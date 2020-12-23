@@ -2,8 +2,8 @@ from pathlib import Path
 
 import yaml
 
-from filter_recipes import create_previously_tried_filter, create_protein_filter, create_time_filter, \
-    has_recipe_category_or_tag, skip_protein_filter
+from filter_recipes import create_previously_tried_filter, create_protein_filter, \
+    create_time_filter, has_recipe_category_or_tag, skip_protein_filter
 
 
 def retrieve_template(filepath):
@@ -12,7 +12,7 @@ def retrieve_template(filepath):
     return weekly_template
 
 
-def select_food_item(recipes, params, tags=[], food_type: str = "Entree"):
+def select_food_item(recipes, params, tags=None, food_type: str = "Entree"):
     mask = recipes.categories.apply(has_recipe_category_or_tag,
                                     args=(food_type,))
 
@@ -45,7 +45,8 @@ def select_meal(recipes, params):
     entree = select_food_item(recipes, params)
     # TODO limit somehow the cuisine type (e.g. Asian)
     veggie_side = select_food_item(recipes, params, ["veggies"], food_type="Side")
-    # TODO link to and somehow limit starches to cuisine type (Asian->rice? or somehow weighted to grains)
+    # TODO link to and somehow limit starches to cuisine type
+    #  (Asian->rice? or somehow weighted to grains)
     return entree, veggie_side
 
 

@@ -1,8 +1,7 @@
 import pytest
 
 from conftest import RECIPES
-from sous_chef.sous_chef.filter_recipes import check_recipe_for_tag, create_tags_and_filter
-
+from sous_chef.filter_recipes import check_recipe_for_tag, create_tags_and_filter
 
 @pytest.mark.parametrize("recipe_tags,desired_tag,expected_result",
                          [(["poultry"], "poultry", True),

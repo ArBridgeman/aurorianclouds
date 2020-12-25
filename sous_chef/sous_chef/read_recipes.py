@@ -1,18 +1,25 @@
-import numpy as np
+from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
-COLUMNS = {"title": str,
-           "preparationTime": str,
-           "cookingTime": str,
-           "totalTime": str,
-           "ingredients": str,
-           "instructions": str,
-           "rating": float,
-           "favorite": bool,
-           "categories": list,
-           "tags": list,
-           }
+CALENDAR_COLUMNS = {"date": str,
+                    "title": str,
+                    "recipeUuid": str,
+                    "uuid": str}
+
+RECIPE_COLUMNS = {"title": str,
+                  "preparationTime": str,
+                  "cookingTime": str,
+                  "totalTime": str,
+                  "ingredients": str,
+                  "instructions": str,
+                  "rating": float,
+                  "favorite": bool,
+                  "categories": list,
+                  "tags": list,
+                  "uuid": str
+                  }
 
 TIME_UNITS = ["min", "minutes", "hour", "hours"]
 
@@ -35,7 +42,7 @@ def create_timedelta(row_entry):
 
 # TODO figure out best way to separate active cooking vs inactive cooking
 def retrieve_format_recipe_df(json_file):
-    tmp_df = pd.read_json(json_file, dtype=COLUMNS)[COLUMNS.keys()]
+    tmp_df = pd.read_json(json_file, dtype=RECIPE_COLUMNS)[RECIPE_COLUMNS.keys()]
     tmp_df["totalTime"] = tmp_df["totalTime"].apply(create_timedelta)
     tmp_df["preparationTime"] = tmp_df["preparationTime"].apply(create_timedelta)
     # tmp_df["cookingTime"] = tmp_df["cookingTime"].apply(create_timedelta)
@@ -49,3 +56,10 @@ def read_recipes(config):
     for json in config.recipe_path.glob(config.recipe_pattern):
         recipes = recipes.append(retrieve_format_recipe_df(json))
     return recipes
+
+
+def read_calendar(config):
+    filepath = Path(config.recipe_path, config.calendar_file)
+    calendar = pd.read_json(filepath, dtype=CALENDAR_COLUMNS)[CALENDAR_COLUMNS.keys()]
+    calendar["date"] = pd.to_datetime(calendar["date"]).dt.date
+    return calendar

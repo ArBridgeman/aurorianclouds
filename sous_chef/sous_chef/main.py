@@ -11,6 +11,9 @@ def generate_parser():
     parser = argparse.ArgumentParser(description='sous chef activities')
     subparser = parser.add_subparsers()
 
+    parser.add_argument("--sender", type=str, default="ariel.m.schulz@gmail.com")
+    parser.add_argument("--recipient", type=str, default="ariel.bridgeman@gmail.com, alex.transporter@gmail.com")
+
     parser.add_argument("--recipe_path", type=Path,
                         default=Path(CWD, "../recipe_data"))
     parser.add_argument("--recipe_pattern", type=str,

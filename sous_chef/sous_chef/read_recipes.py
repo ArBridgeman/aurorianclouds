@@ -17,6 +17,8 @@ RECIPE_COLUMNS = {"title": str,
                   "rating": float,
                   "favorite": bool,
                   "categories": list,
+                  # TODO quantity should be split/standardized...it's bad!!!
+                  "quantity": str,
                   "tags": list,
                   "uuid": str
                   }

@@ -1,0 +1,25 @@
+- Saturday:
+    max_active_time: -1
+    eat_time: "18:00"
+    protein_source: beef
+    servings: 4
+    recipe_previously_tried: 0
+- Sunday:
+    max_active_time: -1
+    eat_time: "18:00"
+    protein_source: unspecified
+    servings: 4
+    recipe_previously_tried: 0
+- Tuesday:
+    max_active_time: 30
+    eat_time: "18:30"
+    protein_source: non-flesh
+    servings: 4
+    recipe_previously_tried: 1
+- Thursday:
+    max_active_time: 30
+    eat_time: "18:30"
+    protein_source: seafood
+    servings: 2
+    recipe_previously_tried: 1
+

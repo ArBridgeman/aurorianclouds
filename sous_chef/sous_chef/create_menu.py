@@ -1,6 +1,6 @@
-from datetime import date
 import json
 from collections import defaultdict, OrderedDict
+from datetime import date
 from pathlib import Path
 
 import numpy as np
@@ -17,6 +17,8 @@ def retrieve_template(filepath):
         weekly_template = yaml.load(file, Loader=yaml.FullLoader)
     return weekly_template
 
+
+# TODO create / use recommended sides options (have for some recipes...maybe better to compile separate from calendar
 
 def select_food_item(recipes, params, tags=[], food_type: str = "Entree"):
     mask = recipes.categories.apply(has_recipe_category_or_tag,
@@ -143,7 +145,7 @@ def create_menu(config, recipes, calendar):
         specifications = entry[day]
         menu[day], email_text[day] = select_random_meal(recipes, calendar, specifications)
 
-    write_path = f"../food_plan/{week}.json"
+    write_path = Path(config.menu_path, f"{week}.json")
     write_menu(write_path, menu)
     email_sender = EmailSender(config)
     email_sender.send_message_with_attachment(f"Menu for {week}", f"{json.dumps(email_text, indent=4)}",

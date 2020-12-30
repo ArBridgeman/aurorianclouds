@@ -58,8 +58,26 @@ def read_recipes(config):
     return recipes
 
 
-def read_calendar(config):
+def create_food_type(row):
+    if "veggies" in row.tags:
+        return "veggies"
+    elif "starch" in row.tags:
+        return "starch"
+    elif "Entree" in row.categories:
+        return "protein"
+    else:
+        return "dessert"
+
+
+def label_calendar(calendar, recipes):
+    calendar = pd.merge(calendar, recipes[["uuid", "tags", "categories"]],
+                        how="inner", left_on="recipeUuid", right_on="uuid")
+    calendar["food_type"] = calendar.apply(lambda x: create_food_type(x), axis=1)
+    return calendar
+
+
+def read_calendar(config, recipes):
     filepath = Path(config.recipe_path, config.calendar_file)
     calendar = pd.read_json(filepath, dtype=CALENDAR_COLUMNS)[CALENDAR_COLUMNS.keys()]
     calendar["date"] = pd.to_datetime(calendar["date"]).dt.date
-    return calendar
+    return label_calendar(calendar, recipes)

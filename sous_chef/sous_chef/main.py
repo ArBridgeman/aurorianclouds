@@ -24,6 +24,7 @@ def generate_parser():
                              default=Path(CWD, "../menu_template"))
     menu_parser.add_argument('--template', type=str,
                              default="four_day_cook_week.yml")
+    menu_parser.add_argument('--cuisine', type=str, default="cuisine_map.yml")
 
     shopping_list_parser = subparser.add_parser('shopping_list')
     shopping_list_parser.set_defaults(which='shopping_list')
@@ -32,8 +33,8 @@ def generate_parser():
 
 def main():
     parser = generate_parser().parse_args()
-    calendar = read_calendar(parser)
     recipes = read_recipes(parser)
+    calendar = read_calendar(parser, recipes)
 
     if parser.which == 'menu':
         create_menu(parser, recipes, calendar)

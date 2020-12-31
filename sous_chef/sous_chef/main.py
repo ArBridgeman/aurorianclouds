@@ -27,6 +27,7 @@ def generate_parser():
                              default=Path(CWD, "../menu_template"))
     menu_parser.add_argument('--template', type=str,
                              default="four_day_cook_week.yml")
+    menu_parser.add_argument('--email', type=str, default="base_email.html")
 
     shopping_list_parser = subparser.add_parser('shopping_list')
     shopping_list_parser.set_defaults(which='shopping_list')

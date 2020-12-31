@@ -1,6 +1,6 @@
-from datetime import date
 import json
 from collections import defaultdict, OrderedDict
+from datetime import date
 from pathlib import Path
 
 import numpy as np

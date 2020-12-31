@@ -6,11 +6,13 @@ Mediterranean:
 Asian:
   - Asian
   - Chinese
-  - Indian
   - Japanese
   - Korean
   - Thai
   - Vietnamese
+
+Indian:
+  - Indian
 
 Latin:
   - Argentinian

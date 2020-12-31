@@ -146,5 +146,4 @@ def create_menu(config, recipes, calendar):
     write_path = f"../food_plan/{week}.json"
     write_menu(write_path, menu)
     email_sender = EmailSender(config)
-    email_sender.send_message_with_attachment(f"Menu for {week}", f"{json.dumps(email_text, indent=4)}",
-                                              write_path)
+    email_sender.send_message_with_attachment(f"Menu for {week}", email_text, write_path)

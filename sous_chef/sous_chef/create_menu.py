@@ -12,7 +12,7 @@ def retrieve_template(filepath):
         weekly_template = yaml.load(file, Loader=yaml.FullLoader)
     return weekly_template
 
-
+  
 def retrieve_cuisine_map(filepath):
     with open(filepath) as file:
         weekly_template = yaml.load(file, Loader=yaml.FullLoader)
@@ -101,7 +101,6 @@ def select_random_meal(recipes, calendar, params, cuisine_map):
     cuisine_select = determine_cuisine_selection(entree.tags.values[0], cuisine_map)
     if "bowl" not in entree.tags:
         veggie_side = select_side(recipes, calendar, params, entree.iloc[0].uuid, cuisine_select)
-
     # TODO link to and somehow limit starches to cuisine type (Asian->rice? or somehow weighted to grains)
     return entree, veggie_side
 

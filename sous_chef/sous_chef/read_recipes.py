@@ -3,25 +3,12 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from definitions import INP_JSON_COLUMNS
+
 CALENDAR_COLUMNS = {"date": str,
                     "title": str,
                     "recipeUuid": str,
                     "uuid": str}
-
-RECIPE_COLUMNS = {"title": str,
-                  "preparationTime": str,
-                  "cookingTime": str,
-                  "totalTime": str,
-                  "ingredients": str,
-                  "instructions": str,
-                  "rating": float,
-                  "favorite": bool,
-                  "categories": list,
-                  "tags": list,
-                  "uuid": str
-                  }
-
-TIME_UNITS = ["min", "minutes", "hour", "hours"]
 
 
 def flatten_dict_to_list(row_entry):
@@ -42,7 +29,7 @@ def create_timedelta(row_entry):
 
 # TODO figure out best way to separate active cooking vs inactive cooking
 def retrieve_format_recipe_df(json_file):
-    tmp_df = pd.read_json(json_file, dtype=RECIPE_COLUMNS)[RECIPE_COLUMNS.keys()]
+    tmp_df = pd.read_json(json_file, dtype=INP_JSON_COLUMNS)[INP_JSON_COLUMNS.keys()]
     tmp_df["totalTime"] = tmp_df["totalTime"].apply(create_timedelta)
     tmp_df["preparationTime"] = tmp_df["preparationTime"].apply(create_timedelta)
     # tmp_df["cookingTime"] = tmp_df["cookingTime"].apply(create_timedelta)

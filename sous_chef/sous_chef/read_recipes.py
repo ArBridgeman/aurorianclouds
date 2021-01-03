@@ -3,12 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from definitions import INP_JSON_COLUMNS
-
-CALENDAR_COLUMNS = {"date": str,
-                    "title": str,
-                    "recipeUuid": str,
-                    "uuid": str}
+from definitions import INP_JSON_COLUMNS, CALENDAR_COLUMNS
 
 
 def flatten_dict_to_list(row_entry):

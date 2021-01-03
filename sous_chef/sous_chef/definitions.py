@@ -16,7 +16,13 @@ INP_JSON_COLUMNS = {
     "favorite": bool,
     "categories": list,
     "tags": list,
+    "uuid": str
 }
+
+CALENDAR_COLUMNS = {"date": str,
+                    "title": str,
+                    "recipeUuid": str,
+                    "uuid": str}
 
 TIME_UNITS = ["min", "minutes", "hour", "hours"]
 

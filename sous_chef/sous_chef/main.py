@@ -41,12 +41,13 @@ def generate_parser():
 def main():
     parser = generate_parser()
     args = parser.parse_args()
-    recipes = read_recipes(args)
-    calendar = read_calendar(parser, recipes)
 
     if len(sys.argv) <= 1:
         parser.print_help()
         return
+
+    recipes = read_recipes(args)
+    calendar = read_calendar(args, recipes)
 
     if args.which == 'menu':
         create_menu(args, recipes, calendar)

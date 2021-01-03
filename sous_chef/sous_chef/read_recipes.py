@@ -1,7 +1,9 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
-from definitions import INP_JSON_COLUMNS
+from definitions import INP_JSON_COLUMNS, CALENDAR_COLUMNS
 
 
 def flatten_dict_to_list(row_entry):
@@ -36,3 +38,28 @@ def read_recipes(config):
     for json in config.recipe_path.glob(config.recipe_pattern):
         recipes = recipes.append(retrieve_format_recipe_df(json))
     return recipes
+
+
+def create_food_type(row):
+    if "veggies" in row.tags:
+        return "veggies"
+    elif "starch" in row.tags:
+        return "starch"
+    elif "Entree" in row.categories:
+        return "protein"
+    else:
+        return "dessert"
+
+
+def label_calendar(calendar, recipes):
+    calendar = pd.merge(calendar, recipes[["uuid", "tags", "categories"]],
+                        how="inner", left_on="recipeUuid", right_on="uuid")
+    calendar["food_type"] = calendar.apply(lambda x: create_food_type(x), axis=1)
+    return calendar
+
+
+def read_calendar(config, recipes):
+    filepath = Path(config.recipe_path, config.calendar_file)
+    calendar = pd.read_json(filepath, dtype=CALENDAR_COLUMNS)[CALENDAR_COLUMNS.keys()]
+    calendar["date"] = pd.to_datetime(calendar["date"]).dt.date
+    return label_calendar(calendar, recipes)

@@ -28,6 +28,14 @@ def create_tags_or_filter(recipes: pd.DataFrame, tags: List[str]):
     return mask
 
 
+def create_category_or_filter(recipes, categories: List[str]):
+    mask = np.array([False] * recipes.shape[0])
+    for category in categories:
+        mask = np.logical_or(mask, recipes.categories.apply(has_recipe_category_or_tag,
+                                                            args=(category,)))
+    return mask
+
+
 def create_protein_filter(recipes, protein_source: str):
     return create_tags_or_filter(recipes, PROTEIN_SOURCE[protein_source])
 

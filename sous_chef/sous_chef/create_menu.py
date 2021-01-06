@@ -1,10 +1,17 @@
+import os
+import json
+
+from collections import defaultdict, OrderedDict
+from datetime import date
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import yaml
 
 from filter_recipes import create_previously_tried_filter, create_protein_filter, \
     create_time_filter, has_recipe_category_or_tag, skip_protein_filter, create_tags_or_filter
+from send_email import EmailSender
 
 
 def retrieve_template(filepath):
@@ -40,6 +47,7 @@ def select_food_item(recipes, params, tags=None, food_type: str = "Entree", cuis
         mask &= skip_protein_filter(recipes)
         mask &= select_by_near_cuisine(recipes, cuisine_select)
 
+    # TODO implement cuisine or other (tag?) selection here
     # if len(tags) > 0:
     #     print(tags)
     #     mask &= create_tags_and_filter(recipes, tags)
@@ -53,11 +61,11 @@ def select_food_item(recipes, params, tags=None, food_type: str = "Entree", cuis
     if bool(params["recipe_previously_tried"]):
         mask &= create_previously_tried_filter(recipes)
         selection = recipes[mask].copy()
-        return selection.sample(weights=selection.rating)
+        return selection.sample(weights=selection.rating).iloc[0]
     else:
         selection = recipes[mask].copy()
         weights = selection.rating.replace(0, 2.5)
-        return selection.sample(weights=weights)
+        return selection.sample(weights=weights).iloc[0]
 
 
 def select_random_side_from_calendar(recipes, calendar, recipe_uuid, food_type):
@@ -71,8 +79,7 @@ def select_random_side_from_calendar(recipes, calendar, recipe_uuid, food_type):
                 calendar.food_type == food_type)
         if sum(mask_side) > 0:
             side_uuid = calendar[mask_side].sample().iloc[0].recipeUuid
-            return recipes[recipes.uuid == side_uuid]
-
+            return recipes[recipes.uuid == side_uuid].iloc[0]
         # TODO use error messages instead and catch based on them and apply appropriate action?
         # TODO let errors be caught at more appropriate level (not just select_side)
         return -1
@@ -82,7 +89,7 @@ def select_random_side_from_calendar(recipes, calendar, recipe_uuid, food_type):
 def select_side(recipes, calendar, params, recipe_uuid, cuisine_select):
     veggie_side = select_random_side_from_calendar(recipes, calendar, recipe_uuid, "veggies")
 
-    if isinstance(veggie_side, pd.DataFrame):
+    if isinstance(veggie_side, pd.Series):
         return veggie_side
     elif veggie_side == -1:
         return None
@@ -93,6 +100,60 @@ def select_side(recipes, calendar, params, recipe_uuid, cuisine_select):
                                 food_type="Side", cuisine_select=cuisine_select)
 
 
+def get_str_minutes(time):
+    if time is None or pd.isnull(time):
+        return "0 min"
+    return f"{int(time.round('1min').total_seconds() // 60)} min"
+
+
+def format_time_entry(entry):
+    return OrderedDict({"prep": get_str_minutes(entry.preparationTime),
+                        # TODO make proper time
+                        "cook": entry.cookingTime + " min" if entry.cookingTime.isdecimal() else "",
+                        "total": get_str_minutes(entry.totalTime)})
+
+
+def format_json_entry(entry):
+    return OrderedDict({"title": entry.title,
+                        "rating": entry.rating,
+                        # TODO add scaling factor to recipe? or do with grocery list
+                        "orig_quantity": entry.quantity,
+                        "time": format_time_entry(entry),
+                        "uuid": entry.uuid})
+
+
+def format_email_entry(entry):
+    return OrderedDict({"title": entry.title,
+                        "time": format_time_entry(entry)})
+
+
+def select_random_meal(recipes, calendar, params, cuisine_map):
+    meal_attachment = defaultdict(dict)
+    meal_text = defaultdict(dict)
+
+    entree = select_food_item(recipes, params)
+    # TODO better way to refactor?
+    meal_attachment["entree"] = format_json_entry(entree)
+    meal_text["entree"] = format_email_entry(entree)
+
+    cuisine_select = determine_cuisine_selection(entree.tags, cuisine_map)
+    # TODO with starch, ensure that meal already doesn't have
+    #  starch component (e.g. noodles, potatoes)
+    if "bowl" not in entree.tags:
+        veggie_side = select_side(recipes, calendar, params, entree.uuid,
+                                  cuisine_select)
+
+        # TODO create new YAML mapping for veggies to be used with new veggie cookbook
+        #  to be able to draw easily from new cook book
+        if veggie_side is not None:
+            meal_attachment["veggie"] = format_json_entry(veggie_side)
+            meal_text["veggie"] = format_email_entry(veggie_side)
+
+    # TODO link to and somehow limit starches to cuisine type
+    # (Asian->rice? or somehow weighted to grains)
+    return meal_attachment, meal_text
+
+
 def determine_cuisine_selection(entree_tags, cuisine_map):
     for cuisine_group in cuisine_map.keys():
         if any(cuisine_tag in entree_tags for cuisine_tag in cuisine_map[cuisine_group]):
@@ -100,33 +161,35 @@ def determine_cuisine_selection(entree_tags, cuisine_map):
     return None
 
 
-def select_random_meal(recipes, calendar, params, cuisine_map):
-    entree = select_food_item(recipes, params)
-    cuisine_select = determine_cuisine_selection(entree.tags.values[0], cuisine_map)
-    veggie_side = None
-    if "bowl" not in entree.tags:
-        veggie_side = select_side(recipes, calendar, params, entree.iloc[0].uuid, cuisine_select)
-    # TODO link to and somehow limit starches to cuisine
-    #  type (Asian->rice? or somehow weighted to grains)
-    return entree, veggie_side
-
-
 # TODO write to json that will be sent via cron to email addresses
-def write_menu_entry(day, meal):
-    print(f"\n# {day}".ljust(120, "#"))
-    for entry in meal:
-        if entry is not None:
-            print(entry[["title", "tags", "categories", "totalTime"]])
+def write_menu(write_path, menu):
+    if not os.path.exists(os.path.dirname(write_path)):
+        os.makedirs(os.path.dirname(write_path))
+    with open(write_path, "w") as outfile:
+        json.dump(menu, outfile)
 
 
 # TODO mode or alternate between this and historic/calendar
 def create_menu(config, recipes, calendar):
+    week = date.today().strftime("%Y-%m-%d")
     template_filepath = Path(config.template_path, config.template)
     template = retrieve_template(template_filepath)
     cuisine_filepath = Path(config.template_path, config.cuisine)
     cuisine_map = retrieve_cuisine_map(cuisine_filepath)
+    menu = OrderedDict()
+    email_text = OrderedDict()
+
     for entry in template:
         day = list(entry.keys())[0]
         specifications = entry[day]
-        meal = select_random_meal(recipes, calendar, specifications, cuisine_map)
-        write_menu_entry(day, meal)
+        menu[day], email_text[day] = select_random_meal(recipes, calendar, specifications,
+                                                        cuisine_map)
+        # TODO add back option to print menu here if optional argument is given
+
+    write_path = f"../food_plan/{week}.json"
+    write_menu(write_path, menu)
+    if not config.no_mail:
+        email_sender = EmailSender(config)
+        email_sender.send_message_with_attachment(f"Menu for {week}", email_text, write_path)
+    else:
+        print("Sending of e-mail deactivated by user!")

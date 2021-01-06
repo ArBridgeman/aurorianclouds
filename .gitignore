@@ -130,3 +130,10 @@ dmypy.json
 
 # IntelliJ
 .idea
+
+# Google API
+token.pickle
+credentials.json
+
+# Sous Chef
+food_plan

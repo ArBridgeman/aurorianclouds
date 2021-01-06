@@ -1,14 +1,14 @@
 import pytest
 
 from conftest import RECIPES
-from sous_chef.sous_chef.filter_recipes import has_recipe_category_or_tag, create_tags_and_filter
 
+from sous_chef.filter_recipes import has_recipe_category_or_tag, create_tags_and_filter
 
 @pytest.mark.parametrize("recipe_tags,desired_tag,expected_result",
                          [(["poultry"], "poultry", True),
                           (["BBQ", "American", "beef"], "American", True),
                           (["French"], "American", False)])
-def test_check_recipe_for_tag(recipe_tags, desired_tag, expected_result):
+def test_has_recipe_category_or_tag(recipe_tags, desired_tag, expected_result):
     assert has_recipe_category_or_tag(recipe_tags, desired_tag) == expected_result
 
 

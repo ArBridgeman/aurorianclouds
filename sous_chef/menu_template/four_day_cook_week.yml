@@ -9,7 +9,7 @@
     eat_time: "18:00"
     protein_source: unspecified
     servings: 4
-    recipe_previously_tried: 0
+    recipe_previously_tried: 1
 - Tuesday:
     max_active_time: 30
     eat_time: "18:30"

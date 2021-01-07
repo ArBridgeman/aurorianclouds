@@ -184,7 +184,10 @@ def create_menu(config, recipes, calendar):
         specifications = entry[day]
         menu[day], email_text[day] = select_random_meal(recipes, calendar, specifications,
                                                         cuisine_map)
-        # TODO add back option to print menu here if optional argument is given
+        if config.print_menu:
+            print(f"\n# {day} ".ljust(100, "#"))
+            print(menu[day]["entree"])
+            print(menu[day]["veggie"])
 
     write_path = Path(config.menu_path, f"{week}.json")
     write_menu(write_path, menu)

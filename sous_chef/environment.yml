@@ -1,0 +1,14 @@
+name: sous_chef_py39
+channels:
+  - defaults
+dependencies:
+  - python=3.9.1
+  - pytest=6.2.1
+  - pandas=1.1.5
+  - pyyaml=5.3.1
+  - numpy=1.19.2
+  - pip:
+      - google-api-python-client
+      - google-auth-httplib2
+      - google-auth-oauthlib
+      - json2html

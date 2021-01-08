@@ -13,8 +13,8 @@ ureg = UnitRegistry()
 ureg.default_format = '.2f'
 
 
-def retrieve_staple_ingredients():
-    with open("../grocery_list/staple_ingredients.yml") as file:
+def retrieve_staple_ingredients(config):
+    with open(Path(config.grocery_list_path, config.staple_ingredients_file)) as file:
         weekly_template = yaml.load(file, Loader=yaml.FullLoader)
     return weekly_template
 
@@ -29,13 +29,15 @@ def separate_unit_from_ingredient(ingredient):
     if len(unit) > 0:
         unit_end = unit[0].span[1]
         unit_name = unit[0].unit.name
-        return unit[0].value, unit_name if unit_name != "dimensionless" else "", ingredient[unit_end:].strip()
+        return unit[0].value, unit_name if unit_name != "dimensionless" else "", ingredient[
+                                                                                 unit_end:].strip()
     return None, "", ingredient.strip()
 
 
 def ignore_ingredient(ignored_ingredients, ingredient):
     # TODO make more robust as matches many things
-    return any(ignored_ingredient == ingredient.lower() for ignored_ingredient in ignored_ingredients)
+    return any(
+        ignored_ingredient == ingredient.lower() for ignored_ingredient in ignored_ingredients)
 
 
 def is_staple_ingredient(staple_ingredients, ingredient):
@@ -54,7 +56,8 @@ def assume_quantity(recipe_title, quantity, ingredient):
         return quantity
 
 
-def separate_ingredients_for_grocery_list(grocery_list, staple_ingredients, recipe_title, ingredients):
+def separate_ingredients_for_grocery_list(grocery_list, staple_ingredients, recipe_title,
+                                          ingredients):
     for line in ingredients.split("\n"):
         stripped_line = line.strip()
         if stripped_line == "[Recommended Sides]":
@@ -73,9 +76,10 @@ def separate_ingredients_for_grocery_list(grocery_list, staple_ingredients, reci
 
         quantity = assume_quantity(recipe_title, quantity, ingredient)
 
-        grocery_list = grocery_list.append({"quantity": quantity, "unit": unit, "ingredient": ingredient,
-                                            "is_staple": is_staple_ingredient(staple_ingredients, ingredient)},
-                                           ignore_index=True)
+        grocery_list = grocery_list.append(
+            {"quantity": quantity, "unit": unit, "ingredient": ingredient,
+             "is_staple": is_staple_ingredient(staple_ingredients, ingredient)},
+            ignore_index=True)
     return grocery_list
 
 
@@ -99,12 +103,14 @@ def aggregate_like_ingredient(grocery_list):
             units = group.unit.unique()
             if len(units) > 1:
                 largest_unit = find_largest_unit(units)
-                group["quantity"], group["unit"] = zip(*group.apply(lambda row: convert_values(row, largest_unit),
-                                                                    axis=1))
+                group["quantity"], group["unit"] = zip(
+                    *group.apply(lambda row: convert_values(row, largest_unit),
+                                 axis=1))
 
         # TODO ensure all types or lack of unit works here & not losing due to none values
         aggregate = group.groupby(["unit", "ingredient"], as_index=False).agg({"quantity": ["sum"],
-                                                                               "is_staple": ["first"]})
+                                                                               "is_staple": [
+                                                                                   "first"]})
         aggregate.columns = aggregate.columns.droplevel(1)
         aggregate_grocery_list = aggregate_grocery_list.append(aggregate[grocery_list.columns])
     return aggregate_grocery_list.reset_index()
@@ -112,7 +118,7 @@ def aggregate_like_ingredient(grocery_list):
 
 def generate_grocery_list(config, recipes):
     filepath = Path(config.menu_path, config.menu_file)
-    staple_ingredients = retrieve_staple_ingredients()
+    staple_ingredients = retrieve_staple_ingredients(config)
     with open(filepath) as f:
         menu = json.load(f)
 
@@ -120,12 +126,14 @@ def generate_grocery_list(config, recipes):
     grocery_list = pd.DataFrame(columns=["quantity", "unit", "ingredient", "is_staple"])
     for day in menu.keys():
         for entry in menu[day].keys():
-            mask_entry = recipes.uuid == menu[day][entry]["uuid"]
-            selected_recipe = recipes[mask_entry].iloc[0]
-            recipe_title = selected_recipe.title
-            ingredients = selected_recipe.ingredients
-            grocery_list = separate_ingredients_for_grocery_list(grocery_list, staple_ingredients, recipe_title,
-                                                                 ingredients)
+            if len(menu[day][entry].keys()) > 0:
+                mask_entry = recipes.uuid == menu[day][entry]["uuid"]
+                selected_recipe = recipes[mask_entry].iloc[0]
+                recipe_title = selected_recipe.title
+                ingredients = selected_recipe.ingredients
+                grocery_list = separate_ingredients_for_grocery_list(grocery_list, staple_ingredients,
+                                                                     recipe_title,
+                                                                     ingredients)
 
     grocery_list = aggregate_like_ingredient(grocery_list)
     # TODO convert all masses to grams

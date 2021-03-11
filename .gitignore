@@ -135,5 +135,8 @@ dmypy.json
 token.pickle
 credentials.json
 
+# Todoist API
+token.todoist
+
 # Sous Chef
 food_plan

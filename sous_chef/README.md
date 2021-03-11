@@ -52,3 +52,12 @@ should be placed in the recipe_data folder.
 Used for sending emails:
 * https://developers.google.com/gmail/api/quickstart/python
 * https://developers.google.com/gmail/api/reference/rest/v1/users.messages/send
+
+#### Todoist
+Create a `token.todoist` file in the sub-directory sous_chef. Copy in your
+Todoist API token, which is found in the web app at `Settings -> Integrations -> API token`.
+
+Used for setting up tasks:
+* https://developer.todoist.com/sync/v8/
+* https://github.com/doist/todoist-python
+* https://buildmedia.readthedocs.org/media/pdf/pytodoist/latest/pytodoist.pdf

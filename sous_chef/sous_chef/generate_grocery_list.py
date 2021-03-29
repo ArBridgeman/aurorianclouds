@@ -8,6 +8,9 @@ from pint import UnitRegistry
 from quantulum3 import parser
 
 from utils_groceries import IngredientsHelper
+from utils_todoist import TodoistHelper
+
+# from IPython import embed
 
 # TODO implement method to scale recipe to desired servings
 # TODO implement method to mark ingredients that can only be bought the day before + need day
@@ -180,7 +183,21 @@ def get_food_categories(grocery_list, config):
     return grocery_list
 
 
-def generate_grocery_list(config, recipes):
+def upload_groceries_to_todoist(groceries, project_name="Groceries", clean=False):
+    todoist_helper = TodoistHelper("todoist_token.txt")
+
+    if clean:
+        print("Cleaning previous items/tasks in project {:s}".format(project_name))
+        todoist_helper.delete_all_items_in_project(project_name)
+
+    for _, item in groceries.iterrows():
+        formatted_item = "{}, {} {}".format(item.ingredient, item.quantity, item.unit)
+        todoist_helper.add_item_to_project(formatted_item.strip(),
+                                           project_name,
+                                           section=item.group if not item.is_staple else "Staples")
+
+
+def generate_grocery_list(config, recipes, verbose=False):
     filepath = Path(config.menu_path, config.menu_file)
     staple_ingredients = retrieve_staple_ingredients(config)
     with open(filepath) as f:
@@ -205,4 +222,10 @@ def generate_grocery_list(config, recipes):
     # get all food categories using USDA data
     grocery_list = get_food_categories(grocery_list, config)
     # TODO convert all masses to grams
-    print(grocery_list.sort_values(by=["is_staple", "ingredient"]))
+    if verbose:
+        print(grocery_list.sort_values(by=["is_staple", "ingredient"]))
+
+    if not config.no_upload:
+        print("Uploading grocery list to todoist...")
+        upload_groceries_to_todoist(grocery_list, clean=True)
+        print("Upload done.")

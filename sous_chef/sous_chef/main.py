@@ -59,6 +59,8 @@ def generate_parser():
                                      default=Path(ABS_FILE_PATH, "../grocery_list"))
     grocery_list_parser.add_argument("--staple_ingredients_file", type=str,
                                      default="staple_ingredients.yml")
+    grocery_list_parser.add_argument("--no_upload", action="store_true",
+                                     help="Deactivate Todoist upload for this run")
     return parser
 
 

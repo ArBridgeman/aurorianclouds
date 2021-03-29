@@ -20,22 +20,22 @@ macro_mapping = {
     "Fruits and Fruit Juices": "Fruits and vegetables",
     "Pork Products": "Meats",
     "Vegetables and Vegetable Products": "Fruits and vegetables",
-    "Nut and Seed Products": "Pasta, grains, nuts, seeds",
+    "Nut and Seed Products": "Pasta_grains_nuts_seeds",
     "Beef Products": "Meats",
     "Beverages": "Beverages",
     "Finfish and Shellfish Products": "Fish",
-    "Legumes and Legume Products": "Pasta, grains, nuts, seeds",
+    "Legumes and Legume Products": "Pasta_grains_nuts_seeds",
     "Lamb, Veal, and Game Products": "Meats",
     "Baked Products": "Prepared",
     "Sweets": "Prepared",
-    "Cereal Grains and Pasta": "Pasta, grains, nuts, seeds",
+    "Cereal Grains and Pasta": "Pasta_grains_nuts_seeds",
     "Fast Foods": "Prepared",
     "Meals, Entrees, and Side Dishes": "Prepared",
     "American Indian/Alaska Native Foods": "Prepared",
     "Restaurant Foods": "Prepared"
 }
 
-relevant_macro_groups = ["Meats", "Fruits and vegetables", "Pasta, grains, nuts, seeds",
+relevant_macro_groups = ["Meats", "Fruits and vegetables", "Pasta_grains_nuts_seeds",
                          "Spices and sauces", "Beverages", "Fish", "Dairy products",
                          "Fats and oils", "Frozen goods"]
 

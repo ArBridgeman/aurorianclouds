@@ -7,6 +7,8 @@ import yaml
 from pint import UnitRegistry
 from quantulum3 import parser
 
+from utils_groceries import IngredientsHelper
+
 # TODO implement method to scale recipe to desired servings
 # TODO implement method to mark ingredients that can only be bought the day before + need day
 ureg = UnitRegistry()
@@ -59,14 +61,30 @@ def assume_quantity(recipe_title, quantity, ingredient):
 def separate_ingredients_for_grocery_list(grocery_list, staple_ingredients, recipe_title,
                                           ingredients):
     for line in ingredients.split("\n"):
+        is_optional = False
         stripped_line = line.strip()
         if stripped_line == "[Recommended Sides]":
             break
             # TODO do return here
         # TODO check that all empty strings are being ignored
         # Doesn't seem to based on addition if to separate_unit_from_ingredient
-        elif not stripped_line or "[" in line:
+        if not stripped_line or "[" in line:
             continue
+
+        # nothing relevant is that short
+        if len(stripped_line) < 3:
+            continue
+
+        if "optional" in stripped_line.lower():
+            is_optional = True
+            stripped_line = stripped_line.replace("Optional", "").replace("optional", "")
+
+        if ":" in stripped_line:
+            # take only things after ":"
+            stripped_line = stripped_line.split(":")[1]
+
+        # quick hack
+        stripped_line = stripped_line.replace("can ", "cup ").replace("cans ", "cups ")
 
         ingredient = remove_instruction(stripped_line)
         quantity, unit, ingredient = separate_unit_from_ingredient(ingredient)
@@ -78,13 +96,21 @@ def separate_ingredients_for_grocery_list(grocery_list, staple_ingredients, reci
 
         grocery_list = grocery_list.append(
             {"quantity": quantity, "unit": unit, "ingredient": ingredient,
-             "is_staple": is_staple_ingredient(staple_ingredients, ingredient)},
+             "is_staple": is_staple_ingredient(staple_ingredients, ingredient),
+             "is_optional": is_optional},
             ignore_index=True)
+
     return grocery_list
 
 
 def find_largest_unit(units):
-    return max([ureg.parse_expression(unit) for unit in units]).units
+    all_units = []
+    for unit in units:
+        try:
+            all_units.append(ureg.parse_expression(unit))
+        except Exception as e:
+            print("Error while parsing unit {:s}! Ignoring!".format(unit))
+    return max(all_units).units
 
 
 def convert_values(row, desired_unit):
@@ -108,12 +134,45 @@ def aggregate_like_ingredient(grocery_list):
                                  axis=1))
 
         # TODO ensure all types or lack of unit works here & not losing due to none values
-        aggregate = group.groupby(["unit", "ingredient"], as_index=False).agg({"quantity": ["sum"],
-                                                                               "is_staple": [
-                                                                                   "first"]})
+        aggregate = group.groupby(["unit", "ingredient"], as_index=False).agg(
+            {
+                "quantity": ["sum"],
+                "is_staple": ["first"],
+                "is_optional": ["first"],
+                "group": ["first"]
+            }
+        )
         aggregate.columns = aggregate.columns.droplevel(1)
         aggregate_grocery_list = aggregate_grocery_list.append(aggregate[grocery_list.columns])
     return aggregate_grocery_list.reset_index()
+
+
+def get_food_categories(grocery_list, config):
+    master_file = None
+    try:
+        master_file = pd.read_csv(config.master_list_file)
+    except Exception as e:
+        print("Error while trying to read master ingredient list!")
+        print(e)
+
+    grocery_list = pd.merge(grocery_list, master_file[["ingredient", "group"]],
+                            on="ingredient", how="left")
+
+    unmatched_mask = grocery_list.group.isnull() | grocery_list.group == "Unknown"
+
+    print("There are {:d} unmatched grocery ingredients after using master list!".format(unmatched_mask.sum()))
+
+    grocery_list_unmatched = grocery_list[unmatched_mask]
+    grocery_list_matched = grocery_list[~unmatched_mask]
+
+    # try to estimate missing or unknown groups
+    ingredient_helper = IngredientsHelper(config.food_items_file)
+    grocery_list_unmatched["group"] = grocery_list_unmatched.ingredient.apply(ingredient_helper.get_food_group)
+
+    grocery_list = pd.concat([grocery_list_matched,
+                              grocery_list_unmatched])
+
+    return grocery_list
 
 
 def generate_grocery_list(config, recipes):
@@ -123,7 +182,8 @@ def generate_grocery_list(config, recipes):
         menu = json.load(f)
 
     # TODO how to handle or options (e.g. lettuce or tortillas?) -> special type in ingredient list?
-    grocery_list = pd.DataFrame(columns=["quantity", "unit", "ingredient", "is_staple"])
+    grocery_list = pd.DataFrame(columns=["quantity", "unit", "ingredient",
+                                         "is_staple", "is_optional", "group"])
     for day in menu.keys():
         for entry in menu[day].keys():
             if len(menu[day][entry].keys()) > 0:
@@ -136,5 +196,8 @@ def generate_grocery_list(config, recipes):
                                                                      ingredients)
 
     grocery_list = aggregate_like_ingredient(grocery_list)
+
+    # get all food categories using USDA data
+    grocery_list = get_food_categories(grocery_list, config)
     # TODO convert all masses to grams
     print(grocery_list.sort_values(by=["is_staple", "ingredient"]))

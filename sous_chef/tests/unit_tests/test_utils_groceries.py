@@ -28,7 +28,10 @@ class TestIngredientsHelper:
                               ("cooking oil", "Fats and oils"),
                               ("soy sauce", "Spices and sauces"),
                               ("white wine", "Beverages"),
-                              ("chicken breast", "Meats")
+                              ("chicken breast", "Meats"),
+                              ("protein bar", "Pasta, grains, nuts, seeds"),
+                              ("rice vinegar", "Spices and sauces"),
+                              ("feta", "Dairy products")
                               ])
     def test_get_food_group(self, ingredient, expected_category):
         assert ingredient_helper.get_food_group(ingredient) == expected_category

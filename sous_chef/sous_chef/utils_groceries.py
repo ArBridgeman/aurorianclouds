@@ -54,6 +54,9 @@ class IngredientsHelper(object):
         # selection of relevant macro groups
         self.ingredient_df = self.ingredient_df[self.ingredient_df.macro_group.isin(relevant_macro_groups)]
 
+        # experimental split and get anything before raw
+        self.ingredient_df["desc_long"] = self.ingredient_df.desc_long.str.split(", raw").str.get(0)
+
         # sorting according to length of description (to try to optimize fuzzy search)
         self.ingredient_df.sort_values("desc_len", ascending=True, inplace=True)
 
@@ -73,33 +76,36 @@ class IngredientsHelper(object):
             return "Spices and sauces"
         if "frozen" in item:
             return "Frozen goods"
+        if "wine" in item and not "vinegar" in item:
+            return "Beverages"
 
         # first stage, search only in desc_first (first part of total description)
         best_result = process.extract(item,
-                                      self.ingredient_df.desc_first.values,
+                                      self.ingredient_df.desc_long.values,
                                       scorer=fuzz.ratio,
                                       limit=3)
 
-        match_df = self.ingredient_df[self.ingredient_df.desc_first == best_result[0][0]]
+        match_df = self.ingredient_df[self.ingredient_df.desc_long == best_result[0][0]]
 
-        if best_result[0][1] < 55:
+        # TODO: find better/more universal matching algorithm as below numbers are purely empirical
+        if best_result[0][1] < 75:
+            best_result = process.extract(item,
+                                          self.ingredient_df.desc_first.values,
+                                          scorer=fuzz.ratio,
+                                          limit=3)
+            match_df = self.ingredient_df[self.ingredient_df.desc_first == best_result[0][0]]
+
+        # if mapping quality thus far is bad, try a mapping on full description (more dangerous, though)
+        if best_result[0][1] < 75:
             best_result = process.extract(item,
                                           self.ingredient_df.desc_second.values,
                                           scorer=fuzz.ratio,
                                           limit=3)
             match_df = self.ingredient_df[self.ingredient_df.desc_second == best_result[0][0]]
 
-        # if mapping quality thus far is bad, try a mapping on full description (more dangerous, though)
-        if best_result[0][1] < 50:
-            best_result = process.extract(item,
-                                          self.ingredient_df.desc_long.values,
-                                          scorer=fuzz.ratio,
-                                          limit=3)
-            match_df = self.ingredient_df[self.ingredient_df.desc_long == best_result[0][0]]
-
         assert len(match_df) > 0, "No results found!"
 
-        if best_result[0][1] < 50:
+        if best_result[0][1] < 60:
             print("Warning! Bad mapping quality for ingredient: {:s}".format(item))
             print("Best match: {:s}".format(best_result[0][0]))
 

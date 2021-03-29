@@ -32,8 +32,12 @@ def generate_parser():
                         default="recipes*.json")
     parser.add_argument("--calendar_file", type=str,
                         default="calendar.json")
+    parser.add_argument("--master_list_file", type=Path,
+                        default=Path(ABS_FILE_PATH, "../nutrition_data/master_ingredient_list.csv"))
     parser.add_argument("--no_mail", action="store_true",
                         help="Do not send menu by mail, only save it locally.")
+    parser.add_argument("--food_items_file", type=Path,
+                        default=Path(ABS_FILE_PATH, "../nutrition_data/food_items.feather"))
 
     menu_parser = sub_parser.add_parser('menu')
     menu_parser.set_defaults(which='menu')

@@ -1,0 +1,1159 @@
+ingredient,is_staple,group
+chicken breasts,False,Meats
+greek yogurt,False,Unknown
+olive oil,True,Fats and oils
+lemon juice,False,Juices
+garlic,False,Fruits and vegetables
+cumin powder,False,Spices and sauces
+paprika,True,Spices and sauces
+cinnamon powder,False,Spices and sauces
+of cayenne pepper,False,Beverages
+large yellow onion,False,Spices and sauces
+large cucumber,False,Fruits and vegetables
+fresh dill,False,Spices and sauces
+pita breads,False,"Pasta, grains, nuts, seeds"
+onion,True,Fruits and vegetables
+tomato,False,Fruits and vegetables
+salmon filet,False,Meats
+chili powder,True,Spices and sauces
+garlic powder,True,Spices and sauces
+oregano,True,Spices and sauces
+medium onion,False,"Pasta, grains, nuts, seeds"
+roasted bell pepper,False,Unknown
+garlic cloves,True,Spices and sauces
+cumin,False,Spices and sauces
+whole peeled tomatoes,False,Unknown
+large eggs,False,"Pasta, grains, nuts, seeds"
+small bunch fresh cilantro/parsley,False,Unknown
+GF flour,False,"Pasta, grains, nuts, seeds"
+milk,False,Dairy products
+flour,True,Dairy products
+egg,True,Dairy products
+mashed banana (~6 small bananas),False,Unknown
+oil OR milk,False,Beverages
+agave,False,Fruits and vegetables
+cinnamon,False,Spices and sauces
+vanilla extract,False,Spices and sauces
+baking soda,False,Beverages
+baking powder,False,Spices and sauces
+chocolate chips),False,Dairy products
+chia seeds),False,"Pasta, grains, nuts, seeds"
+eggs,True,Dairy products
+sesame oil,True,"Pasta, grains, nuts, seeds"
+Shaoxing rice wine or dry sherry,False,Beverages
+cornstarch,True,"Pasta, grains, nuts, seeds"
+sugar,True,Fruits and vegetables
+ketchup,False,Unknown
+beefsteak tomatoes in season,False,Unknown
+vegetable oil,True,Fats and oils
+scallions,False,Fish
+ginger powder,True,Spices and sauces
+rice,False,"Pasta, grains, nuts, seeds"
+2 28-ounce cups whole peeled tomatoes,False,Unknown
+guanciale (salt-cured pork jowl),False,Unknown
+pancetta (Italian bacon),False,Spices and sauces
+tomato paste,False,Fruits and vegetables
+dry white wine,False,Beverages
+crushed red pepper flakes,False,Unknown
+penne or other tube-shaped pasta,False,Spices and sauces
+finely grated Pecorino or Parmesan,False,Unknown
+whole milk (22 g),False,Unknown
+pure vanilla extract,False,Spices and sauces
+cake flour (30-34 g; If you're using a cup measurement,False,Unknown
+baking powder (2 g),False,Spices and sauces
+sugar (25 g),False,Unknown
+neutral-flavored oil (vegetable,False,Unknown
+water (for steaming),False,Unknown
+heavy (whipping) cream (120 ml),False,Unknown
+sugar (20 g),False,Unknown
+confectioners’ sugar/powder sugar,False,Unknown
+Fresh berries,False,Fruits and vegetables
+maple syrup,False,Unknown
+walnuts,False,"Pasta, grains, nuts, seeds"
+fresh ricotta,False,Dairy products
+lemon,False,Fruits and vegetables
+garlic clove,False,Spices and sauces
+grated Parmesan,False,Dairy products
+extra-virgin olive oil,False,Unknown
+tube- or rod-shaped pasta,False,Spices and sauces
+baby carrots,False,Unknown
+butter,False,Dairy products
+light brown sugar,False,Unknown
+honey,True,Meats
+⁄4 tsp seasoning salt,False,Spices and sauces
+ground pork/turkey,False,Meats
+red wine vinegar,True,Spices and sauces
+freshly cracked pepper,False,Unknown
+0.25 tbsp dried parsley,False,Unknown
+onion powder,True,Spices and sauces
+dried basil,False,Beverages
+ground fennel seed,False,Spices and sauces
+brown sugar,True,Spices and sauces
+dried oregano,False,Spices and sauces
+dried thyme,False,Fruits and vegetables
+tomatoes,False,Fruits and vegetables
+balsamic vinegar,True,Spices and sauces
+white beans,False,"Pasta, grains, nuts, seeds"
+brown rice,False,"Pasta, grains, nuts, seeds"
+Schwarzkohl,False,Spices and sauces
+chickpeas,False,"Pasta, grains, nuts, seeds"
+smoked paprika / 1 tsp cumin,False,Unknown
+sugar / 1 tsp cinnamon,False,Unknown
+turmeric / 1 tsp ginger,False,Unknown
+lime (juice and zest) / 2 tsp cracked pepper,False,Juices
+boneless,False,Meats
+plus 2 tbsp cornstarch,False,Unknown
+sesame seeds,True,"Pasta, grains, nuts, seeds"
+green onion,False,Spices and sauces
+chicken broth,False,Meats
+freshly squeezed orange juice,False,Juices
+distilled white vinegar (some rice vinegar),False,Unknown
+soy sauce,True,Spices and sauces
+orange zest,False,Fruits and vegetables
+Sriracha,False,"Pasta, grains, nuts, seeds"
+white pepper,False,Spices and sauces
+small chunks frozen Pineapple,False,Frozen goods
+(225g) milk,False,Unknown
+buckwheat flour,False,"Pasta, grains, nuts, seeds"
+milk + 1 tbsp lemon juice,False,Juices
+large egg,False,"Pasta, grains, nuts, seeds"
+*You can’t use too much of any of these ingredients so there aren’s any measurements,False,Unknown
+-2-4 Cloves of Garlic,False,Unknown
+-Chopped Onion,False,Meats
+-Chopped Peppers,False,Meats
+-Chopped Zucchini,False,Fruits and vegetables
+-Red Chilli Flakes,False,Unknown
+-Fresh pepper,False,Spices and sauces
+-Sprinkle of Himalayan Pink salt,False,Unknown
+ground flax seed,False,"Pasta, grains, nuts, seeds"
+warm water,False,Beverages
+1-0.75 cup chickpea flour (plus more for rolling),False,Unknown
+rotini pasta,False,Unknown
+fresh mozzarella cheese pearls (or chopped into pieces if you can't find pearls),False,Unknown
+salami chopped,False,Meats
+black olives,False,"Pasta, grains, nuts, seeds"
+red onion,False,Spices and sauces
+cherry tomatoes,False,Spices and sauces
+fresh parsley leaves chopped,False,Unknown
+freshly grated parmesan cheese,False,Unknown
+pepperoncinis,False,Meats
+dried parsley flakes,False,Fruits and vegetables
+dried minced onion,False,Unknown
+fresh lemon juice,False,Juices
+dried oregano leaves,False,Fruits and vegetables
+garlic salt,False,Meats
+granulated sugar,False,"Pasta, grains, nuts, seeds"
+milk or non-dairy milk for vegan option,False,Unknown
+homemade milk kefir or plain yogurt use non-dairy yogurt for vegan option,False,Unknown
+300 grams all-purpose gluten-free flour (see note),False,Unknown
+psyllium husk powder,False,Unknown
+1-0.5 tsp sugar,False,Unknown
+active dry yeast,False,Unknown
+olive oil for brushing,False,Unknown
+black sesame seeds or cumin seeds for sprinkling,False,Unknown
+potatoes,False,Fruits and vegetables
+large onions,False,Spices and sauces
+bacon,False,"Pasta, grains, nuts, seeds"
+few pinches of Bratkartoffeln spice,False,Unknown
+grape tomatoes,False,Beverages
+red bell pepper,False,Beverages
+Kalamata olives,False,Unknown
+block feta cheese,False,Meats
+Greek Salad Dressing (app),False,Fats and oils
+ball mozzarella cheese,False,Dairy products
+thin,False,Fruits and vegetables
+artichokes,False,Fruits and vegetables
+pitted Kalamata olives,False,Unknown
+peppercinis,False,Meats
+shallots,False,Fruits and vegetables
+feta block,False,Unknown
+salmon filets,False,Fish
+oil,True,Fats and oils
+rice vinegar,True,Spices and sauces
+grated fresh ginger,False,Unknown
+green onions,False,Spices and sauces
+ginger paste,True,Beverages
+Dijon mustard,False,Fats and oils
+shallot,False,Fruits and vegetables
+chopped fresh rosemary,False,Unknown
+freshly squeezed lemon juice,False,Juices
+pepper. to taste,False,Beverages
+chicken tenderloins,False,Meats
+canola oil,False,Fats and oils
+crushed tomatoes,False,Spices and sauces
+sweet / yellow onion,False,Unknown
+cayenne pepper,False,Spices and sauces
+dashes hot sauce,False,Spices and sauces
+yogurt,False,Dairy products
+mayonnaise,False,Fats and oils
+universal flour,False,"Pasta, grains, nuts, seeds"
+cooking oil or butter,False,Fats and oils
+vanilla,False,Dairy products
+buttermilk,False,Dairy products
+breadcrumbs,False,"Pasta, grains, nuts, seeds"
+poppy/chia seeds,False,Spices and sauces
+sesame seeds (white/black),False,"Pasta, grains, nuts, seeds"
+mustard,False,Spices and sauces
+mixed bread flour,False,Fruits and vegetables
+packet yeast,False,Unknown
+butter / oil,False,Dairy products
+small handful fresh parsley,False,Unknown
+unbleached all-purpose flour,False,Unknown
+whole wheat flour,False,"Pasta, grains, nuts, seeds"
+. baking powder,False,Spices and sauces
+. baking soda,False,Beverages
+. cinnamon,False,Spices and sauces
+. nutmeg,False,Spices and sauces
+. salt,False,Spices and sauces
+plain Greek yogurt,False,Unknown
+coconut oil,False,"Pasta, grains, nuts, seeds"
+. vanilla,False,Dairy products
+grated zucchini,False,Fruits and vegetables
+use vegetable pasta dough recipe,False,Spices and sauces
+stalks green onions,False,Unknown
+ground chicken or other meat,False,Spices and sauces
+ground pepper,False,Fish
+Gulasch beef cube,False,Unknown
+large onion,False,Spices and sauces
+red peppers,False,Fruits and vegetables
+rosenscharfes Paprika,False,Unknown
+edelsüßes Paprika,False,Unknown
+dry red wine,False,Beverages
+beef broth,False,Spices and sauces
+bay leaf/Lorbeerblatt,False,Unknown
+zest of bio lemon rind,False,Unknown
+coriander,False,Spices and sauces
+Majoran,False,Spices and sauces
+pepper to taste,False,Beverages
+flank steak,False,Meats
+med. onions,False,Spices and sauces
+Srichacha,False,"Pasta, grains, nuts, seeds"
+red pepper flakes,True,Spices and sauces
+• rice,False,"Pasta, grains, nuts, seeds"
+• marinated roasted beets,False,Unknown
+unsweetened almond or coconut milk (from a carton,False,Unknown
+. ground turmeric,False,Meats
+. ginger powder,False,Spices and sauces
+. honey,False,Meats
+Pinch of cinnamon as a garnish,False,Unknown
+Pinch of pepper,False,Unknown
+dry lentils,False,"Pasta, grains, nuts, seeds"
+vegetable broth,False,Fats and oils
+bay leaf,False,Spices and sauces
+marinara sauce,False,Spices and sauces
+pasta,False,"Pasta, grains, nuts, seeds"
+grated (vegan) Parmesan,False,Unknown
+fresh basil,False,Fruits and vegetables
+ground Chipotle powder,False,Spices and sauces
+fresh cracked pepper,False,Unknown
+BBQ sauce,False,Spices and sauces
+pasta/pizza sauce,False,Spices and sauces
+sliced bacon,False,Fats and oils
+Garnish,False,"Pasta, grains, nuts, seeds"
+avocado,False,Fruits and vegetables
+handful of chives or green onions,False,Unknown
+smooth peanut butter,False,"Pasta, grains, nuts, seeds"
+Hershey’s Kisses,False,Meats
+spicy tomato paste,False,Spices and sauces
+butter beans,False,"Pasta, grains, nuts, seeds"
+handful fresh parsley,False,Unknown
+pita chips,False,"Pasta, grains, nuts, seeds"
+peanut butter,False,"Pasta, grains, nuts, seeds"
+vanilla protein powder (depending on how drippy your peanut butter is),False,Unknown
+dark chocolate chips,False,Dairy products
+beef brisket (Rinderbrust oder Filet am Stück),False,Unknown
+paprika powder,False,Spices and sauces
+BBQ SAUCE,False,Spices and sauces
+green beans,False,"Pasta, grains, nuts, seeds"
+dark soy sauce,False,Spices and sauces
+Chinese rice wine,False,Beverages
+chili paste,False,Spices and sauces
+chopped garlic,False,Meats
+chopped ginger,False,Meats
+ground cinnamon,False,Spices and sauces
+nutmeg,False,Spices and sauces
+margarine,False,Fats and oils
+white sugar,False,Beverages
+molasses (honey),False,Unknown
+broccoli,False,Fruits and vegetables
+grilled chicken breast,False,Meats
+cooked quinoa,False,"Pasta, grains, nuts, seeds"
+red chili flakes,False,Fruits and vegetables
+yellow onion,False,"Pasta, grains, nuts, seeds"
+ground cumin,False,Meats
+of cayenne,False,Spices and sauces
+diced tomatoes,False,Spices and sauces
+sweet potato,False,Fruits and vegetables
+chopped spinach,False,Fats and oils
+roasted red bell pepper,False,Unknown
+Siracha,False,"Pasta, grains, nuts, seeds"
+diced cucumber,False,Fruits and vegetables
+orange bell pepper,False,Beverages
+diced red onion,False,Spices and sauces
+finely chopped mint,False,Unknown
+vinegar,False,Spices and sauces
+pepper (to taste),False,Beverages
++ Feta,False,Dairy products
+heavy whipping cream,False,Unknown
+Greek yogurt,False,Unknown
+medium zucchini,False,Fruits and vegetables
+roma tomatoes,False,Fruits and vegetables
+Italian seasoning,False,Fats and oils
+grated parmesan cheese,False,Unknown
+panko breadcrumbs,False,Unknown
+shredded Parmesan,False,Dairy products
+buckwheat,False,"Pasta, grains, nuts, seeds"
+pinch of white pepper,False,Unknown
+large ripe tomatoes,False,Unknown
+full fat fresh mozzarella (omit for dairy-free),False,Unknown
+brown rice or grain of choice,False,Unknown
+zucchini squash,False,Fruits and vegetables
+basil,False,Spices and sauces
+pineapple chunks,False,Unknown
+(thicker) slices ham,False,Meats
+roasted red pepper,False,Unknown
+balls mozzarella,False,Dairy products
+shredded parmesan,False,Dairy products
+black beans,False,Fruits and vegetables
+ketchup or BBQ sauce,False,Spices and sauces
+Worcestershire sauce,False,Spices and sauces
+ground cumin,False,Meats
+smoked paprika,False,Spices and sauces
+pinch salt + pepper,False,Unknown
+bread crumbs or oat flour,False,Unknown
+feta cheese,False,Meats
+Brussels sprouts,False,Fruits and vegetables
+red wine vinegar),False,Spices and sauces
+mustard),False,Spices and sauces
+lemon (juiced),False,Juices
+Dijon Mustard,False,Fats and oils
+garlic cloves (minced),False,Unknown
+medium yellow onion,False,Spices and sauces
+zucchini/yellow squash,False,Unknown
+medium carrots,False,"Pasta, grains, nuts, seeds"
+whole tomatoes,False,"Pasta, grains, nuts, seeds"
+vegetable stock,False,Fruits and vegetables
+bay leaves,False,Fruits and vegetables
+spinach or 2 frozen spinach cubes,False,Frozen goods
+(elbow / small shell) pasta,False,Unknown
+Parmesan,False,Dairy products
+chili oil,True,Fruits and vegetables
+butter softened,False,Dairy products
+0.75 cups flour,False,Unknown
+cream of tartar,False,Spices and sauces
+top with tomatoes,False,Unknown
+/basket cherry tomatoes,False,Unknown
+green onions chopped,False,Spices and sauces
+herbed goat chèvre,False,Unknown
+chuck steak de-boned and cubed,False,Unknown
+flour seasoned with salt & pepper,False,Unknown
+olive oil for frying,False,Unknown
+onions sliced,False,Meats
+sprigs fresh rosemary,False,Unknown
+sprigs fresh thyme,False,Unknown
+x 400g cup chopped tomatoes,False,Unknown
+beef stock,False,Fats and oils
+cracked pepper to taste,False,Unknown
+salt to taste,False,Spices and sauces
+roll ready-made puff pastry thawed / RECIPE,False,Unknown
+egg beaten,False,Meats
+Hard Boiled “Happy” (Pastured) Eggs,False,Unknown
+Avocados (or 1 Large),False,Unknown
+Gluten Free Mustard (Dijon is a great option for extra flavor),False,Unknown
+Minced Garlic (I LOVE Garlic!),False,Unknown
+Lime Juice,False,Juices
+Cilantro,False,"Pasta, grains, nuts, seeds"
+Paprika,True,Spices and sauces
+Chinese shaoxing wine,False,Beverages
+corn starch,False,"Pasta, grains, nuts, seeds"
+minced garlic,False,Meats
+minced or finely ginger paste,False,Unknown
+lemon thinly sliced,False,Meats
+chicken stock or broth,False,Spices and sauces
+sesame seeds to garnish,False,"Pasta, grains, nuts, seeds"
+thinly sliced green onions,False,Unknown
+Remaining lemon slices,False,Unknown
+heavy cream,False,Dairy products
+!! (try mixing with other white,False,Unknown
+shredded Parmigiano-Reggiano,False,Unknown
+skirt steak,False,Meats
+unsalted butter / oil,False,Unknown
+egg yolks,False,Dairy products
+raw honey,False,Meats
+coconut flour,False,"Pasta, grains, nuts, seeds"
+fresh lemon zest,False,Spices and sauces
+See yogurt whipped cream recipe,False,Unknown
+fresh berries of choice,False,Unknown
+distilled water,False,Spices and sauces
+castile soap,False,Spices and sauces
+essential oils (I used 6 lavender / 6 rosemary / 3 grapefruit),False,Unknown
+water last. Shake well.,False,Unknown
+red or yellow bell peppers,False,Unknown
+roasted cashews,False,"Pasta, grains, nuts, seeds"
+uncooked quinoa,False,"Pasta, grains, nuts, seeds"
+Pak choy,False,Fish
+ground meat,False,Meats
+tomato sauce,False,Spices and sauces
+chopped onions,False,Meats
+lots of Italian seasoning,False,Fats and oils
+dash of salt,False,Meats
+bay leaves (Lorbeerblätter),False,Unknown
+zucchini,False,Fruits and vegetables
+stewed whole tomatoes,False,Unknown
+eggplant,False,Fruits and vegetables
+feta,False,Dairy products
+thyme,False,Spices and sauces
+hot water,False,Beverages
+6 10 inches flour tortillas,False,Unknown
+chopped onion,False,Meats
+cooking oil,False,Fats and oils
+shredded cooked chicken,False,Meats
+canned black bean,False,Spices and sauces
+bottled salsa,False,Beverages
+shredded Mexicup blend cheese,False,Unknown
+snipped fresh cilantro or 2 tbsp oregano cooking oil for frying,False,Unknown
+shredded lettuce,False,Unknown
+Garnishes,False,Spices and sauces
+guacamole,False,Unknown
+sour cream,False,Dairy products
+cilantro,False,"Pasta, grains, nuts, seeds"
+chopped fresh basil,False,Unknown
+chopped fresh thyme,False,Unknown
+dried tarragon,False,Spices and sauces
+marinade / sauce,False,Spices and sauces
+"steaks (each ~1"" thick)",False,Unknown
+plus 1 tsp cornstarch,False,Unknown
+unsweetened cocoa powder,False,Fruits and vegetables
+whole or 2% milk,False,Unknown
+unsalted butter,False,Fats and oils
+chocolate chips milk,False,Beverages
+whipped cream for serving,False,Unknown
+med. eggplant,False,Fruits and vegetables
+zucchinis,False,Fruits and vegetables
+darker flour,False,"Pasta, grains, nuts, seeds"
+mixture onion,False,"Pasta, grains, nuts, seeds"
+bread or fries,False,Meats
+tzatsiki,False,Unknown
+grilled red peppers,False,Spices and sauces
+Oreo Cookie Crumbs (about 10 cookies,False,Unknown
+melted butter,False,Fats and oils
+8 oz package cream cheese,False,Unknown
+melted semi-sweet chocolate,False,Unknown
+whipped cream for garnish,False,Unknown
+fresh raspberries for garnish,False,Unknown
+all-purpose flour,False,Fats and oils
+large apples (if you can,False,Unknown
+dark rum,False,Meats
+(1 stick) unsalted butter,False,Fats and oils
+sweet potatoes,False,Fruits and vegetables
+fresh pepper,False,Spices and sauces
+spinach or chopped kale,False,Fats and oils
+crumbled feta cheese,False,"Pasta, grains, nuts, seeds"
+unsalted peanut butter,False,"Pasta, grains, nuts, seeds"
+gluten free rice flakes,False,Unknown
+scoop chocolate protein powder,False,Beverages
+servings raw angel hair pasta,False,Unknown
+chopped basil leaves,False,Unknown
+Parmesan cheese,False,Dairy products
+* garlic bread,False,Fats and oils
+* tossed salad,False,Fats and oils
+* sauteed veggies,False,Unknown
+large or two small garlic cloves,False,Unknown
+toasted pine nuts,False,"Pasta, grains, nuts, seeds"
+1-0.5 cups fresh cilantro,False,Unknown
+freshly grated Parmesan cheese,False,Unknown
+hummus,False,"Pasta, grains, nuts, seeds"
+Cilantro pesto (above),False,Unknown
+of an English cucumber,False,Unknown
+pepperoncini,False,Meats
+sun-dried tomatoes,False,Fruits and vegetables
+Extra-virgin olive oil,False,Unknown
+Pita chips,False,"Pasta, grains, nuts, seeds"
+almond meal,False,Beverages
+vanilla protein powder,False,Spices and sauces
+⁄2 tsp baking soda,False,Unknown
+⁄4 tsp salt,False,Unknown
+bananas,False,Fruits and vegetables
+egg whites,False,Dairy products
+coconut oil spray,False,"Pasta, grains, nuts, seeds"
+Greek yogurt/mayo,False,Unknown
+slices of (cheddar) cheese,False,Dairy products
+dash of pepper,False,Spices and sauces
+kg Spätzle,False,Unknown
+ml Sahne/Milch,False,Unknown
+g Emmentaler/Berg,False,Unknown
+Zwiebel(n),False,Unknown
+Salz und Pfeffer,False,Unknown
+Butter,False,Dairy products
+packed freshly shredded raw zucchini,False,Unknown
+freshly shredded Parmesan cheese,False,Unknown
+all purpose flour,False,Fats and oils
+dash of red chili flakes,False,Unknown
+(crumbled feta),False,Dairy products
+(balsamic vinegar),False,Spices and sauces
+Tbs. oat flour (or flour of choice),False,Unknown
+flax egg* OR 2 Tbs. of egg whites,False,Unknown
+. coconut butter or coconut oil,False,"Pasta, grains, nuts, seeds"
+Tbs. baking stevia or coconut sugar,False,Unknown
+. dark chocolate or carob chips,False,Unknown
+dash of cinnamon,False,Spices and sauces
+drop of vanilla extract,False,Spices and sauces
+small onion,False,"Pasta, grains, nuts, seeds"
+white wine,False,Beverages
+plain or flavored cream cheese,False,Unknown
+Pepper and salt,False,Dairy products
+roughly chopped sweet onion,False,Unknown
+chipotle peppers in adobo sauce,False,Spices and sauces
+crushed fire-roasted tomatoes,False,Unknown
+shredded rotisserie chicken,False,Meats
+(6-inch) tortillas,False,Unknown
+ripe avocados,False,Fruits and vegetables
+small red onion,False,Unknown
+crumbled cotija,False,Unknown
+lime,False,Fruits and vegetables
+,False,Fruits and vegetables
+stick Butter,False,Fats and oils
+whole Large (or 6 Medium) Yellow Onions,False,Unknown
+(generous) Dry White Wine,False,Beverages
+Low Sodium Chicken stock,False,Spices and sauces
+Beef stock,False,Fats and oils
+cloves Minced Garlic,False,Unknown
+Worcestershire Sauce,False,Spices and sauces
+Several Thick Slices Of French Bread Or Baguette,False,Unknown
+0.25 cup flour,False,Unknown
+0.25 tsp yeast,False,Unknown
+cream cheese,False,Dairy products
+stick butter,False,Fats and oils
++ 2 tbsp brown sugar,False,Unknown
+shrimp,False,Fish
+ginger,False,Spices and sauces
+zucchini (large),False,Fruits and vegetables
+sour cream / sahne / greek yoghurt,False,Unknown
+paprika mark,False,Spices and sauces
+pinch of garlic powder,False,Spices and sauces
+plum tomatoes,False,Fruits and vegetables
+finely diced white onions,False,Unknown
+chopped cilantro leaves,False,Fruits and vegetables
+freshly squeezed lime juice,False,Juices
+minced,False,Meats
+shrimp/chicken,False,Fats and oils
+baby spinach,False,"Pasta, grains, nuts, seeds"
+grapeseed oil,False,Fats and oils
+Scampi Blend,False,Dairy products
+noodles of choice,False,Meats
+tuna in water,False,Beverages
+small chicken breasts,False,Meats
+sun dried tomato,False,Fruits and vegetables
+slices mozzarella cheese,False,Meats
+Handful of spinach leaves,False,Unknown
+white wine vinegar or lemon juice,False,Juices
+EACH Italian mixed herbs and red pepper flakes,False,Unknown
+pineapple OR banana juice,False,Juices
+chili sauce,False,Spices and sauces
+white vinegar,False,Fish
+graham cracker crumbs,False,Unknown
+plus 1 tbsp sugar,False,Unknown
+8-ounce packages cream cheese,False,Unknown
+canned pumpkin,False,Spices and sauces
+allspice,False,Spices and sauces
+whipped cream,False,Dairy products
+melted coconut oil,False,"Pasta, grains, nuts, seeds"
+cacao powder,False,Spices and sauces
+. vanilla extract,False,Spices and sauces
+. himalayan pink salt,False,Unknown
+handful of goji berries,False,Unknown
+Oregano,True,Spices and sauces
+Thyme,False,Spices and sauces
+0.25 cups all purpose flour,False,Unknown
+0.25 tsp baking powder,False,Unknown
+poppy seeds,False,Spices and sauces
+lemon zest,False,Fruits and vegetables
+0.25 cups confectioners' sugar,False,Unknown
+granulated sugar (banana),False,Unknown
+(240ml) buttermilk*,False,Dairy products
+lemon zest*,False,Fruits and vegetables
+lemon juice (3 medium lemons)*,False,Juices
+blueberries,False,Fruits and vegetables
+(Cream cheese frosting recipe),False,Dairy products
+beef flank steak,False,Meats
+green bell pepper,False,Unknown
+Italian salad dressing Mix,False,Fats and oils
+(8 ounce) packages reduced-fat cream cheese,False,Unknown
+nonfat plain Greek yogurt,False,Unknown
+large egg yolks,False,Unknown
+strawberries or chopped pitted cherries (,False,Unknown
+head romaine lettuce,False,Unknown
+ball mozzarella,False,Dairy products
+cup of  chickpeas,False,Spices and sauces
+chicken/turkey slices,False,Spices and sauces
+salami slices,False,Meats
+red wine,False,Beverages
+Farina Mehl,False,Beverages
+or 4 chicken breasts,False,Meats
+clove garlic,False,Unknown
+some basil,False,Spices and sauces
+large potato,False,Spices and sauces
+(sour cream),False,Dairy products
+steak,False,Beverages
+cornstarch),False,"Pasta, grains, nuts, seeds"
+celery stalks,False,Fruits and vegetables
+shredded carrots,False,Unknown
+fresh ginger,False,Spices and sauces
+5 spice,False,Spices and sauces
+packed brown sugar,False,Unknown
+liquid aminos (or soy sauce),False,Spices and sauces
+whole chipotle pepper In Adobo Sauce,False,Spices and sauces
+lime juice,False,Juices
+Adobo Seasoning,False,Spices and sauces
+Cayenne pepper,False,Spices and sauces
+slices quality bread (ciabatta),False,Unknown
+cooked chicken breasts,False,Meats
+slice cheddar cheese,False,Spices and sauces
+slices cooked bacon,False,Unknown
+or rotisserie chicken,False,Meats
+frozen broccoli,False,Frozen goods
+frozen cauliflower,False,Frozen goods
+Swiss cheese,False,Meats
+ciabatta bread,False,Unknown
+tomato pesto,False,Fruits and vegetables
+roasted tomatoes,False,Fats and oils
+sundried tomatoes in oil,False,Unknown
+basil leaves,False,Fruits and vegetables
+olive oil to brush grill or panini press,False,Unknown
+flank or skirt steak,False,Unknown
+Shaoxing rice wine,False,Beverages
+light soy sauce,False,Spices and sauces
+oyster sauce,False,Spices and sauces
+butternut squash,False,"Pasta, grains, nuts, seeds"
+milled flaxseed (Leinsamen),False,Unknown
+buckwheat or other gluten-free flour,False,Unknown
+mixed herbs,False,"Pasta, grains, nuts, seeds"
+ball pizza dough,False,Unknown
+parmesan cheese,False,Dairy products
+balls mozzarella cheese,False,Dairy products
+fresh spinach,False,"Pasta, grains, nuts, seeds"
+sliced green onion,False,Fruits and vegetables
+. red pepper flakes,False,Spices and sauces
+Chicken Breast,False,Meats
+Pickle Juice,False,Juices
+Eggs,True,Dairy products
+Milk,False,Dairy products
+Flour,True,Dairy products
+Powdered Sugar,False,Dairy products
+Garlic Powder,True,Spices and sauces
+Celery salt,False,Spices and sauces
+Basil,False,Spices and sauces
+Peanut Oil for frying,False,Unknown
+buttered and toasted,False,Fruits and vegetables
+Pickle Slices!,False,Fruits and vegetables
+baby spinach),False,"Pasta, grains, nuts, seeds"
+dash of pepper and salt,False,Unknown
+large chicken breasts,False,Meats
+finely grated fresh Parmesan cheese,False,Unknown
+Cracked pepper,False,Spices and sauces
+Light spray of cooking oil,False,Unknown
+butter (or oil),False,Dairy products
+lemon juice -- juice of 1 lemon (adjust to your tastes),False,Juices
+water + 0.5 tsp chicken bouillon,False,Unknown
+milk (full fat/skim or reduced fat -- original recipe calls for thickened or heavy cream),False,Unknown
+fresh grated Parmesan cheese,False,Unknown
+cornstarch (cornflour) mixed with 1 tbsp of water,False,Unknown
+fresh parsley,False,Spices and sauces
+medium red onion,False,Spices and sauces
+minced jalapeños,False,Unknown
+black bean soup base or cream/yogurt,False,Unknown
+Tbsp fresh lime juice,False,Juices
+tsp chili powder,False,Spices and sauces
+tsp brown sugar,False,Unknown
+tsp cumin,False,Unknown
+tsp paprika,False,Spices and sauces
+tsp onion powder,False,Spices and sauces
+tsp garlic powder,False,Spices and sauces
+tsp salt,False,"Pasta, grains, nuts, seeds"
+tsp pepper,False,Fruits and vegetables
+pinch cayenne pepper,False,Unknown
+uncooked penne pasta,False,Unknown
+of an onion,False,Spices and sauces
+heaping Tbsp flour,False,Unknown
+large baking potatoes,False,Unknown
+grated Parmesan cheese,False,Unknown
+bacon strips,False,Fats and oils
+1-0.5 cups shredded cheddar cheese,False,Unknown
+1⁄2 cups GF rolled oats,False,Unknown
+pumpkin puree,False,Fruits and vegetables
+⁄4 cup unsweetened applesauce,False,Spices and sauces
+⁄4 cup milk,False,"Pasta, grains, nuts, seeds"
+⁄4 cup pure maple syrup,False,Unknown
+chicken breast,False,Meats
+large zucchini & 3 carrots peeled and cut into matchstick-size pieces,False,Unknown
++ tbsp tomatenmark),False,Unknown
+Italian Salad Dressing Mix,False,Fats and oils
+. ground pork,False,Meats
+. water,False,Beverages
+. ginger paste,False,Beverages
+. crushed red pepper flakes,False,Unknown
+. (12 c.) low-sodium chicken broth,False,Spices and sauces
+low-sodium soy sauce,False,Spices and sauces
+. rice vinegar,False,Spices and sauces
+1 12 oz. package No Yolks Extra Broad Noodles,False,Unknown
+packed baby spinach,False,Unknown
+Lime wedges,False,Unknown
+gulasch beef,False,Spices and sauces
+kidney beans,False,"Pasta, grains, nuts, seeds"
+taco seasoning,False,Spices and sauces
+recipe in front section,False,Unknown
+sour cream),False,Dairy products
+cheddar cheese,False,Meats
+pesto,False,Beverages
+penne,False,"Pasta, grains, nuts, seeds"
+Bruschetta Blend,False,Beverages
+mozzarella,False,Dairy products
+dried tomatoes,False,Spices and sauces
+roasted red bell peppers,False,Unknown
+sliced artichoke hearts),False,Unknown
+(1.5 lbs) cubed butternut squash,False,Unknown
+chopped pecans,False,Meats
+0.25 cups pomegranate arils,False,Unknown
+goat cheese or feta,False,Dairy products
+minced shallot,False,Meats
+dijon mustard,False,Fats and oils
+fresh thyme leaves,False,Unknown
+ground nutmeg,False,Meats
+(~3 medium) bananas,False,Unknown
+cloves,False,Spices and sauces
+pork tenderloin,False,Meats
+orange juice,False,Juices
+dried rosemary (or 1 sprig freshly chopped),False,Unknown
+. extra-virgin olive oil,False,Unknown
+. spicy (or sweet) Italian sausage,False,Spices and sauces
+stalks celery,False,Fruits and vegetables
+(15-oz.) cups Great Northern Beans,False,"Pasta, grains, nuts, seeds"
+(15-oz.) cup diced tomatoes,False,Unknown
+Swanson Chicken Broth,False,Spices and sauces
+sprigs rosemary,False,Spices and sauces
+ditalini pasta (or other small shape),False,Unknown
+Freshly grated Parmesan,False,Fruits and vegetables
+Freshly chopped parsley,False,Fats and oils
+garam masala,False,Spices and sauces
+dried dill,False,Fruits and vegetables
+* pita or flatbread,False,"Pasta, grains, nuts, seeds"
+* sliced tomato,False,Spices and sauces
+* sliced red onion,False,Spices and sauces
+* shreddedromaine lettuce,False,Unknown
+bone-in pork chops,False,Meats
+(extra sauce from chops),False,Spices and sauces
+(alt. veggie for Ariel),False,Unknown
+whole milk (grass-fed if possible),False,Unknown
+vanilla powder,False,Dairy products
+white short-grain rice (also called sushi rice),False,Unknown
+cream,False,Dairy products
+organic cane sugar,False,Spices and sauces
+frozen dark sweet cherries,False,Frozen goods
+chopped almonds (or to taste),False,Unknown
+diced yellow onion,False,Spices and sauces
+vodka,False,Dairy products
+penne pasta,False,Spices and sauces
+Grated Parmesan cheese,False,Unknown
+frozen bananas,False,Frozen goods
+raw cacao powder,False,Spices and sauces
+maple syrup (),False,Unknown
+rolled oats,False,"Pasta, grains, nuts, seeds"
+almond butter,False,"Pasta, grains, nuts, seeds"
+ground almonds,False,"Pasta, grains, nuts, seeds"
+a handful of strawberries or raspberries to serve,False,Unknown
+reduced sodium Swanson chicken broth (or vegetable),False,Spices and sauces
+fresh grated parmesan cheese if desired for topping (),False,Unknown
+swerve sweetener,False,Unknown
+shredded zucchini,False,Fruits and vegetables
+mashed banana,False,Fruits and vegetables
+unsweetened chocolate,False,Fruits and vegetables
+ground turkey/pork or Italian sausage),False,Spices and sauces
+white cannellini beans (x 2,False,Unknown
+vegetable/chicken stock,False,Spices and sauces
+cubes frozen spinach,False,Frozen goods
+(rice),False,"Pasta, grains, nuts, seeds"
+vegetable oil for frying,False,Fats and oils
+cup crushed tomatoes,False,Spices and sauces
+2 and 0.75 cups all-purpose flour (not packed!),False,Unknown
+1 and 0.5 cups unsweetened cocoa powder,False,Unknown
+1 and 0.5 tsp baking powder,False,Unknown
+1 and 0.25 tsp salt,False,Unknown
+large eggs + 2 large egg yolks,False,Unknown
+1 and 0.5 cups full-fat sour cream,False,Unknown
+whole milk,False,Dairy products
+vegetable oil (you may also sub in melted coconut oil),False,Unknown
+1 and 0.5 cups hot water,False,Unknown
+unsalted butter (4 sticks,False,Unknown
+4 and 0.5 cups confectioners' sugar,False,Unknown
+heavy cream (more if needed),False,Unknown
+salted caramel sauce,False,Spices and sauces
+1 and 0.25 cups salted caramel sauce (please see post for more on this),False,Spices and sauces
+Flaky salt,False,Meats
+bread crumbs,False,Meats
+olive oil divided,False,Unknown
+jar of marinara sauce,False,Spices and sauces
+garlic cloves minced,False,Unknown
++ crushed red pepper flakes adjust depending on how spicy you like it,False,Unknown
+small tomatoes diced,False,Spices and sauces
+grated parmesan cheese for garnish,False,Unknown
+scoop protein powder,False,Beverages
+peanut or almond butter,False,"Pasta, grains, nuts, seeds"
+banana,False,Fruits and vegetables
+chia/flax seeds,False,"Pasta, grains, nuts, seeds"
+green pepper,False,Spices and sauces
+pinch Mexicup chili powder,False,Spices and sauces
+diced peeled potatoes,False,Unknown
+slices bacon),False,Fats and oils
+Great Northern (or White Kidney) beans,False,Unknown
+quartered cherry tomatoes,False,Unknown
+ball fresh mozzarella,False,Dairy products
+fresh basil leaves,False,Unknown
+balsamic glaze,False,Spices and sauces
+dried red chilis,False,Fruits and vegetables
+freshly ginger paste,False,"Pasta, grains, nuts, seeds"
+chopped green onion,False,Unknown
+rice flour,False,"Pasta, grains, nuts, seeds"
+cornstarch/tapioca flour,False,Unknown
+eggs beaten,False,Unknown
+apple cider vinegar,True,Unknown
+coconut sugar,False,Beverages
+lasagna noodles,False,Spices and sauces
+ground meat),False,Meats
+jars marinara sauce,False,Spices and sauces
+ricotta cheese,False,Spices and sauces
+mozzarella cheese,False,Dairy products
+salad (I used a combination of arugula and baby spinach,False,Unknown
+red apple,False,Fruits and vegetables
+green apple,False,Fruits and vegetables
+dried cranberries,False,Fruits and vegetables
+apple juice,False,Juices
+apple cider vinegar (or white vinegar in a pinch),False,Unknown
+0.3 cups whole milk,False,Unknown
+beef tenderloin,False,Meats
+low sodium soy sauce,False,Spices and sauces
+red chili powder,False,Spices and sauces
+minced ginger,False,Meats
+cornstarch mixed with 2 tbsp water,False,Unknown
+Serve with rice,False,Spices and sauces
+mascarpone cheese or cream cheese,False,Unknown
+(Worcestershire sauce),False,Spices and sauces
+dash red pepper,False,Unknown
+(sautéed onions),False,Unknown
+(cheddar cheese),False,Meats
+(tomato slices),False,Fruits and vegetables
+rosemary,False,Spices and sauces
+(olives,False,Fruits and vegetables
+(garlic aioli),False,Spices and sauces
+(red onion slices),False,Meats
+GF tortilla(s) (chips),False,Unknown
+chile powder,False,Spices and sauces
+chopped plum tomato (~1),False,Unknown
+shredded romaine lettuce,False,Unknown
+shredded cheddar cheese blend,False,Dairy products
+salsa,False,Spices and sauces
+gnocchi (Alnavit),False,Unknown
+parmesan,False,Dairy products
+cream / yogurt,False,Spices and sauces
+strips smoked bacon,False,Unknown
+pinch of dried thyme or rosemary,False,Unknown
+brown rice or gluten-free pasta,False,Unknown
+unsalted cashews,False,Unknown
+nutritional yeast,False,Beverages
+wholegrain mustard,False,Fats and oils
+pinch of nutmeg,False,"Pasta, grains, nuts, seeds"
+cashews,False,"Pasta, grains, nuts, seeds"
+chickpeas or white beans,False,"Pasta, grains, nuts, seeds"
+handfuls of spinach,False,Unknown
+box refrigerated ready-to-bake pie crusts,False,Unknown
+. cornstarch,False,"Pasta, grains, nuts, seeds"
+packages cream cheese,False,Dairy products
+. Almond Extract,False,"Pasta, grains, nuts, seeds"
+cherry pie filling,False,Unknown
+Sliced almonds,False,"Pasta, grains, nuts, seeds"
+Sriracha or other hot sauce,False,Spices and sauces
+vinegar or rice wine vinegar,False,Unknown
+Sriracha or other hot sauce (more to taste),False,Spices and sauces
+wrappers,False,Fish
+Vegetable oil,True,Fats and oils
+extra large peaches,False,Unknown
+almond extract,False,"Pasta, grains, nuts, seeds"
+old-fashioned oats,False,Meats
+finely ground cornflakes,False,Unknown
+chopped romaine lettuce,False,Unknown
+Roma tomato,False,Spices and sauces
+canned corn kernels,False,"Pasta, grains, nuts, seeds"
+canned black beans,False,Spices and sauces
+shredded Monterey Jack cheese,False,Unknown
+shredded cheddar cheese,False,Spices and sauces
+Ranch dressing,False,Fats and oils
+tortilla strips,False,Meats
+large roasted peppers,False,Fruits and vegetables
+whole/crushed tomatoes,False,Spices and sauces
+cream/yogurt,False,"Pasta, grains, nuts, seeds"
+red pepper flake,False,Spices and sauces
+* croutons,False,Fats and oils
+* sliced tomatoes,False,Spices and sauces
+* fresh dill,False,Spices and sauces
+* crispy baked chickpeas,False,Unknown
+* nutritional yeast,False,Beverages
+slices bacon,False,Fats and oils
+apple,False,Fruits and vegetables
+pecup halves,False,Unknown
+crumbled goat cheese,False,"Pasta, grains, nuts, seeds"
+oil OR milk of choice,False,Meats
+1 and 0.5 tsp pure vanilla extract,False,Unknown
+agave or pure maple syrup or honey,False,Unknown
+tightly-packed,False,Unknown
+0.3 to 2/3 c chocolate chips,False,Unknown
+salted butter,False,"Pasta, grains, nuts, seeds"
+Oreo cookies,False,Meats
+(8 oz) packages of cream cheese,False,Unknown
+(14 oz) cup sweetened,False,Fruits and vegetables
+mini chocolate chips,False,Dairy products
+salt (-for topping),False,Unknown
+Wild caught shrimp deveined & butterflied (),False,Unknown
+All purpose flour,False,Fats and oils
+Egg,True,Dairy products
+ice water,False,Beverages
+lite soy sauce,False,Spices and sauces
+rice wine,False,Beverages
+Chopped green scallions,False,Fruits and vegetables
+uncooked grain,False,"Pasta, grains, nuts, seeds"
+pre-made pesto (green or red),False,Unknown
+red Spitzpaprika,False,Spices and sauces
+orange juice (2 oranges),False,Juices
+twigs thyme/dried,False,Spices and sauces
+halloumi,False,Unknown
+black olives),False,"Pasta, grains, nuts, seeds"
+(basmati) rice,False,Spices and sauces
+dashes/small packets saffron,False,Unknown
+chopped mint leaves,False,Unknown
+Kruezkümmel,False,Unknown
+Ras el Hanout,False,Fats and oils
+pomegranate seeds (defrosted),False,Unknown
+handful of Brunnenkresse/Blättersalat,False,Unknown
+small zucchini,False,Fruits and vegetables
+spinach,False,Fruits and vegetables
+uncooked grain of choice,False,Spices and sauces
+mini cucumber,False,Fruits and vegetables
+rote Spitzpaprika,False,Unknown
+Feta,False,Dairy products
+pine nuts,False,"Pasta, grains, nuts, seeds"
+Hummus,False,"Pasta, grains, nuts, seeds"
+.5 tbsp lime juice,False,Juices
+romaine lettuce,False,Unknown
+Jalapenos,False,Fruits and vegetables
+green onion),False,Spices and sauces
+block Halloumi),False,Unknown
+uncooked long-grain rice,False,Unknown
+x Paleo recipe for chocolate almond crust,False,Unknown
+packages Philadelphia cream cheese,False,Unknown
+sugar/maple syrup),False,Fruits and vegetables
+60% chocolate,False,Dairy products
+Fresh strawberries,False,Fruits and vegetables
+mascarpone,False,"Pasta, grains, nuts, seeds"
+almond flour,False,"Pasta, grains, nuts, seeds"
+a dash of salt,False,Unknown
+chocolate chips,False,Dairy products
+♦It's already that!,False,Unknown
+diced apple,False,Fats and oils
+♦ top with jam,False,Meats
+flocken,False,Fruits and vegetables
+Berries,False,Fruits and vegetables
+water + bouillon,False,Spices and sauces
+Sahne,False,Fats and oils
++ cup grated cheese (Parmesan),False,Unknown
+Kochschinken,False,Fats and oils
+or Räuchertofu,False,Unknown
+Pasta,False,"Pasta, grains, nuts, seeds"
+Salmon,False,Fish
+fenugreek (mustard) powder,False,Spices and sauces
+garlic paste,False,Spices and sauces
+turmeric,False,Spices and sauces
+curry powder,False,Spices and sauces
+(cashew) nut butter,False,"Pasta, grains, nuts, seeds"
+ghee,False,Fruits and vegetables
+garlic crushed/paste,False,Unknown
+ginger crushed/paste,False,Beverages
+garam  masala,False,Unknown
+diced tomatoes (weight does not include sauce,False,Spices and sauces
+of protein pieces,False,Unknown
+⬥chicken or,False,Meats
+⬥paneer or tofu,False,"Pasta, grains, nuts, seeds"
+( assorted diced vegetables ),False,Fats and oils
+Kashmiri Chili powder,False,Spices and sauces
+adjust spices,False,Unknown
+fresh corn chicken,False,Spices and sauces
+bunch of thyme,False,Unknown
+aceto balsamico,False,Spices and sauces
+frozen raspberries,False,Frozen goods
+or blueberries,False,Fruits and vegetables
+bag of baking powder,False,Spices and sauces
+(agave) syrup,False,Unknown
+vanilla sugar bag,False,Dairy products
+red chilis,False,Fruits and vegetables
+almonds,False,Fruits and vegetables
++ dried chiliflocken,False,Meats
+floury potatoes,False,Meats
+leeks,False,Fruits and vegetables
+vegetable bouillon,False,Fats and oils
+vegetable broth/fond,False,Spices and sauces
+green lentils,False,Spices and sauces
+med. beetroot,False,Unknown
+mustard seeds,False,Fruits and vegetables
+fenugreek seeds ( or more mustard seeds),False,Unknown
+zest of 1 lemon,False,Unknown
+(light brown) sugar,False,Unknown
+( some powedered sugar ),False,"Pasta, grains, nuts, seeds"
+flour*,False,Dairy products
+.f. bread is 1 cup cassava & 1 cup buckwheat.,False,Unknown
+ripe bananas,False,Fats and oils
+stick of butter,False,Fats and oils
+roma tomato,False,Spices and sauces
+Indian curry paste,False,Fruits and vegetables
+tomatomark,False,Spices and sauces
+small white radish,False,"Pasta, grains, nuts, seeds"
+small cucumber,False,Fruits and vegetables
+Paneer or cheese,False,"Pasta, grains, nuts, seeds"
+basmati rice,False,Spices and sauces
+potato/rice noodles,False,"Pasta, grains, nuts, seeds"
+napa cabbage,False,Fruits and vegetables
+oyster sauce (omit if vegetarian),False,Spices and sauces
+Sichuan peppercorns,False,Unknown
+Shaoxing wine,False,Beverages
+Sriacha,False,"Pasta, grains, nuts, seeds"
+fillets salmon,False,Fats and oils
+sriracha,False,"Pasta, grains, nuts, seeds"
+Sichuan pickled mustard greens (Sui Mi Ya Ca),False,Unknown
+dried chili peppers,False,Fruits and vegetables
+whole Szechuan peppercorn,False,Unknown
+large zucchini,False,Fruits and vegetables
+Sesame seeds,True,"Pasta, grains, nuts, seeds"
+fillets (400 g) white fish,False,Unknown
+shaoxing wine,False,Beverages
+bell pepper,False,Spices and sauces
+small yellow onion,False,Unknown
+pinches of cornstarch,False,Unknown
+potato,False,Fruits and vegetables
+cloves of garlic,False,Unknown
+cayenne powder,False,Spices and sauces
+ground,False,Meats
+whole dried red Sichuan chilies,False,Fruits and vegetables
+Sichuan chili flakes,False,Unknown
+Broccoli,False,Fruits and vegetables
+pre-cooked beets,False,Meats
+Chinese vinegar,False,Fruits and vegetables
+large tomatoes,False,Spices and sauces
+scallion,False,Fish
+yellow squashes,False,Fruits and vegetables
+of crushed tomatoes,False,Spices and sauces
+chopped basil,False,Meats
+fresh thyme,False,Spices and sauces
+medium yellow potatoes,False,Unknown
+uncooked green lentils,False,Fruits and vegetables
+vegetable bouillon cube,False,Fats and oils
+bunch asparagus / green beans,False,Unknown
+coarse seeded mustard,False,Unknown
+handful minced fresh dill,False,Unknown
+coriander seeds,False,Spices and sauces
+dried fenugreek leaves,False,Spices and sauces
+dried red chilies,False,Fruits and vegetables
+fennel seeds,False,Spices and sauces
+onions,False,Fruits and vegetables
+cashew nuts / 3 tbsp cream,False,Unknown
+Spitzpaprika,False,Spices and sauces
+paneer,False,Fruits and vegetables
+ginger garlic paste,False,Beverages
+* roti,False,Fruits and vegetables
+* butter naan,False,"Pasta, grains, nuts, seeds"
+* paratha,False,Spices and sauces
+* jeera rice,False,Unknown
+small bay leaf,False,Spices and sauces
+garam masala powder,False,Spices and sauces
+small red chilli,False,Unknown
+cumin seeds,False,Spices and sauces
+green chili chopped,False,Fruits and vegetables
+masoor dal (brown lentils),False,Unknown
+coriander powder,False,Spices and sauces
+turmeric powder,False,Spices and sauces
+chopped cilantro,False,Meats
+lemon wedges (to serve),False,Spices and sauces
+roti,False,Fruits and vegetables
+paratha,False,Spices and sauces
+large leeks,False,"Pasta, grains, nuts, seeds"
+grapeseed-/Rapsöl,False,Fats and oils
+* Pell Kartoffeln,False,Unknown
+* Knödel,False,Fruits and vegetables
+tomato paste/sauce,False,Spices and sauces
+dried chili flakes,False,Fruits and vegetables
+slices spicy pepperoni / salami,False,Unknown
+• chili oil,False,Fruits and vegetables
+• fresh basil,False,Fruits and vegetables
+medium baking potato,False,Unknown
+• butter,False,Dairy products
+• pepper,False,Fruits and vegetables
+• shredded Cheddar cheese,False,Spices and sauces
+• cottage cheese,False,Dairy products
+• sliced green onions,False,Fruits and vegetables
+(or Diavolo-style),False,Meats
+slices uncooked bacon,False,Unknown
+slices salami,False,Meats
+cooked burger,False,Fats and oils
+olives,False,Fruits and vegetables
+quinoa,False,"Pasta, grains, nuts, seeds"
+(chicken) bouillon,False,Meats
+0 25 c thinly sliced basil,False,Unknown
+chicken stock,False,Spices and sauces
+ginger-garlic paste,False,Beverages
+boneless (ribeye) steaks (about 3 lb),False,Unknown
+. pepper,False,Fruits and vegetables
+. dried oregano,False,Spices and sauces
+. dried ground sage,False,Fruits and vegetables
+. minced fresh thyme,False,Unknown
+low-sodium beef stock,False,Fruits and vegetables
+. Worcestershire sauce,False,Spices and sauces
+hoagie rolls,False,Unknown
+slices provolone,False,Dairy products
+medium,False,"Pasta, grains, nuts, seeds"
+sunflower oil,False,Fats and oils
+x 125g,False,Unknown
+lemon wedges to serve,False,Spices and sauces
+(240 ml) milk,False,Unknown
+melted butter or vegetable oil,False,Fats and oils
+Assorting toppings such as maple syrup,False,Unknown
+head of garlic,False,Unknown
+large potatoes in small cubes,False,Unknown
+white/yellow onion,False,Unknown
+gloves garlic,False,Unknown
+dried rosemary,False,Spices and sauces
+? mustard or spicier,False,Spices and sauces
+. lime juice,False,Juices
+. brown sugar,False,Spices and sauces
+. dark rum,False,Meats
+Old-fashioned,False,Meats
+? Try with Earl Grey tea instead of just water,False,Unknown
+x sweet tart crust,False,Unknown
+small strawberries,False,Fruits and vegetables
+redcurrant jelly,False,Unknown
+vanilla pod,False,Dairy products
+large free-range egg yolks,False,Unknown
+golden caster sugar,False,Spices and sauces
+plain flour,False,"Pasta, grains, nuts, seeds"
+Philadelphia cream cheese,False,Unknown
+ginger powder (or cinnamon),False,Unknown
+• caramel (for pumpkin side),False,Unknown
+• whipped cream OR Greek yogurt,False,Unknown
+granulated sugar*,False,"Pasta, grains, nuts, seeds"
++ 2 tbsp (135g) cake flour (spoon & leveled),False,Unknown
+large egg whites,False,"Pasta, grains, nuts, seeds"
+1 and 0.5 tsp cream of tartar,False,Unknown
+confectioners’ sugar for dusting,False,Unknown
+zest of a lemon,False,Unknown
+semi-sweet chocolate (chips),False,Unknown
+(chicken) broth,False,Meats
+mint leaves ((fresh)),False,Unknown
+lime ((cut into small pieces)),False,Unknown
+sake,False,Beverages
+Ice,False,"Pasta, grains, nuts, seeds"
+club soda,False,Beverages
+sprig mint,False,Fish

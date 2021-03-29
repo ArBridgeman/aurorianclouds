@@ -60,7 +60,9 @@ def generate_parser():
     grocery_list_parser.add_argument("--staple_ingredients_file", type=str,
                                      default="staple_ingredients.yml")
     grocery_list_parser.add_argument("--no_upload", action="store_true",
-                                     help="Deactivate Todoist upload for this run")
+                                     help="Deactivate Todoist upload for this run.")
+    grocery_list_parser.add_argument("--interactive_grouping", action="store_true",
+                                     help="Will ask for user input for uncertain food groups.")
     return parser
 
 

@@ -7,7 +7,7 @@ import yaml
 from pint import UnitRegistry
 from quantulum3 import parser
 
-from utils_groceries import IngredientsHelper
+from utils_groceries import IngredientsHelper, relevant_macro_groups
 from utils_todoist import TodoistHelper
 
 # from IPython import embed
@@ -180,6 +180,25 @@ def get_food_categories(grocery_list, config):
     grocery_list = pd.concat([grocery_list,
                               grocery_list_matched])
 
+    if config.interactive_grouping:
+        print("Will query for user input to improve food grouping of selected recipes!")
+        for _, item in grocery_list.iterrows():
+            if item.group == "Unknown":
+                print("\nGroup unknown for ingredient: {:s}".format(item.ingredient))
+                print("Please select the appropriate group: ")
+                for i_group, group in enumerate(relevant_macro_groups):
+                    print("{}: {:d}".format(group, i_group))
+                while True:
+                    try:
+                        user_input = input("Please select: (0 - {:d}) >> ".format(len(relevant_macro_groups) - 1))
+                        group_update = relevant_macro_groups[int(user_input)]
+                        grocery_list.loc[grocery_list.ingredient == item.ingredient, "group"] = group_update
+                        print("Updated to {}".format(group_update))
+                        break
+                    except Exception as e:
+                        print("Error while updating group, please check input and retry!")
+                        print(e)
+        print("All uncertain groups have been updated!")
     return grocery_list
 
 

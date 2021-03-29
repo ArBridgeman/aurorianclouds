@@ -35,9 +35,9 @@ macro_mapping = {
     "Restaurant Foods": "Prepared"
 }
 
-relevant_macro_groups = ["Meats", "Fruits and vegetables", "Pasta_grains_nuts_seeds",
-                         "Spices and sauces", "Beverages", "Fish", "Dairy products",
-                         "Fats and oils", "Frozen goods"]
+relevant_macro_groups = sorted(["Meats", "Fruits and vegetables", "Pasta_grains_nuts_seeds",
+                                "Spices and sauces", "Beverages", "Fish", "Dairy products",
+                                "Fats and oils", "Frozen goods", "Juices", "Other"])
 
 not_mappable_group = "Unknown"
 

@@ -150,27 +150,32 @@ def aggregate_like_ingredient(grocery_list):
 def get_food_categories(grocery_list, config):
     master_file = None
     try:
-        master_file = pd.read_csv(config.master_list_file)
+        master_file = pd.read_csv(config.master_list_file, header=0)
     except Exception as e:
         print("Error while trying to read master ingredient list!")
         print(e)
 
-    grocery_list = pd.merge(grocery_list, master_file[["ingredient", "group"]],
-                            on="ingredient", how="left")
+    grocery_list_matched = None
+    if master_file is not None:
+        grocery_list = pd.merge(grocery_list.drop(columns=["group"]),
+                                master_file[["ingredient", "group"]],
+                                on="ingredient", how="left")
 
-    unmatched_mask = grocery_list.group.isnull() | grocery_list.group == "Unknown"
+        unmatched_mask = (grocery_list.group.isnull() |
+                          pd.isna(grocery_list.group) |
+                          (grocery_list.group == "Unknown"))
 
-    print("There are {:d} unmatched grocery ingredients after using master list!".format(unmatched_mask.sum()))
+        print("There are {:d} unmatched grocery ingredients after using master list!".format(unmatched_mask.sum()))
 
-    grocery_list_unmatched = grocery_list[unmatched_mask]
-    grocery_list_matched = grocery_list[~unmatched_mask]
+        grocery_list_matched = grocery_list[~unmatched_mask]
+        grocery_list = grocery_list[unmatched_mask]
 
     # try to estimate missing or unknown groups
     ingredient_helper = IngredientsHelper(config.food_items_file)
-    grocery_list_unmatched["group"] = grocery_list_unmatched.ingredient.apply(ingredient_helper.get_food_group)
+    grocery_list["group"] = grocery_list.ingredient.apply(ingredient_helper.get_food_group)
 
-    grocery_list = pd.concat([grocery_list_matched,
-                              grocery_list_unmatched])
+    grocery_list = pd.concat([grocery_list,
+                              grocery_list_matched])
 
     return grocery_list
 

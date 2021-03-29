@@ -66,6 +66,7 @@ def generate_master_list(config, recipes, only_rated=True):
     # quantities are not immediately of interest for the ingredient master list
     # grocery_list = aggregate_like_ingredient(grocery_list)
     # de-duplicate on ingredient
+    # TODO: fuzzy logic here would be better, if two ingredients are 99% similar, probably the same ingredient...
     grocery_list = grocery_list.drop_duplicates(["ingredient"])
 
     # get all food categories using USDA data

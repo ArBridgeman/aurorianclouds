@@ -246,5 +246,6 @@ def generate_grocery_list(config, recipes, verbose=False):
 
     if not config.no_upload:
         print("Uploading grocery list to todoist...")
-        upload_groceries_to_todoist(grocery_list, clean=True)
+        upload_groceries_to_todoist(grocery_list,
+                                    clean=config.clean_todoist)
         print("Upload done.")

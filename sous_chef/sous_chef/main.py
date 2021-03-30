@@ -63,6 +63,8 @@ def generate_parser():
                                      help="Deactivate Todoist upload for this run.")
     grocery_list_parser.add_argument("--interactive_grouping", action="store_true",
                                      help="Will ask for user input for uncertain food groups.")
+    grocery_list_parser.add_argument("--clean_todoist", action="store_true",
+                                     help="Will clean previously existing items/tasks in Groceries project.")
     return parser
 
 

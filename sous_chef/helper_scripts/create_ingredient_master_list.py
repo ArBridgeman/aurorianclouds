@@ -4,21 +4,18 @@
 # Helper script to create master ingredient list for selected recipes (e.g. only rated ones).
 #
 #
-import sys
 import argparse
 from pathlib import Path
 
 import pandas as pd
 
 # from create_menu import create_menu
-from generate_grocery_list import (
-    generate_grocery_list,
+from grocery_list.generate_grocery_list import (
     retrieve_staple_ingredients,
     separate_ingredients_for_grocery_list,
-    aggregate_like_ingredient,
     get_food_categories,
 )
-from read_recipes import read_calendar, read_recipes
+from read_recipes import read_recipes
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
 

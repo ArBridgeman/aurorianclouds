@@ -5,7 +5,6 @@ from collections import defaultdict, OrderedDict
 from datetime import date
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import yaml
 
@@ -17,7 +16,7 @@ from filter_recipes import (
     skip_protein_filter,
     create_tags_or_filter,
 )
-from send_email import EmailSender
+from messaging.send_email import EmailSender
 
 
 def retrieve_template(filepath):

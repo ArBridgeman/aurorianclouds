@@ -7,8 +7,8 @@ import yaml
 from pint import UnitRegistry
 from quantulum3 import parser
 
-from utils_groceries import IngredientsHelper, relevant_macro_groups
-from utils_todoist import TodoistHelper
+from .utils_groceries import IngredientsHelper, relevant_macro_groups
+from messaging.utils_todoist import TodoistHelper
 
 # from IPython import embed
 

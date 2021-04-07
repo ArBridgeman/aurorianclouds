@@ -9,7 +9,7 @@ import argparse
 from pathlib import Path
 
 from create_menu import create_menu
-from generate_grocery_list import generate_grocery_list
+from grocery_list.generate_grocery_list import generate_grocery_list
 from read_recipes import read_calendar, read_recipes
 
 ABS_FILE_PATH = Path(__file__).absolute().parent

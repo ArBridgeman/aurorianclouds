@@ -11,7 +11,7 @@ class SyncTodoist:
     connection: Any = field(init=False)
 
     def __post_init__(self):
-        with open("token.todoist", "r") as f:
+        with open("todoist_token.txt", "r") as f:
             token = f.read().strip()
         self.connection = todoist.TodoistAPI(token)
         self.connection.sync()

@@ -32,8 +32,12 @@ def generate_parser():
                         default="recipes*.json")
     parser.add_argument("--calendar_file", type=str,
                         default="calendar.json")
+    parser.add_argument("--master_list_file", type=Path,
+                        default=Path(ABS_FILE_PATH, "../nutrition_data/master_ingredient_list.csv"))
     parser.add_argument("--no_mail", action="store_true",
                         help="Do not send menu by mail, only save it locally.")
+    parser.add_argument("--food_items_file", type=Path,
+                        default=Path(ABS_FILE_PATH, "../nutrition_data/food_items.feather"))
 
     menu_parser = sub_parser.add_parser('menu')
     menu_parser.set_defaults(which='menu')
@@ -55,6 +59,12 @@ def generate_parser():
                                      default=Path(ABS_FILE_PATH, "../grocery_list"))
     grocery_list_parser.add_argument("--staple_ingredients_file", type=str,
                                      default="staple_ingredients.yml")
+    grocery_list_parser.add_argument("--no_upload", action="store_true",
+                                     help="Deactivate Todoist upload for this run.")
+    grocery_list_parser.add_argument("--interactive_grouping", action="store_true",
+                                     help="Will ask for user input for uncertain food groups.")
+    grocery_list_parser.add_argument("--clean_todoist", action="store_true",
+                                     help="Will clean previously existing items/tasks in Groceries project.")
     return parser
 
 

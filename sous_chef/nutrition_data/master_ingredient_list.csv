@@ -1,0 +1,314 @@
+ingredient,is_staple,group
+olive oil,True,Fats and oils
+lemon juice,True,Juices
+cumin powder,False,Spices and sauces
+cinnamon powder,True,Spices and sauces
+cayenne pepper,True,Spices and sauces
+onion,True,Fruits and vegetables
+cucumber,False,Fruits and vegetables
+dill,True,Spices and sauces
+pita,False,Prepared
+tomato,False,Fruits and vegetables
+salmon,False,Fish
+chili powder,True,Spices and sauces
+garlic powder,True,Spices and sauces
+milk,True,Dairy products
+flour,True,Baking
+egg,True,Dairy products
+agave,False,Baking
+vanilla extract,True,Baking
+chia seeds,False,Nuts_seeds_beans
+cornstarch,True,Baking
+sugar,True,Baking
+ketchup,False,Spices and sauces
+vegetable oil,True,Fats and oils
+ginger powder,True,Spices and sauces
+rice,False,Pasta_grains
+pancetta,False,Meats
+tomato paste,True,Spices and sauces
+white wine,False,Beverages
+cake flour,False,Baking
+powdered sugar,False,Baking
+berries,False,Fruits and vegetables
+maple syrup,False,Baking
+walnuts,False,Nuts_seeds_beans
+lemon,False,Fruits and vegetables
+garlic clove,True,Fruits and vegetables
+tube-shaped pasta,False,Spices and sauces
+carrots,False,Fruits and vegetables
+butter,True,Dairy products
+red wine vinegar,True,Spices and sauces
+onion powder,True,Spices and sauces
+dried basil,True,Spices and sauces
+brown sugar,True,Baking
+dried oregano,True,Spices and sauces
+dried thyme,True,Spices and sauces
+balsamic vinegar,True,Spices and sauces
+white beans,False,Canned
+brown rice,False,Pasta_grains_nuts_seeds
+Schwarzkohl,False,Fruits and vegetables
+chickpeas,False,Canned
+green onion,False,Fruits and vegetables
+stock,False,Canned
+soy sauce,True,Spices and sauces
+orange zest,False,Fruits and vegetables
+white pepper,True,Spices and sauces
+buckwheat flour,False,Baking
+chickpea flour,False,Baking
+rotini pasta,False,Pasta_grains
+black olives,False,Canned
+red onion,False,Spices and sauces
+cherry tomatoes,False,Fruits and vegetables
+psyllium husk powder,False,Baking
+sesame seed,True,Nuts_seeds_beans
+potato,False,Fruits and vegetables
+bacon,False,Meats
+grape tomatoes,False,Fruits and vegetables
+feta,False,Dairy products
+artichokes,False,Fruits and vegetables
+olives,False,Canned
+oil,True,Fats and oils
+rice vinegar,True,Spices and sauces
+ginger paste,True,Canned
+Dijon mustard,True,Spices and sauces
+chicken tenderloins,False,Meats
+crushed tomatoes,False,Canned
+sweet onion,False,Fruits and vegetables
+yogurt,True,Dairy products
+mayonnaise,True,Fats and oils
+buttermilk,True,Dairy products
+breadcrumbs,False,Baking
+mustard,True,Spices and sauces
+yeast,False,Baking
+baking powder,True,Baking
+baking soda,True,Baking
+salt,True,Spices and sauces
+Greek yogurt,True,Dairy products
+coconut oil,False,Fats and oils
+red wine,False,Beverages
+red pepper flakes,True,Spices and sauces
+lentils,True,Nuts_seeds_beans
+bay leaf,True,Spices and sauces
+marinara sauce,False,Canned
+Chipotle powder,False,Spices and sauces
+BBQ sauce,True,Spices and sauces
+pizza sauce,False,Spices and sauces
+avocado,False,Fruits and vegetables
+peanut butter,True,Canned
+Hershey’s Kisses,False,Baking
+spicy tomato paste,False,Spices and sauces
+butter beans,False,Canned
+fresh parsley,False,Fruits and vegetables
+pita chips,False,Prepared
+paprika powder,True,Spices and sauces
+frozen green beans,False,Frozen goods
+chili paste,False,Spices and sauces
+nutmeg,True,Spices and sauces
+molasses,False,Baking
+red chili flakes,False,Fruits and vegetables
+sweet potato,False,Fruits and vegetables
+bell pepper,False,Fruits and vegetables
+vinegar,True,Spices and sauces
+roma tomatoes,False,Fruits and vegetables
+panko breadcrumbs,False,Spices and sauces
+parmesan,True,Dairy products
+buckwheat,False,Pasta_grains
+pineapple chunks,False,Canned
+roasted red bell peppers,True,Canned
+black beans,False,Canned
+Worcestershire sauce,True,Spices and sauces
+frozen brussels sprouts,False,Frozen goods
+chili oil,True,Fats and oils
+cream of tartar,False,Baking
+puff pastry,False,Prepared
+heavy cream,False,Dairy products
+honey,False,Baking
+coconut flour,False,Baking
+castile soap,True,Cleaning
+essential oils,False,Cleaning
+quinoa,False,Pasta_grains
+pak choy,False,Fruits and vegetables
+tomato sauce,False,Spices and sauces
+zucchini,False,Fruits and vegetables
+whole tomatoes,False,Canned
+eggplant,False,Fruits and vegetables
+tortilla,False,Prepared
+cooking oil,False,Fats and oils
+lettuce,False,Fruits and vegetables
+guacamole,False,Unknown
+dried tarragon,False,Spices and sauces
+cocoa powder,True,Baking
+tzatsiki,False,Dairy products
+rice flakes,False,Pasta_grains
+angel hair pasta,False,Pasta_grains
+pine nuts,False,Nuts_seeds_beans
+hummus,False,Prepared
+peperocini,False,Canned
+sun-dried tomatoes,False,Canned
+vanilla protein powder,False,Spices and sauces
+cheddar cheese,True,Dairy products
+spätzle,False,Pasta_grains
+Emmentaler,False,Dairy products
+cream cheese,False,Dairy products
+chipotle peppers in adobo sauce,False,Spices and sauces
+crushed fire-roasted tomatoes,False,Canned
+rotisserie chicken,False,Meats
+cotija,False,Dairy products
+lime,False,Fruits and vegetables
+baguette,False,Prepared
+shrimp,False,Fish
+ginger,False,Fruits and vegetables
+sahne,False,Dairy products
+grapeseed oil,False,Fats and oils
+Scampi Blend,False,Spices and sauces
+noodles,False,Pasta_grains
+canned tuna,False,Canned
+mozzarella,False,Dairy products
+Italian seasoning,True,Spices and sauces
+pineapple juice,False,Juices
+chili sauce,True,Spices and sauces
+white vinegar,True,Spices and sauces
+graham cracker crumbs,False,Prepared
+allspice,False,Spices and sauces
+whipped cream,False,Dairy products
+cacao powder,True,Baking
+poppy seeds,False,Nuts_seeds_beans
+lemon zest,False,Fruits and vegetables
+blueberries,False,Fruits and vegetables
+Italian salad dressing Mix,True,Spices and sauces
+strawberries,False,Fruits and vegetables
+chicken,False,Meats
+Farina Mehl,False,Baking
+steak,False,Meats
+5 spice,True,Spices and sauces
+Adobo Seasoning,False,Spices and sauces
+ciabatta,False,Prepared
+frozen broccoli,False,Frozen goods
+frozen cauliflower,False,Frozen goods
+Swiss cheese,False,Dairy products
+tomato pesto,False,Spices and sauces
+fresh basil,False,Fruits and vegetables
+oyster sauce,True,Spices and sauces
+butternut squash,False,Fruits and vegetables
+pickle,False,Canned
+jalapeños,False,Canned
+pepper,True,Spices and sauces
+pumpkin puree,False,Canned
+chicken breast,False,Meats
+pork,False,Meats
+crushed red pepper flakes,False,Spices and sauces
+beef,False,Meats
+kidney beans,False,Canned
+taco seasoning,False,Spices and sauces
+sour cream,False,Dairy products
+pesto,False,Spices and sauces
+penne,False,Pasta_grains_nuts_seeds
+Bruschetta Blend,False,Spices and sauces
+dried tomatoes,False,Spices and sauces
+artichoke hearts,False,Canned
+shallot,False,Fruits and vegetables
+pork tenderloin,False,Meats
+orange juice,True,Juices
+Italian sausage,False,Meats
+celery,False,Fruits and vegetables
+pasta,False,Pasta_grains
+flatbread,False,Prepared
+romaine lettuce,False,Fruits and vegetables
+pork chop,False,Meats
+sushi rice,False,Pasta_grains
+cream,False,Dairy products
+frozen cherries,False,Frozen goods
+vodka,True,Beverages
+almond butter,False,Canned
+ground almonds,False,Baking
+cannellini beans,False,Canned
+frozen spinach,False,Frozen goods
+banana,False,Fruits and vegetables
+beans,False,Canned
+dried red chilis,True,Spices and sauces
+rice flour,False,Baking
+tapioca flour,False,Baking
+apple cider vinegar,True,Spices and sauces
+coconut sugar,False,Baking
+lasagna noodles,False,Pasta_grains
+marinara sauce,False,Canned
+ricotta cheese,False,Dairy products
+apple juice,False,Juices
+beef tenderloin,False,Meats
+red chili powder,False,Spices and sauces
+rosemary,False,Spices and sauces
+tortilla chips,False,Prepared
+salsa,False,Canned
+gnocchi,False,Pasta_grains
+cashews,False,Nuts_seeds_beans
+almond extract,False,Baking
+peach,False,Fruits and vegetables
+Ranch dressing,False,Spices and sauces
+croutons,False,Prepared
+nutritional yeast,True,Spices and sauces
+apple,False,Fruits and vegetables
+goat cheese,False,Dairy products
+chocolate chips,False,Baking
+Kruezkümmel,False,Spices and sauces
+Ras el Hanout,True,Spices and sauces
+pomegranate seeds,False,Fruits and vegetables
+spinach,False,Fruits and vegetables
+halloumi,False,Dairy products
+chocolate,False,Baking
+mascarpone,False,Dairy products
+almond flour,False,Baking
+flocken,False,Pasta_grains
+Schinken,False,Meats
+tofu,False,Dairy products
+fenugreek powder,False,Spices and sauces
+garlic paste,False,Spices and sauces
+curry powder,False,Spices and sauces
+garam  masala,True,Spices and sauces
+Kashmiri Chili powder,False,Spices and sauces
+frozen raspberries,False,Frozen goods
+red chilis,False,Fruits and vegetables
+almonds,False,Nuts_seeds_beans
+green lentils,False,Nuts_seeds_beans
+mustard seeds,True,Spices and sauces
+curry paste,False,Spices and sauces
+paneer,False,Dairy products
+basmati rice,False,Pasta_grains
+rice noodles,False,Pasta_grains
+napa cabbage,False,Fruits and vegetables
+Shaoxing wine,False,Spices and sauces
+Sriracha,True,Spices and sauces
+dried chili peppers,True,Spices and sauces
+Szechuan peppercorn,True,Spices and sauces
+white fish,False,Fish
+pre-cooked beets,False,Fruits and vegetables
+Chinese vinegar,False,Spices and sauces
+scallion,False,Fruits and vegetables
+squash,False,Fruits and vegetables
+fresh dill,False,Fruits and vegetables
+coriander seeds,False,Spices and sauces
+dried fenugreek leaves,False,Spices and sauces
+fennel seeds,False,Spices and sauces
+Spitzpaprika,False,Fruits and vegetables
+cumin seeds,False,Spices and sauces
+coriander powder,False,Spices and sauces
+turmeric powder,False,Spices and sauces
+leeks,False,Fruits and vegetables
+Knödel,False,Prepared
+dried chili flakes,True,Spices and sauces
+salami,True,Meats
+pepperoni,False,Meats
+bouillon,True,Spices and sauces
+dried ground sage,False,Spices and sauces
+hoagie rolls,False,Prepared
+provolone,False,Dairy products
+sunflower oil,False,Fats and oils
+head of garlic,False,Fruits and vegetables
+dried rosemary,True,Spices and sauces
+lime juice,True,Juices
+dark rum,False,Beverages
+redcurrant jelly,False,Canned
+vanilla pod,False,Baking
+confectioners’ sugar,False,Baking
+broth,False,Canned
+sake,False,Beverages
+club soda,False,Beverages

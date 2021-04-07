@@ -3,7 +3,9 @@
 
 ## Manual configuration
 The paths and user information come from the argparser. The default settings 
-are below.
+are below. Beware that optional parameters for the sections 'menu' or 'grocery_list'
+have to be specified on the command line after the section, while general
+optional parameters are specified before.
 
 ### Menu cron job
 A cron job creates the menu every Wednesday at noon. It is sent in a json file
@@ -11,7 +13,7 @@ via email to the configured recipients.
 
 ### Grocery list
 Using the menu json, a grocery list is manually created.
-**_TODO_** Add detals.  
+**_TODO_** Add detals.
 
 ### Weekly template
 A yml file outlining the weekly food plan is in menu_template. For each desired
@@ -54,7 +56,7 @@ Used for sending emails:
 * https://developers.google.com/gmail/api/reference/rest/v1/users.messages/send
 
 #### Todoist
-Create a `token.todoist` file in the sub-directory sous_chef. Copy in your
+Create a `todoist_token.txt` file in the sub-directory sous_chef. Copy in your
 Todoist API token, which is found in the web app at `Settings -> Integrations -> API token`.
 
 Used for setting up tasks:

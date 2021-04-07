@@ -9,8 +9,14 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from filter_recipes import create_previously_tried_filter, create_protein_filter, \
-    create_time_filter, has_recipe_category_or_tag, skip_protein_filter, create_tags_or_filter
+from filter_recipes import (
+    create_previously_tried_filter,
+    create_protein_filter,
+    create_time_filter,
+    has_recipe_category_or_tag,
+    skip_protein_filter,
+    create_tags_or_filter,
+)
 from send_email import EmailSender
 
 
@@ -34,9 +40,10 @@ def select_by_near_cuisine(recipes, cuisine_select):
     return [True] * recipes.shape[0]
 
 
-def select_food_item(recipes, params, tags=None, food_type: str = "Entree", cuisine_select=None):
-    mask = recipes.categories.apply(has_recipe_category_or_tag,
-                                    args=(food_type,))
+def select_food_item(
+    recipes, params, tags=None, food_type: str = "Entree", cuisine_select=None
+):
+    mask = recipes.categories.apply(has_recipe_category_or_tag, args=(food_type,))
 
     if tags is None:
         tags = []
@@ -75,8 +82,11 @@ def select_random_side_from_calendar(recipes, calendar, recipe_uuid, food_type):
     # TODO some recipes may already be paired with multiple sides (starch + veggie) -> want both?
     if sum(mask_entree) > 0:
         dates = calendar[mask_entree].date.unique()
-        mask_side = (calendar.date.isin(dates)) & (calendar.recipeUuid != recipe_uuid) & (
-                calendar.food_type == food_type)
+        mask_side = (
+            (calendar.date.isin(dates))
+            & (calendar.recipeUuid != recipe_uuid)
+            & (calendar.food_type == food_type)
+        )
         if sum(mask_side) > 0:
             side_uuid = calendar[mask_side].sample().iloc[0].recipeUuid
             return recipes[recipes.uuid == side_uuid].iloc[0]
@@ -87,7 +97,9 @@ def select_random_side_from_calendar(recipes, calendar, recipe_uuid, food_type):
 
 
 def select_side(recipes, calendar, params, recipe_uuid, cuisine_select):
-    veggie_side = select_random_side_from_calendar(recipes, calendar, recipe_uuid, "veggies")
+    veggie_side = select_random_side_from_calendar(
+        recipes, calendar, recipe_uuid, "veggies"
+    )
 
     if isinstance(veggie_side, pd.Series):
         return veggie_side
@@ -96,8 +108,13 @@ def select_side(recipes, calendar, params, recipe_uuid, cuisine_select):
     elif veggie_side == 0:
         # TODO limit somehow the cuisine type (e.g. Asian)
         # TODO once cuisine is fixed: randomly choose between new recipe & found one?
-        return select_food_item(recipes, params, ["veggies"],
-                                food_type="Side", cuisine_select=cuisine_select)
+        return select_food_item(
+            recipes,
+            params,
+            ["veggies"],
+            food_type="Side",
+            cuisine_select=cuisine_select,
+        )
 
 
 def get_str_minutes(time):
@@ -107,24 +124,31 @@ def get_str_minutes(time):
 
 
 def format_time_entry(entry):
-    return OrderedDict({"prep": get_str_minutes(entry.preparationTime),
-                        # TODO make proper time
-                        "cook": entry.cookingTime + " min" if entry.cookingTime.isdecimal() else "",
-                        "total": get_str_minutes(entry.totalTime)})
+    return OrderedDict(
+        {
+            "prep": get_str_minutes(entry.preparationTime),
+            # TODO make proper time
+            "cook": entry.cookingTime + " min" if entry.cookingTime.isdecimal() else "",
+            "total": get_str_minutes(entry.totalTime),
+        }
+    )
 
 
 def format_json_entry(entry):
-    return OrderedDict({"title": entry.title,
-                        "rating": entry.rating,
-                        # TODO add scaling factor to recipe? or do with grocery list
-                        "orig_quantity": entry.quantity,
-                        "time": format_time_entry(entry),
-                        "uuid": entry.uuid})
+    return OrderedDict(
+        {
+            "title": entry.title,
+            "rating": entry.rating,
+            # TODO add scaling factor to recipe? or do with grocery list
+            "orig_quantity": entry.quantity,
+            "time": format_time_entry(entry),
+            "uuid": entry.uuid,
+        }
+    )
 
 
 def format_email_entry(entry):
-    return OrderedDict({"title": entry.title,
-                        "time": format_time_entry(entry)})
+    return OrderedDict({"title": entry.title, "time": format_time_entry(entry)})
 
 
 def select_random_meal(recipes, calendar, params, cuisine_map):
@@ -140,8 +164,9 @@ def select_random_meal(recipes, calendar, params, cuisine_map):
     # TODO with starch, ensure that meal already doesn't have
     #  starch component (e.g. noodles, potatoes)
     if "bowl" not in entree.tags:
-        veggie_side = select_side(recipes, calendar, params, entree.uuid,
-                                  cuisine_select)
+        veggie_side = select_side(
+            recipes, calendar, params, entree.uuid, cuisine_select
+        )
 
         # TODO create new YAML mapping for veggies to be used with new veggie cookbook
         #  to be able to draw easily from new cook book
@@ -156,7 +181,9 @@ def select_random_meal(recipes, calendar, params, cuisine_map):
 
 def determine_cuisine_selection(entree_tags, cuisine_map):
     for cuisine_group in cuisine_map.keys():
-        if any(cuisine_tag in entree_tags for cuisine_tag in cuisine_map[cuisine_group]):
+        if any(
+            cuisine_tag in entree_tags for cuisine_tag in cuisine_map[cuisine_group]
+        ):
             return cuisine_map[cuisine_group]
     return None
 
@@ -182,8 +209,9 @@ def create_menu(config, recipes, calendar):
     for entry in template:
         day = list(entry.keys())[0]
         specifications = entry[day]
-        menu[day], email_text[day] = select_random_meal(recipes, calendar, specifications,
-                                                        cuisine_map)
+        menu[day], email_text[day] = select_random_meal(
+            recipes, calendar, specifications, cuisine_map
+        )
         if config.print_menu:
             print(f"\n# {day} ".ljust(100, "#"))
             print(menu[day]["entree"])
@@ -193,6 +221,8 @@ def create_menu(config, recipes, calendar):
     write_menu(write_path, menu)
     if not config.no_mail:
         email_sender = EmailSender(config)
-        email_sender.send_message_with_attachment(f"Menu for {week}", email_text, write_path)
+        email_sender.send_message_with_attachment(
+            f"Menu for {week}", email_text, write_path
+        )
     else:
         print("Sending of e-mail deactivated by user!")

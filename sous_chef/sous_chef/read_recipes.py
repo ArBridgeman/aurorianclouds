@@ -52,8 +52,13 @@ def create_food_type(row):
 
 
 def label_calendar(calendar, recipes):
-    calendar = pd.merge(calendar, recipes[["uuid", "tags", "categories"]],
-                        how="inner", left_on="recipeUuid", right_on="uuid")
+    calendar = pd.merge(
+        calendar,
+        recipes[["uuid", "tags", "categories"]],
+        how="inner",
+        left_on="recipeUuid",
+        right_on="uuid",
+    )
     calendar["food_type"] = calendar.apply(lambda x: create_food_type(x), axis=1)
     return calendar
 

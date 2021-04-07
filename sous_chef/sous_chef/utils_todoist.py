@@ -49,13 +49,18 @@ class TodoistHelper:
 
     def add_item_to_project(self, item, project, section=None):
         project_id = self.get_project_id(project)
-        assert project_id is not None, "Id of project {:s} could not be found!".format(project)
+        assert project_id is not None, "Id of project {:s} could not be found!".format(
+            project
+        )
         section_id = None
         if section is not None:
             section_id = self.get_section_id(section)
-            assert section_id is not None, "Id of section {:s} could not be found!".format(section)
-        new_item = self.connection.add_item(item, project_id=project_id,
-                                            section_id=section_id)
+            assert (
+                section_id is not None
+            ), "Id of section {:s} could not be found!".format(section)
+        new_item = self.connection.add_item(
+            item, project_id=project_id, section_id=section_id
+        )
         # somehow, the section is not correctly set with the previous command
         if section_id is not None:
             self.connection.items.move(new_item["id"], section_id=section_id)
@@ -65,7 +70,9 @@ class TodoistHelper:
     def get_all_items_in_project(self, project):
         items = []
         project_id = self.get_project_id(project)
-        assert project_id is not None, "Id of project {:s} could not be found!".format(project)
+        assert project_id is not None, "Id of project {:s} could not be found!".format(
+            project
+        )
         for item in self.connection.state["items"]:
             if item["project_id"] == project_id:
                 items.append(item)

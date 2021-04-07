@@ -18,20 +18,24 @@ INP_JSON_COLUMNS = {
     # TODO quantity should be split/standardized...it's bad!!!
     "quantity": str,
     "tags": list,
-    "uuid": str
+    "uuid": str,
 }
 
-CALENDAR_COLUMNS = {"date": str,
-                    "title": str,
-                    "recipeUuid": str,
-                    "uuid": str}
+CALENDAR_COLUMNS = {"date": str, "title": str, "recipeUuid": str, "uuid": str}
 
 TIME_UNITS = ["min", "minutes", "hour", "hours"]
 
 PROTEIN_SOURCE = {
     "beef": ["beef"],
-    "unspecified": ["beef", "seafood", "poultry", "plant protein", "milk protein",
-                    "egg", "pork"],
+    "unspecified": [
+        "beef",
+        "seafood",
+        "poultry",
+        "plant protein",
+        "milk protein",
+        "egg",
+        "pork",
+    ],
     "non-flesh": ["plant protein", "milk protein", "egg"],
     "seafood": ["seafood"],
     "poultry": ["poultry"],

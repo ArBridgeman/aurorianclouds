@@ -7,13 +7,12 @@ are below. Beware that optional parameters for the sections 'menu' or 'grocery_l
 have to be specified on the command line after the section, while general
 optional parameters are specified before.
 
-### Menu cron job
-A cron job creates the menu every Wednesday at noon. It is sent in a json file
-via email to the configured recipients.
+### Menu
+The menu is created and sent in a json file via email to the configured recipients.
 
 ### Grocery list
-Using the menu json, a grocery list is manually created.
-**_TODO_** Add detals.
+Using the menu json, a grocery list is manually created.  
+**_TODO_** Add details.
 
 ### Weekly template
 A yml file outlining the weekly food plan is in menu_template. For each desired

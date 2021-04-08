@@ -14,13 +14,8 @@ class Recipe:
     tags: list
 
 
-recipe1 = Recipe("Bourbon Chicken",
-                 10,
-                 30,
-                 "4 servings",
-                 False,
-                 0,
-                 ["poultry", "American", "BBQ"]
-                 )
+recipe1 = Recipe(
+    "Bourbon Chicken", 10, 30, "4 servings", False, 0, ["poultry", "American", "BBQ"]
+)
 
 RECIPES = pd.DataFrame([recipe1])

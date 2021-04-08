@@ -136,7 +136,6 @@ token.pickle
 credentials.json
 
 # Todoist API
-token.todoist
 todoist_token.txt
 
 # Sous Chef

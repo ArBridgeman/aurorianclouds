@@ -7,15 +7,15 @@ import yaml
 from pint import UnitRegistry
 from quantulum3 import parser
 
-from utils_groceries import IngredientsHelper, relevant_macro_groups
-from utils_todoist import TodoistHelper
+from .utils_groceries import IngredientsHelper, relevant_macro_groups
+from messaging.utils_todoist import TodoistHelper
 
 # from IPython import embed
 
 # TODO implement method to scale recipe to desired servings
 # TODO implement method to mark ingredients that can only be bought the day before + need day
 ureg = UnitRegistry()
-ureg.default_format = '.2f'
+ureg.default_format = ".2f"
 
 
 def retrieve_staple_ingredients(config):
@@ -34,15 +34,20 @@ def separate_unit_from_ingredient(ingredient):
     if len(unit) > 0:
         unit_end = unit[0].span[1]
         unit_name = unit[0].unit.name
-        return unit[0].value, unit_name if unit_name != "dimensionless" else "", ingredient[
-                                                                                 unit_end:].strip()
+        return (
+            unit[0].value,
+            unit_name if unit_name != "dimensionless" else "",
+            ingredient[unit_end:].strip(),
+        )
     return None, "", ingredient.strip()
 
 
 def ignore_ingredient(ignored_ingredients, ingredient):
     # TODO make more robust as matches many things
     return any(
-        ignored_ingredient == ingredient.lower() for ignored_ingredient in ignored_ingredients)
+        ignored_ingredient == ingredient.lower()
+        for ignored_ingredient in ignored_ingredients
+    )
 
 
 def is_staple_ingredient(staple_ingredients, ingredient):
@@ -61,8 +66,9 @@ def assume_quantity(recipe_title, quantity, ingredient):
         return quantity
 
 
-def separate_ingredients_for_grocery_list(grocery_list, staple_ingredients, recipe_title,
-                                          ingredients):
+def separate_ingredients_for_grocery_list(
+    grocery_list, staple_ingredients, recipe_title, ingredients
+):
     for line in ingredients.split("\n"):
         is_optional = False
         stripped_line = line.strip()
@@ -80,7 +86,9 @@ def separate_ingredients_for_grocery_list(grocery_list, staple_ingredients, reci
 
         if "optional" in stripped_line.lower():
             is_optional = True
-            stripped_line = stripped_line.replace("Optional", "").replace("optional", "")
+            stripped_line = stripped_line.replace("Optional", "").replace(
+                "optional", ""
+            )
 
         if ":" in stripped_line:
             # take only things after ":"
@@ -98,10 +106,15 @@ def separate_ingredients_for_grocery_list(grocery_list, staple_ingredients, reci
         quantity = assume_quantity(recipe_title, quantity, ingredient)
 
         grocery_list = grocery_list.append(
-            {"quantity": quantity, "unit": unit, "ingredient": ingredient,
-             "is_staple": is_staple_ingredient(staple_ingredients, ingredient),
-             "is_optional": is_optional},
-            ignore_index=True)
+            {
+                "quantity": quantity,
+                "unit": unit,
+                "ingredient": ingredient,
+                "is_staple": is_staple_ingredient(staple_ingredients, ingredient),
+                "is_optional": is_optional,
+            },
+            ignore_index=True,
+        )
 
     return grocery_list
 
@@ -123,7 +136,7 @@ def convert_values(row, desired_unit):
 
 
 def aggregate_like_ingredient(grocery_list):
-    grouped = grocery_list.groupby('ingredient')
+    grouped = grocery_list.groupby("ingredient")
 
     aggregate_grocery_list = pd.DataFrame(columns=grocery_list.columns)
     # TODO fix aggregation for items where +s (e.g. egg + eggs); separately done currently
@@ -133,8 +146,8 @@ def aggregate_like_ingredient(grocery_list):
             if len(units) > 1:
                 largest_unit = find_largest_unit(units)
                 group["quantity"], group["unit"] = zip(
-                    *group.apply(lambda row: convert_values(row, largest_unit),
-                                 axis=1))
+                    *group.apply(lambda row: convert_values(row, largest_unit), axis=1)
+                )
 
         # TODO ensure all types or lack of unit works here & not losing due to none values
         aggregate = group.groupby(["unit", "ingredient"], as_index=False).agg(
@@ -142,11 +155,13 @@ def aggregate_like_ingredient(grocery_list):
                 "quantity": ["sum"],
                 "is_staple": ["first"],
                 "is_optional": ["first"],
-                "group": ["first"]
+                "group": ["first"],
             }
         )
         aggregate.columns = aggregate.columns.droplevel(1)
-        aggregate_grocery_list = aggregate_grocery_list.append(aggregate[grocery_list.columns])
+        aggregate_grocery_list = aggregate_grocery_list.append(
+            aggregate[grocery_list.columns]
+        )
     return aggregate_grocery_list.reset_index()
 
 
@@ -160,25 +175,35 @@ def get_food_categories(grocery_list, config):
 
     grocery_list_matched = None
     if master_file is not None:
-        grocery_list = pd.merge(grocery_list.drop(columns=["group"]),
-                                master_file[["ingredient", "group"]],
-                                on="ingredient", how="left")
+        grocery_list = pd.merge(
+            grocery_list.drop(columns=["group"]),
+            master_file[["ingredient", "group"]],
+            on="ingredient",
+            how="left",
+        )
 
-        unmatched_mask = (grocery_list.group.isnull() |
-                          pd.isna(grocery_list.group) |
-                          (grocery_list.group == "Unknown"))
+        unmatched_mask = (
+            grocery_list.group.isnull()
+            | pd.isna(grocery_list.group)
+            | (grocery_list.group == "Unknown")
+        )
 
-        print("There are {:d} unmatched grocery ingredients after using master list!".format(unmatched_mask.sum()))
+        print(
+            "There are {:d} unmatched grocery ingredients after using master list!".format(
+                unmatched_mask.sum()
+            )
+        )
 
         grocery_list_matched = grocery_list[~unmatched_mask]
         grocery_list = grocery_list[unmatched_mask]
 
     # try to estimate missing or unknown groups
     ingredient_helper = IngredientsHelper(config.food_items_file)
-    grocery_list["group"] = grocery_list.ingredient.apply(ingredient_helper.get_food_group)
+    grocery_list["group"] = grocery_list.ingredient.apply(
+        ingredient_helper.get_food_group
+    )
 
-    grocery_list = pd.concat([grocery_list,
-                              grocery_list_matched])
+    grocery_list = pd.concat([grocery_list, grocery_list_matched])
 
     if config.interactive_grouping:
         print("Will query for user input to improve food grouping of selected recipes!")
@@ -190,13 +215,21 @@ def get_food_categories(grocery_list, config):
                     print("{}: {:d}".format(group, i_group))
                 while True:
                     try:
-                        user_input = input("Please select: (0 - {:d}) >> ".format(len(relevant_macro_groups) - 1))
+                        user_input = input(
+                            "Please select: (0 - {:d}) >> ".format(
+                                len(relevant_macro_groups) - 1
+                            )
+                        )
                         group_update = relevant_macro_groups[int(user_input)]
-                        grocery_list.loc[grocery_list.ingredient == item.ingredient, "group"] = group_update
+                        grocery_list.loc[
+                            grocery_list.ingredient == item.ingredient, "group"
+                        ] = group_update
                         print("Updated to {}".format(group_update))
                         break
                     except Exception as e:
-                        print("Error while updating group, please check input and retry!")
+                        print(
+                            "Error while updating group, please check input and retry!"
+                        )
                         print(e)
         print("All uncertain groups have been updated!")
     return grocery_list
@@ -211,9 +244,11 @@ def upload_groceries_to_todoist(groceries, project_name="Groceries", clean=False
 
     for _, item in groceries.iterrows():
         formatted_item = "{}, {} {}".format(item.ingredient, item.quantity, item.unit)
-        todoist_helper.add_item_to_project(formatted_item.strip(),
-                                           project_name,
-                                           section=item.group if not item.is_staple else "Staples")
+        todoist_helper.add_item_to_project(
+            formatted_item.strip(),
+            project_name,
+            section=item.group if not item.is_staple else "Staples",
+        )
 
 
 def generate_grocery_list(config, recipes, verbose=False):
@@ -223,8 +258,9 @@ def generate_grocery_list(config, recipes, verbose=False):
         menu = json.load(f)
 
     # TODO how to handle or options (e.g. lettuce or tortillas?) -> special type in ingredient list?
-    grocery_list = pd.DataFrame(columns=["quantity", "unit", "ingredient",
-                                         "is_staple", "is_optional", "group"])
+    grocery_list = pd.DataFrame(
+        columns=["quantity", "unit", "ingredient", "is_staple", "is_optional", "group"]
+    )
     for day in menu.keys():
         for entry in menu[day].keys():
             if len(menu[day][entry].keys()) > 0:
@@ -232,9 +268,9 @@ def generate_grocery_list(config, recipes, verbose=False):
                 selected_recipe = recipes[mask_entry].iloc[0]
                 recipe_title = selected_recipe.title
                 ingredients = selected_recipe.ingredients
-                grocery_list = separate_ingredients_for_grocery_list(grocery_list, staple_ingredients,
-                                                                     recipe_title,
-                                                                     ingredients)
+                grocery_list = separate_ingredients_for_grocery_list(
+                    grocery_list, staple_ingredients, recipe_title, ingredients
+                )
 
     grocery_list = aggregate_like_ingredient(grocery_list)
 
@@ -246,6 +282,5 @@ def generate_grocery_list(config, recipes, verbose=False):
 
     if not config.no_upload:
         print("Uploading grocery list to todoist...")
-        upload_groceries_to_todoist(grocery_list,
-                                    clean=config.clean_todoist)
+        upload_groceries_to_todoist(grocery_list, clean=config.clean_todoist)
         print("Upload done.")

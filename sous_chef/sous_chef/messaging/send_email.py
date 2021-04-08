@@ -40,8 +40,8 @@ class EmailSender:
         # The file token.pickle stores the user's access and refresh tokens, and is
         # created automatically when the authorization flow completes for the first
         # time.
-        if Path('token.pickle').exists():
-            with open('token.pickle', 'rb') as token:
+        if Path("token.pickle").exists():
+            with open("token.pickle", "rb") as token:
                 credentials = pickle.load(token)
         # If no (valid) credentials are available, let the user log in.
         if not credentials or not credentials.valid:
@@ -49,13 +49,14 @@ class EmailSender:
                 credentials.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    'credentials.json', SCOPES)
+                    "credentials.json", SCOPES
+                )
                 credentials = flow.run_local_server(port=0)
             # Save the credentials for the next run
-            with open('token.pickle', 'wb') as token:
+            with open("token.pickle", "wb") as token:
                 pickle.dump(credentials, token)
 
-        return build('gmail', 'v1', credentials=credentials)
+        return build("gmail", "v1", credentials=credentials)
 
     @staticmethod
     def decode_message_byte_str(message):
@@ -64,50 +65,53 @@ class EmailSender:
 
     def create_message_with_text(self, subject, message_text):
         message = MIMEText(message_text)
-        message['to'] = self.recipient
-        message['from'] = self.sender
-        message['subject'] = subject
-        return {'raw': self.decode_message_byte_str(message)}
+        message["to"] = self.recipient
+        message["from"] = self.sender
+        message["subject"] = subject
+        return {"raw": self.decode_message_byte_str(message)}
 
     @staticmethod
     def create_html_table_from_json(plan_json):
         return json2html.convert(plan_json)
 
-    def create_message_with_json(
-            self, subject, plan_json, filepath):
+    def create_message_with_json(self, subject, plan_json, filepath):
         message = MIMEMultipart()
-        message['to'] = self.recipient
-        message['from'] = self.sender
-        message['subject'] = subject
+        message["to"] = self.recipient
+        message["from"] = self.sender
+        message["subject"] = subject
 
-        msg = MIMEText(self.base_email, 'html')
+        msg = MIMEText(self.base_email, "html")
         message.attach(msg)
 
-        msg = MIMEText(self.create_html_table_from_json(plan_json), 'html')
+        msg = MIMEText(self.create_html_table_from_json(plan_json), "html")
         message.attach(msg)
 
         content_type, encoding = mimetypes.guess_type(filepath)
         if content_type is None or encoding is not None:
-            content_type = 'application/octet-stream'
-        main_type, sub_type = content_type.split('/', 1)
+            content_type = "application/octet-stream"
+        main_type, sub_type = content_type.split("/", 1)
 
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             msg = MIMEBase(main_type, sub_type)
             msg.set_payload(f.read())
 
         filename = Path(filepath).name
-        msg.add_header('Content-Disposition', 'attachment', filename=filename)
+        msg.add_header("Content-Disposition", "attachment", filename=filename)
         message.attach(msg)
-        return {'raw': self.decode_message_byte_str(message)}
+        return {"raw": self.decode_message_byte_str(message)}
 
     def send_message(self, message):
         try:
-            message = (self.service.users().messages().send(userId=self.sender, body=message)
-                       .execute())
-            print('Message Id: %s' % message['id'])
+            message = (
+                self.service.users()
+                .messages()
+                .send(userId=self.sender, body=message)
+                .execute()
+            )
+            print("Message Id: %s" % message["id"])
             return message
         except Exception as error:
-            print('An error occurred: %s' % error)
+            print("An error occurred: %s" % error)
 
     def send_message_with_text(self, subject, message_text):
         message = self.create_message_with_text(subject, message_text)

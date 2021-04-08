@@ -24,15 +24,18 @@ def create_tags_and_filter(recipes: pd.DataFrame, tags: List[str]):
 def create_tags_or_filter(recipes: pd.DataFrame, tags: List[str]):
     mask = np.zeros(recipes.shape[0], dtype=bool)
     for tag in tags:
-        mask = np.logical_or(mask, recipes.tags.apply(has_recipe_category_or_tag, args=(tag,)))
+        mask = np.logical_or(
+            mask, recipes.tags.apply(has_recipe_category_or_tag, args=(tag,))
+        )
     return mask
 
 
 def create_category_or_filter(recipes, categories: List[str]):
     mask = np.array([False] * recipes.shape[0])
     for category in categories:
-        mask = np.logical_or(mask, recipes.categories.apply(has_recipe_category_or_tag,
-                                                            args=(category,)))
+        mask = np.logical_or(
+            mask, recipes.categories.apply(has_recipe_category_or_tag, args=(category,))
+        )
     return mask
 
 

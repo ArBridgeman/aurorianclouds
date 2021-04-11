@@ -7,7 +7,7 @@ import yaml
 from pint import UnitRegistry
 from quantulum3 import parser
 
-from .utils_groceries import IngredientsHelper, relevant_macro_groups
+from sous_chef.grocery_list.utils_groceries import IngredientsHelper, relevant_macro_groups, todoist_mapping
 from messaging.utils_todoist import TodoistHelper
 
 # from IPython import embed
@@ -67,7 +67,7 @@ def assume_quantity(recipe_title, quantity, ingredient):
 
 
 def separate_ingredients_for_grocery_list(
-    grocery_list, staple_ingredients, recipe_title, ingredients
+        grocery_list, staple_ingredients, recipe_title, ingredients
 ):
     for line in ingredients.split("\n"):
         is_optional = False
@@ -183,9 +183,9 @@ def get_food_categories(grocery_list, config):
         )
 
         unmatched_mask = (
-            grocery_list.group.isnull()
-            | pd.isna(grocery_list.group)
-            | (grocery_list.group == "Unknown")
+                grocery_list.group.isnull()
+                | pd.isna(grocery_list.group)
+                | (grocery_list.group == "Unknown")
         )
 
         print(
@@ -236,7 +236,10 @@ def get_food_categories(grocery_list, config):
 
 
 def upload_groceries_to_todoist(groceries, project_name="Groceries", clean=False):
+    # TODO token reference hardcoded here, needs to be changed
     todoist_helper = TodoistHelper("todoist_token.txt")
+
+    groceries["group"] = groceries["group"].apply(todoist_mapping)
 
     if clean:
         print("Cleaning previous items/tasks in project {:s}".format(project_name))

@@ -8,46 +8,78 @@ import pyarrow.feather as feather
 from fuzzywuzzy import fuzz, process
 
 macro_mapping = {
-    "Dairy and Egg Products": "Dairy products",
-    "Spices and Herbs": "Spices and sauces",
+    "American Indian/Alaska Native Foods": "Prepared",
     "Baby Foods": "Prepared",
-    "Fats and Oils": "Fats and oils",
-    "Poultry Products": "Meats",
-    "Soups, Sauces, and Gravies": "Spices and sauces",
-    "Sausages and Luncheon Meats": "Meats",
-    "Breakfast Cereals": "Prepared",
-    "Snacks": "Prepared",
-    "Fruits and Fruit Juices": "Fruits and vegetables",
-    "Pork Products": "Meats",
-    "Vegetables and Vegetable Products": "Fruits and vegetables",
-    "Nut and Seed Products": "Pasta_grains_nuts_seeds",
+    "Baked Products": "Prepared",
     "Beef Products": "Meats",
     "Beverages": "Beverages",
-    "Finfish and Shellfish Products": "Fish",
-    "Legumes and Legume Products": "Pasta_grains_nuts_seeds",
-    "Lamb, Veal, and Game Products": "Meats",
-    "Baked Products": "Prepared",
-    "Sweets": "Prepared",
-    "Cereal Grains and Pasta": "Pasta_grains_nuts_seeds",
+    "Breakfast Cereals": "Prepared",
+    "Cereal Grains and Pasta": "Pasta and grains",
+    "Dairy and Egg Products": "Dairy products",
     "Fast Foods": "Prepared",
+    "Fats and Oils": "Fats and oils",
+    "Finfish and Shellfish Products": "Fish",
+    "Fruits and Fruit Juices": "Fruits",
+    "Lamb, Veal, and Game Products": "Meats",
+    "Legumes and Legume Products": "Beans",
     "Meals, Entrees, and Side Dishes": "Prepared",
-    "American Indian/Alaska Native Foods": "Prepared",
+    "Nut and Seed Products": "Nuts and seeds",
+    "Pork Products": "Meats",
+    "Poultry Products": "Meats",
     "Restaurant Foods": "Prepared",
+    "Sausages and Luncheon Meats": "Meats",
+    "Snacks": "Prepared",
+    "Soups, Sauces, and Gravies": "Sauces",
+    "Spices and Herbs": "Spices and herbs",
+    "Sweets": "Prepared",
+    "Vegetables and Vegetable Products": "Vegetables"
+}
+
+# mapping translation before pushing to todoist, can be easily changed without changing internal groups
+todoist_mapping = {
+    "Baking": "Baking",
+    "Beans": "Beans and legumes",
+    "Beverages": "Juices and beverages",
+    "Canned": "Sauces and canned goods",
+    "Cleaning": "Household",
+    "Dairy products": "Dairy products",
+    "Fats and oils": "Fats and oils",
+    "Fish": "Fish",
+    "Frozen goods": "Frozen goods",
+    "Fruits": "Fruits and vegetables",
+    "Grains": "Pasta and grains",
+    "Juices": "Juices and beverages",
+    "Meats": "Meats",
+    "Nuts and seeds": "Nuts and seeds",
+    "Other": "Other",
+    "Pasta and grains": "Pasta and grains",
+    "Pasta": "Pasta and grains",
+    "Prepared": "Prepared",
+    "Sauces": "Sauces and canned goods",
+    "Spices and herbs": "Spices and herbs",
+    "Unknown": "Unknown",
+    "Vegetables": "Fruits and vegetables"
 }
 
 relevant_macro_groups = sorted(
     [
-        "Meats",
-        "Fruits and vegetables",
-        "Pasta_grains_nuts_seeds",
-        "Spices and sauces",
+        "Beans",
         "Beverages",
-        "Fish",
         "Dairy products",
         "Fats and oils",
+        "Fish",
         "Frozen goods",
+        "Fruits",
+        "Grains",
         "Juices",
+        "Meats",
+        "Nuts and seeds",
         "Other",
+        "Pasta and grains",
+        "Pasta",
+        "Sauces",
+        "Spices and herbs",
+        "Vegetables"
     ]
 )
 
@@ -94,11 +126,13 @@ class IngredientsHelper(object):
         if "juice" in item:
             return "Juices"
         if "sauce" in item:
-            return "Spices and sauces"
+            return "Sauces"
         if "frozen" in item:
             return "Frozen goods"
         if "wine" in item and not "vinegar" in item:
             return "Beverages"
+        if "vinegar" in item:
+            return "Sauces"
 
         # first stage, search only in desc_first (first part of total description)
         best_result = process.extract(
@@ -114,7 +148,7 @@ class IngredientsHelper(object):
             )
             match_df = self.ingredient_df[
                 self.ingredient_df.desc_first == best_result[0][0]
-            ]
+                ]
 
         # if mapping quality thus far is bad, try a mapping on full description (more dangerous, though)
         if best_result[0][1] < 75:
@@ -123,7 +157,7 @@ class IngredientsHelper(object):
             )
             match_df = self.ingredient_df[
                 self.ingredient_df.desc_second == best_result[0][0]
-            ]
+                ]
 
         assert len(match_df) > 0, "No results found!"
 

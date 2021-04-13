@@ -44,7 +44,7 @@ def test_separate_quantity_unit_ingredient(input_unit, expected_unit):
                           ("Ice", "Ice"),
                           ("a pinch cayenne pepper", "1 pinch cayenne pepper"),
                           ("16 drops essential oil", "16 drops essential oil"),
-                          ("1c GF flour", "1 cup flour"),
+                          ("1c GF flour", "1 cup GF flour"),
                           ("1 pound (500 grams) baby potatoes", "450 g (500 grams) baby potatoes"),
                           ("4 russet potatoes", "4 russet potatoes"),
                           ("4 plum tomatoes, chopped", "4 plum tomatoes, chopped"),
@@ -54,7 +54,7 @@ def test_separate_quantity_unit_ingredient(input_unit, expected_unit):
                           ('1" ginger, minced', '1 inch ginger, minced'),
                           ("1/2 cup maple syrup", "0.5 cup maple syrup"),
                           ("1/2 ciabatta loaf (120g | 4oz), sliced", "1/2 ciabatta loaf (120g | 4oz), sliced"),
-                          # ("24 wonton wrappers", "24 wonton wrappers"),
+                          ("24 wonton wrappers", "24 wonton wrappers"),
                           ("2 T granulated sweetener of choice", "2 tbsp granulated sweetener of choice")
                           ])
 def test_convert_to_desired_unit(input_unit, expected_unit):

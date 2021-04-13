@@ -1,6 +1,6 @@
 import pytest
 import pathlib
-from sous_chef.utils_groceries import IngredientsHelper
+from sous_chef.grocery_list.utils_groceries import IngredientsHelper
 
 # TODO: refactor and put files somewhere else or have better way to specify path
 data_base = pathlib.Path.cwd() / ".." / ".." / "nutrition_data"

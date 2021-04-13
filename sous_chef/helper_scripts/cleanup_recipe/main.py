@@ -5,7 +5,6 @@ from convert_unit import convert_to_desired_unit
 from read_recipe import read_recipes
 from standardize_unit_value import standardize_unit_values
 
-count = 0
 # from standardize_unit_name import standardize_unit_names
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
@@ -21,7 +20,6 @@ def generate_parser():
 
 
 def transform_ingredient_line(ingredient_line):
-    print(ingredient_line)
     std_ingredient_line = standardize_unit_values(ingredient_line)
     # standard_ingredient_line = standardize_unit_names(standard_ingredient_line)
     std_ingredient_line = convert_to_desired_unit(std_ingredient_line)
@@ -29,11 +27,8 @@ def transform_ingredient_line(ingredient_line):
 
 
 def split_ingredients_perform_operation(row_ingredients):
-    global count
-    print(count)
     split_ingredients = row_ingredients.split("\n")
     transformed_ingredients = [transform_ingredient_line(line_ingredient) for line_ingredient in split_ingredients]
-    count += 1
     return "\n".join(transformed_ingredients)
 
 

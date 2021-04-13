@@ -44,7 +44,7 @@ def test_separate_quantity_unit_ingredient(input_unit, expected_unit):
                           ("Ice", "Ice"),
                           ("a pinch cayenne pepper", "1 pinch cayenne pepper"),
                           ("16 drops essential oil", "16 drops essential oil"),
-                          ("1c GF flour", "1 cup GF flour"),
+                          ("1c GF flour", "1 cup flour"),
                           ("1 pound (500 grams) baby potatoes", "450 g (500 grams) baby potatoes"),
                           ("4 russet potatoes", "4 russet potatoes"),
                           ("4 plum tomatoes, chopped", "4 plum tomatoes, chopped"),

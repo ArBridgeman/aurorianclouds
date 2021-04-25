@@ -87,7 +87,7 @@ Greek yogurt,True,Dairy products
 coconut oil,False,Fats and oils
 red wine,False,Beverages
 red pepper flakes,True,Spices and herbs
-lentils,True,Beans
+lentils,True,Legumes
 bay leaf,True,Spices and herbs
 marinara sauce,False,Canned
 Chipotle powder,False,Spices and herbs
@@ -235,6 +235,7 @@ marinara sauce,False,Canned
 ricotta cheese,False,Dairy products
 apple juice,False,Juices
 beef tenderloin,False,Meats
+beef brisket,False,Meats
 red chili powder,False,Spices and herbs
 rosemary,False,Spices and herbs
 tortilla chips,False,Prepared
@@ -268,7 +269,7 @@ Kashmiri Chili powder,False,Spices and herbs
 frozen raspberries,False,Frozen goods
 red chilis,False,Vegetables
 almonds,False,Nuts and seeds
-green lentils,False,Beans
+green lentils,False,Legumes
 mustard seeds,True,Nuts and seeds
 curry paste,False,Sauces
 paneer,False,Dairy products
@@ -281,7 +282,7 @@ dried chili peppers,True,Spices and herbs
 Szechuan peppercorn,True,Spices and herbs
 white fish,False,Fish
 pre-cooked beets,False,Vegetables
-Chinese vinegar,False,Sauces
+Chinkiang vinegar,False,Sauces
 scallion,False,Vegetables
 squash,False,Vegetables
 fresh dill,False,Spices and herbs

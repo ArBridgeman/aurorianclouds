@@ -21,7 +21,7 @@ macro_mapping = {
     "Finfish and Shellfish Products": "Fish",
     "Fruits and Fruit Juices": "Fruits",
     "Lamb, Veal, and Game Products": "Meats",
-    "Legumes and Legume Products": "Beans",
+    "Legumes and Legume Products": "Legumes",
     "Meals, Entrees, and Side Dishes": "Prepared",
     "Nut and Seed Products": "Nuts and seeds",
     "Pork Products": "Meats",
@@ -38,18 +38,19 @@ macro_mapping = {
 # mapping translation before pushing to todoist, can be easily changed without changing internal groups
 todoist_mapping = {
     "Baking": "Baking",
-    "Beans": "Beans and legumes",
+    "Beans": "Legumes",
+    "Legumes": "Legumes",
     "Beverages": "Juices and beverages",
     "Canned": "Sauces and canned goods",
     "Cleaning": "Household",
     "Dairy products": "Dairy products",
     "Fats and oils": "Fats and oils",
-    "Fish": "Fish",
+    "Fish": "Meat and fish",
     "Frozen goods": "Frozen goods",
     "Fruits": "Fruits and vegetables",
     "Grains": "Pasta and grains",
     "Juices": "Juices and beverages",
-    "Meats": "Meats",
+    "Meats": "Meat and fish",
     "Nuts and seeds": "Nuts and seeds",
     "Other": "Other",
     "Pasta and grains": "Pasta and grains",
@@ -57,13 +58,13 @@ todoist_mapping = {
     "Prepared": "Prepared",
     "Sauces": "Sauces and canned goods",
     "Spices and herbs": "Spices and herbs",
-    "Unknown": "Unknown",
+    "Unknown": "Other",
     "Vegetables": "Fruits and vegetables"
 }
 
 relevant_macro_groups = sorted(
     [
-        "Beans",
+        "Legumes",
         "Beverages",
         "Dairy products",
         "Fats and oils",
@@ -84,6 +85,31 @@ relevant_macro_groups = sorted(
 )
 
 not_mappable_group = "Unknown"
+
+
+def get_fuzzy_match(item_to_match, list_of_search_items, scorer=fuzz.ratio, limit=3,
+                    warn=True, reject=0):
+    """
+    Simple helper function that returns best fuzzy match for item_to_match
+    within list_of_search_items.
+    Will return best found match and corresponding scorer accuracy, and will by default
+    warn if match accuracy is bad.
+    """
+    from fuzzywuzzy import process
+    best_result = process.extract(
+        item_to_match, list_of_search_items, scorer=scorer, limit=limit
+    )
+    best_match = best_result[0][0]
+    match_quality = best_result[0][1]
+
+    if warn:
+        if match_quality < 75:
+            print("Warning! Bad fuzzy search result for item {:s}: {:s} [{:d}]".
+                  format(item_to_match, best_match, match_quality))
+    if match_quality < reject:
+        best_match = "Unknown"
+
+    return best_match, match_quality
 
 
 class IngredientsHelper(object):
@@ -135,33 +161,25 @@ class IngredientsHelper(object):
             return "Sauces"
 
         # first stage, search only in desc_first (first part of total description)
-        best_result = process.extract(
-            item, self.ingredient_df.desc_long.values, scorer=fuzz.ratio, limit=3
-        )
-
-        match_df = self.ingredient_df[self.ingredient_df.desc_long == best_result[0][0]]
+        best_result, match_quality = get_fuzzy_match(item,
+                                                     self.ingredient_df.desc_long.values)
+        match_df = self.ingredient_df[self.ingredient_df.desc_long == best_result]
 
         # TODO: find better/more universal matching algorithm as below numbers are purely empirical
-        if best_result[0][1] < 75:
-            best_result = process.extract(
-                item, self.ingredient_df.desc_first.values, scorer=fuzz.ratio, limit=3
-            )
-            match_df = self.ingredient_df[
-                self.ingredient_df.desc_first == best_result[0][0]
-                ]
+        if match_quality < 75:
+            best_result, match_quality = get_fuzzy_match(item,
+                                                         self.ingredient_df.desc_first.values)
+            match_df = self.ingredient_df[self.ingredient_df.desc_first == best_result]
 
         # if mapping quality thus far is bad, try a mapping on full description (more dangerous, though)
-        if best_result[0][1] < 75:
-            best_result = process.extract(
-                item, self.ingredient_df.desc_second.values, scorer=fuzz.ratio, limit=3
-            )
-            match_df = self.ingredient_df[
-                self.ingredient_df.desc_second == best_result[0][0]
-                ]
+        if match_quality < 75:
+            best_result, match_quality = get_fuzzy_match(item,
+                                                         self.ingredient_df.desc_second.values)
+            match_df = self.ingredient_df[self.ingredient_df.desc_second == best_result]
 
         assert len(match_df) > 0, "No results found!"
 
-        if best_result[0][1] < 60:
+        if match_quality < 60:
             print("Warning! Bad mapping quality for ingredient: {:s}".format(item))
             print("Best match: {:s}".format(best_result[0][0]))
 

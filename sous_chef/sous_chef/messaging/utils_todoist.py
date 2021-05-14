@@ -59,13 +59,14 @@ class TodoistHelper:
                     section_id is not None
             ), "Id of section {:s} could not be found!".format(section)
         new_item = self.connection.add_item(
-            item, project_id=project_id, section_id=section_id
+            item, project_id=project_id
         )
         # somehow, the section is not correctly set with the previous command
         if section_id is not None:
             self.connection.items.move(new_item["id"], section_id=section_id)
 
         self.connection.commit()
+        self.connection.sync()
 
     def get_all_items_in_project(self, project):
         items = []
@@ -95,3 +96,4 @@ class TodoistHelper:
                 self.connection.items.delete(task["id"])
 
         self.connection.commit()
+        self.connection.sync()

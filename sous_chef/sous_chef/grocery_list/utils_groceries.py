@@ -155,6 +155,7 @@ class IngredientsHelper(object):
 
     @staticmethod
     def manual_overwrites(item):
+        item = str(item).lower()
         # manual overwrites for certain entries
         if "juice" in item:
             return "Juices"

@@ -229,5 +229,3 @@ class Client:
         )
         obj = json.loads(response.text) if response.status_code == 200 else None
         return response, obj
-
-    https: // api.nal.usda.gov / fdc / v1 / foods / search?query = steak & pageSize = 2 & api_key = judGkFHTIs2PTnha5yMrQtvcpuf5MXEQ4BRCIghJ

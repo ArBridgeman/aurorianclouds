@@ -172,7 +172,7 @@ class IngredientsHelper(object):
             return "Prepared"
         return None
 
-    def get_food_group_majority_vote(self, item):
+    def get_food_group_majority_vote(self, item, low_cutoff=50):
         from difflib import get_close_matches
 
         item = str(item).lower()
@@ -181,15 +181,12 @@ class IngredientsHelper(object):
         if manual is not None:
             return manual
 
-        # matches = get_close_matches(item, self.ingredient_df.desc_long.values,
-        #                             n=100, cutoff=0.6)
-
         matches = get_fuzzy_match(item,
                                   self.ingredient_df.desc_long.values,
                                   scorer=fuzz.WRatio,
                                   limit=10,
                                   )
-        matches = [m[0] for m in matches if m[1] > 50]  # get only relevant tuple entries
+        matches = [m[0] for m in matches if m[1] > low_cutoff]  # get only relevant tuple entries
 
         matches_df = self.ingredient_df[self.ingredient_df.desc_long.isin(matches)]
 
@@ -210,6 +207,7 @@ class IngredientsHelper(object):
                                                      scorer=fuzz.QRatio)[0]
         match_df = self.ingredient_df[self.ingredient_df.desc_long == best_result]
 
+        # needs more testing
         # if match_quality < 75:
         #     best_result, match_quality = get_fuzzy_match(item,
         #                                                  self.ingredient_df.desc_long.values,

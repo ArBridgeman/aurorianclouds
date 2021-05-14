@@ -5,7 +5,7 @@
 #
 #
 import pyarrow.feather as feather
-from fuzzywuzzy import fuzz, process
+from fuzzywuzzy import fuzz
 
 macro_mapping = {
     "American Indian/Alaska Native Foods": "Prepared",
@@ -97,8 +97,10 @@ def get_fuzzy_match(item_to_match, list_of_search_items, scorer=fuzz.ratio, limi
     """
     from fuzzywuzzy import process
 
-    if item_to_match in list_of_search_items:
-        return [(item_to_match, 100)]
+    # check for direct appearance, thus no fuzzy search necessary at all
+    for item_test in [item_to_match, "{:s}s".format(item_to_match), item_to_match[:-1]]:
+        if item_test in list_of_search_items:
+            return [(item_test, 100)]
 
     best_results = process.extract(
         item_to_match, list_of_search_items, scorer=scorer, limit=limit
@@ -164,7 +166,7 @@ class IngredientsHelper(object):
             return "Sauces"
         if "frozen" in item:
             return "Frozen goods"
-        if "wine" in item and not "vinegar" in item:
+        if "wine" in item and "vinegar" not in item:
             return "Beverages"
         if "vinegar" in item:
             return "Sauces"
@@ -172,8 +174,19 @@ class IngredientsHelper(object):
             return "Prepared"
         return None
 
-    def get_food_group_majority_vote(self, item, low_cutoff=50):
-        from difflib import get_close_matches
+    def get_food_group(self, item, **kwargs):
+        """
+        General function to get food group, calls on other internal methods.
+        :param item: food item to estimate food group of.
+        :param kwargs: other parameters passed to method calls
+        :return: food group (str)
+        """
+        # return self.get_food_group_manual_1(item, **kwargs)
+        return self.get_food_group_majority_vote(item, **kwargs)
+
+    def get_food_group_majority_vote(self, item, low_score_cutoff=80,
+                                     n_vote=50):
+        # from difflib import get_close_matches
 
         item = str(item).lower()
 
@@ -184,15 +197,18 @@ class IngredientsHelper(object):
         matches = get_fuzzy_match(item,
                                   self.ingredient_df.desc_long.values,
                                   scorer=fuzz.WRatio,
-                                  limit=10,
+                                  limit=n_vote,
                                   )
-        matches = [m[0] for m in matches if m[1] > low_cutoff]  # get only relevant tuple entries
+        matches = [m[0] for m in matches if m[1] > low_score_cutoff]  # get only relevant tuple entries
 
         matches_df = self.ingredient_df[self.ingredient_df.desc_long.isin(matches)]
 
+        if matches_df.shape[0] == 0:
+            return not_mappable_group
+
         return matches_df.macro_group.mode().iloc[0]
 
-    def get_food_group(self, item, defensive=True):
+    def get_food_group_manual_1(self, item, defensive=True):
         item = str(item).lower()
 
         manual = self.manual_overwrites(item)
@@ -236,7 +252,8 @@ class IngredientsHelper(object):
 
             try:
                 return self.get_food_group_majority_vote(item)
-            except:
+            except Exception as e:
+                print(e)
                 print("Warning! Could also not get a match with majority vote strategy!")
 
             if defensive:

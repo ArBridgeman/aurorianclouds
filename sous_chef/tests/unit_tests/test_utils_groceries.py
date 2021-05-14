@@ -37,4 +37,3 @@ class TestIngredientsHelper:
                               ])
     def test_get_food_group(self, ingredient, expected_category):
         assert ingredient_helper.get_food_group(ingredient) == expected_category
-        # assert ingredient_helper.get_food_group_majority_vote(ingredient) == expected_category

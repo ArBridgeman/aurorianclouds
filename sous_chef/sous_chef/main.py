@@ -68,6 +68,12 @@ def generate_parser():
         help="Print out the generated menu on the "
              "terminal in addition to saving it!",
     )
+    menu_parser.add_argument(
+        "--interactive_menu",
+        action="store_true",
+        help="Build menu interactively using the terminal instead of having it"
+             "automatically build."
+    )
 
     menu_parser.add_argument("--email", type=str, default="base_email.html")
     menu_parser.add_argument("--cuisine", type=str, default="cuisine_map.yml")

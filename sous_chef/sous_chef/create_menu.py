@@ -18,6 +18,9 @@ from filter_recipes import (
 )
 from messaging.send_email import EmailSender
 
+from fuzzywuzzy import fuzz
+from sous_chef.grocery_list.utils_groceries import get_fuzzy_match
+
 
 def retrieve_template(filepath):
     with open(filepath) as file:
@@ -40,7 +43,7 @@ def select_by_near_cuisine(recipes, cuisine_select):
 
 
 def select_food_item(
-    recipes, params, tags=None, food_type: str = "Entree", cuisine_select=None
+        recipes, params, tags=None, food_type: str = "Entree", cuisine_select=None
 ):
     mask = recipes.categories.apply(has_recipe_category_or_tag, args=(food_type,))
 
@@ -82,9 +85,9 @@ def select_random_side_from_calendar(recipes, calendar, recipe_uuid, food_type):
     if sum(mask_entree) > 0:
         dates = calendar[mask_entree].date.unique()
         mask_side = (
-            (calendar.date.isin(dates))
-            & (calendar.recipeUuid != recipe_uuid)
-            & (calendar.food_type == food_type)
+                (calendar.date.isin(dates))
+                & (calendar.recipeUuid != recipe_uuid)
+                & (calendar.food_type == food_type)
         )
         if sum(mask_side) > 0:
             side_uuid = calendar[mask_side].sample().iloc[0].recipeUuid
@@ -178,10 +181,60 @@ def select_random_meal(recipes, calendar, params, cuisine_map):
     return meal_attachment, meal_text
 
 
+def interactive_meal_selection(recipes, calendar, params, cuisine_map):
+    meal_attachment = defaultdict(dict)
+    meal_text = defaultdict(dict)
+
+    def validate_answer(ans, expected):
+        if ans.lower().strip() == expected:
+            return True
+        return False
+
+    side = False
+    selector = lambda s: "entree" if not s else "veggie"
+    while True:
+        title = input(
+            "Please enter at least the start of the title of your desired {:s}dish: ".format("side " if side else ""))
+        best_results = get_fuzzy_match(title,
+                                       recipes.title,
+                                       limit=3,
+                                       scorer=fuzz.partial_ratio)
+        print("Is your desired {:s}dish in this list?:".format("side " if side else ""))
+        for i_dish, dish in enumerate(best_results):
+            print("({:d}) {:s}".format(i_dish, best_results[i_dish][0]))
+        answer = input("Please enter the according number or no (n): [0] ") or 0
+
+        if validate_answer(str(answer), "n"):
+            print("Please retry and enter more details!")
+            continue
+        try:
+            answer = int(answer)
+            if answer in range(len(best_results)):
+                best_result = best_results[answer][0]
+            else:
+                raise AssertionError("Input is not in list of valid options!")
+        except Exception as e:
+            print(e)
+            continue
+
+        selected_recipe = recipes[recipes.title == best_result].iloc[0]
+        meal_attachment[selector(side)] = format_json_entry(selected_recipe)
+        meal_text[selector(side)] = format_email_entry(selected_recipe)
+
+        if not side:
+            answer = input("Do you wish to add a side dish? (y/n): [y] ") or "y"
+            if validate_answer(answer, "y"):
+                side = True
+                continue
+        break
+
+    return meal_attachment, meal_text
+
+
 def determine_cuisine_selection(entree_tags, cuisine_map):
     for cuisine_group in cuisine_map.keys():
         if any(
-            cuisine_tag in entree_tags for cuisine_tag in cuisine_map[cuisine_group]
+                cuisine_tag in entree_tags for cuisine_tag in cuisine_map[cuisine_group]
         ):
             return cuisine_map[cuisine_group]
     return None
@@ -208,9 +261,19 @@ def create_menu(config, recipes, calendar):
     for entry in template:
         day = list(entry.keys())[0]
         specifications = entry[day]
-        menu[day], email_text[day] = select_random_meal(
-            recipes, calendar, specifications, cuisine_map
-        )
+        if not config.interactive_menu:
+            menu[day], email_text[day] = select_random_meal(
+                recipes, calendar, specifications, cuisine_map
+            )
+        else:  # interactive grouping:
+            print("\nWe are going to select the entree for {:s}".format(day))
+            skip = input("Skip (y/n): [n] ")
+            if skip == "y":
+                continue
+            menu[day], email_text[day] = interactive_meal_selection(
+                recipes, calendar, specifications, cuisine_map
+            )
+
         if config.print_menu:
             print(f"\n# {day} ".ljust(100, "#"))
             print(menu[day]["entree"])

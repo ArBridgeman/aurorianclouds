@@ -135,11 +135,14 @@ def find_largest_unit(units):
 
 
 def convert_values(row, desired_unit):
-    original_value = ureg.Quantity(row["quantity"], ureg.parse_expression(row["unit"]))
-    if row["unit"] == "":
-        return round(original_value.magnitude, 2), ""
-    converted_value = original_value.to(desired_unit)
-    return round(converted_value.magnitude, 2), converted_value.units
+    try:
+        original_value = ureg.Quantity(row["quantity"], ureg.parse_expression(row["unit"]))
+        if row["unit"] == "":
+            return round(original_value.magnitude, 2), ""
+        converted_value = original_value.to(desired_unit)
+        return round(converted_value.magnitude, 2), converted_value.units
+    except Exception as e:
+        return row["quantity"], row["unit"]
 
 
 def aggregate_like_ingredient(grocery_list):
@@ -186,7 +189,7 @@ def get_food_categories(grocery_list, config):
     grocery_list_matched = None
     if master_file is not None:
         match_helper = lambda item: get_fuzzy_match(item, master_file.ingredient.values,
-                                                    warn=True, reject=50)
+                                                    warn=True, limit=1, reject=75)[0]
         grocery_list["best_match"] = grocery_list["ingredient"].apply(match_helper).str[0]
 
         grocery_list = pd.merge(
@@ -263,11 +266,11 @@ def upload_groceries_to_todoist(groceries, project_name="Groceries", clean=False
         todoist_helper.delete_all_items_in_project(project_name)
 
     for _, item in groceries.iterrows():
+        print("Adding item {:s} to todoist".format(item.ingredient))
         formatted_item = "{}, {} {}".format(item.ingredient, item.quantity, item.unit)
         todoist_helper.add_item_to_project(
             formatted_item.strip(),
             project_name,
-            # section=item.group if not item.is_staple else "Staples",
             section=item.group
         )
 
@@ -297,6 +300,7 @@ def generate_grocery_list(config, recipes, verbose=False):
 
     # get all food categories using USDA data
     grocery_list = get_food_categories(grocery_list, config)
+
     # TODO convert all masses to grams
     if verbose:
         print(grocery_list.sort_values(by=["is_staple", "ingredient"]))

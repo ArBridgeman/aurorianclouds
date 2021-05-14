@@ -15,10 +15,10 @@ class TestIngredientsHelper:
                              [("banana", "Fruits"),
                               ("apple", "Fruits"),
                               ("apple juice", "Juices"),
-                              ("flank steak", "Meats"),
+                              ("steak", "Meats"),
                               ("butter", "Dairy products"),
                               ("milk", "Dairy products"),
-                              ("yoghurt", "Dairy products"),
+                              ("greek yogurt", "Dairy products"),
                               ("broccoli", "Vegetables"),
                               ("avocado", "Fruits"),
                               ("beef", "Meats"),
@@ -29,9 +29,12 @@ class TestIngredientsHelper:
                               ("soy sauce", "Sauces"),
                               ("white wine", "Beverages"),
                               ("chicken breast", "Meats"),
-                              ("protein bar", "Pasta and grains"),
+                              ("protein bar", "Prepared"),
                               ("rice vinegar", "Sauces"),
-                              ("feta", "Dairy products")
+                              ("feta", "Dairy products"),
+                              ("chicken breast", "Meats"),
+                              ("zucchini", "Vegetables")
                               ])
     def test_get_food_group(self, ingredient, expected_category):
         assert ingredient_helper.get_food_group(ingredient) == expected_category
+        # assert ingredient_helper.get_food_group_majority_vote(ingredient) == expected_category

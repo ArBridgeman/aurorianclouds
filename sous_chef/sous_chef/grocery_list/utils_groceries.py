@@ -37,29 +37,29 @@ macro_mapping = {
 
 # mapping translation before pushing to todoist, can be easily changed without changing internal groups
 todoist_mapping = {
-    "Baking": "Baking",
-    "Beans": "Legumes",
-    "Legumes": "Legumes",
+    "Baking": "Sweet carolina",
+    "Beans": "Sauces cans and oils",
+    "Legumes": "Sauces cans and oils",
     "Beverages": "Juices and beverages",
-    "Canned": "Sauces and canned goods",
+    "Canned": "Sauces cans and oils",
     "Cleaning": "Household",
-    "Dairy products": "Dairy products",
-    "Fats and oils": "Fats and oils",
-    "Fish": "Meat and fish",
-    "Frozen goods": "Frozen goods",
-    "Fruits": "Fruits and vegetables",
-    "Grains": "Pasta and grains",
+    "Dairy products": "Dairy force",
+    "Fats and oils": "Sauces cans and oils",
+    "Fish": "Dead animal society",
+    "Frozen goods": "Frozen 3",
+    "Fruits": "Farmland pride",
+    "Grains": "GF park",
     "Juices": "Juices and beverages",
-    "Meats": "Meat and fish",
-    "Nuts and seeds": "Nuts and seeds",
+    "Meats": "Dead animal society",
+    "Nuts and seeds": "GF park",
     "Other": "Other",
-    "Pasta and grains": "Pasta and grains",
-    "Pasta": "Pasta and grains",
-    "Prepared": "Prepared",
-    "Sauces": "Sauces and canned goods",
+    "Pasta and grains": "GF park",
+    "Pasta": "GF park",
+    "Prepared": "Other",
+    "Sauces": "Sauces cans and oils",
     "Spices and herbs": "Spices and herbs",
     "Unknown": "Other",
-    "Vegetables": "Fruits and vegetables"
+    "Vegetables": "Farmland pride"
 }
 
 relevant_macro_groups = sorted(
@@ -88,7 +88,7 @@ not_mappable_group = "Unknown"
 
 
 def get_fuzzy_match(item_to_match, list_of_search_items, scorer=fuzz.ratio, limit=3,
-                    warn=True, reject=0):
+                    warn=True, warn_thresh=75, reject=0):
     """
     Simple helper function that returns best fuzzy match for item_to_match
     within list_of_search_items.
@@ -96,20 +96,24 @@ def get_fuzzy_match(item_to_match, list_of_search_items, scorer=fuzz.ratio, limi
     warn if match accuracy is bad.
     """
     from fuzzywuzzy import process
-    best_result = process.extract(
+
+    if item_to_match in list_of_search_items:
+        return [(item_to_match, 100)]
+
+    best_results = process.extract(
         item_to_match, list_of_search_items, scorer=scorer, limit=limit
     )
-    best_match = best_result[0][0]
-    match_quality = best_result[0][1]
+    best_match = best_results[0][0]
+    match_quality = best_results[0][1]
 
     if warn:
-        if match_quality < 75:
+        if match_quality < warn_thresh:
             print("Warning! Bad fuzzy search result for item {:s}: {:s} [{:d}]".
                   format(item_to_match, best_match, match_quality))
     if match_quality < reject:
-        best_match = "Unknown"
+        best_results = [("Unknown", match_quality)]
 
-    return best_match, match_quality
+    return best_results
 
 
 class IngredientsHelper(object):
@@ -132,6 +136,8 @@ class IngredientsHelper(object):
             ", raw"
         ).str.get(0)
 
+        self.ingredient_df["desc_long"] = self.ingredient_df.desc_long.str.replace("cheese, ", "")
+
         # sorting according to length of description (to try to optimize fuzzy search)
         self.ingredient_df.sort_values("desc_len", ascending=True, inplace=True)
 
@@ -145,12 +151,15 @@ class IngredientsHelper(object):
             self.ingredient_df.desc_long.str.split(",").str.get(1).fillna("")
         )
 
-    def get_food_group(self, item, defensive=True):
-        item = str(item).lower()
-
+    @staticmethod
+    def manual_overwrites(item):
         # manual overwrites for certain entries
         if "juice" in item:
             return "Juices"
+        if "milk" in item and len(item) < 7:
+            return "Dairy products"
+        if "steak" in item and "sauce" not in item:
+            return "Meats"
         if "sauce" in item:
             return "Sauces"
         if "frozen" in item:
@@ -159,29 +168,78 @@ class IngredientsHelper(object):
             return "Beverages"
         if "vinegar" in item:
             return "Sauces"
+        if "protein bar" in item:
+            return "Prepared"
+        return None
 
-        # first stage, search only in desc_first (first part of total description)
-        best_result, match_quality = get_fuzzy_match(item,
-                                                     self.ingredient_df.desc_long.values)
-        match_df = self.ingredient_df[self.ingredient_df.desc_long == best_result]
+    def get_food_group_majority_vote(self, item):
+        from difflib import get_close_matches
+
+        item = str(item).lower()
+
+        manual = self.manual_overwrites(item)
+        if manual is not None:
+            return manual
+
+        # matches = get_close_matches(item, self.ingredient_df.desc_long.values,
+        #                             n=100, cutoff=0.6)
+
+        matches = get_fuzzy_match(item,
+                                  self.ingredient_df.desc_long.values,
+                                  scorer=fuzz.WRatio,
+                                  limit=10,
+                                  )
+        matches = [m[0] for m in matches if m[1] > 50]  # get only relevant tuple entries
+
+        matches_df = self.ingredient_df[self.ingredient_df.desc_long.isin(matches)]
+
+        return matches_df.macro_group.mode().iloc[0]
+
+    def get_food_group(self, item, defensive=True):
+        item = str(item).lower()
+
+        manual = self.manual_overwrites(item)
+        if manual is not None:
+            return manual
 
         # TODO: find better/more universal matching algorithm as below numbers are purely empirical
-        if match_quality < 75:
+
+        # first stage, try search in full description (fails for short items)
+        best_result, match_quality = get_fuzzy_match(item,
+                                                     self.ingredient_df.desc_long.values,
+                                                     scorer=fuzz.QRatio)[0]
+        match_df = self.ingredient_df[self.ingredient_df.desc_long == best_result]
+
+        # if match_quality < 75:
+        #     best_result, match_quality = get_fuzzy_match(item,
+        #                                                  self.ingredient_df.desc_long.values,
+        #                                                  scorer=fuzz.partial_ratio)[0]
+        #     match_df = self.ingredient_df[self.ingredient_df.desc_long == best_result]
+
+        if match_quality < 70:
             best_result, match_quality = get_fuzzy_match(item,
-                                                         self.ingredient_df.desc_first.values)
+                                                         self.ingredient_df.desc_first.values,
+                                                         scorer=fuzz.QRatio)[0]
             match_df = self.ingredient_df[self.ingredient_df.desc_first == best_result]
 
-        # if mapping quality thus far is bad, try a mapping on full description (more dangerous, though)
-        if match_quality < 75:
-            best_result, match_quality = get_fuzzy_match(item,
-                                                         self.ingredient_df.desc_second.values)
-            match_df = self.ingredient_df[self.ingredient_df.desc_second == best_result]
+            best_result2, match_quality2 = get_fuzzy_match(item,
+                                                           self.ingredient_df.desc_second.values,
+                                                           scorer=fuzz.QRatio)[0]
+
+            if match_quality2 > match_quality:
+                match_quality = match_quality2
+                match_df = self.ingredient_df[self.ingredient_df.desc_second == best_result2]
 
         assert len(match_df) > 0, "No results found!"
 
         if match_quality < 60:
             print("Warning! Bad mapping quality for ingredient: {:s}".format(item))
-            print("Best match: {:s}".format(best_result[0][0]))
+            print("Best match: {:s}".format(best_result))
+
+            try:
+                return self.get_food_group_majority_vote(item)
+            except:
+                print("Warning! Could also not get a match with majority vote strategy!")
 
             if defensive:
                 return not_mappable_group

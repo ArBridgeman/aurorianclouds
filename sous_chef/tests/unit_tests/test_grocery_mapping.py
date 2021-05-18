@@ -1,6 +1,6 @@
 import pytest
 import pathlib
-from sous_chef.grocery_list.utils_groceries import IngredientsHelper
+from sous_chef.grocery_list.grocery_matching_mapping import IngredientsHelper
 
 # TODO: refactor and put files somewhere else or have better way to specify path
 data_base = pathlib.Path.cwd() / ".." / ".." / "nutrition_data"
@@ -33,7 +33,8 @@ class TestIngredientsHelper:
                               ("rice vinegar", "Sauces"),
                               ("feta", "Dairy products"),
                               ("chicken breast", "Meats"),
-                              ("zucchini", "Vegetables")
+                              ("zucchini", "Vegetables"),
+                              ("chicken broth", "Sauces")
                               ])
     def test_get_food_group(self, ingredient, expected_category):
         assert ingredient_helper.get_food_group(ingredient) == expected_category

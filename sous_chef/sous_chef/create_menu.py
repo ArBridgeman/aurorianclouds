@@ -19,7 +19,7 @@ from filter_recipes import (
 from messaging.send_email import EmailSender
 
 from fuzzywuzzy import fuzz
-from sous_chef.grocery_list.utils_groceries import get_fuzzy_match
+from sous_chef.grocery_list.grocery_matching_mapping import get_fuzzy_match
 
 
 def retrieve_template(filepath):

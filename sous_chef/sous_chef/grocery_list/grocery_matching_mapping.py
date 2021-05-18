@@ -173,6 +173,8 @@ class IngredientsHelper(object):
             return "Sauces"
         if "protein bar" in item:
             return "Prepared"
+        if "broth" in item:
+            return "Sauces"
         return None
 
     def get_food_group(self, item, **kwargs):

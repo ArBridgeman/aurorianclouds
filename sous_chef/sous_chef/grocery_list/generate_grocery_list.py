@@ -9,9 +9,9 @@ import yaml
 from pint import UnitRegistry
 from quantulum3 import parser
 
-from sous_chef.grocery_list.utils_groceries import IngredientsHelper, relevant_macro_groups, todoist_mapping, \
+from sous_chef.grocery_list.grocery_matching_mapping import IngredientsHelper, relevant_macro_groups, todoist_mapping, \
     get_fuzzy_match
-from messaging.utils_todoist import TodoistHelper
+from messaging.todoist_api import TodoistHelper
 
 # from IPython import embed
 
@@ -28,7 +28,7 @@ def retrieve_staple_ingredients(config):
 
 
 def remove_instruction(ingredient):
-    return ingredient.split(",")[0]
+    return ingredient.replace(", chopped", "").replace(", minced", "").replace(", diced", "")
 
 
 def separate_unit_from_ingredient(ingredient):
@@ -78,6 +78,7 @@ def separate_ingredients_for_grocery_list(
         if stripped_line == "[Recommended Sides]":
             break
             # TODO do return here
+
         # TODO check that all empty strings are being ignored
         # Doesn't seem to based on addition if to separate_unit_from_ingredient
         if not stripped_line or "[" in line:
@@ -96,9 +97,6 @@ def separate_ingredients_for_grocery_list(
         if ":" in stripped_line:
             # take only things after ":"
             stripped_line = stripped_line.split(":")[1]
-
-        # quick hack
-        stripped_line = stripped_line.replace("can ", "cup ").replace("cans ", "cups ")
 
         ingredient = remove_instruction(stripped_line)
         quantity, unit, ingredient = separate_unit_from_ingredient(ingredient)
@@ -183,17 +181,18 @@ def get_food_categories(grocery_list, config):
         print("Error while trying to read master ingredient list!")
         print(e)
 
-    # some cleaning
-    grocery_list["ingredient"] = grocery_list["ingredient"].apply(lambda x: re.sub('[^A-Za-z0-9üäö ]+', '', x))
+    # some cleaning before matching
+    grocery_list["ingredient"] = grocery_list["ingredient"].apply(
+        lambda x: re.sub('[^A-Za-z0-9üäö\- ]+', '', x).strip())
 
     grocery_list_matched = None
     if master_file is not None:
         match_helper = lambda item: get_fuzzy_match(item, master_file.ingredient.values,
-                                                    warn=True, limit=1, reject=75)[0]
+                                                    warn=True, limit=1, reject=80)[0]
         grocery_list["best_match"] = grocery_list["ingredient"].apply(match_helper).str[0]
 
         grocery_list = pd.merge(
-            grocery_list.drop(columns=["group"]),
+            grocery_list[[col for col in grocery_list.columns if col not in ["group"]]],
             master_file[["ingredient", "group"]].rename(columns={"ingredient": "master_ingredient"}),
             left_on="best_match",
             right_on="master_ingredient",
@@ -254,25 +253,27 @@ def get_food_categories(grocery_list, config):
     return grocery_list
 
 
-def upload_groceries_to_todoist(groceries, project_name="Groceries", clean=False,
-                                test_mode=False, todoist_token_file_path="todoist_token.txt"):
-    # TODO token reference hardcoded here, needs to be changed
+def upload_groceries_to_todoist(groceries, project_name="Groceries",
+                                clean=False, dry_mode=False,
+                                todoist_token_file_path="todoist_token.txt"):
     todoist_helper = TodoistHelper(todoist_token_file_path)
 
     groceries["group"] = groceries["group"].map(todoist_mapping)
 
     if clean:
         print("Cleaning previous items/tasks in project {:s}".format(project_name))
-        todoist_helper.delete_all_items_in_project(project_name)
+        if not dry_mode:
+            todoist_helper.delete_all_items_in_project(project_name)
 
     for _, item in groceries.iterrows():
-        print("Adding item {:s} to todoist".format(item.ingredient))
+        print("Adding item {:s} ({:s}) to todoist".format(item.ingredient, item.group))
         formatted_item = "{}, {} {}".format(item.ingredient, item.quantity, item.unit)
-        todoist_helper.add_item_to_project(
-            formatted_item.strip(),
-            project_name,
-            section=item.group
-        )
+        if not dry_mode:
+            todoist_helper.add_item_to_project(
+                formatted_item.strip(),
+                project_name,
+                section=item.group
+            )
 
 
 def generate_grocery_list(config, recipes, verbose=False):
@@ -308,5 +309,6 @@ def generate_grocery_list(config, recipes, verbose=False):
     if not config.no_upload:
         print("Uploading grocery list to todoist...")
         upload_groceries_to_todoist(grocery_list, clean=config.clean_todoist,
+                                    dry_mode=True,
                                     todoist_token_file_path=config.todoist_token_file)
         print("Upload done.")

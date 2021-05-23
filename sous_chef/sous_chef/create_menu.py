@@ -190,19 +190,20 @@ def interactive_meal_selection(recipes, calendar, params, cuisine_map):
             return True
         return False
 
-    side = False
-    selector = lambda s: "entree" if not s else "veggie"
+    state = 0
+    labels = ["entree", "veggie", "starch"]  # a fct of state
+    # could also be "entree", "side1", "side2"; it doesn't really matter for the logic
     while True:
         title = input(
-            "Please enter at least the start of the title of your desired {:s}dish: ".format("side " if side else ""))
+            "Please enter at least the start of the title of your desired {:s} dish: ".format(labels[state]))
         best_results = get_fuzzy_match(title,
                                        recipes.title,
-                                       limit=3,
+                                       limit=5,
                                        scorer=fuzz.partial_ratio)
-        print("Is your desired {:s}dish in this list?:".format("side " if side else ""))
+        print("Is your desired {:s} dish in this list?:".format(labels[state]))
         for i_dish, dish in enumerate(best_results):
             print("({:d}) {:s}".format(i_dish, best_results[i_dish][0]))
-        answer = input("Please enter the according number or no (n): [0] ") or 0
+        answer = input("Please enter the according number or enter no (n): [0] ") or 0
 
         if validate_answer(str(answer), "n"):
             print("Please retry and enter more details!")
@@ -218,14 +219,18 @@ def interactive_meal_selection(recipes, calendar, params, cuisine_map):
             continue
 
         selected_recipe = recipes[recipes.title == best_result].iloc[0]
-        meal_attachment[selector(side)] = format_json_entry(selected_recipe)
-        meal_text[selector(side)] = format_email_entry(selected_recipe)
+        meal_attachment[labels[state]] = format_json_entry(selected_recipe)
+        meal_text[labels[state]] = format_email_entry(selected_recipe)
 
-        if not side:
-            answer = input("Do you wish to add a side dish? (y/n): [y] ") or "y"
+        last = False
+        while state < len(labels) - 1:
+            answer = input("Do you wish to add a {:s} dish? (y/n): [y] ".format(labels[state + 1])) or "y"
+            state = state + 1
             if validate_answer(answer, "y"):
-                side = True
-                continue
+                last = True
+                break
+        if last and (state < len(labels)):
+            continue
         break
 
     return meal_attachment, meal_text
@@ -267,7 +272,7 @@ def create_menu(config, recipes, calendar):
             )
         else:  # interactive grouping:
             print("\nWe are going to select the entree for {:s}".format(day))
-            skip = input("Skip (y/n): [n] ")
+            skip = input("Skip entire day (y/n): [n] ")
             if skip == "y":
                 continue
             menu[day], email_text[day] = interactive_meal_selection(
@@ -276,8 +281,9 @@ def create_menu(config, recipes, calendar):
 
         if config.print_menu:
             print(f"\n# {day} ".ljust(100, "#"))
-            print(menu[day]["entree"])
-            print(menu[day]["veggie"])
+            for k in menu[day].keys():
+                print(k)
+                print(menu[day][k])
 
     write_path = Path(config.menu_path, f"{week}.json")
     write_menu(write_path, menu)

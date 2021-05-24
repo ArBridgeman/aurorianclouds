@@ -21,6 +21,8 @@ INP_JSON_COLUMNS = {
     "uuid": str,
 }
 
+CALENDAR_FILE_PATTERN = "calendar.json"
+
 CALENDAR_COLUMNS = {"date": str, "title": str, "recipeUuid": str, "uuid": str}
 
 TIME_UNITS = ["min", "minutes", "hour", "hours"]
@@ -42,3 +44,8 @@ PROTEIN_SOURCE = {
     "pork": ["pork"],
     "side_excluded": ["beef", "seafood", "poultry", "plant protein", "pork"],
 }
+
+RECIPE_FILE_PATTERN = "recipes*.json"
+
+RTK_FILE_PATTERN = "backup*.rtk"
+

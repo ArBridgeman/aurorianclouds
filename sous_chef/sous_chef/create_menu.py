@@ -19,7 +19,7 @@ from filter_recipes import (
 from messaging.send_email import EmailSender
 
 from fuzzywuzzy import fuzz
-from sous_chef.grocery_list.grocery_matching_mapping import get_fuzzy_match
+from grocery_list.grocery_matching_mapping import get_fuzzy_match
 
 
 def retrieve_template(filepath):
@@ -143,14 +143,16 @@ def format_json_entry(entry):
             "rating": entry.rating,
             # TODO add scaling factor to recipe? or do with grocery list
             "orig_quantity": entry.quantity,
-            "time": format_time_entry(entry),
+            # "time": format_time_entry(entry),
             "uuid": entry.uuid,
         }
     )
 
 
 def format_email_entry(entry):
-    return OrderedDict({"title": entry.title, "time": format_time_entry(entry)})
+    return OrderedDict({"title": entry.title,
+                        # "time": format_time_entry(entry)
+                        })
 
 
 def select_random_meal(recipes, calendar, params, cuisine_map):

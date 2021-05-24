@@ -13,6 +13,7 @@ from grocery_list.generate_grocery_list import generate_grocery_list
 from read_recipes import read_calendar, read_recipes
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
+HOME_PATH = str(Path.home())
 
 
 def generate_parser():
@@ -29,12 +30,9 @@ def generate_parser():
     parser.add_argument(
         "--menu_path", type=Path, default=Path(ABS_FILE_PATH, "../food_plan")
     )
-
     parser.add_argument(
-        "--recipe_path", type=Path, default=Path(ABS_FILE_PATH, "../recipe_data")
+        "--recetteTek_path", type=Path, default=Path(HOME_PATH, "./Dropbox/SharedApps/RecetteTek")
     )
-    parser.add_argument("--recipe_pattern", type=str, default="recipes*.json")
-    parser.add_argument("--calendar_file", type=str, default="calendar.json")
     parser.add_argument(
         "--master_list_file",
         type=Path,
@@ -119,10 +117,10 @@ def main():
         parser.print_help()
         return
 
-    recipes = read_recipes(args)
+    recipes = read_recipes(args.recetteTek_path)
 
     if args.which == "menu":
-        calendar = read_calendar(args, recipes)
+        calendar = read_calendar(args.recetteTek_path, recipes)
         create_menu(args, recipes, calendar)
 
     elif args.which == "grocery_list":

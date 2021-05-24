@@ -9,7 +9,7 @@ import yaml
 from pint import UnitRegistry
 from quantulum3 import parser
 
-from sous_chef.grocery_list.grocery_matching_mapping import IngredientsHelper, relevant_macro_groups, todoist_mapping, \
+from grocery_list.grocery_matching_mapping import IngredientsHelper, relevant_macro_groups, todoist_mapping, \
     get_fuzzy_match
 from messaging.todoist_api import TodoistHelper
 

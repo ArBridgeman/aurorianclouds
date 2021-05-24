@@ -38,17 +38,22 @@ def generate_parser():
     parser.add_argument(
         "--master_list_file",
         type=Path,
-        default=Path(ABS_FILE_PATH, "../nutrition_data/master_ingredient_list.csv"),
+        default=Path(ABS_FILE_PATH, "../nutrition_data/master_ingredient_list.csv")
+    )
+    parser.add_argument(
+        "--todoist_token_file",
+        type=Path,
+        default=Path(ABS_FILE_PATH, "./todoist_token.txt")
     )
     parser.add_argument(
         "--no_mail",
         action="store_true",
-        help="Do not send menu by mail, only save it locally.",
+        help="Do not send menu by mail, only save it locally."
     )
     parser.add_argument(
         "--food_items_file",
         type=Path,
-        default=Path(ABS_FILE_PATH, "../nutrition_data/food_items.feather"),
+        default=Path(ABS_FILE_PATH, "../nutrition_data/food_items.feather")
     )
 
     menu_parser = sub_parser.add_parser("menu")
@@ -61,7 +66,13 @@ def generate_parser():
         "--print_menu",
         action="store_true",
         help="Print out the generated menu on the "
-        "terminal in addition to saving it!",
+             "terminal in addition to saving it!",
+    )
+    menu_parser.add_argument(
+        "--interactive_menu",
+        action="store_true",
+        help="Build menu interactively using the terminal instead of having it"
+             "automatically build."
     )
 
     menu_parser.add_argument("--email", type=str, default="base_email.html")
@@ -91,6 +102,12 @@ def generate_parser():
         action="store_true",
         help="Will clean previously existing items/tasks in Groceries project.",
     )
+
+    # grocery_list_parser.add_argument(
+    #     "--test_todoist_mode",
+    #     action="store_true",
+    #     help="Will add (test) to grocery entry and delete according entries.",
+    # )
     return parser
 
 

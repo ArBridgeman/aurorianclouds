@@ -48,4 +48,3 @@ PROTEIN_SOURCE = {
 RECIPE_FILE_PATTERN = "recipes*.json"
 
 RTK_FILE_PATTERN = "backup*.rtk"
-

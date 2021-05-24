@@ -3,9 +3,8 @@ from pathlib import Path
 
 from convert_unit import convert_to_desired_unit
 from read_recipe import read_recipes
+from relocate_action import relocate_action
 from standardize_unit_value import standardize_unit_values
-
-# from standardize_unit_name import standardize_unit_names
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
 
@@ -21,8 +20,9 @@ def generate_parser():
 
 def transform_ingredient_line(ingredient_line):
     std_ingredient_line = standardize_unit_values(ingredient_line)
-    # standard_ingredient_line = standardize_unit_names(standard_ingredient_line)
-    std_ingredient_line = convert_to_desired_unit(std_ingredient_line)
+    # std_ingredient_line = convert_to_desired_unit(std_ingredient_line)
+    # std_ingredient_line =
+    relocate_action(std_ingredient_line)
     return std_ingredient_line
 
 
@@ -33,6 +33,7 @@ def split_ingredients_perform_operation(row_ingredients):
 
 
 def main():
+    global cnt
     parser = generate_parser()
     args = parser.parse_args()
 

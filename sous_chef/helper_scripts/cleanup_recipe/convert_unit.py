@@ -76,12 +76,13 @@ def separate_quantity_unit_ingredient(ingredient_line):
                 ingredient_line[unit_end:].strip(),
             )
         else:
+            print("BAD UNITS".center(20, "#"))
             print(unit[0].unit.name, ingredient_line)
-
     return None, "", ingredient_line.strip()
 
 
 def convert_to_desired_unit(ingredient_line):
+    # TO DO switch to our own parsing so we don't have to deal with messy Quantulum
     quantity, unit, ingredient = separate_quantity_unit_ingredient(ingredient_line)
     if unit in QUANTULUM_TO_KNOWN.keys():
         unit = QUANTULUM_TO_KNOWN[unit]

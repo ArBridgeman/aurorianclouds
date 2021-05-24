@@ -15,10 +15,10 @@ class TestIngredientsHelper:
                              [("banana", "Fruits"),
                               ("apple", "Fruits"),
                               ("apple juice", "Juices"),
-                              ("steak", "Meats"),
+                              ("flank steak", "Meats"),
                               ("butter", "Dairy products"),
                               ("milk", "Dairy products"),
-                              ("greek yogurt", "Dairy products"),
+                              ("greek yoghurt", "Dairy products"),
                               ("broccoli", "Vegetables"),
                               ("avocado", "Fruits"),
                               ("beef", "Meats"),
@@ -31,10 +31,7 @@ class TestIngredientsHelper:
                               ("chicken breast", "Meats"),
                               ("protein bar", "Prepared"),
                               ("rice vinegar", "Sauces"),
-                              ("feta", "Dairy products"),
-                              ("chicken breast", "Meats"),
-                              ("zucchini", "Vegetables"),
-                              ("chicken broth", "Sauces")
+                              ("feta", "Dairy products")
                               ])
     def test_get_food_group(self, ingredient, expected_category):
         assert ingredient_helper.get_food_group(ingredient) == expected_category

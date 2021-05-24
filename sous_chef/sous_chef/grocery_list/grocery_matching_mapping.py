@@ -233,7 +233,7 @@ class IngredientsHelper(object):
         #                                                  scorer=fuzz.partial_ratio)[0]
         #     match_df = self.ingredient_df[self.ingredient_df.desc_long == best_result]
 
-        if match_quality < 70:
+        if match_quality < 75:
             best_result, match_quality = get_fuzzy_match(item,
                                                          self.ingredient_df.desc_first.values,
                                                          scorer=fuzz.QRatio)[0]
@@ -249,7 +249,7 @@ class IngredientsHelper(object):
 
         assert len(match_df) > 0, "No results found!"
 
-        if match_quality < 60:
+        if match_quality < 70:
             print("Warning! Bad mapping quality for ingredient: {:s}".format(item))
             print("Best match: {:s}".format(best_result))
 

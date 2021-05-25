@@ -8,13 +8,10 @@ import argparse
 from pathlib import Path
 
 import pandas as pd
-
 # from create_menu import create_menu
 from grocery_list.generate_grocery_list import (
-    retrieve_staple_ingredients,
-    separate_ingredients_for_grocery_list,
-    get_food_categories,
-)
+    get_food_categories, retrieve_staple_ingredients,
+    separate_ingredients_for_grocery_list)
 from read_recipes import read_recipes
 
 ABS_FILE_PATH = Path(__file__).absolute().parent

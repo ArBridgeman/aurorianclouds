@@ -4,12 +4,12 @@
 # Main sous_chef steering file.
 #
 #
-import sys
 import argparse
+import sys
 from pathlib import Path
 
-from menu.create_manual_menu import create_menu
 from grocery_list.generate_grocery_list import generate_grocery_list
+from menu.create_manual_menu import create_menu
 from menu.prepare_fixed_menu import finalize_fixed_menu
 from read_recipes import read_calendar, read_recipes
 
@@ -38,27 +38,29 @@ def parse_default_settings(parser):
         "--menu_path", type=Path, default=Path(ABS_FILE_PATH, "../food_plan")
     )
     parser.add_argument(
-        "--recetteTek_path", type=Path, default=Path(HOME_PATH, "./Dropbox/SharedApps/RecetteTek")
+        "--recetteTek_path",
+        type=Path,
+        default=Path(HOME_PATH, "./Dropbox/SharedApps/RecetteTek"),
     )
     parser.add_argument(
         "--master_list_file",
         type=Path,
-        default=Path(ABS_FILE_PATH, "../nutrition_data/master_ingredient_list.csv")
+        default=Path(ABS_FILE_PATH, "../nutrition_data/master_ingredient_list.csv"),
     )
     parser.add_argument(
         "--todoist_token_file",
         type=Path,
-        default=Path(ABS_FILE_PATH, "./todoist_token.txt")
+        default=Path(ABS_FILE_PATH, "./todoist_token.txt"),
     )
     parser.add_argument(
         "--no_mail",
         action="store_true",
-        help="Do not send menu by mail, only save it locally."
+        help="Do not send menu by mail, only save it locally.",
     )
     parser.add_argument(
         "--food_items_file",
         type=Path,
-        default=Path(ABS_FILE_PATH, "../nutrition_data/food_items.feather")
+        default=Path(ABS_FILE_PATH, "../nutrition_data/food_items.feather"),
     )
 
 
@@ -66,7 +68,9 @@ def parse_fixed_menu(sub_parser):
     fixed_menu_parser = sub_parser.add_parser("fixed_menu")
     fixed_menu_parser.set_defaults(which="fixed_menu")
     fixed_menu_parser.add_argument(
-        "--fixed_menu_path", type=Path, default=Path(ABS_FILE_PATH, "../food_plan/fixed_menu")
+        "--fixed_menu_path",
+        type=Path,
+        default=Path(ABS_FILE_PATH, "../food_plan/fixed_menu"),
     )
     fixed_menu_parser.add_argument("--fixed_menu_number", type=int, required=True)
 
@@ -114,13 +118,13 @@ def parse_manual_menu(sub_parser):
         "--print_menu",
         action="store_true",
         help="Print out the generated menu on the "
-             "terminal in addition to saving it!",
+        "terminal in addition to saving it!",
     )
     manual_menu.add_argument(
         "--interactive_menu",
         action="store_true",
         help="Build menu interactively using the terminal instead of having it"
-             "automatically build."
+        "automatically build.",
     )
     manual_menu.add_argument("--email", type=str, default="base_email.html")
     manual_menu.add_argument("--cuisine", type=str, default="cuisine_map.yml")

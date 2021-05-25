@@ -3,8 +3,9 @@ from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
-
-from definitions import CALENDAR_COLUMNS, CALENDAR_FILE_PATTERN, INP_JSON_COLUMNS, RECIPE_FILE_PATTERN, RTK_FILE_PATTERN
+from definitions import (CALENDAR_COLUMNS, CALENDAR_FILE_PATTERN,
+                         INP_JSON_COLUMNS, RECIPE_FILE_PATTERN,
+                         RTK_FILE_PATTERN)
 
 
 def flatten_dict_to_list(row_entry):

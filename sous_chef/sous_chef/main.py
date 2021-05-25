@@ -8,8 +8,9 @@ import sys
 import argparse
 from pathlib import Path
 
-from create_menu import create_menu
+from menu.create_manual_menu import create_menu
 from grocery_list.generate_grocery_list import generate_grocery_list
+from menu.prepare_fixed_menu import finalize_fixed_menu
 from read_recipes import read_calendar, read_recipes
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
@@ -19,14 +20,20 @@ HOME_PATH = str(Path.home())
 def generate_parser():
     parser = argparse.ArgumentParser(description="sous chef activities")
     sub_parser = parser.add_subparsers(help="type of operation")
+    parse_default_settings(parser)
+    parse_manual_menu(sub_parser)
+    parse_fixed_menu(sub_parser)
+    parse_grocery_list(sub_parser)
+    return parser
 
+
+def parse_default_settings(parser):
     parser.add_argument("--sender", type=str, default="ariel.m.schulz@gmail.com")
     parser.add_argument(
         "--recipient",
         type=str,
         default="ariel.bridgeman@gmail.com, alex.transporter@gmail.com",
     )
-
     parser.add_argument(
         "--menu_path", type=Path, default=Path(ABS_FILE_PATH, "../food_plan")
     )
@@ -54,28 +61,17 @@ def generate_parser():
         default=Path(ABS_FILE_PATH, "../nutrition_data/food_items.feather")
     )
 
-    menu_parser = sub_parser.add_parser("menu")
-    menu_parser.set_defaults(which="menu")
-    menu_parser.add_argument(
-        "--template_path", type=Path, default=Path(ABS_FILE_PATH, "../menu_template")
-    )
-    menu_parser.add_argument("--template", type=str, default="four_day_cook_week.yml")
-    menu_parser.add_argument(
-        "--print_menu",
-        action="store_true",
-        help="Print out the generated menu on the "
-             "terminal in addition to saving it!",
-    )
-    menu_parser.add_argument(
-        "--interactive_menu",
-        action="store_true",
-        help="Build menu interactively using the terminal instead of having it"
-             "automatically build."
-    )
 
-    menu_parser.add_argument("--email", type=str, default="base_email.html")
-    menu_parser.add_argument("--cuisine", type=str, default="cuisine_map.yml")
+def parse_fixed_menu(sub_parser):
+    fixed_menu_parser = sub_parser.add_parser("fixed_menu")
+    fixed_menu_parser.set_defaults(which="fixed_menu")
+    fixed_menu_parser.add_argument(
+        "--fixed_menu_path", type=Path, default=Path(ABS_FILE_PATH, "../food_plan/fixed_menu")
+    )
+    fixed_menu_parser.add_argument("--fixed_menu_number", type=int, required=True)
 
+
+def parse_grocery_list(sub_parser):
     grocery_list_parser = sub_parser.add_parser("grocery_list")
     grocery_list_parser.set_defaults(which="grocery_list")
     grocery_list_parser.add_argument("--menu_file", type=str)
@@ -100,13 +96,34 @@ def generate_parser():
         action="store_true",
         help="Will clean previously existing items/tasks in Groceries project.",
     )
-
     # grocery_list_parser.add_argument(
     #     "--test_todoist_mode",
     #     action="store_true",
     #     help="Will add (test) to grocery entry and delete according entries.",
     # )
-    return parser
+
+
+def parse_manual_menu(sub_parser):
+    manual_menu = sub_parser.add_parser("manual_menu")
+    manual_menu.set_defaults(which="manual_menu")
+    manual_menu.add_argument(
+        "--template_path", type=Path, default=Path(ABS_FILE_PATH, "../menu_template")
+    )
+    manual_menu.add_argument("--template", type=str, default="four_day_cook_week.yml")
+    manual_menu.add_argument(
+        "--print_menu",
+        action="store_true",
+        help="Print out the generated menu on the "
+             "terminal in addition to saving it!",
+    )
+    manual_menu.add_argument(
+        "--interactive_menu",
+        action="store_true",
+        help="Build menu interactively using the terminal instead of having it"
+             "automatically build."
+    )
+    manual_menu.add_argument("--email", type=str, default="base_email.html")
+    manual_menu.add_argument("--cuisine", type=str, default="cuisine_map.yml")
 
 
 def main():
@@ -119,9 +136,12 @@ def main():
 
     recipes = read_recipes(args.recetteTek_path)
 
-    if args.which == "menu":
+    if args.which == "manual_menu":
         calendar = read_calendar(args.recetteTek_path, recipes)
         create_menu(args, recipes, calendar)
+
+    elif args.which == "fixed_menu":
+        finalize_fixed_menu(args.fixed_menu_path, args.fixed_menu_number)
 
     elif args.which == "grocery_list":
         generate_grocery_list(args, recipes)

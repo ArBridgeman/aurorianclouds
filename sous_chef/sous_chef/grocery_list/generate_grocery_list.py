@@ -1,17 +1,17 @@
 import json
-from pathlib import Path
-
 import re
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import yaml
+from grocery_list.grocery_matching_mapping import (IngredientsHelper,
+                                                   get_fuzzy_match,
+                                                   relevant_macro_groups,
+                                                   todoist_mapping)
+from messaging.todoist_api import TodoistHelper
 from pint import UnitRegistry
 from quantulum3 import parser
-
-from grocery_list.grocery_matching_mapping import IngredientsHelper, relevant_macro_groups, todoist_mapping, \
-    get_fuzzy_match
-from messaging.todoist_api import TodoistHelper
 
 # from IPython import embed
 
@@ -28,7 +28,11 @@ def retrieve_staple_ingredients(config):
 
 
 def remove_instruction(ingredient):
-    return ingredient.replace(", chopped", "").replace(", minced", "").replace(", diced", "")
+    return (
+        ingredient.replace(", chopped", "")
+        .replace(", minced", "")
+        .replace(", diced", "")
+    )
 
 
 def separate_unit_from_ingredient(ingredient):
@@ -70,7 +74,7 @@ def assume_quantity(recipe_title, quantity, ingredient):
 
 
 def separate_ingredients_for_grocery_list(
-        grocery_list, staple_ingredients, recipe_title, ingredients
+    grocery_list, staple_ingredients, recipe_title, ingredients
 ):
     for line in ingredients.split("\n"):
         is_optional = False
@@ -134,7 +138,9 @@ def find_largest_unit(units):
 
 def convert_values(row, desired_unit):
     try:
-        original_value = ureg.Quantity(row["quantity"], ureg.parse_expression(row["unit"]))
+        original_value = ureg.Quantity(
+            row["quantity"], ureg.parse_expression(row["unit"])
+        )
         if row["unit"] == "":
             return round(original_value.magnitude, 2), ""
         converted_value = original_value.to(desired_unit)
@@ -183,26 +189,32 @@ def get_food_categories(grocery_list, config):
 
     # some cleaning before matching
     grocery_list["ingredient"] = grocery_list["ingredient"].apply(
-        lambda x: re.sub('[^A-Za-z0-9üäö\- ]+', '', x).strip())
+        lambda x: re.sub("[^A-Za-z0-9üäö\- ]+", "", x).strip()
+    )
 
     grocery_list_matched = None
     if master_file is not None:
-        match_helper = lambda item: get_fuzzy_match(item, master_file.ingredient.values,
-                                                    warn=True, limit=1, reject=80)[0]
-        grocery_list["best_match"] = grocery_list["ingredient"].apply(match_helper).str[0]
+        match_helper = lambda item: get_fuzzy_match(
+            item, master_file.ingredient.values, warn=True, limit=1, reject=80
+        )[0]
+        grocery_list["best_match"] = (
+            grocery_list["ingredient"].apply(match_helper).str[0]
+        )
 
         grocery_list = pd.merge(
             grocery_list[[col for col in grocery_list.columns if col not in ["group"]]],
-            master_file[["ingredient", "group"]].rename(columns={"ingredient": "master_ingredient"}),
+            master_file[["ingredient", "group"]].rename(
+                columns={"ingredient": "master_ingredient"}
+            ),
             left_on="best_match",
             right_on="master_ingredient",
-            how="left"
+            how="left",
         ).drop(columns=["master_ingredient"])
 
         unmatched_mask = (
-                grocery_list.group.isnull()
-                | pd.isna(grocery_list.group)
-                | (grocery_list.group == "Unknown")
+            grocery_list.group.isnull()
+            | pd.isna(grocery_list.group)
+            | (grocery_list.group == "Unknown")
         )
 
         print(
@@ -253,9 +265,13 @@ def get_food_categories(grocery_list, config):
     return grocery_list
 
 
-def upload_groceries_to_todoist(groceries, project_name="Groceries",
-                                clean=False, dry_mode=False,
-                                todoist_token_file_path="todoist_token.txt"):
+def upload_groceries_to_todoist(
+    groceries,
+    project_name="Groceries",
+    clean=False,
+    dry_mode=False,
+    todoist_token_file_path="todoist_token.txt",
+):
     todoist_helper = TodoistHelper(todoist_token_file_path)
 
     groceries["group"] = groceries["group"].map(todoist_mapping)
@@ -270,9 +286,7 @@ def upload_groceries_to_todoist(groceries, project_name="Groceries",
         formatted_item = "{}, {} {}".format(item.ingredient, item.quantity, item.unit)
         if not dry_mode:
             todoist_helper.add_item_to_project(
-                formatted_item.strip(),
-                project_name,
-                section=item.group
+                formatted_item.strip(), project_name, section=item.group
             )
 
 
@@ -308,7 +322,10 @@ def generate_grocery_list(config, recipes, verbose=False):
 
     if not config.no_upload:
         print("Uploading grocery list to todoist...")
-        upload_groceries_to_todoist(grocery_list, clean=config.clean_todoist,
-                                    dry_mode=True,
-                                    todoist_token_file_path=config.todoist_token_file)
+        upload_groceries_to_todoist(
+            grocery_list,
+            clean=config.clean_todoist,
+            dry_mode=True,
+            todoist_token_file_path=config.todoist_token_file,
+        )
         print("Upload done.")

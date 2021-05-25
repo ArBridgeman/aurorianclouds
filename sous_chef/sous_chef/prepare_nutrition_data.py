@@ -5,8 +5,9 @@
 #
 #
 import pathlib
-import pyarrow.feather as feather
+
 import pandas as pd
+import pyarrow.feather as feather
 
 data_base = pathlib.Path.cwd() / ".." / "nutrition_data"
 food_groups = data_base / "FD_GROUP.txt.gz"

@@ -24,6 +24,8 @@ def flatten_dict_to_list(row_entry):
         for entry in row_entry:
             values.extend(entry.values())
     return values
+
+
 #
 # def create_timedelta(row_entry):
 #     if row_entry.isdecimal():
@@ -31,6 +33,7 @@ def flatten_dict_to_list(row_entry):
 #     else:
 #         # has units in string or is nan
 #         return pd.to_timedelta(row_entry)
+
 
 def retrieve_format_recipe_df(json_file):
     tmp_df = pd.read_json(json_file, dtype=INP_JSON_COLUMNS)[INP_JSON_COLUMNS.keys()]

@@ -1,4 +1,5 @@
 from pathlib import Path
+
 import pandas as pd
 
 MENU_FILE_PATTERN = lambda num: f"menu-{num}.csv"
@@ -36,7 +37,9 @@ def check_menu_by_day(group):
 
 
 def check_menu(fixed_menu: pd.DataFrame):
-    return fixed_menu.groupby("weekday", sort=False).apply(lambda group: check_menu_by_day(group))
+    return fixed_menu.groupby("weekday", sort=False).apply(
+        lambda group: check_menu_by_day(group)
+    )
 
 
 def finalize_fixed_menu(menu_path: Path, menu_number: int):

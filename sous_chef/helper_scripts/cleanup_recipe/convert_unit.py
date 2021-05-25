@@ -3,31 +3,60 @@ from quantulum3 import parser
 
 ureg = UnitRegistry()
 ureg.default_format = ".2f"
-ureg.define('drop = 0.05 ml = drop')
-ureg.define('pinch = 0.25 tsp = pinch')
+ureg.define("drop = 0.05 ml = drop")
+ureg.define("pinch = 0.25 tsp = pinch")
 
 DESIRED_UNITS = {"g": ["pound", "ounce"]}
-QUANTULUM_TO_KNOWN = {"pound-mass": "pound",
-                      "pound sterling": "pound",
-                      "penny inch": "pinch",
-                      "speed of light": "cup",  # c
-                      "inch set": "inch",  # inch
-                      "second of arc": "inch",  # "
-                      "tesla": "tablespoon",  # T
-                      "tesla litre": "tablespoon",  # TL
-                      "tonne litre": "teaspoon",  # tl
-                      "gram second": "gram",  # gms
-                      "coulomb": "cup",  # C,
-                      "teaspoon second": "teaspoon",  # tsps
-                      "cubic centimetre second": "ml",  # mls
-                      "tablespoon second": "tbsp",  # tbsps
-                      }
+QUANTULUM_TO_KNOWN = {
+    "pound-mass": "pound",
+    "pound sterling": "pound",
+    "penny inch": "pinch",
+    "speed of light": "cup",  # c
+    "inch set": "inch",  # inch
+    "second of arc": "inch",  # "
+    "tesla": "tablespoon",  # T
+    "tesla litre": "tablespoon",  # TL
+    "tonne litre": "teaspoon",  # tl
+    "gram second": "gram",  # gms
+    "coulomb": "cup",  # C,
+    "teaspoon second": "teaspoon",  # tsps
+    "cubic centimetre second": "ml",  # mls
+    "tablespoon second": "tbsp",  # tbsps
+}
 
-REAL_UNITS = ['centimetre', 'cubic centimetre', 'cup', 'dimensionless', 'drop', 'gallon', 'gram',
-              'inch', 'kilogram', 'litre', 'ounce', 'pint', 'pound-mass', 'quart', 'tablespoon', 'teaspoon']
-ALLOWED_QUANTULUM = ['coulomb', 'cubic centimetre second', 'gram second', 'inch set', 'penny inch', 'pound sterling',
-                     'second of arc', 'speed of light', 'tablespoon second', 'teaspoon second', 'tesla', 'tesla litre',
-                     'tonne litre'] + REAL_UNITS
+REAL_UNITS = [
+    "centimetre",
+    "cubic centimetre",
+    "cup",
+    "dimensionless",
+    "drop",
+    "gallon",
+    "gram",
+    "inch",
+    "kilogram",
+    "litre",
+    "ounce",
+    "pint",
+    "pound-mass",
+    "quart",
+    "tablespoon",
+    "teaspoon",
+]
+ALLOWED_QUANTULUM = [
+    "coulomb",
+    "cubic centimetre second",
+    "gram second",
+    "inch set",
+    "penny inch",
+    "pound sterling",
+    "second of arc",
+    "speed of light",
+    "tablespoon second",
+    "teaspoon second",
+    "tesla",
+    "tesla litre",
+    "tonne litre",
+] + REAL_UNITS
 DO_NOT_ABBREVIATE = ["cup", "drop", "inch"]
 
 
@@ -39,7 +68,11 @@ def find_desired_unit(unit):
 
 
 def format_significant_quantity(quantity):
-    if isinstance(quantity, int) or (isinstance(quantity, float) and quantity.is_integer()) or quantity >= 10:
+    if (
+        isinstance(quantity, int)
+        or (isinstance(quantity, float) and quantity.is_integer())
+        or quantity >= 10
+    ):
         return int(float("{:.2g}".format(quantity)))
     return float("{:.3g}".format(quantity))
 

@@ -28,7 +28,10 @@ def transform_ingredient_line(ingredient_line):
 
 def split_ingredients_perform_operation(row_ingredients):
     split_ingredients = row_ingredients.split("\n")
-    transformed_ingredients = [transform_ingredient_line(line_ingredient) for line_ingredient in split_ingredients]
+    transformed_ingredients = [
+        transform_ingredient_line(line_ingredient)
+        for line_ingredient in split_ingredients
+    ]
     return "\n".join(transformed_ingredients)
 
 
@@ -38,7 +41,8 @@ def main():
 
     orig_recipes = read_recipes(args)
     orig_recipes["modified_ingredients"] = orig_recipes.ingredients.apply(
-        lambda row: split_ingredients_perform_operation(row))
+        lambda row: split_ingredients_perform_operation(row)
+    )
     orig_recipes[["title", "ingredients", "modified_ingredients"]].to_csv("recipes.csv")
 
 

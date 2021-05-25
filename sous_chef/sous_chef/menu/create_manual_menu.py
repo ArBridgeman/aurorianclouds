@@ -1,25 +1,18 @@
-import os
 import json
-
-from collections import defaultdict, OrderedDict
+import os
+from collections import OrderedDict, defaultdict
 from datetime import date
 from pathlib import Path
 
 import pandas as pd
 import yaml
-
-from filter_recipes import (
-    create_previously_tried_filter,
-    create_protein_filter,
-    create_time_filter,
-    has_recipe_category_or_tag,
-    skip_protein_filter,
-    create_tags_or_filter,
-)
-from messaging.send_email import EmailSender
-
+from filter_recipes import (create_previously_tried_filter,
+                            create_protein_filter, create_tags_or_filter,
+                            create_time_filter, has_recipe_category_or_tag,
+                            skip_protein_filter)
 from fuzzywuzzy import fuzz
 from grocery_list.grocery_matching_mapping import get_fuzzy_match
+from messaging.send_email import EmailSender
 
 
 def retrieve_template(filepath):
@@ -43,7 +36,7 @@ def select_by_near_cuisine(recipes, cuisine_select):
 
 
 def select_food_item(
-        recipes, params, tags=None, food_type: str = "Entree", cuisine_select=None
+    recipes, params, tags=None, food_type: str = "Entree", cuisine_select=None
 ):
     mask = recipes.categories.apply(has_recipe_category_or_tag, args=(food_type,))
 
@@ -85,9 +78,9 @@ def select_random_side_from_calendar(recipes, calendar, recipe_uuid, food_type):
     if sum(mask_entree) > 0:
         dates = calendar[mask_entree].date.unique()
         mask_side = (
-                (calendar.date.isin(dates))
-                & (calendar.recipeUuid != recipe_uuid)
-                & (calendar.food_type == food_type)
+            (calendar.date.isin(dates))
+            & (calendar.recipeUuid != recipe_uuid)
+            & (calendar.food_type == food_type)
         )
         if sum(mask_side) > 0:
             side_uuid = calendar[mask_side].sample().iloc[0].recipeUuid
@@ -150,9 +143,12 @@ def format_json_entry(entry):
 
 
 def format_email_entry(entry):
-    return OrderedDict({"title": entry.title,
-                        # "time": format_time_entry(entry)
-                        })
+    return OrderedDict(
+        {
+            "title": entry.title,
+            # "time": format_time_entry(entry)
+        }
+    )
 
 
 def select_random_meal(recipes, calendar, params, cuisine_map):
@@ -197,11 +193,13 @@ def interactive_meal_selection(recipes, calendar, params, cuisine_map):
     # could also be "entree", "side1", "side2"; it doesn't really matter for the logic
     while True:
         title = input(
-            "Please enter at least the start of the title of your desired {:s} dish: ".format(labels[state]))
-        best_results = get_fuzzy_match(title,
-                                       recipes.title,
-                                       limit=5,
-                                       scorer=fuzz.partial_ratio)
+            "Please enter at least the start of the title of your desired {:s} dish: ".format(
+                labels[state]
+            )
+        )
+        best_results = get_fuzzy_match(
+            title, recipes.title, limit=5, scorer=fuzz.partial_ratio
+        )
         print("Is your desired {:s} dish in this list?:".format(labels[state]))
         for i_dish, dish in enumerate(best_results):
             print("({:d}) {:s}".format(i_dish, best_results[i_dish][0]))
@@ -226,7 +224,14 @@ def interactive_meal_selection(recipes, calendar, params, cuisine_map):
 
         last = False
         while state < len(labels) - 1:
-            answer = input("Do you wish to add a {:s} dish? (y/n): [y] ".format(labels[state + 1])) or "y"
+            answer = (
+                input(
+                    "Do you wish to add a {:s} dish? (y/n): [y] ".format(
+                        labels[state + 1]
+                    )
+                )
+                or "y"
+            )
             state = state + 1
             if validate_answer(answer, "y"):
                 last = True
@@ -241,7 +246,7 @@ def interactive_meal_selection(recipes, calendar, params, cuisine_map):
 def determine_cuisine_selection(entree_tags, cuisine_map):
     for cuisine_group in cuisine_map.keys():
         if any(
-                cuisine_tag in entree_tags for cuisine_tag in cuisine_map[cuisine_group]
+            cuisine_tag in entree_tags for cuisine_tag in cuisine_map[cuisine_group]
         ):
             return cuisine_map[cuisine_group]
     return None

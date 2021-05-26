@@ -47,7 +47,8 @@ class TodoistHelper:
                 freezer_contents["type"].append("undefined")
         return pd.DataFrame(freezer_contents)
 
-    def add_item_to_project(self, item, project, section=None):
+    def add_item_to_project(self, item, project, section=None,
+                            label=None):
         project_id = self.get_project_id(project)
         assert project_id is not None, "Id of project {:s} could not be found!".format(
             project
@@ -56,9 +57,10 @@ class TodoistHelper:
         if section is not None:
             section_id = self.get_section_id(section)
             assert (
-                section_id is not None
+                    section_id is not None
             ), "Id of section {:s} could not be found!".format(section)
-        new_item = self.connection.add_item(item, project_id=project_id)
+        new_item = self.connection.add_item(item, project_id=project_id,
+                                            label=label)
         # somehow, the section is not correctly set with the previous command
         if section_id is not None:
             self.connection.items.move(new_item["id"], section_id=section_id)
@@ -90,8 +92,8 @@ class TodoistHelper:
                 if no_recurring:
                     if task["due"] is not None:
                         if (
-                            task["due"]["is_recurring"] is True
-                            or task["due"]["date"] is not None
+                                task["due"]["is_recurring"] is True
+                                or task["due"]["date"] is not None
                         ):
                             continue
                 self.connection.items.delete(task["id"])

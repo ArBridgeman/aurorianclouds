@@ -313,3 +313,11 @@ confectioners’ sugar,False,Baking
 broth,False,Canned
 sake,False,Beverages
 club soda,False,Beverages
+fries,False,Frozen goods
+burger buns,False,Prepared
+wraps,False,Prepared
+Tomatenmark,True,Sauces
+Caesar dressing,False,Sauces
+bratkartoffeln,False,Frozen goods
+fusilli noodles,False,Pasta
+fried egg,False,Other

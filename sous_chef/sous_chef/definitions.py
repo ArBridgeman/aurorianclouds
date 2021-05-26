@@ -45,6 +45,33 @@ PROTEIN_SOURCE = {
     "side_excluded": ["beef", "seafood", "poultry", "plant protein", "pork"],
 }
 
+ALLOWED_UNITS = [
+    "cm",
+    "m",
+    "ccm",
+    "cup",
+    "can",
+    "dimensionless",
+    "drop",
+    "gallon",
+    "g",
+    "inch",
+    "kg",
+    "l",
+    "ml",
+    "ounce",
+    "pint",
+    "pound-mass",
+    "quart",
+    "tbsp",
+    "tsp",
+    "package",
+    "pkg",
+    "pack",
+    "jar"
+]
+
+
 RECIPE_FILE_PATTERN = "recipes*.json"
 
 RTK_FILE_PATTERN = "backup*.rtk"

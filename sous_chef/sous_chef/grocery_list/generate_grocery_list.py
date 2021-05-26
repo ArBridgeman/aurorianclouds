@@ -110,7 +110,7 @@ def regex_split_ingredient(ingredient,
 
 
 def separate_ingredients_for_grocery_list(grocery_list, staple_ingredients,
-                                          recipe_title, ingredients,
+                                          recipe_title, ingredients, day,
                                           mult_factor=1,
                                           regex_match=True):
     for line in ingredients.split("\n"):
@@ -147,6 +147,7 @@ def separate_ingredients_for_grocery_list(grocery_list, staple_ingredients,
                                                                   staple_ingredients,
                                                                   factor=mult_factor,
                                                                   from_recipe=recipe_title,
+                                                                  from_day=day,
                                                                   use_regex=regex_match,
                                                                   manual_entry=False,
                                                                   is_optional=is_optional
@@ -201,6 +202,7 @@ def aggregate_like_ingredient(grocery_list, convert_units=False):
                 "quantity": ["sum"],
                 "is_staple": ["first"],
                 "from_recipe": lambda x: list(set(x)),
+                "from_day": lambda x: list(set(x)),
                 "instruction": lambda x: list(set(x))
             }
         )
@@ -221,7 +223,7 @@ def get_food_categories(grocery_list, config):
 
     # some cleaning before matching
     grocery_list["ingredient"] = grocery_list["ingredient"].apply(
-        lambda x: re.sub("[^A-Za-z0-9üäö\-\_\s]+", "", x).strip()
+        lambda x: re.sub("[^A-Za-z0-9üäö\-_\s]+", "", x).strip()
     )
 
     grocery_list_matched = None
@@ -268,6 +270,7 @@ def get_food_categories(grocery_list, config):
     grocery_list = pd.concat([grocery_list, grocery_list_matched])
     grocery_list = grocery_list.sort_values("manual_ingredient", ascending=False)
 
+    one_change = False
     if config.interactive_grouping:
         print("Will query for user input to improve food grouping of selected recipes!")
         for _, item in grocery_list.iterrows():
@@ -300,16 +303,18 @@ def get_food_categories(grocery_list, config):
                             },
                             ignore_index=True,
                         )
+                        one_change = True
                         break
                     except Exception as e:
                         print(
                             "Error while updating group, please check input and retry!"
                         )
                         print(e)
-        print("All uncertain groups have been updated!")
-        print("Updating master file with added ingredients and groups!")
-        master_file.to_csv(config.master_list_file, index=False, header=True)
-        print("Written to {:s}".format(config.master_list_file.as_posix()))
+        if one_change:
+            print("All uncertain groups have been updated!")
+            print("Updating master file with added ingredients and groups!")
+            master_file.to_csv(config.master_list_file, index=False, header=True)
+            print("Written to {:s}".format(config.master_list_file.as_posix()))
 
     return grocery_list
 
@@ -334,14 +339,18 @@ def upload_groceries_to_todoist(
         print("Dry mode! Will only simulate actions but not upload to todoist!")
 
     for _, item in groceries.iterrows():
-        formatted_item = "{}, {} {}".format(item.ingredient, item.quantity, item.unit)
-        formatted_item = re.sub("\s+", " ", formatted_item)
-        print("Adding item {:s} ({:s}) to "
+        formatted_item = "{}, {} {}{}".format(item.ingredient, item.quantity,
+                                              item.unit, " (optional)" if item.is_optional else "")
+        formatted_item = re.sub("\s+", " ", formatted_item).strip()
+        print("Adding item {:s} from group {:s} to "
               "todoist (recipe source(s): {})".format(formatted_item, item.group, repr(item.from_recipe)))
         if not dry_mode:
+            all_labels = item.from_recipe + item.from_day
+            if item.is_optional:
+                all_labels.append(["Optional"])
             todoist_helper.add_item_to_project(
-                formatted_item.strip(), project_name, section=item.group,
-                label=repr(item.from_recipe)
+                formatted_item, project_name, section=item.group,
+                labels=all_labels
             )
 
 
@@ -350,8 +359,10 @@ def parse_add_ingredient_entry_to_grocery_list(ingredient_line,
                                                grocery_list, staple_list,
                                                manual_entry=True, factor=1,
                                                is_staple=False, is_optional=False,
-                                               use_regex=True, from_recipe=""):
+                                               use_regex=True, from_recipe="",
+                                               from_day=""):
     ingredient_line = str(ingredient_line.strip())
+    instruction = ""
     if use_regex:
         quantity, unit, ingredient, instruction = regex_split_ingredient(ingredient_line)
     else:
@@ -371,6 +382,7 @@ def parse_add_ingredient_entry_to_grocery_list(ingredient_line,
             "is_optional": is_optional,
             "manual_ingredient": manual_entry,
             "from_recipe": from_recipe,
+            "from_day": from_day,
             "instruction": instruction,
         },
         ignore_index=True,
@@ -381,12 +393,19 @@ def parse_add_ingredient_entry_to_grocery_list(ingredient_line,
 def get_empty_grocery_df():
     grocery_list = pd.DataFrame(
         columns=["quantity", "unit", "ingredient", "is_staple", "is_optional",
-                 "manual_ingredient", "from_recipe", "instruction"]
+                 "manual_ingredient", "from_recipe", "from_day", "instruction"]
     )
     return grocery_list
 
 
 def generate_grocery_list(config, recipes, verbose=False):
+    if config.only_clean_todoist:
+        project_name = "Groceries"
+        todoist_helper = TodoistHelper(config.todoist_token_file)
+        print("Cleaning previous items/tasks in project {:s}".format(project_name))
+        todoist_helper.delete_all_items_in_project(project_name)
+        return
+
     filepath = Path(config.menu_path, config.menu_file)
     staple_ingredients = retrieve_staple_ingredients(config)
 
@@ -416,7 +435,8 @@ def generate_grocery_list(config, recipes, verbose=False):
                                                                                   grocery_list,
                                                                                   staple_ingredients,
                                                                                   factor=entry["factor"],
-                                                                                  from_recipe=day
+                                                                                  from_recipe="manual",
+                                                                                  from_day=day
                                                                                   )
                 else:
                     mask_entry = None
@@ -442,7 +462,7 @@ def generate_grocery_list(config, recipes, verbose=False):
                     recipe_title = selected_recipe.title
                     ingredients = selected_recipe.ingredients
                     grocery_list = separate_ingredients_for_grocery_list(
-                        grocery_list, staple_ingredients, recipe_title, ingredients,
+                        grocery_list, staple_ingredients, recipe_title, ingredients, day,
                         mult_factor=float(entry.get("factor", 1)),
                         regex_match=True
                     )
@@ -454,14 +474,15 @@ def generate_grocery_list(config, recipes, verbose=False):
 
     # TODO convert all masses to grams
     if verbose:
-        print(grocery_list.sort_values(by=["is_staple", "ingredient"]))
+        print(grocery_list.sort_values(["is_staple", "ingredient"]))
 
     if not config.no_upload:
+        # TODO add arg option for dry-run as currently hardcoded
         print("Uploading grocery list to todoist...")
         upload_groceries_to_todoist(
             grocery_list,
             clean=config.clean_todoist,
-            dry_mode=True,
+            dry_mode=config.dry_mode,
             todoist_token_file_path=config.todoist_token_file,
         )
         print("Upload done.")

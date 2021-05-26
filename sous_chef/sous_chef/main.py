@@ -100,11 +100,16 @@ def parse_grocery_list(sub_parser):
         action="store_true",
         help="Will clean previously existing items/tasks in Groceries project.",
     )
-    # grocery_list_parser.add_argument(
-    #     "--test_todoist_mode",
-    #     action="store_true",
-    #     help="Will add (test) to grocery entry and delete according entries.",
-    # )
+    grocery_list_parser.add_argument(
+        "--dry_mode",
+        action="store_true",
+        help="Will perform only a dry mode without uploads and print actions to terminal.",
+    )
+    grocery_list_parser.add_argument(
+        "--only_clean_todoist",
+        action="store_true",
+        help="Will only clean previous entries in todoist and not do anything else.",
+    )
 
 
 def parse_manual_menu(sub_parser):

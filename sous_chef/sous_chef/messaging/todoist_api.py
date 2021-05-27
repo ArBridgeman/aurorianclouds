@@ -5,21 +5,33 @@ from typing import Any
 import pandas as pd
 import todoist
 
+import re
+
 
 @dataclass
 class TodoistHelper:
     connection: Any = field(init=False)
     token_str: str
+    active_labels: dict = field(init=False)
 
     def __post_init__(self):
         with open(self.token_str, "r") as f:
             token = f.read().strip()
         self.connection = todoist.TodoistAPI(token)
-        self.connection.sync()
+        self.sync()
+        self.active_labels = self.get_active_labels()
 
-    # TODO do we need this? or is commit sufficient?
     def sync(self):
         self.connection.sync()
+
+    def commit(self):
+        self.connection.commit()
+
+    def get_active_labels(self):
+        label_dict = {}
+        for label in self.connection.labels.state["labels"]:
+            label_dict[label["name"]] = label["id"]
+        return label_dict
 
     def get_project_id(self, desired_project):
         for project in self.connection.state["projects"]:
@@ -33,7 +45,7 @@ class TodoistHelper:
                 return project.data.get("id")
         return None
 
-    # TODO implement
+    # TODO implement defrost task uploader
     def add_defrost_task_to_active_tasks(self):
         project_id = self.get_project_id("Active tasks")
         # add task with this project id to defrost meat the day before
@@ -47,7 +59,30 @@ class TodoistHelper:
                 freezer_contents["type"].append("undefined")
         return pd.DataFrame(freezer_contents)
 
-    def add_item_to_project(self, item, project, section=None):
+    @staticmethod
+    def clean_label(label):
+        return re.sub("\s+", "_", label).strip()
+
+    def get_label_id_or_add_new(self, label):
+        label = self.clean_label(label)
+        if label in self.active_labels.keys():
+            return self.active_labels[label]
+        else:
+            new_label = self.connection.labels.add(label)
+            self.commit()  # resolves the correct new label id, before that it's a different transaction id
+            self.active_labels[label] = new_label["id"]
+            return new_label["id"]
+
+    def get_label_ids(self, labels):
+        label_ids = []
+        for label in labels:
+            if label is None or label == "":
+                continue
+            label_ids.append(self.get_label_id_or_add_new(label))
+        return label_ids
+
+    def add_item_to_project(self, item, project, section=None,
+                            labels=None):
         project_id = self.get_project_id(project)
         assert project_id is not None, "Id of project {:s} could not be found!".format(
             project
@@ -56,15 +91,22 @@ class TodoistHelper:
         if section is not None:
             section_id = self.get_section_id(section)
             assert (
-                section_id is not None
+                    section_id is not None
             ), "Id of section {:s} could not be found!".format(section)
-        new_item = self.connection.add_item(item, project_id=project_id)
+
+        label_ids = None
+        if labels is not None:
+            label_ids = self.get_label_ids(labels)
+        new_item = self.connection.add_item(item, project_id=project_id,
+                                            labels=label_ids)
+
         # somehow, the section is not correctly set with the previous command
+        # as such, the following is necessary
         if section_id is not None:
             self.connection.items.move(new_item["id"], section_id=section_id)
 
-        self.connection.commit()
-        self.connection.sync()
+        self.commit()
+        self.sync()
 
     def get_all_items_in_project(self, project):
         items = []
@@ -90,11 +132,11 @@ class TodoistHelper:
                 if no_recurring:
                     if task["due"] is not None:
                         if (
-                            task["due"]["is_recurring"] is True
-                            or task["due"]["date"] is not None
+                                task["due"]["is_recurring"] is True
+                                or task["due"]["date"] is not None
                         ):
                             continue
                 self.connection.items.delete(task["id"])
 
-        self.connection.commit()
-        self.connection.sync()
+        self.commit()
+        self.sync()

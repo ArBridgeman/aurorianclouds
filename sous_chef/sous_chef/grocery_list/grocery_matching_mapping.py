@@ -55,7 +55,7 @@ todoist_mapping = {
     "Other": "Other",
     "Pasta and grains": "GF park",
     "Pasta": "GF park",
-    "Prepared": "Other",
+    "Prepared": "GF park",
     "Sauces": "Sauces cans and oils",
     "Spices and herbs": "Spices and herbs",
     "Unknown": "Other",
@@ -88,13 +88,13 @@ not_mappable_group = "Unknown"
 
 
 def get_fuzzy_match(
-    item_to_match,
-    list_of_search_items,
-    scorer=fuzz.ratio,
-    limit=3,
-    warn=True,
-    warn_thresh=75,
-    reject=0,
+        item_to_match,
+        list_of_search_items,
+        scorer=fuzz.ratio,
+        limit=3,
+        warn=True,
+        warn_thresh=75,
+        reject=0,
 ):
     """
     Simple helper function that returns best fuzzy match for item_to_match
@@ -199,7 +199,7 @@ class IngredientsHelper(object):
         # return self.get_food_group_manual_1(item, **kwargs)
         return self.get_food_group_majority_vote(item, **kwargs)
 
-    def get_food_group_majority_vote(self, item, low_score_cutoff=80, n_vote=50):
+    def get_food_group_majority_vote(self, item, low_score_cutoff=80, n_vote=25):
         # from difflib import get_close_matches
 
         item = str(item).lower()
@@ -261,7 +261,7 @@ class IngredientsHelper(object):
                 match_quality = match_quality2
                 match_df = self.ingredient_df[
                     self.ingredient_df.desc_second == best_result2
-                ]
+                    ]
 
         assert len(match_df) > 0, "No results found!"
 

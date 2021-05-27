@@ -5,6 +5,8 @@ from typing import Any
 import pandas as pd
 import todoist
 
+import re
+
 
 @dataclass
 class TodoistHelper:
@@ -26,10 +28,10 @@ class TodoistHelper:
         self.connection.commit()
 
     def get_active_labels(self):
-        ldict = {}
+        label_dict = {}
         for label in self.connection.labels.state["labels"]:
-            ldict[label["name"]] = label["id"]
-        return ldict
+            label_dict[label["name"]] = label["id"]
+        return label_dict
 
     def get_project_id(self, desired_project):
         for project in self.connection.state["projects"]:
@@ -57,7 +59,11 @@ class TodoistHelper:
                 freezer_contents["type"].append("undefined")
         return pd.DataFrame(freezer_contents)
 
+    def clean_label(self, label):
+        return re.sub("\s+", "_", label).strip()
+
     def get_label_id_or_add_new(self, label):
+        label = self.clean_label(label)
         if label in self.active_labels.keys():
             return self.active_labels[label]
         else:

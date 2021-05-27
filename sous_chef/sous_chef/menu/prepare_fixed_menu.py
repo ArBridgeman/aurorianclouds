@@ -46,4 +46,4 @@ def finalize_fixed_menu(menu_path: Path, menu_number: int):
     fixed_menu = obtain_fixed_menu(menu_path, menu_number)
     checked_menu = check_menu(fixed_menu)
     tmp_menu = Path(menu_path, "menu-tmp.csv")
-    checked_menu.to_csv(tmp_menu)
+    checked_menu.reset_index(drop=True).to_csv(tmp_menu, index=False, header=True)

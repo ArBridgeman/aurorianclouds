@@ -111,7 +111,7 @@ def regex_split_ingredient(ingredient,
 
 def separate_ingredients_for_grocery_list(grocery_list, staple_ingredients,
                                           recipe_title, ingredients, day,
-                                          mult_factor=1,
+                                          mult_factor=1.,
                                           regex_match=True):
     for line in ingredients.split("\n"):
         is_optional = False
@@ -164,6 +164,7 @@ def find_largest_unit(units):
         try:
             all_units.append(ureg.parse_expression(unit))
         except Exception as e:
+            print(e)
             print("Error while parsing unit {:s}! Ignoring!".format(unit))
     return max(all_units).units
 
@@ -178,6 +179,7 @@ def convert_values(row, desired_unit):
         converted_value = original_value.to(desired_unit)
         return round(converted_value.magnitude, 2), converted_value.units
     except Exception as e:
+        print(e)
         return row["quantity"], row["unit"]
 
 
@@ -357,7 +359,7 @@ def upload_groceries_to_todoist(
 # TODO: further generalize and improve this function (staple detection, other fields etc.)
 def parse_add_ingredient_entry_to_grocery_list(ingredient_line,
                                                grocery_list, staple_list,
-                                               manual_entry=True, factor=1,
+                                               manual_entry=True, factor=1.,
                                                is_staple=False, is_optional=False,
                                                use_regex=True, from_recipe="",
                                                from_day=""):

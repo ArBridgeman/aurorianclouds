@@ -59,7 +59,8 @@ class TodoistHelper:
                 freezer_contents["type"].append("undefined")
         return pd.DataFrame(freezer_contents)
 
-    def clean_label(self, label):
+    @staticmethod
+    def clean_label(label):
         return re.sub("\s+", "_", label).strip()
 
     def get_label_id_or_add_new(self, label):

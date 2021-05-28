@@ -1,11 +1,11 @@
 weekday,item,type,factor,grocery_list,menu_list
 Saturday,Cali burgers,recipe,1,Y,Y
-Saturday,1 package fries,ingredient,0.7,Y,Y
+Saturday,package fries,ingredient,0.7,Y,Y
 Sunday,Marry Me Chicken,recipe,1,Y,Y
-Sunday,1 package fusilli noodles,ingredient,0.5,Y,Y
-Sunday,0.25 cup Caesar dressing,ingredient,1,Y,N
+Sunday,package fusilli noodles,ingredient,0.7,Y,Y
+Sunday,cup Caesar dressing,ingredient,0.25,Y,N
 Sunday,Caesar salad,ingredient,1,N,Y
 Monday,Chipotle bean burritos,recipe,2,Y,Y
 Thursday,fried egg,ingredient,3,Y,Y
-Thursday,1 package bratkartoffeln,ingredient,1,Y,Y
+Thursday,package bratkartoffeln,ingredient,1,Y,Y
 Thursday,side salad,ingredient,1,N,Y

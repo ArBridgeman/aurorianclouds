@@ -57,7 +57,7 @@ veetable stock,False,Canned
 soy sauce,True,Sauces
 orange zest,False,Fruits
 white pepper,True,Spices and herbs
-buckwheat flour,False,Baking
+buckwheat flour,False,Prepared
 chickpea flour,False,Baking
 rotini pasta,False,Pasta
 black olives,False,Canned
@@ -67,6 +67,7 @@ cherry tomatoes,False,Vegetables
 psyllium husk powder,False,Baking
 sesame seeds,True,Nuts and seeds
 potato,False,Vegetables
+baking potato,False,Vegetables
 bacon,False,Meats
 grape tomatoes,False,Vegetables
 feta,False,Dairy products
@@ -76,6 +77,7 @@ oil,True,Fats and oils
 rice vinegar,True,Sauces
 ginger paste,True,Sauces
 Dijon mustard,True,Sauces
+sweet mustard,True,Sauces
 chicken tenderloins,False,Meats
 crushed tomatoes,False,Canned
 sweet onion,False,Vegetables
@@ -146,7 +148,7 @@ cocoa powder,True,Baking
 tzatsiki,False,Dairy products
 rice flakes,False,Grains
 angel hair pasta,False,Pasta
-pine Nuts and seeds,False,Nuts and seeds
+pine nuts,False,Nuts and seeds
 hummus,False,Prepared
 peperocini,False,Canned
 sun-dried tomatoes,False,Canned
@@ -178,6 +180,7 @@ allspice,False,Spices and herbs
 whipped cream,False,Dairy products
 cacao powder,True,Baking
 poppy seeds,False,Nuts and seeds
+ground flaxseed,False,Nuts and seeds
 lemon zest,False,Fruits
 blueberries,False,Fruits
 Italian salad dressing Mix,True,Spices and herbs
@@ -237,7 +240,7 @@ apple cider vinegar,True,Sauces
 coconut sugar,False,Baking
 lasagna noodles,False,Pasta
 marinara sauce,False,Canned
-ricotta cheese,False,Dairy products
+ricotta,False,Dairy products
 apple juice,False,Juices
 beef tenderloin,False,Meats
 beef brisket,False,Meats
@@ -309,6 +312,8 @@ chicken bouillon,True,Spices and herbs
 vegetable bouillon,True,Spices and herbs
 dried sage,False,Spices and herbs
 hoagie rolls,False,Prepared
+bread rolls,False,Prepared
+bread slices,False,Prepared
 provolone,False,Dairy products
 sunflower oil,False,Fats and oils
 head of garlic,False,Vegetables

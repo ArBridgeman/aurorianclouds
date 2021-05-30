@@ -1,11 +1,10 @@
+import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any
 
 import pandas as pd
 import todoist
-
-import re
 
 
 @dataclass
@@ -47,8 +46,7 @@ class TodoistHelper:
 
     # TODO implement defrost task uploader
     def add_defrost_task_to_active_tasks(self):
-        project_id = self.get_project_id("Active tasks")
-        # add task with this project id to defrost meat the day before
+        NotImplementedError("Defrost tasks are not implemented yet!")
 
     def retrieve_freezer(self):
         freezer_contents = defaultdict(list)
@@ -81,8 +79,7 @@ class TodoistHelper:
             label_ids.append(self.get_label_id_or_add_new(label))
         return label_ids
 
-    def add_item_to_project(self, item, project, section=None,
-                            labels=None):
+    def add_item_to_project(self, item, project, section=None, labels=None):
         project_id = self.get_project_id(project)
         assert project_id is not None, "Id of project {:s} could not be found!".format(
             project
@@ -91,22 +88,23 @@ class TodoistHelper:
         if section is not None:
             section_id = self.get_section_id(section)
             assert (
-                    section_id is not None
+                section_id is not None
             ), "Id of section {:s} could not be found!".format(section)
 
         label_ids = None
         if labels is not None:
             label_ids = self.get_label_ids(labels)
-        new_item = self.connection.add_item(item, project_id=project_id,
-                                            labels=label_ids)
+        new_item = self.connection.add_item(
+            item, project_id=project_id, labels=label_ids
+        )
 
         # somehow, the section is not correctly set with the previous command
         # as such, the following is necessary
         if section_id is not None:
             self.connection.items.move(new_item["id"], section_id=section_id)
 
-        self.commit()
         self.sync()
+        self.commit()
 
     def get_all_items_in_project(self, project):
         items = []
@@ -119,24 +117,38 @@ class TodoistHelper:
                 items.append(item)
         return items
 
-    def delete_all_items_in_project(self, project, no_recurring=True):
+    def delete_all_items_in_project(
+        self, project, no_recurring=True, prior_move="Deleted"
+    ):
         """
         Deletes items in project "project" that fulfil specified properties.
         :param project: string, name of project.
         :param no_recurring: boolean. If true, do not delete recurring items from list.
+        :param prior_move: string (optional). If not None, will move items to corresponding
+                           section prior to deleting them.
         """
         project_id = self.get_project_id(project)
+        self.sync()
+
+        section_id = None
+        if prior_move is not None:
+            section_id = self.get_section_id(prior_move)
+            assert (
+                section_id is not None
+            ), "Id of section {:s} could not be found!".format(prior_move)
 
         for task in self.connection.state["items"]:
             if task["project_id"] == project_id:
                 if no_recurring:
                     if task["due"] is not None:
                         if (
-                                task["due"]["is_recurring"] is True
-                                or task["due"]["date"] is not None
+                            task["due"]["is_recurring"] is True
+                            or task["due"]["date"] is not None
                         ):
                             continue
+                if section_id is not None:
+                    self.connection.items.move(task["id"], section_id=section_id)
                 self.connection.items.delete(task["id"])
 
-        self.commit()
         self.sync()
+        self.commit()

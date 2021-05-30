@@ -61,6 +61,10 @@ Used for sending emails:
 Create a `todoist_token.txt` file in the sub-directory sous_chef. Copy in your
 Todoist API token, which is found in the web app at `Settings -> Integrations -> API token`.
 
+**IMPORTANT**: if there are persisent problems when syncing to/from the Todoist API,
+it has proven useful to issue a new API token in the webinterface and replace the
+old token in `todoist_token.txt` by the new one.
+
 Used for setting up tasks:
 * https://developer.todoist.com/sync/v8/
 * https://github.com/doist/todoist-python

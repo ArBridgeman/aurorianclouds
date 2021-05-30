@@ -6,10 +6,12 @@ import numpy as np
 import pandas as pd
 import yaml
 from definitions import ALLOWED_UNITS
-from grocery_list.grocery_matching_mapping import (IngredientsHelper,
-                                                   get_fuzzy_match,
-                                                   relevant_macro_groups,
-                                                   todoist_mapping)
+from grocery_list.grocery_matching_mapping import (
+    IngredientsHelper,
+    get_fuzzy_match,
+    relevant_macro_groups,
+    todoist_mapping,
+)
 from messaging.todoist_api import TodoistHelper
 from pint import UnitRegistry, unit
 from quantulum3 import parser

@@ -88,13 +88,13 @@ not_mappable_group = "Unknown"
 
 
 def get_fuzzy_match(
-        item_to_match,
-        list_of_search_items,
-        scorer=fuzz.ratio,
-        limit=3,
-        warn=True,
-        warn_thresh=75,
-        reject=0,
+    item_to_match,
+    list_of_search_items,
+    scorer=fuzz.ratio,
+    limit=3,
+    warn=True,
+    warn_thresh=75,
+    reject=0,
 ):
     """
     Simple helper function that returns best fuzzy match for item_to_match
@@ -261,7 +261,7 @@ class IngredientsHelper(object):
                 match_quality = match_quality2
                 match_df = self.ingredient_df[
                     self.ingredient_df.desc_second == best_result2
-                    ]
+                ]
 
         assert len(match_df) > 0, "No results found!"
 

@@ -1,6 +1,5 @@
 import pytest
-from standardize_unit_value import (convert_html_to_fraction,
-                                    switch_fraction_to_decimal)
+from standardize_unit_value import convert_html_to_fraction, switch_fraction_to_decimal
 
 
 @pytest.mark.parametrize(

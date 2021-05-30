@@ -1,7 +1,10 @@
 import pytest
-from convert_unit import (convert_quantity_unit, convert_to_desired_unit,
-                          format_significant_quantity,
-                          separate_quantity_unit_ingredient)
+from convert_unit import (
+    convert_quantity_unit,
+    convert_to_desired_unit,
+    format_significant_quantity,
+    separate_quantity_unit_ingredient,
+)
 
 
 @pytest.mark.parametrize(

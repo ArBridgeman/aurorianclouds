@@ -1,6 +1,7 @@
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
+from time import sleep
 from typing import Any
 
 import pandas as pd
@@ -118,7 +119,7 @@ class TodoistHelper:
         return items
 
     def delete_all_items_in_project(
-        self, project, no_recurring=True, prior_move="Deleted"
+        self, project, no_recurring=True, prior_move="Deleted", sleep_s=1
     ):
         """
         Deletes items in project "project" that fulfil specified properties.
@@ -128,6 +129,7 @@ class TodoistHelper:
                            section prior to deleting them.
         """
         project_id = self.get_project_id(project)
+        sleep(sleep_s)
         self.sync()
 
         section_id = None

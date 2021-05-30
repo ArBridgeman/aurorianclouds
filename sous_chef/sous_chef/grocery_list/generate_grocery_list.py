@@ -532,17 +532,20 @@ def generate_grocery_list(config, recipes, verbose=False):
 
     # get all food categories using USDA data
     grocery_list = get_food_categories(grocery_list, config)
+    grocery_list = grocery_list.sort_values(
+        ["ingredient", "quantity", "unit"], ascending=[True, True, False]
+    )
 
     # TODO convert all masses to grams
     if verbose:
-        print(grocery_list.sort_values(["is_staple", "ingredient"]))
+        print(grocery_list)
 
     if not config.no_upload:
         # TODO add arg option for dry-run as currently hardcoded
         print("Uploading grocery list to todoist...")
         upload_groceries_to_todoist(
             grocery_list,
-            clean=config.clean_todoist,
+            clean=not config.no_cleaning,
             dry_mode=config.dry_mode,
             todoist_token_file_path=config.todoist_token_file,
         )

@@ -1,6 +1,7 @@
 weekday,item,type,factor,grocery_list,menu_list
 Saturday,Cali burgers,recipe,1,Y,Y
 Saturday,package fries,ingredient,0.7,Y,Y
+Sunday_morning,Buttermilk donuts,recipe,0.5,Y,Y
 Sunday,Marry Me Chicken,recipe,1,Y,Y
 Sunday,package fusilli noodles,ingredient,0.7,Y,Y
 Sunday,cup Caesar dressing,ingredient,0.25,Y,N

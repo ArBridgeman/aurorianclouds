@@ -96,9 +96,9 @@ def parse_grocery_list(sub_parser):
         help="Will ask for user input for uncertain food groups.",
     )
     grocery_list_parser.add_argument(
-        "--clean_todoist",
+        "--no_cleaning",
         action="store_true",
-        help="Will clean previously existing items/tasks in Groceries project.",
+        help="Will not clean previously existing items/tasks in Groceries project.",
     )
     grocery_list_parser.add_argument(
         "--dry_mode",

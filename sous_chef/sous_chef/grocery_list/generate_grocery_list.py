@@ -6,12 +6,14 @@ import numpy as np
 import pandas as pd
 import yaml
 from definitions import ALLOWED_UNITS
-from grocery_list.grocery_matching_mapping import (IngredientsHelper,
-                                                   get_fuzzy_match,
-                                                   relevant_macro_groups,
-                                                   todoist_mapping)
+from grocery_list.grocery_matching_mapping import (
+    IngredientsHelper,
+    get_fuzzy_match,
+    relevant_macro_groups,
+    todoist_mapping,
+)
 from messaging.todoist_api import TodoistHelper
-from pint import UnitRegistry
+from pint import UnitRegistry, unit
 from quantulum3 import parser
 
 # TODO implement method to scale recipe to desired servings
@@ -72,17 +74,17 @@ def assume_quantity(recipe_title, quantity, ingredient):
         return float(quantity)
 
 
-def naive_unit_extraction(ingredient):
+def naive_unit_extraction(ingredient, pattern="^{:s}s?\.?\s"):
     # TODO: this makes assumptions about our specific ingredient format and should be generalized
     # TODO: mapping from long to abbreviated forms is missing
     detected = ""
     for unit in ALLOWED_UNITS:
-        if re.match("^{:s}s?\s".format(unit), ingredient):
+        if re.match(pattern.format(unit), ingredient.strip()):
             detected = unit
             break
 
     if detected != "":
-        ingredient = re.sub("^{:s}s?\s".format(detected), " ", ingredient)
+        ingredient = re.sub(pattern.format(detected), "", ingredient)
 
     return ingredient, detected
 
@@ -165,7 +167,7 @@ def separate_ingredients_for_grocery_list(
     return grocery_list
 
 
-def find_largest_unit(units):
+def find_largest_unit(units, debug=False):
     all_units = []
     for unit in units:
         if unit.strip() == "":
@@ -173,12 +175,15 @@ def find_largest_unit(units):
         try:
             all_units.append(ureg.parse_expression(unit))
         except Exception as e:
-            print(e)
+            if debug:
+                print(e)
             print("Error while parsing unit {:s}! Ignoring!".format(unit))
+    if len(all_units) == 0:
+        return ""
     return max(all_units).units
 
 
-def convert_values(row, desired_unit):
+def convert_values(row, desired_unit, debug=False):
     try:
         original_value = ureg.Quantity(
             row["quantity"], ureg.parse_expression(row["unit"])
@@ -188,7 +193,8 @@ def convert_values(row, desired_unit):
         converted_value = original_value.to(desired_unit)
         return round(converted_value.magnitude, 2), converted_value.units
     except Exception as e:
-        print(e)
+        if debug:
+            print(e)
         return row["quantity"], row["unit"]
 
 
@@ -198,16 +204,13 @@ def aggregate_like_ingredient(grocery_list, convert_units=False):
     aggregate_grocery_list = pd.DataFrame(columns=grocery_list.columns)
     # TODO fix aggregation for items where +s (e.g. egg + eggs); separately done currently
     for name, group in grouped:
-        if group.shape[0] > 1:
+        if group.shape[0] >= 1:
             if convert_units:
                 units = group.unit.unique()
-                if len(units) > 1:
-                    largest_unit = find_largest_unit(units)
-                    group["quantity"], group["unit"] = zip(
-                        *group.apply(
-                            lambda row: convert_values(row, largest_unit), axis=1
-                        )
-                    )
+                largest_unit = find_largest_unit(units)
+                group["quantity"], group["unit"] = zip(
+                    *group.apply(lambda row: convert_values(row, largest_unit), axis=1)
+                )
 
         # TODO ensure all types or lack of unit works here & not losing due to none values
         aggregate = group.groupby(
@@ -339,6 +342,19 @@ def get_food_categories(grocery_list, config):
     return grocery_list
 
 
+def abbreviate_units(unit_object):
+    if isinstance(unit_object, unit._Unit):
+        abbr = "{:~}".format(unit_object)
+        if abbr == "cp":
+            return "cup"
+        return abbr
+    elif isinstance(unit_object, str):
+        # can add custom abbreviation mapping here
+        return "{:s}".format(unit_object)
+    else:
+        AssertionError("Unknown unit type: {}".format(type(unit_object)))
+
+
 def upload_groceries_to_todoist(
     groceries,
     project_name="Groceries",
@@ -362,7 +378,7 @@ def upload_groceries_to_todoist(
         formatted_item = "{}, {} {}{}".format(
             item.ingredient,
             item.quantity,
-            item.unit,
+            abbreviate_units(item.unit),
             " (optional)" if item.is_optional else "",
         )
         formatted_item = re.sub("\s+", " ", formatted_item).strip()
@@ -405,7 +421,7 @@ def parse_add_ingredient_entry_to_grocery_list(
 
     quantity = assume_quantity("", quantity, ingredient)
 
-    if ignore_ingredient(staple_list["Always_ignore"], ingredient):
+    if ignore_ingredient(staple_list["Always_ignore"], ingredient.strip()):
         return grocery_list
 
     grocery_list = grocery_list.append(
@@ -528,21 +544,34 @@ def generate_grocery_list(config, recipes, verbose=False):
                         regex_match=True,
                     )
 
-    grocery_list = aggregate_like_ingredient(grocery_list)
+    grocery_list = aggregate_like_ingredient(grocery_list, convert_units=True)
 
     # get all food categories using USDA data
     grocery_list = get_food_categories(grocery_list, config)
+    grocery_list = grocery_list.sort_values(
+        ["ingredient", "quantity"], ascending=[True, True]
+    )
 
+    print(
+        "Number of grocery list entries after extraction and aggregation: {:d}".format(
+            grocery_list.shape[0]
+        )
+    )
+    print(
+        "Number of distinct ingredient entries: {:d}".format(
+            grocery_list.ingredient.nunique()
+        )
+    )
     # TODO convert all masses to grams
     if verbose:
-        print(grocery_list.sort_values(["is_staple", "ingredient"]))
+        print(grocery_list)
 
     if not config.no_upload:
         # TODO add arg option for dry-run as currently hardcoded
         print("Uploading grocery list to todoist...")
         upload_groceries_to_todoist(
             grocery_list,
-            clean=config.clean_todoist,
+            clean=not config.no_cleaning,
             dry_mode=config.dry_mode,
             todoist_token_file_path=config.todoist_token_file,
         )

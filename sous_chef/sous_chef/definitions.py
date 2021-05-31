@@ -68,7 +68,7 @@ ALLOWED_UNITS = [
     "package",
     "pkg",
     "pack",
-    "jar"
+    "jar",
 ]
 
 

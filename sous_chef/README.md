@@ -1,9 +1,5 @@
 # Sous Chef
 
-## Setup
-1. Run `update_env.sh`.
-2. Run `pre-commit install`.
-
 ## Manual configuration
 The paths and user information come from the argparser. The default settings 
 are below. Beware that optional parameters for the sections 'menu' or 'grocery_list'

@@ -78,7 +78,7 @@ def parse_fixed_menu(sub_parser):
 def parse_grocery_list(sub_parser):
     grocery_list_parser = sub_parser.add_parser("grocery_list")
     grocery_list_parser.set_defaults(which="grocery_list")
-    grocery_list_parser.add_argument("--menu_file", type=str)
+    grocery_list_parser.add_argument("--menu_file", type=str, required=True)
     grocery_list_parser.add_argument(
         "--grocery_list_path", type=str, default=Path(ABS_FILE_PATH, "../grocery_list")
     )

@@ -10,11 +10,12 @@ dill,True,Spices and herbs
 pita,False,Prepared
 tomato,False,Vegetables
 salmon,False,Fish
+salmon filet,False,Fish
 chili powder,True,Spices and herbs
 garlic powder,True,Spices and herbs
 milk,True,Dairy products
 flour,True,Baking
-egg,True,Dairy products
+egg,True,Egg
 agave,False,Baking
 vanilla extract,True,Baking
 chia seeds,False,Nuts and seeds
@@ -57,10 +58,10 @@ buckwheat flour,False,Baking
 chickpea flour,False,Baking
 rotini pasta,False,Pasta
 black olives,False,Canned
-red onion,False,Spices and herbs
+red onion,False,Vegetables
 cherry tomatoes,False,Vegetables
 psyllium husk powder,False,Baking
-sesame seed,True,Nuts and seeds
+sesame seeds,True,Nuts and seeds
 potato,False,Vegetables
 bacon,False,Meats
 grape tomatoes,False,Vegetables
@@ -320,4 +321,7 @@ Tomatenmark,True,Sauces
 Caesar dressing,False,Sauces
 bratkartoffeln,False,Frozen goods
 fusilli noodles,False,Pasta
-fried egg,False,Other
+fried egg,False,Egg
+garlic aioli,False,Sauces
+ground beef,False,Meats
+passata,False,Sauces

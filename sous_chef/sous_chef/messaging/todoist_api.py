@@ -89,7 +89,7 @@ class TodoistHelper:
         if section is not None:
             section_id = self.get_section_id(section)
             assert (
-                section_id is not None
+                    section_id is not None
             ), "Id of section {:s} could not be found!".format(section)
 
         label_ids = None
@@ -119,7 +119,7 @@ class TodoistHelper:
         return items
 
     def delete_all_items_in_project(
-        self, project, no_recurring=True, prior_move="Deleted", sleep_s=1
+            self, project, no_recurring=True, prior_move="Deleted", sleep_s=1
     ):
         """
         Deletes items in project "project" that fulfil specified properties.
@@ -136,21 +136,26 @@ class TodoistHelper:
         if prior_move is not None:
             section_id = self.get_section_id(prior_move)
             assert (
-                section_id is not None
+                    section_id is not None
             ), "Id of section {:s} could not be found!".format(prior_move)
 
+        for_deletion = []
         for task in self.connection.state["items"]:
             if task["project_id"] == project_id:
                 if no_recurring:
                     if task["due"] is not None:
                         if (
-                            task["due"]["is_recurring"] is True
-                            or task["due"]["date"] is not None
+                                task["due"]["is_recurring"] is True
+                                or task["due"]["date"] is not None
                         ):
                             continue
-                if section_id is not None:
-                    self.connection.items.move(task["id"], section_id=section_id)
-                self.connection.items.delete(task["id"])
+                for_deletion.append(task["id"])
+
+        print("Identified {:d} tasks for deletion!".format(len(for_deletion)))
+        for to_delete in for_deletion:
+            if section_id is not None:
+                self.connection.items.move(to_delete, section_id=section_id)
+            self.connection.items.delete(to_delete)
+            self.commit()
 
         self.sync()
-        self.commit()

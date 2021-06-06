@@ -27,6 +27,16 @@ CALENDAR_COLUMNS = {"date": str, "title": str, "recipeUuid": str, "uuid": str}
 
 TIME_UNITS = ["min", "minutes", "hour", "hours"]
 
+DAYS_OF_WEEK = [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+]
+
 PROTEIN_SOURCE = {
     "beef": ["beef"],
     "unspecified": [

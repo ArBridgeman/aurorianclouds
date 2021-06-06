@@ -80,7 +80,9 @@ class TodoistHelper:
             label_ids.append(self.get_label_id_or_add_new(label))
         return label_ids
 
-    def add_item_to_project(self, item, project, section=None, labels=None):
+    def add_item_to_project(
+        self, item, project, section=None, labels=None, due_dict=None, due_update=False
+    ):
         project_id = self.get_project_id(project)
         assert project_id is not None, "Id of project {:s} could not be found!".format(
             project
@@ -95,17 +97,35 @@ class TodoistHelper:
         label_ids = None
         if labels is not None:
             label_ids = self.get_label_ids(labels)
+
         new_item = self.connection.add_item(
-            item, project_id=project_id, labels=label_ids
+            item,
+            project_id=project_id,
+            labels=label_ids,
+            date_string=due_dict.get("string", None),
         )
+
+        self.commit()
+
+        # sometimes due to todoist api error new_item gets lost in the process
+        if "id" not in new_item:
+            all_in_project = self.get_all_items_in_project(project)
+            for one_item in all_in_project:
+                if one_item["content"] == item:
+                    new_item = one_item
+                    break
 
         # somehow, the section is not correctly set with the previous command
         # as such, the following is necessary
         if section_id is not None:
             self.connection.items.move(new_item["id"], section_id=section_id)
 
-        self.sync()
+        if due_update:
+            if due_dict is not None and new_item["due"] is None:
+                self.connection.items.update(new_item["id"], due=due_dict)
+
         self.commit()
+        self.sync()
 
     def get_all_items_in_project(self, project):
         items = []
@@ -119,7 +139,7 @@ class TodoistHelper:
         return items
 
     def delete_all_items_in_project(
-            self, project, no_recurring=True, prior_move="Deleted", sleep_s=1
+        self, project, no_recurring=True, prior_move="Deleted", sleep_s=1
     ):
         """
         Deletes items in project "project" that fulfil specified properties.
@@ -136,7 +156,7 @@ class TodoistHelper:
         if prior_move is not None:
             section_id = self.get_section_id(prior_move)
             assert (
-                    section_id is not None
+                section_id is not None
             ), "Id of section {:s} could not be found!".format(prior_move)
 
         for_deletion = []

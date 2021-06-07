@@ -119,7 +119,7 @@ class TodoistHelper:
         return items
 
     def delete_all_items_in_project(
-            self, project, no_recurring=True, prior_move="Deleted", sleep_s=1
+        self, project, no_recurring=True, prior_move="Deleted", sleep_s=1
     ):
         """
         Deletes items in project "project" that fulfil specified properties.
@@ -136,7 +136,7 @@ class TodoistHelper:
         if prior_move is not None:
             section_id = self.get_section_id(prior_move)
             assert (
-                    section_id is not None
+                section_id is not None
             ), "Id of section {:s} could not be found!".format(prior_move)
 
         for_deletion = []

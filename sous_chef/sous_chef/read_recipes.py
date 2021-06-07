@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -21,19 +22,31 @@ def flatten_dict_to_list(row_entry):
 
 
 def create_timedelta(row_entry):
+    row_entry = row_entry.lower().strip()
     if row_entry.isdecimal():
         return pd.to_timedelta(int(row_entry), unit="minutes")
     else:
         # has units in string or is nan
-        return pd.to_timedelta(row_entry)
+        # cleaning, then parsing with pd.to_timedelta
+        row_entry = re.sub("time", "", row_entry)
+        row_entry = re.sub("prep", "", row_entry)
+        row_entry = re.sub("cooking", "", row_entry)
+        row_entry = re.sub("minutes.?", "min", row_entry)
+        row_entry = re.sub("^[\D]+", "", row_entry)
+        row_entry = re.sub("mins\.?$", "min", row_entry)
+        if re.match("^\d{1,2}:\d{1,2}$", row_entry):
+            row_entry = "{}:00".format(row_entry)
+
+        # errors = "ignore" could be put if we are confident that we want to ignore further issues
+        return pd.to_timedelta(row_entry, unit=None, errors="raise")
 
 
 # TODO figure out best way to separate active cooking vs inactive cooking; make resilient to problems
 def retrieve_format_recipe_df(json_file):
     tmp_df = pd.read_json(json_file, dtype=INP_JSON_COLUMNS)[INP_JSON_COLUMNS.keys()]
-    # tmp_df["totalTime"] = tmp_df["totalTime"].apply(create_timedelta)
-    # tmp_df["preparationTime"] = tmp_df["preparationTime"].apply(create_timedelta)
-    # tmp_df["cookingTime"] = tmp_df["cookingTime"].apply(create_timedelta)
+    tmp_df["totalTime"] = tmp_df["totalTime"].apply(create_timedelta)
+    tmp_df["preparationTime"] = tmp_df["preparationTime"].apply(create_timedelta)
+    tmp_df["cookingTime"] = tmp_df["cookingTime"].apply(create_timedelta)
     tmp_df["categories"] = tmp_df.categories.apply(flatten_dict_to_list)
     tmp_df["tags"] = tmp_df.tags.apply(flatten_dict_to_list)
     return tmp_df

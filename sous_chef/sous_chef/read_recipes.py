@@ -27,17 +27,12 @@ def create_timedelta(row_entry):
         return pd.to_timedelta(int(row_entry), unit="minutes")
     else:
         # has units in string or is nan
-        # cleaning, then parsing with pd
+        # cleaning, then parsing with pd.to_timedelta
         row_entry = re.sub("time", "", row_entry)
         row_entry = re.sub("prep", "", row_entry)
         row_entry = re.sub("cooking", "", row_entry)
-        row_entry = re.sub("minutesm", "min", row_entry)
-        while True:
-            row_entry_new = re.sub("^[\D]", "", row_entry)
-            if row_entry_new == row_entry:
-                break
-            row_entry = row_entry_new
-
+        row_entry = re.sub("minutes.?", "min", row_entry)
+        row_entry = re.sub("^[\D]+", "", row_entry)
         row_entry = re.sub("mins\.?$", "min", row_entry)
         if re.match("^\d{1,2}:\d{1,2}$", row_entry):
             row_entry = "{}:00".format(row_entry)

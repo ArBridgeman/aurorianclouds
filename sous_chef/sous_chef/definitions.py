@@ -27,6 +27,8 @@ CALENDAR_COLUMNS = {"date": str, "title": str, "recipeUuid": str, "uuid": str}
 
 TIME_UNITS = ["min", "minutes", "hour", "hours"]
 
+DESIRED_MEAL_TIMES = {"morning": "8:00", "evening": "18:30"}
+
 DAYS_OF_WEEK = [
     "monday",
     "tuesday",

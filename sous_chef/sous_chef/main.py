@@ -75,9 +75,15 @@ def parse_fixed_menu(sub_parser):
     fixed_menu_parser.add_argument("--fixed_menu_number", type=int, required=True)
 
     fixed_menu_parser.add_argument(
-        "--no_upload",
+        "--dry_mode",
         action="store_true",
-        help="Will overwrite default and not upload the finalized menu to todoist.",
+        help="Will perform only a dry mode without uploads and print actions to terminal.",
+    )
+
+    fixed_menu_parser.add_argument(
+        "--menu_sorting",
+        type=str,
+        default="original",
     )
 
 
@@ -156,7 +162,7 @@ def main():
         create_menu(args, recipes, calendar)
 
     elif args.which == "fixed_menu":
-        finalize_fixed_menu(args.fixed_menu_path, args.fixed_menu_number, recipes, args)
+        finalize_fixed_menu(args, recipes)
 
     elif args.which == "grocery_list":
         generate_grocery_list(args, recipes)

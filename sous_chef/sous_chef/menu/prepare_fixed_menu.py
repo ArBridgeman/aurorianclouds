@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 import pandas as pd
-from definitions import DAYS_OF_WEEK
+from definitions import DAYS_OF_WEEK, DESIRED_MEAL_TIMES
 from messaging.todoist_api import TodoistHelper
 
 MENU_FILE_PATTERN = lambda num: f"menu-{num}.csv"
@@ -47,6 +47,25 @@ def check_menu(fixed_menu: pd.DataFrame):
     )
 
 
+def get_anchor_date(weekday_index):
+    today = datetime.datetime.today()
+    return today + datetime.timedelta(days=max(0, weekday_index - today.weekday()))
+
+
+def get_due_date(
+    day, anchor_date=datetime.datetime.today(), hour=0, minute=0, second=0
+):
+    new_date = anchor_date + datetime.timedelta(
+        days=(day - anchor_date.weekday() + 7) % 7
+    )
+    if new_date.date() == anchor_date.date():
+        new_date = new_date + datetime.timedelta(days=7)
+
+    new_date = new_date.replace(hour=int(hour), minute=int(minute), second=int(second))
+
+    return new_date
+
+
 def upload_menu_to_todoist(
     menu: pd.DataFrame,
     project_name: str = "Menu",
@@ -60,64 +79,59 @@ def upload_menu_to_todoist(
 
     if clean:
         print("Cleaning previous items/tasks in project {:s}".format(project_name))
-        NotImplementedError("Functionality is not implemented for menu at the moment!")
-        # if not dry_mode:
-        #     [todoist_helper.delete_all_items_in_project(project_name) for i in range(3)]
+        NotImplementedError(
+            "Functionality is not implemented or intended for menu at the moment!"
+        )
 
     if dry_mode:
-        print("Dry mode! Will only simulate actions but not upload to todoist!")
-
-    get_datetime = lambda date, day: date + datetime.timedelta(
-        days=(day - date.weekday() + 7) % 7
-    )
-    in_day_time_hour = {"morning": "8:00", "evening": "18:30"}
+        print("Dry mode! Will only simulate actions but not upload to Todoist!")
 
     for _, item in menu.iterrows():
 
         if item.menu_list != "Y":
             continue
 
-        weekday = item.weekday
         time_in_day = "evening"  # by default dinner entry
+
+        weekday = item.weekday
         if "_" in weekday:
             weekday, time_in_day = weekday.split("_")
-        weekday = DAYS_OF_WEEK.index(weekday.lower())
+        weekday_index = DAYS_OF_WEEK.index(weekday.lower())
 
-        due_date = get_datetime(datetime.datetime.today(), weekday)
-        if due_date.date() == datetime.date.today():
-            due_date = due_date + datetime.timedelta(days=7)
-
-        in_day_split = in_day_time_hour[time_in_day].split(":")
-        due_date = due_date.replace(
-            hour=int(in_day_split[0]), minute=int(in_day_split[1]), second=0
+        in_day_split = DESIRED_MEAL_TIMES[time_in_day].split(":")
+        due_date = get_due_date(
+            weekday_index,
+            get_anchor_date(4),
+            hour=int(in_day_split[0]),
+            minute=int(in_day_split[1]),
         )
 
-        cooking_time_min = (
-            int(item.totalTime.total_seconds() / 60)
-            if not pd.isna(item.totalTime)
-            else None
-        )
-        due_date = due_date - datetime.timedelta(minutes=cooking_time_min or 20)
+        cooking_time_min = 20
+        if not pd.isna(item.totalTime):
+            cooking_time_min = int(item.totalTime.total_seconds() / 60)
 
-        due_date = due_date.strftime("on %Y-%m-%d at %H:%M")
-        due_dict = {"string": due_date}
+        due_date = due_date - datetime.timedelta(minutes=cooking_time_min)
+        due_date_str = due_date.strftime("on %Y-%m-%d at %H:%M")
+        due_dict = {"string": due_date_str}
 
         formatted_item = "{} (x {}){}".format(
             item["item"],
             item.factor,
-            " [{:d} min]".format(cooking_time_min) if cooking_time_min else "",
+            " [{:d} min]".format(cooking_time_min)
+            if not pd.isna(item.totalTime)
+            else "",
         )
         formatted_item = re.sub("\s+", " ", formatted_item).strip()
         print(
-            "Adding item {:s} to todoist for date {}".format(formatted_item, due_date)
+            "Adding item {:s} to todoist for date {}".format(
+                formatted_item, due_date_str
+            )
         )
         if not dry_mode:
             todoist_helper.add_item_to_project(
                 formatted_item,
                 project_name,
-                section=None,
-                labels=None,
-                due_dict=due_dict,
+                due_date_dict=due_dict,
             )
 
 
@@ -128,12 +142,13 @@ def join_recipe_information(
 ) -> pd.DataFrame:
     from grocery_list.grocery_matching_mapping import get_fuzzy_match
 
+    checked_menu = checked_menu.reset_index()
     match_helper = lambda item: get_fuzzy_match(
         item, recipes.title.values, warn=True, limit=1, reject=98
     )[0][0]
     checked_menu_recipes_filter = checked_menu.type == "recipe"
     checked_menu_recipes = checked_menu[checked_menu_recipes_filter].copy()
-    checked_menu_additions = checked_menu[~checked_menu_recipes_filter].copy()
+    checked_menu_ingredients = checked_menu[~checked_menu_recipes_filter].copy()
 
     checked_menu_recipes["best_match"] = checked_menu_recipes["item"].apply(
         match_helper
@@ -147,24 +162,27 @@ def join_recipe_information(
         how="left",
     ).drop(columns=["title", "best_match"])
 
-    return pd.concat([checked_menu_recipes, checked_menu_additions], ignore_index=True)
+    df_concat = pd.concat([checked_menu_recipes, checked_menu_ingredients])
+    df_concat = df_concat.sort_values("index").drop(columns="index")
+
+    return df_concat
 
 
-def finalize_fixed_menu(
-    menu_path: Path, menu_number: int, recipes: pd.DataFrame, config: argparse.Namespace
-):
+def finalize_fixed_menu(config: argparse.Namespace, recipes: pd.DataFrame):
+    menu_path = config.fixed_menu_path
+    menu_number = config.fixed_menu_number
     fixed_menu = obtain_fixed_menu(menu_path, menu_number)
     # checked_menu = check_menu(fixed_menu)
     checked_menu = fixed_menu
     checked_menu = join_recipe_information(checked_menu, recipes)
-    checked_menu = checked_menu.sort_values("weekday")
+    if config.menu_sorting != "original":
+        checked_menu = checked_menu.sort_values(config.menu_sorting)
     # saving
     tmp_menu = Path(menu_path, "menu-tmp.csv")
     checked_menu.reset_index(drop=True).to_csv(tmp_menu, index=False, header=True)
     # uploading
-    if not config.no_upload:
-        upload_menu_to_todoist(
-            checked_menu,
-            dry_mode=False,
-            todoist_token_file_path=config.todoist_token_file,
-        )
+    upload_menu_to_todoist(
+        checked_menu,
+        dry_mode=config.dry_mode,
+        todoist_token_file_path=config.todoist_token_file,
+    )

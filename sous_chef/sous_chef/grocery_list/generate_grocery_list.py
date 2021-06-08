@@ -179,8 +179,14 @@ def find_largest_unit(units, debug=False):
                 print(e)
             print("Error while parsing unit {:s}! Ignoring!".format(unit))
     if len(all_units) == 0:
-        return ""
-    return max(all_units).units
+        return None
+    try:
+        return max(all_units).units
+    except Exception as e:
+        if debug:
+            print(e)
+        print("Error while comparing units and finding the maximum, please check!")
+        return None
 
 
 def convert_values(row, desired_unit, debug=False):
@@ -208,9 +214,12 @@ def aggregate_like_ingredient(grocery_list, convert_units=False):
             if convert_units:
                 units = group.unit.unique()
                 largest_unit = find_largest_unit(units)
-                group["quantity"], group["unit"] = zip(
-                    *group.apply(lambda row: convert_values(row, largest_unit), axis=1)
-                )
+                if largest_unit is not None:
+                    group["quantity"], group["unit"] = zip(
+                        *group.apply(
+                            lambda row: convert_values(row, largest_unit), axis=1
+                        )
+                    )
 
         # TODO ensure all types or lack of unit works here & not losing due to none values
         aggregate = group.groupby(
@@ -290,7 +299,7 @@ def get_food_categories(grocery_list, config):
     if config.interactive_grouping:
         print("Will query for user input to improve food grouping of selected recipes!")
         for _, item in grocery_list.iterrows():
-            if item.group == "Unknown" or (
+            if (item.group == "Unknown") or (
                 item.manual_ingredient and (item.match_quality < 98)
             ):
                 if not item.manual_ingredient:

@@ -68,6 +68,7 @@ psyllium husk powder,False,Baking
 sesame seeds,True,Nuts and seeds
 potato,False,Vegetables
 baking potato,False,Vegetables
+floury potato,False,Vegetables
 bacon,False,Meats
 grape tomatoes,False,Vegetables
 feta,False,Dairy products
@@ -83,6 +84,8 @@ crushed tomatoes,False,Canned
 sweet onion,False,Vegetables
 yogurt,True,Dairy products
 mayonnaise,True,Fats and oils
+mayo,True,Fats and oils
+spicy mayo,True,Fats and oils
 buttermilk,True,Dairy products
 breadcrumbs,False,Baking
 mustard,True,Sauces
@@ -109,6 +112,7 @@ fresh parsley,False,Vegetables
 pita chips,False,Prepared
 paprika powder,True,Spices and herbs
 frozen green beans,False,Frozen goods
+frozen peas,False,Frozen goods
 chili paste,False,Sauces
 nutmeg,True,Spices and herbs
 molasses,False,Baking
@@ -169,6 +173,7 @@ sahne,False,Dairy products
 grapeseed oil,False,Fats and oils
 Scampi Blend,False,Spices and herbs
 noodles,False,Pasta
+spaghetti,False,Pasta
 canned tuna,False,Canned
 mozzarella,False,Dairy products
 Italian seasoning,True,Spices and herbs
@@ -341,3 +346,4 @@ garlic aioli,False,Sauces
 ground beef,False,Meats
 passata,False,Sauces
 prepared tapas meat,False,Meats
+speck,False,Meats

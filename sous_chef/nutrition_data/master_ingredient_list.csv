@@ -141,6 +141,8 @@ quinoa,False,Grains
 pak choy,False,Vegetables
 tomato sauce,False,Sauces
 zucchini,False,Vegetables
+carrot,False,Vegetables
+small carrot,False,Vegetables
 whole tomatoes,False,Canned
 eggplant,False,Vegetables
 tortilla,False,Prepared
@@ -193,6 +195,8 @@ strawberries,False,Fruits
 chicken,False,Meats
 Farina Mehl,False,Baking
 steak,False,Meats
+flank steak,False,Meats
+sliced flank steak,False,Meats
 5 spice,True,Spices and herbs
 Adobo Seasoning,False,Spices and herbs
 ciabatta,False,Prepared
@@ -244,6 +248,7 @@ tapioca flour,False,Baking
 apple cider vinegar,True,Sauces
 coconut sugar,False,Baking
 lasagna noodles,False,Pasta
+noodle cake,False,Pasta
 marinara sauce,False,Canned
 ricotta,False,Dairy products
 apple juice,False,Juices
@@ -342,8 +347,13 @@ Caesar dressing,False,Sauces
 bratkartoffeln,False,Frozen goods
 fusilli noodles,False,Pasta
 fried egg,False,Egg
+scrambled egg,False,Egg
 garlic aioli,False,Sauces
 ground beef,False,Meats
+ground turkey,False,Meats
 passata,False,Sauces
 prepared tapas meat,False,Meats
 speck,False,Meats
+side salad,False,Vegetables
+salad,False,Vegetables
+farfalle,False,Pasta

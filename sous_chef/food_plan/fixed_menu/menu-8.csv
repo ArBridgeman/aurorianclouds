@@ -1,0 +1,11 @@
+weekday,item,type,factor,grocery_list,menu_list
+Saturday,Beef pan-fried noodles,recipe,1,Y,Y
+Saturday,side salad,ingredient,1,N,Y
+Saturday,cup salad,ingredient,1,Y,Y
+Sunday_morning,Elven banana bread,recipe,1,Y,Y
+Sunday_morning,Scrambled eggs,ingredient,3,Y,Y
+Sunday,Tuscan white bean soup,recipe,1,Y,Y
+Monday,Butter potion,recipe,2,Y,Y
+Thursday,Pasta fresca,recipe,1,Y,Y
+Thursday,side salad,ingredient,1,Y,Y
+Thursday,cup salad,ingredient,1,Y,Y

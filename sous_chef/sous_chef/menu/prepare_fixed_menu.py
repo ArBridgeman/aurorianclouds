@@ -146,7 +146,7 @@ def join_recipe_information(
 
     checked_menu = checked_menu.reset_index()
     match_helper = lambda item: get_fuzzy_match(
-        item, recipes.title.values, warn=True, limit=1, reject=98
+        item, recipes.title.values, warn=True, limit=1, reject=95, warn_thresh=95
     )[0][0]
     checked_menu_recipes_filter = checked_menu.type == "recipe"
     checked_menu_recipes = checked_menu[checked_menu_recipes_filter].copy()

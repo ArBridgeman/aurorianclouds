@@ -300,7 +300,7 @@ def get_food_categories(grocery_list, config):
         print("Will query for user input to improve food grouping of selected recipes!")
         for _, item in grocery_list.iterrows():
             if (item.group == "Unknown") or (
-                item.manual_ingredient and (item.match_quality < 98)
+                item.manual_ingredient and (item.match_quality < 95)
             ):
                 if not item.manual_ingredient:
                     print(
@@ -527,7 +527,8 @@ def generate_grocery_list(config, recipes, verbose=False):
                                 recipes.title.values,
                                 warn=True,
                                 limit=1,
-                                reject=97,
+                                reject=95,
+                                warn_thresh=95,
                             )[0][0]
                             print("Identified recipe: {:s}".format(match_title))
                             mask_entry = recipes.title == match_title

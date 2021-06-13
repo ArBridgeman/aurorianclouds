@@ -30,6 +30,7 @@ macro_mapping = {
     "Sausages and Luncheon Meats": "Meats",
     "Snacks": "Prepared",
     "Soups, Sauces, and Gravies": "Sauces",
+    "Fresh herbs": "Fresh herbs",
     "Spices and Herbs": "Spices and herbs",
     "Sweets": "Prepared",
     "Vegetables and Vegetable Products": "Vegetables",
@@ -58,6 +59,7 @@ todoist_mapping = {
     "Pasta": "GF park",
     "Prepared": "GF park",
     "Sauces": "Sauces cans and oils",
+    "Fresh herbs": "Farmland pride",
     "Spices and herbs": "Spices and herbs",
     "Unknown": "Other",
     "Vegetables": "Farmland pride",
@@ -81,6 +83,7 @@ relevant_macro_groups = sorted(
         "Pasta",
         "Sauces",
         "Spices and herbs",
+        "Fresh herbs",
         "Vegetables",
     ]
 )

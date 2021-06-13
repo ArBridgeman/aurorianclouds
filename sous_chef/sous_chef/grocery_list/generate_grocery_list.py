@@ -438,6 +438,10 @@ def parse_add_ingredient_entry_to_grocery_list(
 
     quantity = assume_quantity("", quantity, ingredient)
 
+    # skip ALL CAPITAL entries as self-references within recipe by convention
+    if ingredient.isupper():
+        return grocery_list
+
     if ignore_ingredient(staple_list["Always_ignore"], ingredient.strip()):
         return grocery_list
 

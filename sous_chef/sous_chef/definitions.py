@@ -82,6 +82,7 @@ ALLOWED_UNITS = [
     "pack",
     "packet",
     "jar",
+    "slice",
 ]
 
 

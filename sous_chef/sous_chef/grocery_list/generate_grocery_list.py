@@ -128,6 +128,7 @@ def separate_ingredients_for_grocery_list(
             "[sides]",
             "[optional]",
             "[garnish]",
+            "[marinade]",
         ]:
             break
 

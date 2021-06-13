@@ -5,6 +5,7 @@ cumin powder,False,Spices and herbs
 cinnamon powder,True,Spices and herbs
 cayenne pepper powder,True,Spices and herbs
 onion,True,Vegetables
+white onion,True,Vegetables
 cucumber,False,Vegetables
 small cucumber,False,Vegetables
 dill,True,Spices and herbs
@@ -264,6 +265,7 @@ house rub,False,Spices and herbs
 rosemary,False,Spices and herbs
 tortilla chips,False,Prepared
 salsa,False,Canned
+salsa brava,False,Sauces
 gnocchi,False,Pasta
 cashews,False,Nuts and seeds
 almond extract,False,Baking
@@ -335,6 +337,7 @@ bread slices,False,Prepared
 provolone,False,Dairy products
 sunflower oil,False,Fats and oils
 head of garlic,False,Vegetables
+garlic,True,Vegetables
 dried rosemary,True,Spices and herbs
 lime juice,True,Juices
 dark rum,False,Beverages
@@ -366,3 +369,4 @@ side salad,False,Vegetables
 salad,False,Vegetables
 farfalle,False,Pasta
 apple sauce,False,Sauces
+garlic butter,False,Fats and oils

@@ -72,6 +72,7 @@ potato,False,Vegetables
 baking potato,False,Vegetables
 floury potato,False,Vegetables
 bacon,False,Meats
+bacon cubes,False,Meats
 grape tomatoes,False,Vegetables
 feta,False,Dairy products
 artichokes,False,Vegetables
@@ -210,6 +211,8 @@ frozen broccoli,False,Frozen goods
 frozen cauliflower,False,Frozen goods
 Swiss cheese,False,Dairy products
 tomato pesto,False,Sauces
+red pesto,False,Sauces
+green pesto,False,Sauces
 fresh basil,False,Vegetables
 oyster sauce,True,Sauces
 butternut squash,False,Vegetables
@@ -239,6 +242,7 @@ flatbread,False,Prepared
 romaine lettuce,False,Vegetables
 pork chop,False,Meats
 sushi rice,False,Grains
+uncooked grain,False,Grains
 cream,False,Dairy products
 frozen cherries,False,Frozen goods
 vodka,True,Beverages
@@ -371,3 +375,4 @@ salad,False,Vegetables
 farfalle,False,Pasta
 apple sauce,False,Sauces
 garlic butter,False,Fats and oils
+blattspinat,False,Vegetables

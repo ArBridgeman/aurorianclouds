@@ -10,11 +10,11 @@ from messaging.todoist_api import TodoistHelper
 MENU_FILE_PATTERN = lambda num: f"menu-{num}.csv"
 
 
-def obtain_fixed_menu(menu_path: Path, menu_number: int):
+def obtain_fixed_menu(menu_path: Path, menu_number: int, sep: str = ";"):
     fixed_menu_file = MENU_FILE_PATTERN(menu_number)
     fixed_menu = Path(menu_path, fixed_menu_file)
     if fixed_menu.is_file():
-        return pd.read_csv(fixed_menu)
+        return pd.read_csv(fixed_menu, sep=sep)
     else:
         raise ValueError(f"{fixed_menu_file} does not exist")
 
@@ -180,7 +180,9 @@ def finalize_fixed_menu(config: argparse.Namespace, recipes: pd.DataFrame):
         checked_menu = checked_menu.sort_values(config.menu_sorting)
     # saving
     tmp_menu = Path(menu_path, "menu-tmp.csv")
-    checked_menu.reset_index(drop=True).to_csv(tmp_menu, index=False, header=True)
+    checked_menu.reset_index(drop=True).to_csv(
+        tmp_menu, index=False, header=True, sep=";"
+    )
     # uploading
     upload_menu_to_todoist(
         checked_menu,

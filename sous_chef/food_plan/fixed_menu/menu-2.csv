@@ -1,13 +1,13 @@
-weekday,item,type,factor,grocery_list,menu_list
-Saturday,Lasagna,recipe,1,Y,Y
-Saturday,side salad,ingredient,1,N,Y
-Saturday,cup spinach,ingredient,1,Y,Y
-Sunday_morning,Banana spinach pancakes,recipe,0.5,Y,Y
-Sunday,Honey mustard chicken tenders,recipe,2,Y,Y
-Sunday,Baked potato,recipe,2,Y,Y
-Sunday,Veggie un-kebabs,recipe,1,Y,Y
-Monday,Chickpea tuna sandwich,recipe,1,Y,Y
-Monday,side salad,ingredient,1,N,Y
-Monday,cup spinach,ingredient,1,Y,Y
-Thursday,Italian baked eggs,recipe,1,Y,Y
-Thursday,bread rolls,ingredient,4,Y,Y
+weekday;item;type;factor;grocery_list;menu_list
+Saturday;Lasagna;recipe;1;Y;Y
+Saturday;side salad;ingredient;1;N;Y
+Saturday;cup spinach;ingredient;1;Y;Y
+Sunday_morning;Banana spinach pancakes;recipe;0.5;Y;Y
+Sunday;Honey mustard chicken tenders;recipe;2;Y;Y
+Sunday;Baked potato;recipe;2;Y;Y
+Sunday;Veggie un-kebabs;recipe;1;Y;Y
+Monday;Chickpea tuna sandwich;recipe;1;Y;Y
+Monday;side salad;ingredient;1;N;Y
+Monday;cup spinach;ingredient;1;Y;Y
+Thursday;Italian baked eggs;recipe;1;Y;Y
+Thursday;bread rolls;ingredient;4;Y;Y

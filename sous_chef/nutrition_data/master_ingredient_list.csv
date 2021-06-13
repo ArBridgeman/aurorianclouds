@@ -6,6 +6,7 @@ cinnamon powder,True,Spices and herbs
 cayenne pepper powder,True,Spices and herbs
 onion,True,Vegetables
 cucumber,False,Vegetables
+small cucumber,False,Vegetables
 dill,True,Spices and herbs
 pita,False,Prepared
 tomato,False,Vegetables
@@ -194,9 +195,11 @@ blueberries,False,Fruits
 Italian salad dressing Mix,True,Spices and herbs
 strawberries,False,Fruits
 chicken,False,Meats
+chicken schnitzel,False,Meats
 Farina Mehl,False,Baking
 steak,False,Meats
 flank steak,False,Meats
+skirt steak,False,Meats
 sliced flank steak,False,Meats
 5 spice,True,Spices and herbs
 Adobo Seasoning,False,Spices and herbs
@@ -362,3 +365,4 @@ speck,False,Meats
 side salad,False,Vegetables
 salad,False,Vegetables
 farfalle,False,Pasta
+apple sauce,False,Sauces

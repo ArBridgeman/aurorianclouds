@@ -280,6 +280,7 @@ flocken,False,Grains
 Schinken,False,Meats
 tofu,False,Dairy products
 fenugreek powder,False,Spices and herbs
+fenugreek seeds,False,Nuts and seeds
 garlic paste,False,Sauces
 curry powder,False,Spices and herbs
 garam  masala,True,Spices and herbs
@@ -289,6 +290,7 @@ red chilis,False,Vegetables
 almonds,False,Nuts and seeds
 green lentils,False,Legumes
 mustard seeds,True,Nuts and seeds
+mustard powder,True,Spices and herbs
 curry paste,False,Sauces
 paneer,False,Dairy products
 basmati rice,False,Grains

@@ -1,10 +1,10 @@
-weekday,item,type,factor,grocery_list,menu_list
-Saturday,Chicken gyro bowls,recipe,1,Y,Y
-Sunday_morning,German pancakes,recipe,1,Y,Y
-Sunday_morning,apple sauce,ingredient,1,Y,Y
-Sunday,Mediterranean bean soup,recipe,1,Y,Y
-Monday,Garlic butter Brazilian steak,recipe,1,Y,Y
-Monday,Veggie fun mix,recipe,1,Y,Y
-Monday,bratkartoffeln,ingredient,1,Y,Y
-Thursday,Sweet & sour salmon,recipe,1,Y,Y
-Thursday,Szechuan green beans,recipe,1,Y,Y
+weekday;item;type;factor;grocery_list;menu_list
+Saturday;Romano chicken;recipe;1;Y;Y
+Saturday;side salad;ingredient;1;N;Y
+Saturday;cup blattspinat;ingredient;1;Y;N
+Sunday_morning;Bacon, cheddar, & chive savory pancakes;recipe;1;Y;Y
+Sunday;Moroccan stew;recipe;1;Y;Y
+Monday;Aphrodite's beauty bowl;recipe;1;Y;Y
+Thursday;Blackened salmon;recipe;1;Y;Y
+Thursday;Marinated roasted beets;recipe;1;Y;Y
+Thursday;cup rice;ingredient;1;Y;Y

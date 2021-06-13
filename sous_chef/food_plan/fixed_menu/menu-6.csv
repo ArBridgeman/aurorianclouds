@@ -2,9 +2,9 @@ weekday;item;type;factor;grocery_list;menu_list
 Saturday;Black bean burger;recipe;1;Y;Y
 Saturday;pkg fries;ingredient;0.7;Y;Y
 Sunday_morning;Berry muffins;recipe;1;Y;Y
-Sunday;Grilled tuna with herbed Aioli;recipe;1;Y;Y
+Sunday;Grilled tuna with herbed aioli;recipe;1;Y;Y
 Sunday;Patatas bravas;recipe;0.75;Y;Y
-Sunday;pkg frozen brocoli;ingredient;1;Y;Y
+Sunday;pkg frozen broccoli;ingredient;1;Y;Y
 Sunday;tbsp garlic butter;ingredient;2;Y;Y
 Monday;Szechuan beef;recipe;1;Y;Y
 Monday;Chinese green beans;recipe;1;Y;Y

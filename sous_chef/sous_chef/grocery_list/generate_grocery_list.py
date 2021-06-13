@@ -128,7 +128,6 @@ def separate_ingredients_for_grocery_list(
             "[sides]",
             "[optional]",
             "[garnish]",
-            "[marinade]",
         ]:
             break
 
@@ -438,6 +437,10 @@ def parse_add_ingredient_entry_to_grocery_list(
         quantity, unit, ingredient = separate_unit_from_ingredient(ingredient_line)
 
     quantity = assume_quantity("", quantity, ingredient)
+
+    # skip ALL CAPITAL entries as self-references within recipe by convention
+    if ingredient.isupper():
+        return grocery_list
 
     if ignore_ingredient(staple_list["Always_ignore"], ingredient.strip()):
         return grocery_list

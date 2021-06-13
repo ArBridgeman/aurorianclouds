@@ -497,7 +497,7 @@ def generate_grocery_list(config, recipes, verbose=False):
         days = menu.keys()
         getter = lambda d: menu[d].items()
     elif filepath.suffix == ".csv":
-        menu = pd.read_csv(filepath)
+        menu = pd.read_csv(filepath, sep=";")
         days = menu.weekday.unique()
         getter = lambda d: menu[menu.weekday == d].iterrows()
 

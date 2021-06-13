@@ -1,9 +1,9 @@
-weekday,item,type,factor,grocery_list,menu_list
-Saturday,steaks,ingredient,2,Y,Y
-Saturday,Potatoes au gratin,recipe,1,Y,Y
-Sunday_morning,Waffles,recipe,1,Y,Y
-Sunday,Lentil baked ziti,recipe,1,Y,Y
-Monday,Chick-fil-A's chicken sandwich,recipe,1,Y,Y
-Monday,side salad,ingredient,1,N,Y
-Monday,cup salad,ingredient,1,Y,N
-Thursday,Cajun shrimp linguine,recipe,1,Y,Y
+weekday;item;type;factor;grocery_list;menu_list
+Saturday;steaks;ingredient;2;Y;Y
+Saturday;Potatoes au gratin;recipe;1;Y;Y
+Sunday_morning;Waffles;recipe;1;Y;Y
+Sunday;Lentil baked ziti;recipe;1;Y;Y
+Monday;Chick-fil-A's chicken sandwich;recipe;1;Y;Y
+Monday;side salad;ingredient;1;N;Y
+Monday;cup salad;ingredient;1;Y;N
+Thursday;Cajun shrimp linguine;recipe;1;Y;Y

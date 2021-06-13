@@ -102,6 +102,7 @@ red wine,False,Beverages
 red pepper flakes,True,Spices and herbs
 lentils,True,Legumes
 bay leaf,True,Spices and herbs
+basil leaf,False,Fresh herbs
 marinara sauce,False,Canned
 Chipotle powder,False,Spices and herbs
 BBQ sauce,True,Sauces
@@ -163,6 +164,7 @@ peperocini,False,Canned
 sun-dried tomatoes,False,Canned
 vanilla protein powder,False,Spices and herbs
 cheddar cheese,True,Dairy products
+gruyere,False,Dairy products
 spätzle,False,Pasta
 Emmentaler,False,Dairy products
 cream cheese,False,Dairy products
@@ -330,6 +332,7 @@ leeks,False,Vegetables
 Knödel,False,Prepared
 dried chili flakes,True,Spices and herbs
 salami,True,Meats
+ham,True,Meats
 pepperoni,False,Meats
 bouillon,True,Spices and herbs
 beef bouillon,True,Spices and herbs
@@ -376,3 +379,4 @@ farfalle,False,Pasta
 apple sauce,False,Sauces
 garlic butter,False,Fats and oils
 blattspinat,False,Vegetables
+red peppers,False,Vegetables

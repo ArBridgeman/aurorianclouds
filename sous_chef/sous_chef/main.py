@@ -8,6 +8,7 @@ import argparse
 import sys
 from pathlib import Path
 
+import pandas as pd
 from grocery_list.generate_grocery_list import generate_grocery_list
 from menu.create_manual_menu import create_menu
 from menu.prepare_fixed_menu import finalize_fixed_menu
@@ -15,6 +16,10 @@ from read_recipes import read_calendar, read_recipes
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
 HOME_PATH = str(Path.home())
+
+pd.set_option("display.max_rows", 500)
+pd.set_option("display.max_columns", 500)
+pd.set_option("display.width", 1000)
 
 
 def generate_parser():

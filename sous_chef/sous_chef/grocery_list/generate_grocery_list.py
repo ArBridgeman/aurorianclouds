@@ -262,6 +262,14 @@ def get_food_categories(grocery_list, config):
         grocery_list["match_quality"] = grocery_list["best_match"].str[1]
         grocery_list["best_match"] = grocery_list["best_match"].str[0]
 
+        debug_filter = grocery_list.match_quality < 70
+        if np.sum(debug_filter) > 0:
+            print(
+                grocery_list[debug_filter][
+                    ["ingredient", "from_recipe", "best_match", "match_quality"]
+                ]
+            )
+
         grocery_list = pd.merge(
             grocery_list[[col for col in grocery_list.columns if col not in ["group"]]],
             master_file[["ingredient", "group"]].rename(

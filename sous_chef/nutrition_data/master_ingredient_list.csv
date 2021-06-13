@@ -172,6 +172,7 @@ baguette,False,Prepared
 shrimp,False,Fish
 ginger,False,Vegetables
 sahne,False,Dairy products
+half-and-half,False,Dairy products
 grapeseed oil,False,Fats and oils
 Scampi Blend,False,Spices and herbs
 noodles,False,Pasta
@@ -248,6 +249,7 @@ tapioca flour,False,Baking
 apple cider vinegar,True,Sauces
 coconut sugar,False,Baking
 lasagna noodles,False,Pasta
+linguine,False,Pasta
 noodle cake,False,Pasta
 marinara sauce,False,Canned
 ricotta,False,Dairy products
@@ -255,6 +257,7 @@ apple juice,False,Juices
 beef tenderloin,False,Meats
 beef brisket,False,Meats
 red chili powder,False,Spices and herbs
+house rub,False,Spices and herbs
 rosemary,False,Spices and herbs
 tortilla chips,False,Prepared
 salsa,False,Canned

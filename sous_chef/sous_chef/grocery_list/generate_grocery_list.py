@@ -1,5 +1,6 @@
 import json
 import re
+from difflib import ndiff
 from pathlib import Path
 
 import numpy as np
@@ -52,10 +53,15 @@ def separate_unit_from_ingredient(ingredient):
 
 def ignore_ingredient(ignored_ingredients, ingredient):
     # TODO make more robust as matches many things
-    return any(
-        ignored_ingredient == ingredient.lower()
-        for ignored_ingredient in ignored_ingredients
-    )
+    for ignored_ingredient in ignored_ingredients:
+        if ignored_ingredient == ingredient.lower():
+            return True
+        diff_res = list(ndiff(ignored_ingredient, ingredient.lower()))
+        if diff_res[-1][-1] == "s" and len(diff_res) == max(
+            len(ignored_ingredient), len(ingredient)
+        ):
+            return True
+    return False
 
 
 def is_staple_ingredient(staple_ingredients, ingredient):
@@ -110,6 +116,24 @@ def regex_split_ingredient(
     return quantity, unit, ingredient, instruction
 
 
+def identify_referenced_recipes(
+    ingredients, pattern="^#\s(\d+[\.\,]?\d*)?([\s\-\_\w]+)$"
+):
+    referenced_recipes = []
+    for line in ingredients.split("\n"):
+
+        stripped_line = re.sub("\s+", " ", line.strip())
+        if len(stripped_line) == 0:
+            continue
+        re_match = re.match(pattern, stripped_line)
+        if re_match:
+            quantity = float(re_match.group(1))
+            recipe = re_match.group(2).strip()
+            referenced_recipes.append({"item": recipe, "factor": quantity})
+
+    return referenced_recipes
+
+
 def separate_ingredients_for_grocery_list(
     grocery_list,
     staple_ingredients,
@@ -138,6 +162,10 @@ def separate_ingredients_for_grocery_list(
 
         # nothing relevant is that short
         if len(stripped_line) < 3:
+            continue
+
+        # self-references to other recipes, handled before
+        if stripped_line[0] == "#":
             continue
 
         if "optional" in stripped_line.lower():
@@ -479,7 +507,29 @@ def get_empty_grocery_df():
     return grocery_list
 
 
+def identify_recipe_by_title(search_title, recipes, reject_below=95):
+    if search_title in recipes.title.to_list():
+        return search_title
+
+    print(
+        "Couldn't directly find recipe title {:s}. Attempting (very strict) fuzzy match!".format(
+            search_title
+        )
+    )
+    match_title = get_fuzzy_match(
+        search_title,
+        recipes.title.values,
+        warn=True,
+        limit=1,
+        reject=reject_below,
+        warn_thresh=reject_below,
+    )[0][0]
+    print("Identified recipe: {:s}".format(match_title))
+    return match_title
+
+
 def generate_grocery_list(config, recipes, verbose=False):
+    # pure cleaning mode
     if config.only_clean_todoist:
         project_name = "Groceries"
         todoist_helper = TodoistHelper(config.todoist_token_file)
@@ -512,7 +562,7 @@ def generate_grocery_list(config, recipes, verbose=False):
             if len(entry) > 0:
 
                 # manual ingredient or addition, no matching to known recipes should be done
-                if entry.get("type", None) == "ingredient":
+                if entry.get("type", None).lower() == "ingredient":
                     if entry.get("grocery_list", None) == "Y":
                         grocery_list = parse_add_ingredient_entry_to_grocery_list(
                             entry["item"],
@@ -527,23 +577,9 @@ def generate_grocery_list(config, recipes, verbose=False):
                     if "uuid" in entry:
                         mask_entry = recipes.uuid == entry["uuid"]
                     elif "item" in entry:
-                        mask_entry = recipes.title == entry["item"]
-                        if np.sum(mask_entry) == 0:
-                            print(
-                                "Couldn't find recipe title {:s}. Attempting (very strict) fuzzy match!".format(
-                                    entry["item"]
-                                )
-                            )
-                            match_title = get_fuzzy_match(
-                                entry["item"],
-                                recipes.title.values,
-                                warn=True,
-                                limit=1,
-                                reject=95,
-                                warn_thresh=95,
-                            )[0][0]
-                            print("Identified recipe: {:s}".format(match_title))
-                            mask_entry = recipes.title == match_title
+                        mask_entry = recipes.title == identify_recipe_by_title(
+                            entry["item"], recipes
+                        )
                     else:
                         AssertionError(
                             "No way of matching entry {} to recipe db!".format(entry)
@@ -556,6 +592,7 @@ def generate_grocery_list(config, recipes, verbose=False):
                     selected_recipe = recipes[mask_entry].iloc[0]
                     recipe_title = selected_recipe.title
                     ingredients = selected_recipe.ingredients
+
                     grocery_list = separate_ingredients_for_grocery_list(
                         grocery_list,
                         staple_ingredients,
@@ -565,6 +602,43 @@ def generate_grocery_list(config, recipes, verbose=False):
                         mult_factor=float(entry.get("factor", 1)),
                         regex_match=True,
                     )
+
+                    recipe_title_orig = recipe_title
+                    referenced_recipes = identify_referenced_recipes(ingredients)
+
+                    # also adding ingredients from all referenced recipes
+                    while len(referenced_recipes) > 0:
+
+                        mask_entry = recipes.title == identify_recipe_by_title(
+                            referenced_recipes[0]["item"], recipes
+                        )
+
+                        assert (
+                            mask_entry is not None and np.sum(mask_entry) > 0
+                        ), "Could not find recipe {} in recipes db!".format(
+                            referenced_recipes[0]
+                        )
+
+                        selected_recipe = recipes[mask_entry].iloc[0]
+                        recipe_title = "{:s}_{:s}".format(
+                            selected_recipe.title, recipe_title_orig
+                        )
+                        ingredients = selected_recipe.ingredients
+
+                        grocery_list = separate_ingredients_for_grocery_list(
+                            grocery_list,
+                            staple_ingredients,
+                            recipe_title,
+                            ingredients,
+                            day,
+                            mult_factor=float(entry.get("factor", 1))
+                            * referenced_recipes[0].get("factor", 1),
+                            regex_match=True,
+                        )
+                        # identify references recipes within referenced recipes (and recursively forever :)
+                        referenced_recipes = referenced_recipes[
+                            1:
+                        ] + identify_referenced_recipes(ingredients)
 
     grocery_list = aggregate_like_ingredient(grocery_list, convert_units=True)
 

@@ -103,6 +103,7 @@ red pepper flakes,True,Spices and herbs
 lentils,True,Legumes
 bay leaf,True,Spices and herbs
 basil leaf,False,Fresh herbs
+mint leaf,False,Fresh herbs
 marinara sauce,False,Canned
 Chipotle powder,False,Spices and herbs
 BBQ sauce,True,Sauces
@@ -112,7 +113,7 @@ peanut butter,True,Canned
 Hershey’s Kisses,False,Baking
 spicy tomato paste,False,Sauces
 butter beans,False,Canned
-fresh parsley,False,Vegetables
+fresh parsley,False,Fresh herbs
 pita chips,False,Prepared
 paprika powder,True,Spices and herbs
 frozen green beans,False,Frozen goods
@@ -215,7 +216,7 @@ Swiss cheese,False,Dairy products
 tomato pesto,False,Sauces
 red pesto,False,Sauces
 green pesto,False,Sauces
-fresh basil,False,Vegetables
+fresh basil,False,Fresh herbs
 oyster sauce,True,Sauces
 butternut squash,False,Vegetables
 pickle,False,Canned
@@ -320,7 +321,8 @@ pre-cooked beets,False,Vegetables
 Chinkiang vinegar,False,Sauces
 scallion,False,Vegetables
 squash,False,Vegetables
-fresh dill,False,Spices and herbs
+fresh dill,False,Fresh herbs
+dried dill,False,Spices and herbs
 coriander seeds,False,Spices and herbs
 dried fenugreek leaves,False,Spices and herbs
 fennel seeds,False,Spices and herbs

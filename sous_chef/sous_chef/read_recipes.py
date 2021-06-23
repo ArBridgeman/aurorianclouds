@@ -70,11 +70,17 @@ def unzip_rtk(recipe_path):
         rtk_file.unlink()
 
 
-def read_recipes(recipe_path: Path):
+def read_recipes(recipe_path: Path, de_duplicate: bool = True):
     unzip_rtk(recipe_path)
     recipes = pd.DataFrame()
     for json in recipe_path.glob(RECIPE_FILE_PATTERN):
         recipes = recipes.append(retrieve_format_recipe_df(json))
+
+    # if multiple recipes with exact same name exist, keep highest rated one
+    if de_duplicate:
+        recipes = recipes.sort_values(["rating"], ascending=False)
+        recipes = recipes.drop_duplicates(["title"], keep="first")
+
     return recipes
 
 

@@ -118,7 +118,7 @@ def regex_split_ingredient(
 
 def identify_referenced_recipes(
     ingredients,
-    pattern="^#\s(\d+[\.\,]?\d*)?([\s\-\_\w]+)$",
+    pattern="^#\s(\d+[\.\,]?\d*)?([\s\-\_\w]+)(\s?\(\w+\))?$",
     base_factor=1.0,
     base_title="",
 ):
@@ -132,8 +132,16 @@ def identify_referenced_recipes(
         if re_match:
             quantity = float(re_match.group(1)) * base_factor
             recipe = re_match.group(2).strip()
+            instruction = None
+            if re_match.group(3) is not None and re_match.group(3) != "":
+                instruction = re_match.group(3)[1:-1]
             referenced_recipes.append(
-                {"item": recipe, "factor": quantity, "base_title": base_title}
+                {
+                    "item": recipe,
+                    "factor": quantity,
+                    "base_title": base_title,
+                    "instruction": instruction,
+                }
             )
 
     return referenced_recipes
@@ -332,8 +340,10 @@ def get_food_categories(grocery_list, config):
     grocery_list["group"] = grocery_list.ingredient.apply(
         ingredient_helper.get_food_group
     )
-
     grocery_list = pd.concat([grocery_list, grocery_list_matched])
+    # overwrite entries with explicit can/cans unit
+    grocery_list.loc[grocery_list.unit.isin(["can", "cans"]), "group"] = "Canned"
+
     grocery_list = grocery_list.sort_values("manual_ingredient", ascending=False)
 
     one_change = False
@@ -625,6 +635,8 @@ def generate_grocery_list(config, recipes, verbose=False):
                             base_factor=current_recipe.get("factor", 1),
                             base_title="_{:s}".format(recipe_title),
                         )
+                        if len(referenced_recipes) > 0:
+                            print("Referenced recipes:", referenced_recipes)
                         all_recipes = all_recipes[1:] + referenced_recipes
 
     grocery_list = aggregate_like_ingredient(grocery_list, convert_units=True)

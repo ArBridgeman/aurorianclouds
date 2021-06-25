@@ -296,7 +296,7 @@ flocken,False,Grains
 Schinken,False,Meats
 tofu,False,Dairy products
 fenugreek powder,False,Spices and herbs
-fenugreek seeds,False,Nuts and seeds
+fenugreek seeds,False,Spices and herbs
 garlic paste,False,Sauces
 curry powder,False,Spices and herbs
 garam  masala,True,Spices and herbs
@@ -305,7 +305,7 @@ frozen raspberries,False,Frozen goods
 red chilis,False,Vegetables
 almonds,False,Nuts and seeds
 green lentils,False,Legumes
-mustard seeds,True,Nuts and seeds
+mustard seeds,True,Spices and herbs
 mustard powder,True,Spices and herbs
 curry paste,False,Sauces
 paneer,False,Dairy products
@@ -372,6 +372,7 @@ scrambled egg,False,Egg
 garlic aioli,False,Sauces
 ground beef,False,Meats
 ground turkey,False,Meats
+ground pork,False,Meats
 passata,False,Sauces
 prepared tapas meat,False,Meats
 speck,False,Meats

@@ -156,8 +156,9 @@ def separate_ingredients_for_grocery_list(
     mult_factor=1.0,
     regex_match=True,
 ):
+    optional_groups_reached = False
     for line in ingredients.split("\n"):
-        is_optional = False
+        is_optional = optional_groups_reached
         stripped_line = re.sub("\s+", " ", line.strip())
 
         if stripped_line.lower() in [
@@ -166,7 +167,8 @@ def separate_ingredients_for_grocery_list(
             "[optional]",
             "[garnish]",
         ]:
-            break
+            optional_groups_reached = True
+            continue
 
         # TODO check that all empty strings are being ignored
         # Doesn't seem to based on addition if to separate_unit_from_ingredient

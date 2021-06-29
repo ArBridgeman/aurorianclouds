@@ -84,9 +84,12 @@ def upload_menu_to_todoist(
         if not dry_mode:
             [
                 todoist_helper.delete_all_items_in_project(
-                    project_name, no_recurring=False, only_app_generated=True
+                    project_name,
+                    no_recurring=False,
+                    only_app_generated=True,
+                    only_delete_after_date=get_due_date(4).date(),
                 )
-                for i in range(3)
+                for _ in range(3)
             ]
 
     if dry_mode:

@@ -386,7 +386,7 @@ def upload_groceries_to_todoist(
     if clean:
         print("Cleaning previous items/tasks in project {:s}".format(project_name))
         if not dry_mode:
-            [todoist_helper.delete_all_items_in_project(project_name) for i in range(3)]
+            [todoist_helper.delete_all_items_in_project(project_name) for _ in range(3)]
 
     if dry_mode:
         print("Dry mode! Will only simulate actions but not upload to todoist!")
@@ -484,7 +484,7 @@ def generate_grocery_list(config, recipes, verbose=False):
         project_name = "Groceries"
         todoist_helper = TodoistHelper(config.todoist_token_file)
         print("Cleaning previous items/tasks in project {:s}".format(project_name))
-        [todoist_helper.delete_all_items_in_project(project_name) for i in range(3)]
+        [todoist_helper.delete_all_items_in_project(project_name) for _ in range(3)]
         return
 
     filepath = Path(config.menu_path, config.menu_file)

@@ -149,13 +149,18 @@ class TodoistHelper:
         project,
         no_recurring=True,
         only_app_generated=True,
+        only_delete_after_date=None,
         prior_move="Deleted",
         sleep_s=1,
     ):
         """
         Deletes items in project "project" that fulfil specified properties.
         :param project: string, name of project.
-        :param no_recurring: boolean. If true, do not delete recurring items from list.
+        :param no_recurring: boolean (default: True). If true, do not delete recurring items from list.
+        :param only_app_generated: boolean (default: True). If true, will only delete entries with label app,
+                                   the label that is added to all app-generated entries by default.
+        :param only_delete_after_date: date (default: None).
+                                       Will only delete entries with a due date after this given date.
         :param prior_move: string (optional). If not None, will move items to corresponding
                            section prior to deleting them.
         """
@@ -178,11 +183,20 @@ class TodoistHelper:
                 # check if task is already finished or deleted
                 if task["in_history"] == 1 or task["is_deleted"] == 1:
                     continue
-                if no_recurring:
-                    if task["due"] is not None:
+                if task["due"] is not None:
+                    if no_recurring:
                         if (
                             task["due"]["is_recurring"] is True
                             or task["due"]["date"] is not None
+                        ):
+                            continue
+                    if (
+                        only_delete_after_date is not None
+                        and task["due"]["date"] is not None
+                    ):
+                        if (
+                            pd.to_datetime(task["due"]["date"]).date()
+                            <= only_delete_after_date
                         ):
                             continue
                 if only_app_generated and app_added_label_id not in task["labels"]:

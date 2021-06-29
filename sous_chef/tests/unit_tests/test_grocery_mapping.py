@@ -4,7 +4,7 @@ import pytest
 from sous_chef.grocery_list.grocery_matching_mapping import IngredientsHelper
 
 # TODO: refactor and put files somewhere else or have better way to specify path
-data_base = pathlib.Path.cwd() / ".." / ".." / "nutrition_data"
+data_base = pathlib.Path(__file__).parent / ".." / ".." / "nutrition_data"
 path_input = data_base / "food_items.feather"
 
 ingredient_helper = IngredientsHelper(path_input)

@@ -84,11 +84,15 @@ def parse_fixed_menu(sub_parser):
         action="store_true",
         help="Will perform only a dry mode without uploads and print actions to terminal.",
     )
-
     fixed_menu_parser.add_argument(
         "--menu_sorting",
         type=str,
         default="original",
+    )
+    fixed_menu_parser.add_argument(
+        "--no_cleaning",
+        action="store_true",
+        help="Will not clean previously existing items/tasks in menu project.",
     )
 
 

@@ -175,6 +175,7 @@ class TodoistHelper:
         for_deletion = []
         for task in self.connection.state["items"]:
             if task["project_id"] == project_id:
+                # check if task is already finished or deleted
                 if task["in_history"] == 1 or task["is_deleted"] == 1:
                     continue
                 if no_recurring:

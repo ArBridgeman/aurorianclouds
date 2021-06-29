@@ -81,9 +81,13 @@ def upload_menu_to_todoist(
 
     if clean:
         print("Cleaning previous items/tasks in project {:s}".format(project_name))
-        NotImplementedError(
-            "Functionality is not implemented or intended for menu at the moment!"
-        )
+        if not dry_mode:
+            [
+                todoist_helper.delete_all_items_in_project(
+                    project_name, no_recurring=False, only_app_generated=True
+                )
+                for i in range(3)
+            ]
 
     if dry_mode:
         print("Dry mode! Will only simulate actions but not upload to Todoist!")
@@ -186,6 +190,7 @@ def finalize_fixed_menu(config: argparse.Namespace, recipes: pd.DataFrame):
     # uploading
     upload_menu_to_todoist(
         checked_menu,
+        clean=not config.no_cleaning,
         dry_mode=config.dry_mode,
         todoist_token_file_path=config.todoist_token_file,
     )

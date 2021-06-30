@@ -9,6 +9,7 @@ dependencies:
   - numpy=1.19.2
   - scipy=1.6.1
   - pip=20.3.3
+  - inflect=5.3.0
   - pip:
       - google-api-python-client==1.12.8
       - google-auth-httplib2==0.0.4

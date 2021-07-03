@@ -488,12 +488,10 @@ def upload_groceries_to_todoist(
     if dry_mode:
         print("Dry mode! Will only simulate actions but not upload to todoist!")
 
-    round_to_n = lambda x, n: round(x, -int(np.floor(np.log10(x))) + (n - 1))
-
     for _, item in groceries.iterrows():
         formatted_item = "{}, {} {}{}".format(
             item.ingredient,
-            round_to_n(item.quantity, 2),
+            "{:g}".format(float("{:.{p}g}".format(item.quantity, p=2))),
             abbreviate_units(item.unit),
             " (optional)" if item.is_optional else "",
         )

@@ -3,6 +3,7 @@ import re
 from difflib import ndiff
 from pathlib import Path
 
+import inflect
 import numpy as np
 import pandas as pd
 import yaml
@@ -21,6 +22,8 @@ from quantulum3 import parser
 # TODO implement method to mark ingredients that can only be bought the day before + need day
 ureg = UnitRegistry()
 ureg.default_format = ".2f"
+
+inf_engine = inflect.engine()
 
 
 def retrieve_staple_ingredients(config):
@@ -247,11 +250,27 @@ def convert_values(row, desired_unit, debug=False):
         return row["quantity"], row["unit"]
 
 
+def pluralize_ingredients(grocery_list, ingredient_field="ingredient"):
+    """
+    Check if the plural version of a certain ingredient exists and then switch all to plural for the aggregation.
+    :param grocery_list:
+    :return: grocery_list with fixed inflection.
+    """
+    all_ingredients = grocery_list[ingredient_field].unique()
+
+    def plural_helper(ingredient):
+        plural = inf_engine.plural_noun(ingredient)
+        return plural if plural in all_ingredients else ingredient
+
+    grocery_list[ingredient_field] = grocery_list[ingredient_field].apply(plural_helper)
+    return grocery_list
+
+
 def aggregate_like_ingredient(grocery_list, convert_units=False):
+    grocery_list = pluralize_ingredients(grocery_list)
     grouped = grocery_list.groupby("ingredient")
 
     aggregate_grocery_list = pd.DataFrame(columns=grocery_list.columns)
-    # TODO fix aggregation for items where +s (e.g. egg + eggs); separately done currently
     for name, group in grouped:
         if group.shape[0] >= 1:
             if convert_units:
@@ -264,7 +283,6 @@ def aggregate_like_ingredient(grocery_list, convert_units=False):
                         )
                     )
 
-        # TODO ensure all types or lack of unit works here & not losing due to none values
         aggregate = group.groupby(
             ["unit", "ingredient", "manual_ingredient", "is_optional"], as_index=False
         ).agg(
@@ -280,7 +298,41 @@ def aggregate_like_ingredient(grocery_list, convert_units=False):
         aggregate_grocery_list = aggregate_grocery_list.append(
             aggregate[grocery_list.columns]
         )
-    return aggregate_grocery_list.reset_index()
+
+    # check and fix inflections
+    aggregate_grocery_list = aggregate_grocery_list.reset_index()
+
+    should_be_plural_mask = (
+        (aggregate_grocery_list.quantity > 1)
+        & (aggregate_grocery_list.unit == "")
+        & (
+            aggregate_grocery_list.ingredient.apply(
+                lambda x: inf_engine.singular_noun(x) is False
+            )
+        )
+    )
+    aggregate_grocery_list.loc[
+        should_be_plural_mask, "ingredient"
+    ] = aggregate_grocery_list[should_be_plural_mask]["ingredient"].apply(
+        inf_engine.plural_noun
+    )
+
+    should_be_singular_mask = (
+        (aggregate_grocery_list.quantity == 1)
+        & (aggregate_grocery_list.unit == "")
+        & (
+            aggregate_grocery_list.ingredient.apply(
+                lambda x: inf_engine.singular_noun(x) is not False
+            )
+        )
+    )
+    aggregate_grocery_list.loc[
+        should_be_singular_mask, "ingredient"
+    ] = aggregate_grocery_list[should_be_singular_mask]["ingredient"].apply(
+        inf_engine.singular_noun
+    )
+
+    return aggregate_grocery_list
 
 
 def get_food_categories(grocery_list, config):
@@ -431,7 +483,7 @@ def upload_groceries_to_todoist(
     if clean:
         print("Cleaning previous items/tasks in project {:s}".format(project_name))
         if not dry_mode:
-            [todoist_helper.delete_all_items_in_project(project_name) for i in range(3)]
+            [todoist_helper.delete_all_items_in_project(project_name) for _ in range(3)]
 
     if dry_mode:
         print("Dry mode! Will only simulate actions but not upload to todoist!")
@@ -551,7 +603,7 @@ def generate_grocery_list(config, recipes, verbose=False):
         project_name = "Groceries"
         todoist_helper = TodoistHelper(config.todoist_token_file)
         print("Cleaning previous items/tasks in project {:s}".format(project_name))
-        [todoist_helper.delete_all_items_in_project(project_name) for i in range(3)]
+        [todoist_helper.delete_all_items_in_project(project_name) for _ in range(3)]
         return
 
     filepath = Path(config.menu_path, config.menu_file)

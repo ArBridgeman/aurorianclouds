@@ -101,6 +101,10 @@ class TodoistHelper:
                 section_id is not None
             ), "Id of section {:s} could not be found!".format(section)
 
+        if labels is None:
+            labels = ["app"]
+        labels += ["app"]
+
         label_ids = None
         if labels is not None:
             label_ids = self.get_label_ids(labels)

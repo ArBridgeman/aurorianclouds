@@ -7,6 +7,7 @@
 | remove fresh description         | 1 fresh basil leaf        | 1 basil leaf         |
 | pepper                           | 1 tsp ground black pepper | 1 tsp pepper         |
 | salt                             | 1 tsp sea salt            | 1 tsp salt           |
+| mustard/fenugreek (always powder)| 1 tsp mustard seeds       | 1 tsp mustard powder |
 
 * Units are not required for salt & pepper as these are typically under 1 tsp.
 

@@ -296,7 +296,6 @@ flocken,False,Grains
 Schinken,False,Meats
 tofu,False,Dairy products
 fenugreek powder,False,Spices and herbs
-fenugreek seeds,False,Spices and herbs
 garlic paste,False,Sauces
 curry powder,False,Spices and herbs
 garam  masala,True,Spices and herbs
@@ -305,7 +304,6 @@ frozen raspberries,False,Frozen goods
 red chilis,False,Vegetables
 almonds,False,Nuts and seeds
 green lentils,False,Legumes
-mustard seeds,True,Spices and herbs
 mustard powder,True,Spices and herbs
 curry paste,False,Sauces
 paneer,False,Dairy products
@@ -326,6 +324,7 @@ dried dill,False,Spices and herbs
 coriander seeds,False,Spices and herbs
 dried fenugreek leaves,False,Spices and herbs
 fennel seeds,False,Spices and herbs
+fennel powder,False,Spices and herbs
 Spitzpaprika,False,Vegetables
 cumin seeds,False,Spices and herbs
 coriander powder,False,Spices and herbs

@@ -182,6 +182,9 @@ def finalize_fixed_menu(config: argparse.Namespace, recipes: pd.DataFrame):
     menu_number = config.fixed_menu_number
     fixed_menu = obtain_fixed_menu(menu_path, menu_number)
     checked_menu = check_menu(fixed_menu)
+
+    checked_menu = checked_menu[checked_menu.factor > 0]
+
     checked_menu = join_recipe_information(checked_menu, recipes)
     if config.menu_sorting != "original":
         checked_menu = checked_menu.sort_values(config.menu_sorting)

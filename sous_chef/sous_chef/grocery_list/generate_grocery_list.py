@@ -505,7 +505,7 @@ def upload_groceries_to_todoist(
         if not dry_mode:
             all_labels = item.from_recipe + item.from_day
             if item.is_optional:
-                all_labels.append(["Optional"])
+                all_labels.append("Optional")
             todoist_helper.add_item_to_project(
                 formatted_item, project_name, section=item.group, labels=all_labels
             )
@@ -540,6 +540,9 @@ def parse_add_ingredient_entry_to_grocery_list(
         return grocery_list
 
     if ignore_ingredient(staple_list["Always_ignore"], ingredient.strip()):
+        return grocery_list
+
+    if factor * quantity == 0:
         return grocery_list
 
     grocery_list = grocery_list.append(

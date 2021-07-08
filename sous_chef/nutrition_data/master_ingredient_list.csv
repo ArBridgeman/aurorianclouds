@@ -49,13 +49,13 @@ dried thyme,True,Spices and herbs
 balsamic vinegar,True,Sauces
 white beans,False,Canned
 brown rice,False,Grains
-Schwarzkohl,False,Vegetables
+schwarzkohl,False,Vegetables
 chickpeas,False,Canned
 green onion,False,Vegetables
 stock,False,Canned
 beef stock,False,Canned
 chicken stock,False,Canned
-veetable stock,False,Canned
+vegetable stock,False,Canned
 soy sauce,True,Sauces
 orange zest,False,Fruits
 white pepper,True,Spices and herbs
@@ -80,7 +80,7 @@ olives,False,Canned
 oil,True,Fats and oils
 rice vinegar,True,Sauces
 ginger paste,True,Sauces
-Dijon mustard,True,Sauces
+dijon mustard,True,Sauces
 sweet mustard,True,Sauces
 chicken tenderloins,False,Meats
 crushed tomatoes,False,Canned
@@ -96,7 +96,7 @@ yeast,False,Baking
 baking powder,True,Baking
 baking soda,True,Baking
 salt,True,Spices and herbs
-Greek yogurt,True,Dairy products
+greek yogurt,True,Dairy products
 coconut oil,False,Fats and oils
 red wine,False,Beverages
 red pepper flakes,True,Spices and herbs
@@ -105,12 +105,12 @@ bay leaf,True,Spices and herbs
 basil leaf,False,Fresh herbs
 mint leaf,False,Fresh herbs
 marinara sauce,False,Canned
-Chipotle powder,False,Spices and herbs
-BBQ sauce,True,Sauces
+chipotle powder,False,Spices and herbs
+bbq sauce,True,Sauces
 pizza sauce,False,Sauces
 avocado,False,Fruits
 peanut butter,True,Canned
-Hershey’s Kisses,False,Baking
+hershey’s kisses,False,Baking
 spicy tomato paste,False,Sauces
 butter beans,False,Canned
 fresh parsley,False,Fresh herbs
@@ -132,7 +132,7 @@ buckwheat,False,Grains
 pineapple chunks,False,Canned
 roasted red bell peppers,True,Canned
 black beans,False,Canned
-Worcestershire sauce,True,Sauces
+worcestershire sauce,True,Sauces
 frozen brussels sprouts,False,Frozen goods
 chili oil,True,Fats and oils
 cream of tartar,False,Baking
@@ -167,7 +167,7 @@ vanilla protein powder,False,Spices and herbs
 cheddar cheese,True,Dairy products
 gruyere,False,Dairy products
 spätzle,False,Pasta
-Emmentaler,False,Dairy products
+emmentaler,False,Dairy products
 cream cheese,False,Dairy products
 chipotle peppers in adobo sauce,False,Spices and herbs
 crushed fire-roasted tomatoes,False,Canned
@@ -180,13 +180,13 @@ ginger,False,Vegetables
 sahne,False,Dairy products
 half-and-half,False,Dairy products
 grapeseed oil,False,Fats and oils
-Scampi Blend,False,Spices and herbs
+scampi Blend,False,Spices and herbs
 noodles,False,Pasta
 spaghetti,False,Pasta
 canned tuna,False,Canned
 tuna steak,False,Frozen goods
 mozzarella,False,Dairy products
-Italian seasoning,True,Spices and herbs
+italian seasoning,True,Spices and herbs
 pineapple juice,False,Juices
 chili sauce,True,Sauces
 white vinegar,True,Sauces
@@ -198,7 +198,7 @@ poppy seeds,False,Nuts and seeds
 ground flaxseed,False,Nuts and seeds
 lemon zest,False,Fruits
 blueberries,False,Fruits
-Italian salad dressing Mix,True,Spices and herbs
+italian salad dressing Mix,True,Spices and herbs
 strawberries,False,Fruits
 chicken,False,Meats
 chicken schnitzel,False,Meats
@@ -208,11 +208,11 @@ flank steak,False,Meats
 skirt steak,False,Meats
 sliced flank steak,False,Meats
 5 spice,True,Spices and herbs
-Adobo Seasoning,False,Spices and herbs
+adobo seasoning,False,Spices and herbs
 ciabatta,False,Prepared
 frozen broccoli,False,Frozen goods
 frozen cauliflower,False,Frozen goods
-Swiss cheese,False,Dairy products
+swiss cheese,False,Dairy products
 tomato pesto,False,Sauces
 red pesto,False,Sauces
 green pesto,False,Sauces
@@ -232,13 +232,13 @@ taco seasoning,False,Spices and herbs
 sour cream,False,Dairy products
 pesto,False,Sauces
 penne,False,Pasta
-Bruschetta Blend,False,Spices and herbs
+bruschetta Blend,False,Spices and herbs
 dried tomatoes,False,Vegetables
 artichoke hearts,False,Canned
 shallot,False,Vegetables
 pork tenderloin,False,Meats
 orange juice,True,Juices
-Italian sausage,False,Meats
+italian sausage,False,Meats
 celery,False,Vegetables
 pasta,False,Pasta
 flatbread,False,Prepared
@@ -278,14 +278,14 @@ gnocchi,False,Pasta
 cashews,False,Nuts and seeds
 almond extract,False,Baking
 peach,False,Fruits
-Ranch dressing,False,Spices and herbs
+ranch dressing,False,Spices and herbs
 croutons,False,Prepared
 nutritional yeast,True,Baking
 apple,False,Fruits
 goat cheese,False,Dairy products
 chocolate chips,False,Baking
-Kruezkümmel,False,Spices and herbs
-Ras el Hanout,True,Spices and herbs
+kruezkümmel,False,Spices and herbs
+ras el Hanout,True,Spices and herbs
 pomegranate seeds,False,Fruits
 spinach,False,Vegetables
 halloumi,False,Dairy products
@@ -293,13 +293,13 @@ chocolate,False,Baking
 mascarpone,False,Dairy products
 almond flour,False,Baking
 flocken,False,Grains
-Schinken,False,Meats
+schinken,False,Meats
 tofu,False,Dairy products
 fenugreek powder,False,Spices and herbs
 garlic paste,False,Sauces
 curry powder,False,Spices and herbs
 garam  masala,True,Spices and herbs
-Kashmiri Chili powder,False,Spices and herbs
+kashmiri chili powder,False,Spices and herbs
 frozen raspberries,False,Frozen goods
 red chilis,False,Vegetables
 almonds,False,Nuts and seeds
@@ -310,13 +310,13 @@ paneer,False,Dairy products
 basmati rice,False,Grains
 rice noodles,False,Pasta
 napa cabbage,False,Vegetables
-Shaoxing wine,False,Sauces
-Sriracha,True,Sauces
+shaoxing wine,False,Sauces
+sriracha,True,Sauces
 dried chili peppers,True,Spices and herbs
-Szechuan peppercorn,True,Spices and herbs
+szechuan peppercorn,True,Spices and herbs
 white fish,False,Fish
 pre-cooked beets,False,Vegetables
-Chinkiang vinegar,False,Sauces
+chinkiang vinegar,False,Sauces
 scallion,False,Vegetables
 squash,False,Vegetables
 fresh dill,False,Fresh herbs
@@ -325,12 +325,12 @@ coriander seeds,False,Spices and herbs
 dried fenugreek leaves,False,Spices and herbs
 fennel seeds,False,Spices and herbs
 fennel powder,False,Spices and herbs
-Spitzpaprika,False,Vegetables
+spitzpaprika,False,Vegetables
 cumin seeds,False,Spices and herbs
 coriander powder,False,Spices and herbs
 turmeric powder,False,Spices and herbs
 leeks,False,Vegetables
-Knödel,False,Prepared
+knödel,False,Prepared
 dried chili flakes,True,Spices and herbs
 salami,True,Meats
 ham,True,Meats
@@ -362,8 +362,8 @@ club soda,False,Beverages
 fries,False,Frozen goods
 burger buns,False,Prepared
 wraps,False,Prepared
-Tomatenmark,True,Sauces
-Caesar dressing,False,Sauces
+tomatenmark,True,Sauces
+caesar dressing,False,Sauces
 bratkartoffeln,False,Frozen goods
 fusilli noodles,False,Pasta
 fried egg,False,Egg

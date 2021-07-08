@@ -3,6 +3,7 @@
 |:-------------------------------- |:------------------------- |:-------------------- |
 | units required*                  | garlic powder             | 1 tsp garlic powder  |
 | units abbreviated                | 1 teaspoon garlic powder  | 1 tsp garlic powder  |
+| lower case (also master list)    | 1 teaspoon Garlic Powder  | 1 tsp garlic powder  |
 | ground description required      | 1 tsp paprika             | 1 tsp paprika powder |
 | remove fresh description         | 1 fresh basil leaf        | 1 basil leaf         |
 | pepper                           | 1 tsp ground black pepper | 1 tsp pepper         |

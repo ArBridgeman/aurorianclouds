@@ -548,8 +548,8 @@ def parse_add_ingredient_entry_to_grocery_list(
     grocery_list = grocery_list.append(
         {
             "quantity": factor * quantity,
-            "unit": unit,
-            "ingredient": ingredient,
+            "unit": unit.lower(),
+            "ingredient": ingredient.lower(),
             "is_staple": is_staple_ingredient(staple_list, ingredient) or is_staple,
             "is_optional": is_optional,
             "manual_ingredient": manual_entry,

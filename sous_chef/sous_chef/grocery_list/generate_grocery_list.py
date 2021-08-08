@@ -491,7 +491,7 @@ def upload_groceries_to_todoist(
     for _, item in groceries.iterrows():
         formatted_item = "{}, {} {}{}".format(
             item.ingredient,
-            item.quantity,
+            "{:g}".format(float("{:.{p}g}".format(item.quantity, p=2))),
             abbreviate_units(item.unit),
             " (optional)" if item.is_optional else "",
         )
@@ -505,7 +505,7 @@ def upload_groceries_to_todoist(
         if not dry_mode:
             all_labels = item.from_recipe + item.from_day
             if item.is_optional:
-                all_labels.append(["Optional"])
+                all_labels.append("Optional")
             todoist_helper.add_item_to_project(
                 formatted_item, project_name, section=item.group, labels=all_labels
             )
@@ -542,11 +542,14 @@ def parse_add_ingredient_entry_to_grocery_list(
     if ignore_ingredient(staple_list["Always_ignore"], ingredient.strip()):
         return grocery_list
 
+    if factor * quantity == 0:
+        return grocery_list
+
     grocery_list = grocery_list.append(
         {
             "quantity": factor * quantity,
-            "unit": unit,
-            "ingredient": ingredient,
+            "unit": unit.lower(),
+            "ingredient": ingredient.lower(),
             "is_staple": is_staple_ingredient(staple_list, ingredient) or is_staple,
             "is_optional": is_optional,
             "manual_ingredient": manual_entry,

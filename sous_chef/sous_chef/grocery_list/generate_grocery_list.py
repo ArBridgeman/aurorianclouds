@@ -25,6 +25,14 @@ ureg.default_format = ".2f"
 
 inf_engine = inflect.engine()
 
+DRIED_BEANS = [
+    "black beans",
+    "butter beans",
+    "chickpeas",
+    "kidney beans",
+    "white beans",
+]
+
 
 def retrieve_staple_ingredients(config):
     with open(Path(config.grocery_list_path, config.staple_ingredients_file)) as file:
@@ -99,7 +107,7 @@ def naive_unit_extraction(ingredient, pattern="^{:s}s?\.?\s"):
 
 
 def regex_split_ingredient(
-    ingredient, pattern="^(\d+[\.\,]?\d*)?\s([\s\-\_\w]+)(\s?\(\w+\))?"
+    ingredient, pattern="^(\d+[\.\,]?\d*)?\s([\s\-\_\w\%]+)(\s?\(\w+\))?"
 ):
     # TODO: this should be updated with crf model in the future to be MUCH more robust
     # especially once we start cleaning other recipes that haven't been preprocessed
@@ -343,11 +351,6 @@ def get_food_categories(grocery_list, config):
         print("Error while trying to read master ingredient list!")
         print(e)
 
-    # some cleaning before matching
-    grocery_list["ingredient"] = grocery_list["ingredient"].apply(
-        lambda x: re.sub("[^A-Za-z0-9üäö\-_\s]+", "", x).strip()
-    )
-
     grocery_list_matched = None
     if master_file is not None:
         match_helper = lambda item: get_fuzzy_match(
@@ -386,6 +389,7 @@ def get_food_categories(grocery_list, config):
                 unmatched_mask.sum()
             )
         )
+        print(grocery_list)
         grocery_list_matched = grocery_list[~unmatched_mask]
         grocery_list = grocery_list[unmatched_mask]
 
@@ -600,6 +604,20 @@ def identify_recipe_by_title(search_title, recipes, reject_below=95):
     return match_title
 
 
+def convert_cooked_to_dried_beans(grocery_list):
+    mask_canned_beans = (grocery_list.ingredient.isin(DRIED_BEANS)) & (
+        grocery_list.unit.isin(["can", "cans"])
+    )
+    grocery_list.loc[mask_canned_beans, "unit"] = ureg.gram
+    grocery_list.loc[mask_canned_beans, "quantity"] = (
+        grocery_list.loc[mask_canned_beans, "quantity"] * 180
+    )
+    grocery_list.loc[mask_canned_beans, "ingredient"] = (
+        "dried " + grocery_list.loc[mask_canned_beans, "ingredient"]
+    )
+    return grocery_list
+
+
 def generate_grocery_list(config, recipes, verbose=False):
     # pure cleaning mode
     if config.only_clean_todoist:
@@ -714,6 +732,10 @@ def generate_grocery_list(config, recipes, verbose=False):
             grocery_list.ingredient.nunique()
         )
     )
+
+    # convert canned beans to grams dried beans
+    grocery_list = convert_cooked_to_dried_beans(grocery_list)
+
     # TODO convert all masses to grams
     if verbose:
         print(grocery_list)

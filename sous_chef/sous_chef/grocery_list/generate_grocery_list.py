@@ -610,7 +610,7 @@ def convert_cooked_to_dried_beans(grocery_list):
     )
     grocery_list.loc[mask_canned_beans, "unit"] = ureg.gram
     grocery_list.loc[mask_canned_beans, "quantity"] = (
-        grocery_list.loc[mask_canned_beans, "quantity"] * 180
+        grocery_list.loc[mask_canned_beans, "quantity"] * 150
     )
     grocery_list.loc[mask_canned_beans, "ingredient"] = (
         "dried " + grocery_list.loc[mask_canned_beans, "ingredient"]

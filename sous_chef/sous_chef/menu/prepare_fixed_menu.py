@@ -57,6 +57,8 @@ def get_anchor_date(weekday_index):
 def get_due_date(
     day, anchor_date=datetime.datetime.today(), hour=0, minute=0, second=0
 ):
+    import datetime
+
     new_date = anchor_date + datetime.timedelta(
         days=(day - anchor_date.weekday() + 7) % 7
     )

@@ -389,7 +389,6 @@ def get_food_categories(grocery_list, config):
                 unmatched_mask.sum()
             )
         )
-        print(grocery_list)
         grocery_list_matched = grocery_list[~unmatched_mask]
         grocery_list = grocery_list[unmatched_mask]
 
@@ -513,6 +512,86 @@ def upload_groceries_to_todoist(
             todoist_helper.add_item_to_project(
                 formatted_item, project_name, section=item.group, labels=all_labels
             )
+    return
+
+
+def ingredient_is_bean(ingredient):
+    for dried_bean in DRIED_BEANS:
+        if dried_bean in ingredient:
+            return True
+    return False
+
+
+def add_preparation_tasks_to_todoist(
+    groceries,
+    project_name="Menu",
+    clean=False,
+    dry_mode=False,
+    todoist_token_file_path="todoist_token.txt",
+):
+    from sous_chef.menu.prepare_fixed_menu import get_anchor_date, get_due_date
+
+    todoist_helper = TodoistHelper(todoist_token_file_path)
+
+    if clean:
+        print("Cleaning previous items/tasks in project {:s}".format(project_name))
+        if not dry_mode:
+            [todoist_helper.delete_all_items_in_project(project_name) for _ in range(3)]
+
+    if dry_mode:
+        print("Dry mode! Will only simulate actions but not upload to Todoist!")
+
+    for _, item in groceries.iterrows():
+        # TODO add defrosts etc
+        # e.g. just check if group == "Frozen 3" and/or
+        # meat that is needed during later week (but purchased previous week)
+
+        formatted_item = None
+        due_dict = None
+
+        # bean prep tasks
+        if ingredient_is_bean(item.ingredient):
+            add_for_freeze = 150  # add certain amount to be made for freezing
+            formatted_item = "BEAN prep: {}, {} {} (cook & freeze {} {}) {}".format(
+                item.ingredient,
+                "{:g}".format(
+                    float("{:.{p}g}".format(item.quantity + add_for_freeze, p=2))
+                ),
+                abbreviate_units(item.unit),
+                "{:g}".format(float("{:.{p}g}".format(add_for_freeze, p=2))),
+                abbreviate_units(item.unit),
+                " (optional)" if item.is_optional else "",
+            )
+            formatted_item = re.sub("\s+", " ", formatted_item).strip()
+
+            # add entry on Saturday
+            due_date = get_due_date(
+                5,
+                get_anchor_date(4),
+                hour=9,
+                minute=0,
+            )
+            due_date_str = due_date.strftime("on %Y-%m-%d at %H:%M")
+            due_dict = {"string": due_date_str}
+
+        if formatted_item is not None:
+            print(
+                "Adding item {:s} to Menu "
+                "todoist (recipe source(s): {}). Due date: {}.".format(
+                    formatted_item, repr(item.from_recipe), due_dict
+                )
+            )
+            if not dry_mode:
+                all_labels = item.from_recipe + item.from_day
+                if item.is_optional:
+                    all_labels.append("Optional")
+                todoist_helper.add_item_to_project(
+                    formatted_item,
+                    project_name,
+                    labels=all_labels,
+                    due_date_dict=due_dict,
+                )
+    return
 
 
 # TODO: further generalize and improve this function (staple detection, other fields etc.)
@@ -740,13 +819,19 @@ def generate_grocery_list(config, recipes, verbose=False):
     if verbose:
         print(grocery_list)
 
-    if not config.no_upload:
-        # TODO add arg option for dry-run as currently hardcoded
-        print("Uploading grocery list to todoist...")
-        upload_groceries_to_todoist(
-            grocery_list,
-            clean=not config.no_cleaning,
-            dry_mode=config.dry_mode,
-            todoist_token_file_path=config.todoist_token_file,
-        )
-        print("Upload done.")
+    print("Adding grocery list to todoist...")
+    upload_groceries_to_todoist(
+        grocery_list,
+        clean=not config.no_cleaning,
+        dry_mode=config.dry_mode,
+        todoist_token_file_path=config.todoist_token_file,
+    )
+
+    print("Adding preparation tasks (beans, defrosting etc) to todoist...")
+    add_preparation_tasks_to_todoist(
+        grocery_list,
+        clean=False,
+        dry_mode=config.dry_mode,
+        todoist_token_file_path=config.todoist_token_file,
+    )
+    print("Upload done.")

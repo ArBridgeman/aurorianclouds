@@ -7,7 +7,7 @@ import inflect
 import numpy as np
 import pandas as pd
 import yaml
-from definitions import ALLOWED_UNITS
+from definitions import ALLOWED_UNITS, BEAN_COOKED_CAN_DRY_G
 from grocery_list.grocery_matching_mapping import (
     IngredientsHelper,
     get_fuzzy_match,
@@ -492,11 +492,9 @@ def upload_groceries_to_todoist(
         print("Dry mode! Will only simulate actions but not upload to todoist!")
 
     for _, item in groceries.iterrows():
-        formatted_item = "{}, {} {}{}".format(
-            item.ingredient,
-            "{:g}".format(float("{:.{p}g}".format(item.quantity, p=2))),
-            abbreviate_units(item.unit),
-            " (optional)" if item.is_optional else "",
+        formatted_item = (
+            f"{item.ingredient}, {significant_digits_str(item.quantity)} "
+            f"{abbreviate_units(item.unit)}{' (optional)' if item.is_optional else ''}"
         )
         formatted_item = re.sub("\s+", " ", formatted_item).strip()
         print(
@@ -522,12 +520,23 @@ def ingredient_is_bean(ingredient):
     return False
 
 
+def significant_digits_str(number, precision=2):
+    """
+    Returns string from given number with defined amount of significant digits.
+    :param number: number to print nicely (int/float)
+    :param precision: significant digits to be included
+    :return: formatted string
+    """
+    return "{:g}".format(float("{:.{p}g}".format(number, p=precision)))
+
+
 def add_preparation_tasks_to_todoist(
     groceries,
     project_name="Menu",
     clean=False,
     dry_mode=False,
     todoist_token_file_path="todoist_token.txt",
+    add_cans_for_freezing=1,
 ):
     from sous_chef.menu.prepare_fixed_menu import get_anchor_date, get_due_date
 
@@ -551,23 +560,21 @@ def add_preparation_tasks_to_todoist(
 
         # bean prep tasks
         if ingredient_is_bean(item.ingredient):
-            add_for_freeze = 150  # add certain amount to be made for freezing
-            formatted_item = "BEAN prep: {}, {} {} (cook & freeze {} {}) {}".format(
-                item.ingredient,
-                "{:g}".format(
-                    float("{:.{p}g}".format(item.quantity + add_for_freeze, p=2))
-                ),
-                abbreviate_units(item.unit),
-                "{:g}".format(float("{:.{p}g}".format(add_for_freeze, p=2))),
-                abbreviate_units(item.unit),
-                " (optional)" if item.is_optional else "",
+            add_for_freeze = (
+                BEAN_COOKED_CAN_DRY_G * add_cans_for_freezing
+            )  # add certain amount to be made for freezing
+            formatted_item = (
+                f"BEAN prep: {item.ingredient}, "
+                f"{significant_digits_str(item.quantity + add_for_freeze)} "
+                f"{abbreviate_units(item.unit)} "
+                f"(cook & freeze {significant_digits_str(add_for_freeze)} {abbreviate_units(item.unit)})"
+                f"{' (optional)' if item.is_optional else ''}"
             )
             formatted_item = re.sub("\s+", " ", formatted_item).strip()
 
             # add entry on Saturday
             due_date = get_due_date(
-                5,
-                get_anchor_date(4),
+                "saturday",
                 hour=9,
                 minute=0,
             )
@@ -689,7 +696,7 @@ def convert_cooked_to_dried_beans(grocery_list):
     )
     grocery_list.loc[mask_canned_beans, "unit"] = ureg.gram
     grocery_list.loc[mask_canned_beans, "quantity"] = (
-        grocery_list.loc[mask_canned_beans, "quantity"] * 150
+        grocery_list.loc[mask_canned_beans, "quantity"] * BEAN_COOKED_CAN_DRY_G
     )
     grocery_list.loc[mask_canned_beans, "ingredient"] = (
         "dried " + grocery_list.loc[mask_canned_beans, "ingredient"]
@@ -833,5 +840,6 @@ def generate_grocery_list(config, recipes, verbose=False):
         clean=False,
         dry_mode=config.dry_mode,
         todoist_token_file_path=config.todoist_token_file,
+        add_cans_for_freezing=config.add_bean_cans_for_freezing,
     )
     print("Upload done.")

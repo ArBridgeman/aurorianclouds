@@ -54,10 +54,20 @@ def get_anchor_date(weekday_index):
     return today + datetime.timedelta(days=max(0, weekday_index - today.weekday()))
 
 
-def get_due_date(
-    day, anchor_date=datetime.datetime.today(), hour=0, minute=0, second=0
-):
+def get_due_date(day, anchor_date=get_anchor_date(4), hour=0, minute=0, second=0):
+    """
+    Transfer day to proper due date datetime. Will always use the week after given anchor date.
+    :param day: weekday in int (monday: 0) or str.
+    :param anchor_date: anchor date to set day before specified week.
+    :param hour: hour of datetime
+    :param minute: minute of datetime
+    :param second: second of datetime
+    :return:
+    """
     import datetime
+
+    if isinstance(day, str):
+        day = DAYS_OF_WEEK.index(day.lower())
 
     new_date = anchor_date + datetime.timedelta(
         days=(day - anchor_date.weekday() + 7) % 7

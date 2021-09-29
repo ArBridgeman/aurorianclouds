@@ -29,6 +29,8 @@ TIME_UNITS = ["min", "minutes", "hour", "hours"]
 
 DESIRED_MEAL_TIMES = {"morning": "8:30", "evening": "18:30"}
 
+BEAN_COOKED_CAN_DRY_G = 130  # weight of dried beans that result in 1 can cooked beans
+
 DAYS_OF_WEEK = [
     "monday",
     "tuesday",

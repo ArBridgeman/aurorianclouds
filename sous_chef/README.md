@@ -6,12 +6,40 @@ are below. Beware that optional parameters for the sections 'menu' or 'grocery_l
 have to be specified on the command line after the section, while general
 optional parameters are specified before.
 
-### Menu
+### Menu creation
+There are currently two ways to generate weekly menus.
+
+#### Creating menu from template
+The typical use case is to verify and create a menu from the collection of weekly menu templates.\
+This can be done with the following command (e.g. for menu 1):
+`python main.py fixed_menu --fixed_menu_number 1`
+
+There are currently 13 weekly menus that can be iterated through in any desired order.
+By appending the command line parameter `--dry_mode`, the menu can be modified and written locally
+without uploading the results to todoist. The final menu is written into a file named `menu-tmp.csv` in the
+fixed_menu directory.
+
+#### Randomized from history/interactively
+
+WARNING! This feature is not actively developed and might not be fully functional.\
+With this option, the menu history is used to create semi-randomized weekly menus.
 The menu is created and sent in a json file via email to the configured recipients.
+Beware to adjust the corresponding command line arguments.
+
+To use this option, run a command like:
+`python main.py manual_menu`
+
+The sending of the generated menu by mail can be turned off by using the argument `--no_mail`.\
+An interactive meal selection is possible by providing the argument `--interactive_menu`.
 
 ### Grocery list
-Using the menu json, a grocery list is manually created.  
-**_TODO_** Add details.
+Using the menu json or csv files, a grocery list can be created and uploaded.\
+The normal use case is reflected by the following command:\
+`python main.py grocery_list --menu_file fixed_menu/menu-tmp.csv --interactive_grouping`
+
+By default, the generated grocery list is uploaded to todoist. This can be prevented by
+specifying the argument `--dry_mode`. In that case, the generated list will be printed into the terminal.
+The `no_cleaning` option will deactivate the automatic removal of old app-created grocery list entries.
 
 ### Weekly template
 A yml file outlining the weekly food plan is in menu_template. For each desired

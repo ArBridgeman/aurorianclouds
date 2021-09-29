@@ -281,7 +281,7 @@ def create_menu(config, recipes, calendar):
             menu[day], email_text[day] = select_random_meal(
                 recipes, calendar, specifications, cuisine_map
             )
-        else:  # interactive grouping:
+        else:  # interactive menu:
             print("\nWe are going to select the entree for {:s}".format(day))
             skip = input("Skip entire day (y/n): [n] ")
             if skip == "y":

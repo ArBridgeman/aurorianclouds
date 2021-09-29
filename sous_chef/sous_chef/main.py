@@ -111,29 +111,35 @@ def parse_grocery_list(sub_parser):
         "--staple_ingredients_file", type=str, default="staple_ingredients.yml"
     )
     grocery_list_parser.add_argument(
-        "--no_upload",
-        action="store_true",
-        help="Deactivate Todoist upload for this run.",
-    )
-    grocery_list_parser.add_argument(
         "--interactive_grouping",
         action="store_true",
         help="Will ask for user input for uncertain food groups.",
+        required=False,
     )
     grocery_list_parser.add_argument(
         "--no_cleaning",
         action="store_true",
         help="Will not clean previously existing items/tasks in Groceries project.",
+        required=False,
     )
     grocery_list_parser.add_argument(
         "--dry_mode",
         action="store_true",
         help="Will perform only a dry mode without uploads and print actions to terminal.",
+        required=False,
     )
     grocery_list_parser.add_argument(
         "--only_clean_todoist",
         action="store_true",
         help="Will only clean previous entries in todoist and not do anything else.",
+        required=False,
+    )
+    grocery_list_parser.add_argument(
+        "--add_bean_cans_for_freezing",
+        type=int,
+        default=1,
+        help="Will bump quantity of cans to prepare for freezing.",
+        required=False,
     )
 
 

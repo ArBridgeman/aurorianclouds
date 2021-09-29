@@ -7,7 +7,7 @@ import inflect
 import numpy as np
 import pandas as pd
 import yaml
-from definitions import ALLOWED_UNITS
+from definitions import ALLOWED_UNITS, BEAN_COOKED_CAN_DRY_G
 from grocery_list.grocery_matching_mapping import (
     IngredientsHelper,
     get_fuzzy_match,
@@ -24,6 +24,14 @@ ureg = UnitRegistry()
 ureg.default_format = ".2f"
 
 inf_engine = inflect.engine()
+
+DRIED_BEANS = [
+    "black beans",
+    "butter beans",
+    "chickpeas",
+    "kidney beans",
+    "white beans",
+]
 
 
 def retrieve_staple_ingredients(config):
@@ -99,7 +107,7 @@ def naive_unit_extraction(ingredient, pattern="^{:s}s?\.?\s"):
 
 
 def regex_split_ingredient(
-    ingredient, pattern="^(\d+[\.\,]?\d*)?\s([\s\-\_\w]+)(\s?\(\w+\))?"
+    ingredient, pattern="^(\d+[\.\,]?\d*)?\s([\s\-\_\w\%]+)(\s?\(\w+\))?"
 ):
     # TODO: this should be updated with crf model in the future to be MUCH more robust
     # especially once we start cleaning other recipes that haven't been preprocessed
@@ -343,11 +351,6 @@ def get_food_categories(grocery_list, config):
         print("Error while trying to read master ingredient list!")
         print(e)
 
-    # some cleaning before matching
-    grocery_list["ingredient"] = grocery_list["ingredient"].apply(
-        lambda x: re.sub("[^A-Za-z0-9üäö\-_\s]+", "", x).strip()
-    )
-
     grocery_list_matched = None
     if master_file is not None:
         match_helper = lambda item: get_fuzzy_match(
@@ -489,11 +492,9 @@ def upload_groceries_to_todoist(
         print("Dry mode! Will only simulate actions but not upload to todoist!")
 
     for _, item in groceries.iterrows():
-        formatted_item = "{}, {} {}{}".format(
-            item.ingredient,
-            "{:g}".format(float("{:.{p}g}".format(item.quantity, p=2))),
-            abbreviate_units(item.unit),
-            " (optional)" if item.is_optional else "",
+        formatted_item = (
+            f"{item.ingredient}, {significant_digits_str(item.quantity)} "
+            f"{abbreviate_units(item.unit)}{' (optional)' if item.is_optional else ''}"
         )
         formatted_item = re.sub("\s+", " ", formatted_item).strip()
         print(
@@ -509,6 +510,95 @@ def upload_groceries_to_todoist(
             todoist_helper.add_item_to_project(
                 formatted_item, project_name, section=item.group, labels=all_labels
             )
+    return
+
+
+def ingredient_is_bean(ingredient):
+    for dried_bean in DRIED_BEANS:
+        if dried_bean in ingredient:
+            return True
+    return False
+
+
+def significant_digits_str(number, precision=2):
+    """
+    Returns string from given number with defined amount of significant digits.
+    :param number: number to print nicely (int/float)
+    :param precision: significant digits to be included
+    :return: formatted string
+    """
+    return "{:g}".format(float("{:.{p}g}".format(number, p=precision)))
+
+
+def add_preparation_tasks_to_todoist(
+    groceries,
+    project_name="Menu",
+    clean=False,
+    dry_mode=False,
+    todoist_token_file_path="todoist_token.txt",
+    add_cans_for_freezing=1,
+):
+    from sous_chef.menu.prepare_fixed_menu import get_anchor_date, get_due_date
+
+    todoist_helper = TodoistHelper(todoist_token_file_path)
+
+    if clean:
+        print("Cleaning previous items/tasks in project {:s}".format(project_name))
+        if not dry_mode:
+            [todoist_helper.delete_all_items_in_project(project_name) for _ in range(3)]
+
+    if dry_mode:
+        print("Dry mode! Will only simulate actions but not upload to Todoist!")
+
+    for _, item in groceries.iterrows():
+        # TODO add defrosts etc
+        # e.g. just check if group == "Frozen 3" and/or
+        # meat that is needed during later week (but purchased previous week)
+
+        formatted_item = None
+        due_dict = None
+
+        # bean prep tasks
+        if ingredient_is_bean(item.ingredient):
+            add_for_freeze = (
+                BEAN_COOKED_CAN_DRY_G * add_cans_for_freezing
+            )  # add certain amount to be made for freezing
+            formatted_item = (
+                f"BEAN prep: {item.ingredient}, "
+                f"{significant_digits_str(item.quantity + add_for_freeze)} "
+                f"{abbreviate_units(item.unit)} "
+                f"(cook & freeze {significant_digits_str(add_for_freeze)} {abbreviate_units(item.unit)})"
+                f"{' (optional)' if item.is_optional else ''}"
+            )
+            formatted_item = re.sub("\s+", " ", formatted_item).strip()
+
+            # add entry on Saturday
+            due_date = get_due_date(
+                "saturday",
+                hour=9,
+                minute=0,
+            )
+            due_date_str = due_date.strftime("on %Y-%m-%d at %H:%M")
+            due_dict = {"string": due_date_str}
+
+        if formatted_item is not None:
+            print(
+                "Adding item {:s} to Menu "
+                "todoist (recipe source(s): {}). Due date: {}.".format(
+                    formatted_item, repr(item.from_recipe), due_dict
+                )
+            )
+            if not dry_mode:
+                all_labels = item.from_recipe + item.from_day
+                if item.is_optional:
+                    all_labels.append("Optional")
+                todoist_helper.add_item_to_project(
+                    formatted_item,
+                    project_name,
+                    labels=all_labels,
+                    due_date_dict=due_dict,
+                )
+    return
 
 
 # TODO: further generalize and improve this function (staple detection, other fields etc.)
@@ -598,6 +688,20 @@ def identify_recipe_by_title(search_title, recipes, reject_below=95):
     )[0][0]
     print("Identified recipe: {:s}".format(match_title))
     return match_title
+
+
+def convert_cooked_to_dried_beans(grocery_list):
+    mask_canned_beans = (grocery_list.ingredient.isin(DRIED_BEANS)) & (
+        grocery_list.unit.isin(["can", "cans"])
+    )
+    grocery_list.loc[mask_canned_beans, "unit"] = ureg.gram
+    grocery_list.loc[mask_canned_beans, "quantity"] = (
+        grocery_list.loc[mask_canned_beans, "quantity"] * BEAN_COOKED_CAN_DRY_G
+    )
+    grocery_list.loc[mask_canned_beans, "ingredient"] = (
+        "dried " + grocery_list.loc[mask_canned_beans, "ingredient"]
+    )
+    return grocery_list
 
 
 def generate_grocery_list(config, recipes, verbose=False):
@@ -714,17 +818,28 @@ def generate_grocery_list(config, recipes, verbose=False):
             grocery_list.ingredient.nunique()
         )
     )
+
+    # convert canned beans to grams dried beans
+    grocery_list = convert_cooked_to_dried_beans(grocery_list)
+
     # TODO convert all masses to grams
     if verbose:
         print(grocery_list)
 
-    if not config.no_upload:
-        # TODO add arg option for dry-run as currently hardcoded
-        print("Uploading grocery list to todoist...")
-        upload_groceries_to_todoist(
-            grocery_list,
-            clean=not config.no_cleaning,
-            dry_mode=config.dry_mode,
-            todoist_token_file_path=config.todoist_token_file,
-        )
-        print("Upload done.")
+    print("Adding grocery list to todoist...")
+    upload_groceries_to_todoist(
+        grocery_list,
+        clean=not config.no_cleaning,
+        dry_mode=config.dry_mode,
+        todoist_token_file_path=config.todoist_token_file,
+    )
+
+    print("Adding preparation tasks (beans, defrosting etc) to todoist...")
+    add_preparation_tasks_to_todoist(
+        grocery_list,
+        clean=False,
+        dry_mode=config.dry_mode,
+        todoist_token_file_path=config.todoist_token_file,
+        add_cans_for_freezing=config.add_bean_cans_for_freezing,
+    )
+    print("Upload done.")

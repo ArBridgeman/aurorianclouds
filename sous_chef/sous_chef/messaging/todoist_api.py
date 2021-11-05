@@ -60,7 +60,8 @@ class TodoistHelper:
 
     @staticmethod
     def clean_label(label):
-        return re.sub("\s+", "_", label).strip()
+        cleaned = re.sub("\s\&\s", " and ", label).strip()
+        return re.sub("\s+", "_", cleaned).strip()
 
     def get_label_id_or_add_new(self, label):
         label = self.clean_label(label)

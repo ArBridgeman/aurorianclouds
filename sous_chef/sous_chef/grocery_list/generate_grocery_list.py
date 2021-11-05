@@ -107,16 +107,22 @@ def naive_unit_extraction(ingredient, pattern="^{:s}s?\.?\s"):
 
 
 def regex_split_ingredient(
-    ingredient, pattern="^(\d+[\.\,]?\d*)?\s([\s\-\_\w\%]+)(\s?\(\w+\))?"
+    ingredient, pattern="^(\d+[\.\,\/]?\d*)?\s([\s\-\_\w\%]+)(\s?\(\w+\))?"
 ):
     # TODO: this should be updated with crf model in the future to be MUCH more robust
     # especially once we start cleaning other recipes that haven't been preprocessed
+    from fractions import Fraction
+
     instruction = ""
     ingredient = re.sub("\s+", " ", ingredient.strip())
 
     re_match = re.match(pattern, ingredient)
     if re_match:
-        quantity = float(re_match.group(1))
+        quantity_raw = re_match.group(1)
+        if "/" in quantity_raw:
+            quantity = float(Fraction(quantity_raw))
+        else:
+            quantity = float(quantity_raw)
         ingredient = re_match.group(2).strip()
         if re_match.group(3) is not None and re_match.group(3) != "":
             instruction = re_match.group(3)[1:-1]

@@ -165,7 +165,7 @@ def join_recipe_information(
 
     checked_menu = checked_menu.reset_index()
     match_helper = lambda item: get_fuzzy_match(
-        item, recipes.title.values, warn=True, limit=1, reject=95, warn_thresh=95
+        item, recipes.title.values, warn=True, limit=1, reject=90, warn_thresh=95
     )[0][0]
     checked_menu_recipes_filter = checked_menu.type == "recipe"
     checked_menu_recipes = checked_menu[checked_menu_recipes_filter].copy()
@@ -181,7 +181,11 @@ def join_recipe_information(
         left_on="best_match",
         right_on="title",
         how="left",
-    ).drop(columns=["title", "best_match"])
+    ).drop(columns=["title"])
+
+    # overwrite title with best matching one
+    checked_menu_recipes.loc[:, "item"] = checked_menu_recipes["best_match"]
+    checked_menu_recipes = checked_menu_recipes.drop(columns=["best_match"])
 
     df_concat = pd.concat([checked_menu_recipes, checked_menu_ingredients])
     df_concat = df_concat.sort_values("index").drop(columns="index")

@@ -65,11 +65,14 @@ def separate_unit_from_ingredient(ingredient):
 def ignore_ingredient(ignored_ingredients, ingredient):
     # TODO make more robust as matches many things
     for ignored_ingredient in ignored_ingredients:
-        if ignored_ingredient == ingredient.lower():
+        if ignored_ingredient.strip() == ingredient.lower().strip():
             return True
         diff_res = list(ndiff(ignored_ingredient, ingredient.lower()))
-        if diff_res[-1][-1] == "s" and len(diff_res) == max(
-            len(ignored_ingredient), len(ingredient)
+        n_plus = sum([1 for pos in diff_res if "+ " in pos])
+        if (
+            (diff_res[-1][-1] == "s")
+            and (len(diff_res) == max(len(ignored_ingredient), len(ingredient)))
+            and (n_plus == 1)
         ):
             return True
     return False
@@ -245,7 +248,9 @@ def find_largest_unit(units, debug=False):
     except Exception as e:
         if debug:
             print(e)
-        print("Error while comparing units and finding the maximum, please check!")
+        print(
+            f"Error while comparing units {all_units} and finding the maximum, please check!"
+        )
         return None
 
 

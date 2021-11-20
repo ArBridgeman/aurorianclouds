@@ -1,8 +1,5 @@
 weekday;item;type;factor;grocery_list;menu_list
-Saturday;Sesame chicken;recipe;1;Y;Y
-Saturday;jar red peppers;ingredient;1;Y;Y
-Saturday;pkg frozen broccoli;ingredient;1;Y;Y
-Saturday;cup rice;ingredient;1;Y;Y
+Saturday;Sesame chicken bowls;recipe;2;Y;Y
 Sunday_morning;Berry crepes;recipe;1;Y;Y
 Sunday;French onion soup;recipe;1;Y;Y
 Sunday;Croque-madame;recipe;1;Y;Y

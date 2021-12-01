@@ -31,7 +31,7 @@ def create_timedelta(row_entry):
         row_entry = re.sub("time", "", row_entry)
         row_entry = re.sub("prep", "", row_entry)
         row_entry = re.sub("cooking", "", row_entry)
-        row_entry = re.sub("minutes.?", "min", row_entry)
+        row_entry = re.sub("minut[eo]s.?", "min", row_entry)
         row_entry = re.sub("^[\D]+", "", row_entry)
         row_entry = re.sub("mins\.?$", "min", row_entry)
         if re.match("^\d{1,2}:\d{1,2}$", row_entry):

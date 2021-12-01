@@ -90,7 +90,7 @@ mayonnaise,True,Fats and oils
 mayo,True,Fats and oils
 spicy mayo,True,Fats and oils
 buttermilk,True,Dairy products
-breadcrumbs,False,Baking
+breadcrumbs,False,Prepared
 mustard,True,Sauces
 yeast,False,Baking
 baking powder,True,Baking
@@ -386,3 +386,6 @@ red peppers,False,Vegetables
 feldsalat,False,Vegetables
 baking potatoes,False,Vegetables
 kaiser buns,False,Other
+schmand,False,Dairy products
+balls mozzarellas,False,Dairy products
+marinated chicken breasts,False,Meats

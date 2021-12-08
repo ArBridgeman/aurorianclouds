@@ -1,0 +1,10 @@
+weekday;item;type;factor;grocery_list;menu_list
+Saturday;Honey mustard chicken tenders;recipe;2;Y;Y
+Saturday;Baked potato;recipe;2;Y;Y
+Saturday;Veggie un-kebabs;recipe;1;Y;Y
+Sunday_morning;Breakfast sandwich;recipe;1;Y;Y
+Tuesday;Chickpea tuna sandwich;recipe;1;Y;Y
+Tuesday;side salad;ingredient;1;N;Y
+Tuesday;cup spinach;ingredient;1;Y;Y
+Thursday;Italian baked eggs;recipe;1;Y;Y
+Thursday;bread rolls;ingredient;4;Y;Y

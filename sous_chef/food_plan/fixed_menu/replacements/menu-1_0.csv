@@ -1,0 +1,11 @@
+weekday;item;type;factor;grocery_list;menu_list
+Saturday;Italian baked meatballs;recipe;1;Y;Y
+Saturday;package fusilli noodles;ingredient;0.5;Y;Y
+Sunday_morning;Turkish eggs;recipe;1.0;Y;Y
+Sunday;Everything chicken fingers;recipe;2;Y;Y
+Sunday;Garlic mashed potatoes;recipe;1;Y;Y
+Sunday;Parmesan green beans;recipe;2;Y;Y
+Monday;Chickpea Shawarma bowl;recipe;1;Y;Y
+Thursday;Chicken yakitori;recipe;1;Y;Y
+Thursday;Ginger soy glazed green beans & peppers;recipe;1;Y;Y
+Thursday;cup rice;ingredient;1;Y;Y

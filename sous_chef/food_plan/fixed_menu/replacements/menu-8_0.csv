@@ -1,0 +1,9 @@
+weekday;item;type;factor;grocery_list;menu_list
+Saturday;Beef pan-fried noodles;recipe;1;Y;Y
+Saturday;side salad;ingredient;1;N;Y
+Saturday;cup salad;ingredient;1;Y;Y
+Sunday_morning;Huevos rancheros;recipe;1;Y;Y
+Sunday;Tarte flambée alsacienne au gruyère;recipe;1;Y;Y
+Monday;Pink treasure of the land;recipe;1;Y;Y
+Monday;cup rice;ingredient;1;Y;Y
+Thursday;Tuscan white bean soup;recipe;1;Y;Y

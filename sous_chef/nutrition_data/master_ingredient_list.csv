@@ -52,6 +52,7 @@ brown rice,False,Grains
 schwarzkohl,False,Vegetables
 chickpeas,False,Canned
 green onion,False,Vegetables
+chives,False,Vegetables
 stock,False,Canned
 beef stock,False,Canned
 chicken stock,False,Canned
@@ -389,3 +390,4 @@ kaiser buns,False,Other
 schmand,False,Dairy products
 balls mozzarellas,False,Dairy products
 marinated chicken breasts,False,Meats
+mirin,False,Sauces

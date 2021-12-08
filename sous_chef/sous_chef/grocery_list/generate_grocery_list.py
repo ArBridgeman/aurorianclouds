@@ -780,11 +780,16 @@ def generate_grocery_list(config, recipes, verbose=False):
                                 )
                             )
 
-                        assert (
-                            mask_entry is not None and np.sum(mask_entry) > 0
-                        ), "Could not find recipe {} in recipes db!".format(
-                            current_recipe
-                        )
+                        # should match a recipe but couldn't detect it
+                        if mask_entry is not None and np.sum(mask_entry) == 0:
+                            print(
+                                "Warning! Could not find recipe {} in recipes db! "
+                                "Will continue without adding ingredients! Please check!".format(
+                                    current_recipe
+                                )
+                            )
+                            all_recipes = all_recipes[1:]
+                            continue
 
                         selected_recipe = recipes[mask_entry].iloc[0]
                         recipe_title = "{:s}{:s}".format(

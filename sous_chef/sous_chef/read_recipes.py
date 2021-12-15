@@ -22,6 +22,8 @@ def flatten_dict_to_list(row_entry):
 
 
 def create_timedelta(row_entry):
+    from fractions import Fraction
+
     row_entry = row_entry.lower().strip()
     if row_entry.isdecimal():
         return pd.to_timedelta(int(row_entry), unit="minutes")
@@ -36,6 +38,14 @@ def create_timedelta(row_entry):
         row_entry = re.sub("mins\.?$", "min", row_entry)
         if re.match("^\d{1,2}:\d{1,2}$", row_entry):
             row_entry = "{}:00".format(row_entry)
+
+        # handle fractions properly
+        # todo outsource to separate clean function
+        if "/" in row_entry:
+            groups = re.match("^(\d?\s\d+[\.\,\/]?\d*)?\s([\s\-\_\w\%]+)", row_entry)
+            if groups:
+                float_conv = float(sum(Fraction(s) for s in groups.group(1).split()))
+                row_entry = f"{float_conv} {groups.group(2).strip()}"
 
         # errors = "ignore" could be put if we are confident that we want to ignore further issues
         return pd.to_timedelta(row_entry, unit=None, errors="raise")

@@ -15,7 +15,7 @@ from definitions import (
 
 def flatten_dict_to_list(row_entry):
     values = []
-    if row_entry is not np.nan:
+    if row_entry is not np.nan and row_entry is not None:
         for entry in row_entry:
             values.extend(entry.values())
     return values
@@ -52,8 +52,12 @@ def create_timedelta(row_entry):
 
 
 # TODO figure out best way to separate active cooking vs inactive cooking; make resilient to problems
-def retrieve_format_recipe_df(json_file):
-    tmp_df = pd.read_json(json_file, dtype=INP_JSON_COLUMNS)[INP_JSON_COLUMNS.keys()]
+def retrieve_format_recipe_df(json_file, cols_to_select=INP_JSON_COLUMNS.keys()):
+    tmp_df = pd.read_json(json_file, dtype=INP_JSON_COLUMNS)
+    for col in cols_to_select:
+        if col not in tmp_df.columns:
+            tmp_df[col] = None
+    tmp_df = tmp_df[cols_to_select]
     tmp_df["totalTime"] = tmp_df["totalTime"].apply(create_timedelta)
     tmp_df["preparationTime"] = tmp_df["preparationTime"].apply(create_timedelta)
     tmp_df["cookingTime"] = tmp_df["cookingTime"].apply(create_timedelta)

@@ -58,7 +58,7 @@ def parse_default_settings(parser):
         default=Path(ABS_FILE_PATH, "tokens/todoist_token.txt"),
     )
     parser.add_argument(
-        "--google-serviceaccount-secret",
+        "--google_secret_file",
         type=Path,
         default=Path(ABS_FILE_PATH, "tokens/google_client_key.json"),
     )
@@ -82,12 +82,20 @@ def parse_fixed_menu(sub_parser):
         type=Path,
         default=Path(ABS_FILE_PATH, "../food_plan/fixed_menu"),
     )
+    fixed_menu_parser.add_argument(
+        "--google_drive_menu_file", type=str, default="menus"
+    )
     fixed_menu_parser.add_argument("--fixed_menu_number", type=int, required=True)
 
     fixed_menu_parser.add_argument(
         "--dry_mode",
         action="store_true",
         help="Will perform only a dry mode without uploads and print actions to terminal.",
+    )
+    fixed_menu_parser.add_argument(
+        "--use_local_menus",
+        action="store_true",
+        help="Will use local menu files instead of default Google drive ones (deprecated).",
     )
     fixed_menu_parser.add_argument(
         "--menu_sorting",

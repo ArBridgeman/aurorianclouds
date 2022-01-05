@@ -24,3 +24,4 @@ dependencies:
       - feather-format==0.4.1
       - fuzzywuzzy==0.18.0
       - python-Levenshtein==0.12.2
+      - pygsheets==2.0.5

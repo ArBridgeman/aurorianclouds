@@ -1,5 +1,18 @@
 # Sous Chef
 
+## Installation with conda
+
+Check and the repository with git.
+To create a new environment based on the included environment file:
+`conda env create -f environment.yml`
+
+To update an existing environment after changes to the environment file:
+`conda env update --file environment.yml`
+
+## Installation with poetry
+
+Coming soon, tbd.
+
 ## Manual configuration
 The paths and user information come from the argparser. The default settings 
 are below. Beware that optional parameters for the sections 'menu' or 'grocery_list'
@@ -85,7 +98,7 @@ Used for sending emails:
 Create a `todoist_token.txt` file in the sub-directory sous_chef. Copy in your
 Todoist API token, which is found in the web app at `Settings -> Integrations -> API token`.
 
-**IMPORTANT**: if there are persisent problems when syncing to/from the Todoist API,
+**IMPORTANT**: if there are persistent problems when syncing to/from the Todoist API,
 it has proven useful to issue a new API token in the webinterface and replace the
 old token in `todoist_token.txt` by the new one.
 
@@ -93,3 +106,13 @@ Used for setting up tasks:
 * https://developer.todoist.com/sync/v8/
 * https://github.com/doist/todoist-python
 * https://buildmedia.readthedocs.org/media/pdf/pytodoist/latest/pytodoist.pdf
+
+#### Google sheets and drive integration
+
+API integration used to access/write information from/to Google drive/sheets.
+
+See for example:
+* https://pygsheets.readthedocs.io/en/stable/index.html
+
+The authentification implementation relies on the file `client_key.json` to be present within the sub-directory sous_chef.
+This file needs to include the json of the service account credentials in the exact manner as shared privately.

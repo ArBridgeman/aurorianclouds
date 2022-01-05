@@ -4,10 +4,12 @@
 
 Check and the repository with git.
 To create a new environment based on the included environment file:
-`conda env create -f environment.yml`
+`conda env create -f environment.yml`.
 
 To update an existing environment after changes to the environment file:
-`conda env update --file environment.yml`
+`conda env update --file environment.yml`,
+
+also included in the `update_env.sh` shell script.
 
 ## Installation with poetry
 
@@ -95,7 +97,7 @@ Used for sending emails:
 * https://developers.google.com/gmail/api/reference/rest/v1/users.messages/send
 
 #### Todoist
-Create a `todoist_token.txt` file in the sub-directory sous_chef. Copy in your
+Create a `todoist_token.txt` file in the subdirectory sous_chef/tokens. Copy in your
 Todoist API token, which is found in the web app at `Settings -> Integrations -> API token`.
 
 **IMPORTANT**: if there are persistent problems when syncing to/from the Todoist API,
@@ -114,5 +116,6 @@ API integration used to access/write information from/to Google drive/sheets.
 See for example:
 * https://pygsheets.readthedocs.io/en/stable/index.html
 
-The authentification implementation relies on the file `client_key.json` to be present within the sub-directory sous_chef.
+The authentication implementation relies on the file `google_client_key.json` to be present 
+within the subdirectory sous_chef/tokens.
 This file needs to include the json of the service account credentials in the exact manner as shared privately.

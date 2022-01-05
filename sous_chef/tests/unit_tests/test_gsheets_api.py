@@ -7,7 +7,12 @@ from sous_chef.messaging.gsheets_api import GsheetsHelper
 
 # todo: refactor to not have hardcoded path here
 client_secret_path = (
-    pathlib.Path(__file__).parent / ".." / ".." / "sous_chef" / "client_key.json"
+    pathlib.Path(__file__).parent
+    / ".."
+    / ".."
+    / "sous_chef"
+    / "tokens"
+    / "google_client_key.json"
 )
 
 gsheets_helper = GsheetsHelper(client_secret_path)
@@ -57,10 +62,12 @@ class TestGSheetsHelper:
         ],
     )
     def test_write_df_to_sheet(self, test_workbook, test_sheet, write_df):
-        write_df["Vals"] = write_df["Vals"].astype(int)
         gsheets_helper.write_df_to_sheet(
             write_df, test_sheet, test_workbook, copy_index=False
         )
+        write_df["Vals"] = write_df["Vals"].astype(int)
+        read_df = gsheets_helper.get_sheet_as_df(test_workbook, test_sheet)
+        read_df["Vals"] = read_df["Vals"].astype(int)
         assert np.all(
-            gsheets_helper.get_sheet_as_df(test_workbook, test_sheet) == write_df
+            read_df == write_df
         ), "Could not validate writing of test dataframe to Google drive!"

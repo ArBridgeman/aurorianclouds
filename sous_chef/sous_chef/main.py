@@ -55,7 +55,12 @@ def parse_default_settings(parser):
     parser.add_argument(
         "--todoist_token_file",
         type=Path,
-        default=Path(ABS_FILE_PATH, "./todoist_token.txt"),
+        default=Path(ABS_FILE_PATH, "tokens/todoist_token.txt"),
+    )
+    parser.add_argument(
+        "--google-serviceaccount-secret",
+        type=Path,
+        default=Path(ABS_FILE_PATH, "tokens/google_client_key.json"),
     )
     parser.add_argument(
         "--no_mail",

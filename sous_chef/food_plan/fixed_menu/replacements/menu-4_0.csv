@@ -1,0 +1,10 @@
+weekday;item;type;factor;grocery_list;menu_list
+Sunday;Tomato & butter bean dip;recipe;2;Y;Y
+Sunday;Spicy baked feta;recipe;1;Y;Y
+Sunday;Patatas brava;recipe;1;Y;Y
+Sunday;Croquetas de Jamón Serrano;recipe;1;Y;Y
+Sunday;g prepared tapas meat;ingredient;80;Y;Y
+Sunday_morning;Baked eggs with chorizo & hash browns;recipe;1;Y;Y
+Monday;Shakshuka;recipe;1.5;Y;Y
+Monday;cup rice;ingredient;1.5;Y;Y
+Thursday;Chicago deep dish pizza;recipe;1;Y;Y

@@ -1,0 +1,9 @@
+weekday;item;type;factor;grocery_list;menu_list
+Sunday_morning;Buttermilk donuts;recipe;0.5;Y;Y
+Sunday;Cali burgers;recipe;1;Y;Y
+Sunday;package fries;ingredient;0.7;Y;Y
+Sunday;Olive Garden salad;recipe;1;Y;Y
+Monday;Chipotle bean bowl;recipe;2;Y;Y
+Thursday;fried egg;ingredient;3;Y;Y
+Thursday;package bratkartoffeln;ingredient;1;Y;Y
+Thursday;side salad;ingredient;1;N;Y

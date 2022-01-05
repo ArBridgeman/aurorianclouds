@@ -1,3 +1,4 @@
+import os
 import re
 from pathlib import Path
 from zipfile import ZipFile
@@ -66,10 +67,18 @@ def retrieve_format_recipe_df(json_file, cols_to_select=INP_JSON_COLUMNS.keys())
     return tmp_df
 
 
+def delete_older_files(latest_file, rtk_list):
+    for file in rtk_list:
+        if file != latest_file:
+            os.remove(file)
+
+
 def find_latest_rtk_file(recipe_path: Path):
     rtk_list = [file for file in recipe_path.glob(RTK_FILE_PATTERN)]
     if len(rtk_list) > 0:
-        return max(rtk_list, key=lambda p: p.stat().st_ctime)
+        latest_file = max(rtk_list, key=lambda p: p.stat().st_ctime)
+        delete_older_files(latest_file, rtk_list)
+        return latest_file
     return None
 
 

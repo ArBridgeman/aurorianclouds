@@ -197,17 +197,12 @@ def join_recipe_information(
 def finalize_fixed_menu(config: argparse.Namespace, recipes: pd.DataFrame):
     menu_path = config.fixed_menu_path
     menu_number = config.fixed_menu_number
-    if config.use_local_menus:
-        print(
-            "(Deprecation warning) Using local menu files! (Feature will be removed soon)!"
-        )
-        fixed_menu = obtain_fixed_menu(menu_path, menu_number)
-    else:
-        print(f"Getting menu {menu_number} from Google drive!")
-        sheets_helper = GsheetsHelper(config.google_secret_file)
-        fixed_menu = sheets_helper.get_sheet_as_df(
-            config.google_drive_menu_file, f"menu-{menu_number}"
-        )
+
+    print(f"Getting menu {menu_number} from Google drive!")
+    sheets_helper = GsheetsHelper(config.google_drive_secret_file)
+    fixed_menu = sheets_helper.get_sheet_as_df(
+        f"{config.google_drive_menu_prefix}{menu_number}", f"menu-{menu_number}"
+    )
     checked_menu = check_menu(fixed_menu)
 
     checked_menu = checked_menu[checked_menu.factor > 0]

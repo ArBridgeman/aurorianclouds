@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 from definitions import DAYS_OF_WEEK, DESIRED_MEAL_TIMES
+from messaging.gsheets_api import GsheetsHelper
 from messaging.todoist_api import TodoistHelper
 
 MENU_FILE_PATTERN = lambda num: f"menu-{num}.csv"
@@ -196,7 +197,12 @@ def join_recipe_information(
 def finalize_fixed_menu(config: argparse.Namespace, recipes: pd.DataFrame):
     menu_path = config.fixed_menu_path
     menu_number = config.fixed_menu_number
-    fixed_menu = obtain_fixed_menu(menu_path, menu_number)
+
+    print(f"Getting menu {menu_number} from Google drive!")
+    sheets_helper = GsheetsHelper(config.google_drive_secret_file)
+    fixed_menu = sheets_helper.get_sheet_as_df(
+        f"{config.google_drive_menu_prefix}{menu_number}", f"menu-{menu_number}"
+    )
     checked_menu = check_menu(fixed_menu)
 
     checked_menu = checked_menu[checked_menu.factor > 0]

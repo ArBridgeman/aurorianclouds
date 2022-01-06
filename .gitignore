@@ -132,11 +132,15 @@ dmypy.json
 .idea
 
 # Google API
+tokens/
 token.pickle
 credentials.json
 
 # Todoist API
 todoist_token.txt
+
+# Google service account secret
+client_key.json
 
 # Sous Chef
 menu-tmp.csv

@@ -55,7 +55,12 @@ def parse_default_settings(parser):
     parser.add_argument(
         "--todoist_token_file",
         type=Path,
-        default=Path(ABS_FILE_PATH, "./todoist_token.txt"),
+        default=Path(ABS_FILE_PATH, "tokens/todoist_token.txt"),
+    )
+    parser.add_argument(
+        "--google_drive_secret_file",
+        type=Path,
+        default=Path(ABS_FILE_PATH, "tokens/google_client_key.json"),
     )
     parser.add_argument(
         "--no_mail",
@@ -76,6 +81,9 @@ def parse_fixed_menu(sub_parser):
         "--fixed_menu_path",
         type=Path,
         default=Path(ABS_FILE_PATH, "../food_plan/fixed_menu"),
+    )
+    fixed_menu_parser.add_argument(
+        "--google_drive_menu_prefix", type=str, default="menu-"
     )
     fixed_menu_parser.add_argument("--fixed_menu_number", type=int, required=True)
 

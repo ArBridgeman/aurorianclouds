@@ -11,6 +11,7 @@
       <sourceFolder url="file://$MODULE_DIR$/../helper_scripts/cleanup_recipe" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../sous_chef" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/.." isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

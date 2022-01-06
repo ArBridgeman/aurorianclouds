@@ -4,9 +4,9 @@ import re
 from pathlib import Path
 
 import pandas as pd
-from definitions import DAYS_OF_WEEK, DESIRED_MEAL_TIMES
-from messaging.gsheets_api import GsheetsHelper
-from messaging.todoist_api import TodoistHelper
+from sous_chef.definitions import DAYS_OF_WEEK, DESIRED_MEAL_TIMES
+from sous_chef.messaging.gsheets_api import GsheetsHelper
+from sous_chef.messaging.todoist_api import TodoistHelper
 
 MENU_FILE_PATTERN = lambda num: f"menu-{num}.csv"
 
@@ -162,7 +162,7 @@ def join_recipe_information(
     recipes: pd.DataFrame,
     add_columns: list = ["cookingTime", "totalTime", "rating"],
 ) -> pd.DataFrame:
-    from grocery_list.grocery_matching_mapping import get_fuzzy_match
+    from sous_chef.grocery_list.grocery_matching_mapping import get_fuzzy_match
 
     checked_menu = checked_menu.reset_index()
     match_helper = lambda item: get_fuzzy_match(

@@ -9,10 +9,10 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-from grocery_list.generate_grocery_list import generate_grocery_list
-from menu.create_manual_menu import create_menu
-from menu.prepare_fixed_menu import finalize_fixed_menu
-from read_recipes import read_calendar, read_recipes
+from sous_chef.grocery_list.generate_grocery_list import generate_grocery_list
+from sous_chef.menu.create_manual_menu import create_menu
+from sous_chef.menu.prepare_fixed_menu import finalize_fixed_menu
+from sous_chef.read_recipes import read_calendar, read_recipes
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
 HOME_PATH = str(Path.home())

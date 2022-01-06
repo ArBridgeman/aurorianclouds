@@ -5,6 +5,8 @@
 #
 #
 
+# TODO: move some stuff to config?
+
 INP_JSON_COLUMNS = {
     "title": str,
     "preparationTime": str,

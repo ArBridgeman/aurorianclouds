@@ -6,7 +6,8 @@ from pathlib import Path
 
 import pandas as pd
 import yaml
-from filter_recipes import (
+from fuzzywuzzy import fuzz
+from sous_chef.filter_recipes import (
     create_previously_tried_filter,
     create_protein_filter,
     create_tags_or_filter,
@@ -14,9 +15,8 @@ from filter_recipes import (
     has_recipe_category_or_tag,
     skip_protein_filter,
 )
-from fuzzywuzzy import fuzz
-from grocery_list.grocery_matching_mapping import get_fuzzy_match
-from messaging.send_email import EmailSender
+from sous_chef.grocery_list.grocery_matching_mapping import get_fuzzy_match
+from sous_chef.messaging.send_email import EmailSender
 
 
 def retrieve_template(filepath):

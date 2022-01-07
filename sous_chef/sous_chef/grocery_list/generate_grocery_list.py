@@ -7,16 +7,16 @@ import inflect
 import numpy as np
 import pandas as pd
 import yaml
-from definitions import ALLOWED_UNITS, BEAN_COOKED_CAN_DRY_G
-from grocery_list.grocery_matching_mapping import (
+from pint import UnitRegistry, unit
+from quantulum3 import parser
+from sous_chef.definitions import ALLOWED_UNITS, BEAN_COOKED_CAN_DRY_G
+from sous_chef.grocery_list.grocery_matching_mapping import (
     IngredientsHelper,
     get_fuzzy_match,
     relevant_macro_groups,
     todoist_mapping,
 )
-from messaging.todoist_api import TodoistHelper
-from pint import UnitRegistry, unit
-from quantulum3 import parser
+from sous_chef.messaging.todoist_api import TodoistHelper
 
 # TODO implement method to scale recipe to desired servings
 # TODO implement method to mark ingredients that can only be bought the day before + need day

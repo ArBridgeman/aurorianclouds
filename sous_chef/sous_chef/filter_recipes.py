@@ -2,7 +2,7 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-from definitions import PROTEIN_SOURCE
+from sous_chef.definitions import PROTEIN_SOURCE
 
 
 def has_recipe_category_or_tag(recipe_tags, desired_category_or_tag):

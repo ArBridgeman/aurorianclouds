@@ -5,7 +5,7 @@ from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
-from definitions import (
+from sous_chef.definitions import (
     CALENDAR_COLUMNS,
     CALENDAR_FILE_PATTERN,
     INP_JSON_COLUMNS,

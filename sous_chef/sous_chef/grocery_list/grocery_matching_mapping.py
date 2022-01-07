@@ -36,7 +36,7 @@ macro_mapping = {
     "Vegetables and Vegetable Products": "Vegetables",
 }
 
-# mapping translation before pushing to todoist, can be easily changed without changing internal groups
+# aisle map for todoist; easily changed without changing internal groups
 todoist_mapping = {
     "Baking": "Sweet carolina",
     "Beans": "Sauces cans and oils",
@@ -103,13 +103,17 @@ def get_fuzzy_match(
     """
     Simple helper function that returns best fuzzy match for item_to_match
     within list_of_search_items.
-    Will return best found match and corresponding scorer accuracy, and will by default
+    Return best found match and corresponding scorer accuracy, and by default,
     warn if match accuracy is bad.
     """
     from fuzzywuzzy import process
 
     # check for direct appearance, thus no fuzzy search necessary at all
-    for item_test in [item_to_match, "{:s}s".format(item_to_match), item_to_match[:-1]]:
+    for item_test in [
+        item_to_match,
+        "{:s}s".format(item_to_match),
+        item_to_match[:-1],
+    ]:
         if item_test in list_of_search_items:
             return [(item_test, 100)]
 
@@ -122,7 +126,7 @@ def get_fuzzy_match(
     if warn:
         if match_quality < warn_thresh:
             print(
-                "Warning! Bad fuzzy search result for item {:s}: {:s} [{:d}]".format(
+                "Warning! Bad fuzzy search result for {:s}: {:s} [{:d}]".format(
                     item_to_match, best_match, match_quality
                 )
             )
@@ -148,23 +152,23 @@ class IngredientsHelper(object):
         ]
 
         # experimental split and get anything before raw
-        self.ingredient_df["desc_long"] = self.ingredient_df.desc_long.str.split(
-            ", raw"
-        ).str.get(0)
+        self.ingredient_df[
+            "desc_long"
+        ] = self.ingredient_df.desc_long.str.split(", raw").str.get(0)
 
-        self.ingredient_df["desc_long"] = self.ingredient_df.desc_long.str.replace(
-            "cheese, ", ""
-        )
+        self.ingredient_df[
+            "desc_long"
+        ] = self.ingredient_df.desc_long.str.replace("cheese, ", "")
 
-        # sorting according to length of description (to try to optimize fuzzy search)
+        # sort according to length of description (try to optimize fuzzy search)
         self.ingredient_df.sort_values("desc_len", ascending=True, inplace=True)
 
-        # first part of description added as a separate column (typically contains the relevant keyword)
-        self.ingredient_df["desc_first"] = self.ingredient_df.desc_long.str.split(
-            ","
-        ).str.get(0)
+        # 1st part added as separate column (typically has relevant keyword)
+        self.ingredient_df[
+            "desc_first"
+        ] = self.ingredient_df.desc_long.str.split(",").str.get(0)
 
-        # 2nd part is sometimes also really insightful as first part is sometimes dummy prefix like Fish,
+        # 2nd part sometimes insightful, as 1st part sometimes dummy prefix
         self.ingredient_df["desc_second"] = (
             self.ingredient_df.desc_long.str.split(",").str.get(1).fillna("")
         )
@@ -203,7 +207,9 @@ class IngredientsHelper(object):
         # return self.get_food_group_manual_1(item, **kwargs)
         return self.get_food_group_majority_vote(item, **kwargs)
 
-    def get_food_group_majority_vote(self, item, low_score_cutoff=80, n_vote=25):
+    def get_food_group_majority_vote(
+        self, item, low_score_cutoff=80, n_vote=25
+    ):
         # from difflib import get_close_matches
 
         item = str(item).lower()
@@ -222,7 +228,9 @@ class IngredientsHelper(object):
             m[0] for m in matches if m[1] > low_score_cutoff
         ]  # get only relevant tuple entries
 
-        matches_df = self.ingredient_df[self.ingredient_df.desc_long.isin(matches)]
+        matches_df = self.ingredient_df[
+            self.ingredient_df.desc_long.isin(matches)
+        ]
 
         if matches_df.shape[0] == 0:
             return not_mappable_group
@@ -236,26 +244,30 @@ class IngredientsHelper(object):
         if manual is not None:
             return manual
 
-        # TODO: find better/more universal matching algorithm as below numbers are purely empirical
-
+        # TODO universal matching algorithm as numbers are purely empirical
         # first stage, try search in full description (fails for short items)
         best_result, match_quality = get_fuzzy_match(
             item, self.ingredient_df.desc_long.values, scorer=fuzz.QRatio
         )[0]
-        match_df = self.ingredient_df[self.ingredient_df.desc_long == best_result]
+        match_df = self.ingredient_df[
+            self.ingredient_df.desc_long == best_result
+        ]
 
         # needs more testing
         # if match_quality < 75:
         #     best_result, match_quality = get_fuzzy_match(item,
         #                                                  self.ingredient_df.desc_long.values,
         #                                                  scorer=fuzz.partial_ratio)[0]
-        #     match_df = self.ingredient_df[self.ingredient_df.desc_long == best_result]
+        #     match_df =
+        #     self.ingredient_df[self.ingredient_df.desc_long == best_result]
 
         if match_quality < 75:
             best_result, match_quality = get_fuzzy_match(
                 item, self.ingredient_df.desc_first.values, scorer=fuzz.QRatio
             )[0]
-            match_df = self.ingredient_df[self.ingredient_df.desc_first == best_result]
+            match_df = self.ingredient_df[
+                self.ingredient_df.desc_first == best_result
+            ]
 
             best_result2, match_quality2 = get_fuzzy_match(
                 item, self.ingredient_df.desc_second.values, scorer=fuzz.QRatio
@@ -270,7 +282,9 @@ class IngredientsHelper(object):
         assert len(match_df) > 0, "No results found!"
 
         if match_quality < 70:
-            print("Warning! Bad mapping quality for ingredient: {:s}".format(item))
+            print(
+                "Warning! Bad mapping quality for ingredient: {:s}".format(item)
+            )
             print("Best match: {:s}".format(best_result))
 
             try:
@@ -278,7 +292,7 @@ class IngredientsHelper(object):
             except Exception as e:
                 print(e)
                 print(
-                    "Warning! Could also not get a match with majority vote strategy!"
+                    "Warning! Could not get match with majority vote strategy!"
                 )
 
             if defensive:

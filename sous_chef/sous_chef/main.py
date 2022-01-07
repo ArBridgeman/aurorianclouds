@@ -23,7 +23,7 @@ pd.set_option("display.width", 1000)
 
 
 def generate_parser():
-    parser = argparse.ArgumentParser(description="sous chef activities")
+    parser = argparse.ArgumentParser(description="sous chef apps")
     sub_parser = parser.add_subparsers(help="type of operation")
     parse_default_settings(parser)
     parse_manual_menu(sub_parser)
@@ -33,7 +33,9 @@ def generate_parser():
 
 
 def parse_default_settings(parser):
-    parser.add_argument("--sender", type=str, default="ariel.m.schulz@gmail.com")
+    parser.add_argument(
+        "--sender", type=str, default="ariel.m.schulz@gmail.com"
+    )
     parser.add_argument(
         "--recipient",
         type=str,
@@ -50,7 +52,9 @@ def parse_default_settings(parser):
     parser.add_argument(
         "--master_list_file",
         type=Path,
-        default=Path(ABS_FILE_PATH, "../nutrition_data/master_ingredient_list.csv"),
+        default=Path(
+            ABS_FILE_PATH, "../nutrition_data/master_ingredient_list.csv"
+        ),
     )
     parser.add_argument(
         "--todoist_token_file",
@@ -85,12 +89,14 @@ def parse_fixed_menu(sub_parser):
     fixed_menu_parser.add_argument(
         "--google_drive_menu_prefix", type=str, default="menu-"
     )
-    fixed_menu_parser.add_argument("--fixed_menu_number", type=int, required=True)
+    fixed_menu_parser.add_argument(
+        "--fixed_menu_number", type=int, required=True
+    )
 
     fixed_menu_parser.add_argument(
         "--dry_mode",
         action="store_true",
-        help="Will perform only a dry mode without uploads and print actions to terminal.",
+        help="Perform a dry run printing actions to terminal.",
     )
     fixed_menu_parser.add_argument(
         "--menu_sorting",
@@ -100,7 +106,7 @@ def parse_fixed_menu(sub_parser):
     fixed_menu_parser.add_argument(
         "--no_cleaning",
         action="store_true",
-        help="Will not clean previously existing items/tasks in menu project.",
+        help="Do not clean previously existing tasks in Menu project.",
     )
 
 
@@ -113,7 +119,9 @@ def parse_grocery_list(sub_parser):
         default=Path(ABS_FILE_PATH, "../food_plan/fixed_menu/menu-tmp.csv"),
     )
     grocery_list_parser.add_argument(
-        "--grocery_list_path", type=str, default=Path(ABS_FILE_PATH, "../grocery_list")
+        "--grocery_list_path",
+        type=str,
+        default=Path(ABS_FILE_PATH, "../grocery_list"),
     )
     grocery_list_parser.add_argument(
         "--staple_ingredients_file", type=str, default="staple_ingredients.yml"
@@ -127,19 +135,19 @@ def parse_grocery_list(sub_parser):
     grocery_list_parser.add_argument(
         "--no_cleaning",
         action="store_true",
-        help="Will not clean previously existing items/tasks in Groceries project.",
+        help="Do not clean previously existing tasks in Groceries project.",
         required=False,
     )
     grocery_list_parser.add_argument(
         "--dry_mode",
         action="store_true",
-        help="Will perform only a dry mode without uploads and print actions to terminal.",
+        help="Perform a dry run by printing actions to terminal.",
         required=False,
     )
     grocery_list_parser.add_argument(
         "--only_clean_todoist",
         action="store_true",
-        help="Will only clean previous entries in todoist and not do anything else.",
+        help="Remove existing entries in todoist (and nothing else).",
         required=False,
     )
     grocery_list_parser.add_argument(
@@ -155,9 +163,13 @@ def parse_manual_menu(sub_parser):
     manual_menu = sub_parser.add_parser("manual_menu")
     manual_menu.set_defaults(which="manual_menu")
     manual_menu.add_argument(
-        "--template_path", type=Path, default=Path(ABS_FILE_PATH, "../menu_template")
+        "--template_path",
+        type=Path,
+        default=Path(ABS_FILE_PATH, "../menu_template"),
     )
-    manual_menu.add_argument("--template", type=str, default="four_day_cook_week.yml")
+    manual_menu.add_argument(
+        "--template", type=str, default="four_day_cook_week.yml"
+    )
     manual_menu.add_argument(
         "--print_menu",
         action="store_true",

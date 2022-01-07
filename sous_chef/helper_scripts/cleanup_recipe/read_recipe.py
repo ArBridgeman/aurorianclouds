@@ -36,9 +36,12 @@ def flatten_dict_to_list(row_entry):
 
 
 def retrieve_format_recipe_df(json_file):
-    tmp_df = pd.read_json(json_file, dtype=INP_JSON_COLUMNS)[INP_JSON_COLUMNS.keys()]
+    tmp_df = pd.read_json(json_file, dtype=INP_JSON_COLUMNS)[
+        INP_JSON_COLUMNS.keys()
+    ]
     # tmp_df["totalTime"] = tmp_df["totalTime"].apply(create_timedelta)
-    # tmp_df["preparationTime"] = tmp_df["preparationTime"].apply(create_timedelta)
+    # tmp_df["preparationTime"] = tmp_df["preparationTime"]\
+    # .apply(create_timedelta)
     # tmp_df["cookingTime"] = tmp_df["cookingTime"].apply(create_timedelta)
     tmp_df["categories"] = tmp_df.categories.apply(flatten_dict_to_list)
     tmp_df["tags"] = tmp_df.tags.apply(flatten_dict_to_list)

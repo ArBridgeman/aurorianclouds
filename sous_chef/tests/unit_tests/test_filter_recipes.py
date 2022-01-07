@@ -1,5 +1,8 @@
 import pytest
-from sous_chef.filter_recipes import create_tags_and_filter, has_recipe_category_or_tag
+from sous_chef.filter_recipes import (
+    create_tags_and_filter,
+    has_recipe_category_or_tag,
+)
 from tests.conftest import RECIPES
 
 
@@ -12,7 +15,9 @@ from tests.conftest import RECIPES
     ],
 )
 def test_has_recipe_category_or_tag(recipe_tags, desired_tag, expected_result):
-    assert has_recipe_category_or_tag(recipe_tags, desired_tag) == expected_result
+    assert (
+        has_recipe_category_or_tag(recipe_tags, desired_tag) == expected_result
+    )
 
 
 @pytest.mark.parametrize(

@@ -92,8 +92,12 @@ def convert_quantity_unit(quantity, unit):
     desired_unit = find_desired_unit(unit)
     converted_value = original_value.to(desired_unit)
     # desired format
-    significant_magnitude = format_significant_quantity(converted_value.magnitude)
-    converted_unit = give_desired_unit(converted_value.units, significant_magnitude)
+    significant_magnitude = format_significant_quantity(
+        converted_value.magnitude
+    )
+    converted_unit = give_desired_unit(
+        converted_value.units, significant_magnitude
+    )
     return "{!s} {!s}".format(significant_magnitude, converted_unit)
 
 
@@ -115,12 +119,16 @@ def separate_quantity_unit_ingredient(ingredient_line):
 
 
 def convert_to_desired_unit(ingredient_line):
-    quantity, unit, ingredient = separate_quantity_unit_ingredient(ingredient_line)
+    quantity, unit, ingredient = separate_quantity_unit_ingredient(
+        ingredient_line
+    )
     if unit in QUANTULUM_TO_KNOWN.keys():
         unit = QUANTULUM_TO_KNOWN[unit]
     if unit != "":
         converted_quantity_unit = convert_quantity_unit(quantity, unit)
         return "{!s} {!s}".format(converted_quantity_unit, ingredient)
     if quantity is not None:
-        return "{!s} {!s}".format(format_significant_quantity(quantity), ingredient)
+        return "{!s} {!s}".format(
+            format_significant_quantity(quantity), ingredient
+        )
     return ingredient

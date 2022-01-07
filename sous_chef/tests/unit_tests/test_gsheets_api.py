@@ -29,7 +29,9 @@ class TestGSheetsHelper:
                 and f["mimeType"] == "application/vnd.google-apps.folder"
             )
         ]
-        assert len(found) == 1, "Could not verify valid google drive/sheets connection!"
+        assert (
+            len(found) == 1
+        ), "Could not verify valid google drive/sheets connection!"
 
     @pytest.mark.parametrize(
         "test_workbook, test_sheet, expected_df",
@@ -43,7 +45,8 @@ class TestGSheetsHelper:
     )
     def test_get_sheet_as_df(self, test_workbook, test_sheet, expected_df):
         assert np.all(
-            gsheets_helper.get_sheet_as_df(test_workbook, test_sheet) == expected_df
+            gsheets_helper.get_sheet_as_df(test_workbook, test_sheet)
+            == expected_df
         ), "Could not validate reading of test df!"
 
     @pytest.mark.parametrize(

@@ -31,21 +31,27 @@ class EmailSender:
         self.recipient = self.config.recipient
         self.service = self.connect_service()
 
-        with codecs.open(Path(self.config.template_path, self.config.email)) as f:
+        with codecs.open(
+            Path(self.config.template_path, self.config.email)
+        ) as f:
             self.base_email = f.read()
 
     @staticmethod
     def connect_service():
         credentials = None
-        # The file token.pickle stores the user's access and refresh tokens, and is
-        # created automatically when the authorization flow completes for the first
-        # time.
+        # token.pickle stores the user's access and refresh tokens, and is
+        # created automatically when the authorization flow completes
+        # for the first time.
         if Path("token.pickle").exists():
             with open("token.pickle", "rb") as token:
                 credentials = pickle.load(token)
         # If no (valid) credentials are available, let the user log in.
         if not credentials or not credentials.valid:
-            if credentials and credentials.expired and credentials.refresh_token:
+            if (
+                credentials
+                and credentials.expired
+                and credentials.refresh_token
+            ):
                 credentials.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(

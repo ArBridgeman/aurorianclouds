@@ -60,8 +60,8 @@ class TodoistHelper:
 
     @staticmethod
     def clean_label(label):
-        cleaned = re.sub("\s\&\s", " and ", label).strip()
-        return re.sub("\s+", "_", cleaned).strip()
+        cleaned = re.sub(r"\s\&\s", " and ", label).strip()
+        return re.sub(r"\s+", "_", cleaned).strip()
 
     def get_label_id_or_add_new(self, label):
         label = self.clean_label(label)
@@ -69,7 +69,8 @@ class TodoistHelper:
             return self.active_labels[label]
         else:
             new_label = self.connection.labels.add(label)
-            self.commit()  # resolves the correct new label id, before that it's a different transaction id
+            # get correct new label id; before, it has different transaction id
+            self.commit()
             self.active_labels[label] = new_label["id"]
             return new_label["id"]
 
@@ -115,11 +116,14 @@ class TodoistHelper:
             date_string = due_date_dict.get("string", None)
 
         new_item = self.connection.add_item(
-            item, project_id=project_id, labels=label_ids, date_string=date_string
+            item,
+            project_id=project_id,
+            labels=label_ids,
+            date_string=date_string,
         )
         self.commit()
 
-        # sometimes due to Todoist api "features" new_item gets lost/changed in the process
+        # sometimes due to Todoist api, new_item gets lost/changed in process
         if "id" not in new_item:
             new_item = self.get_item_in_project(project, item)
 
@@ -141,9 +145,9 @@ class TodoistHelper:
     def get_all_items_in_project(self, project):
         items = []
         project_id = self.get_project_id(project)
-        assert project_id is not None, "Id of project {:s} could not be found!".format(
-            project
-        )
+        assert (
+            project_id is not None
+        ), "Id of project {:s} could not be found!".format(project)
         for item in self.connection.state["items"]:
             if item["project_id"] == project_id:
                 items.append(item)
@@ -161,13 +165,15 @@ class TodoistHelper:
         """
         Deletes items in project "project" that fulfil specified properties.
         :param project: string, name of project.
-        :param no_recurring: boolean (default: True). If true, do not delete recurring items from list.
-        :param only_app_generated: boolean (default: True). If true, will only delete entries with label app,
-                                   the label that is added to all app-generated entries by default.
+        :param no_recurring: boolean (default: True).
+        If True, do not delete recurring items from list.
+        :param only_app_generated: boolean (default: True).
+        If True, delete entries with label app, the label
+        that is added to all app-generated entries by default.
         :param only_delete_after_date: date (default: None).
-                                       Will only delete entries with a due date after this given date.
-        :param prior_move: string (optional). If not None, will move items to corresponding
-                           section prior to deleting them.
+        Delete entries with a due date after this date.
+        :param prior_move: string (optional).
+        If not None, move items to relevant section before deleting them.
         """
         project_id = self.get_project_id(project)
         sleep(sleep_s)
@@ -204,7 +210,10 @@ class TodoistHelper:
                             <= only_delete_after_date
                         ):
                             continue
-                if only_app_generated and app_added_label_id not in task["labels"]:
+                if (
+                    only_app_generated
+                    and app_added_label_id not in task["labels"]
+                ):
                     continue
                 for_deletion.append(task["id"])
 

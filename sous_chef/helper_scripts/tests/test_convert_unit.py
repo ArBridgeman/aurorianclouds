@@ -8,13 +8,18 @@ from convert_unit import (
 
 
 @pytest.mark.parametrize(
-    "quantity, unit, expected_result", [(1, "cup", "1 cup"), (0.25, "tsp", "0.25 tsp")]
+    "quantity, unit, expected_result",
+    [(1, "cup", "1 cup"), (0.25, "tsp", "0.25 tsp")],
 )
-def test_convert_value_unit_does_not_convert_units(quantity, unit, expected_result):
+def test_convert_value_unit_does_not_convert_units(
+    quantity, unit, expected_result
+):
     assert convert_quantity_unit(quantity, unit) == expected_result
 
 
-@pytest.mark.parametrize("quantity, unit, expected_result", [(1, "pound", "450 g")])
+@pytest.mark.parametrize(
+    "quantity, unit, expected_result", [(1, "pound", "450 g")]
+)
 def test_convert_value_unit_converts_units(quantity, unit, expected_result):
     assert convert_quantity_unit(quantity, unit) == expected_result
 
@@ -52,7 +57,10 @@ def test_separate_quantity_unit_ingredient(input_unit, expected_unit):
         ("a pinch cayenne pepper", "1 pinch cayenne pepper"),
         ("16 drops essential oil", "16 drops essential oil"),
         ("1c GF flour", "1 cup GF flour"),
-        ("1 pound (500 grams) baby potatoes", "450 g (500 grams) baby potatoes"),
+        (
+            "1 pound (500 grams) baby potatoes",
+            "450 g (500 grams) baby potatoes",
+        ),
         ("4 russet potatoes", "4 russet potatoes"),
         ("4 plum tomatoes, chopped", "4 plum tomatoes, chopped"),
         ("10 empanada disks", "10 empanada disks"),
@@ -68,7 +76,10 @@ def test_separate_quantity_unit_ingredient(input_unit, expected_unit):
             "1/2 ciabatta loaf (120g | 4oz), sliced",
         ),
         ("24 wonton wrappers", "24 wonton wrappers"),
-        ("2 T granulated sweetener of choice", "2 tbsp granulated sweetener of choice"),
+        (
+            "2 T granulated sweetener of choice",
+            "2 tbsp granulated sweetener of choice",
+        ),
     ],
 )
 def test_convert_to_desired_unit(input_unit, expected_unit):

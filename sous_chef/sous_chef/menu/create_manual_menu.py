@@ -42,7 +42,9 @@ def select_by_near_cuisine(recipes, cuisine_select):
 def select_food_item(
     recipes, params, tags=None, food_type: str = "Entree", cuisine_select=None
 ):
-    mask = recipes.categories.apply(has_recipe_category_or_tag, args=(food_type,))
+    mask = recipes.categories.apply(
+        has_recipe_category_or_tag, args=(food_type,)
+    )
 
     if tags is None:
         tags = []
@@ -76,9 +78,8 @@ def select_food_item(
 
 def select_random_side_from_calendar(recipes, calendar, recipe_uuid, food_type):
     mask_entree = calendar.recipeUuid == recipe_uuid
-    # TODO somehow ensure that get a veggie/starch side -> pre-match with recipes?
-    # TODO some recipes like lasagna...don't really need sides: need tertiary logic
-    # TODO some recipes may already be paired with multiple sides (starch + veggie) -> want both?
+    # TODO ensure that get a veggie/starch side -> see new categories
+    # TODO some recipes don't really need sides: need tertiary logic
     if sum(mask_entree) > 0:
         dates = calendar[mask_entree].date.unique()
         mask_side = (
@@ -89,8 +90,8 @@ def select_random_side_from_calendar(recipes, calendar, recipe_uuid, food_type):
         if sum(mask_side) > 0:
             side_uuid = calendar[mask_side].sample().iloc[0].recipeUuid
             return recipes[recipes.uuid == side_uuid].iloc[0]
-        # TODO use error messages instead and catch based on them and apply appropriate action?
-        # TODO let errors be caught at more appropriate level (not just select_side)
+        # TODO use error messages instead and apply appropriate action?
+        # TODO catch errors at more appropriate level (not just select_side)
         return -1
     return 0
 
@@ -106,7 +107,7 @@ def select_side(recipes, calendar, params, recipe_uuid, cuisine_select):
         return None
     elif veggie_side == 0:
         # TODO limit somehow the cuisine type (e.g. Asian)
-        # TODO once cuisine is fixed: randomly choose between new recipe & found one?
+        # TODO once cuisine is fixed: choose between new recipe & found one?
         return select_food_item(
             recipes,
             params,
@@ -127,7 +128,9 @@ def format_time_entry(entry):
         {
             "prep": get_str_minutes(entry.preparationTime),
             # TODO make proper time
-            "cook": entry.cookingTime + " min" if entry.cookingTime.isdecimal() else "",
+            "cook": entry.cookingTime + " min"
+            if entry.cookingTime.isdecimal()
+            else "",
             "total": get_str_minutes(entry.totalTime),
         }
     )
@@ -172,8 +175,7 @@ def select_random_meal(recipes, calendar, params, cuisine_map):
             recipes, calendar, params, entree.uuid, cuisine_select
         )
 
-        # TODO create new YAML mapping for veggies to be used with new veggie cookbook
-        #  to be able to draw easily from new cook book
+        # TODO use veggie spreadsheet to increase veggie recipes
         if veggie_side is not None:
             meal_attachment["veggie"] = format_json_entry(veggie_side)
             meal_text["veggie"] = format_email_entry(veggie_side)
@@ -194,10 +196,9 @@ def interactive_meal_selection(recipes, calendar, params, cuisine_map):
 
     state = 0
     labels = ["entree", "veggie", "starch"]  # a fct of state
-    # could also be "entree", "side1", "side2"; it doesn't really matter for the logic
     while True:
         title = input(
-            "Please enter at least the start of the title of your desired {:s} dish: ".format(
+            "Enter (at least) start of the title of desired {:s} dish: ".format(
                 labels[state]
             )
         )
@@ -207,7 +208,10 @@ def interactive_meal_selection(recipes, calendar, params, cuisine_map):
         print("Is your desired {:s} dish in this list?:".format(labels[state]))
         for i_dish, dish in enumerate(best_results):
             print("({:d}) {:s}".format(i_dish, best_results[i_dish][0]))
-        answer = input("Please enter the according number or enter no (n): [0] ") or 0
+        answer = (
+            input("Please enter the according number or enter no (n): [0] ")
+            or 0
+        )
 
         if validate_answer(str(answer), "n"):
             print("Please retry and enter more details!")
@@ -250,7 +254,8 @@ def interactive_meal_selection(recipes, calendar, params, cuisine_map):
 def determine_cuisine_selection(entree_tags, cuisine_map):
     for cuisine_group in cuisine_map.keys():
         if any(
-            cuisine_tag in entree_tags for cuisine_tag in cuisine_map[cuisine_group]
+            cuisine_tag in entree_tags
+            for cuisine_tag in cuisine_map[cuisine_group]
         ):
             return cuisine_map[cuisine_group]
     return None

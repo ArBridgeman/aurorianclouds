@@ -18,8 +18,8 @@ from sous_chef.grocery_list.grocery_matching_mapping import (
 )
 from sous_chef.messaging.todoist_api import TodoistHelper
 
-# TODO implement method to scale recipe to desired servings
-# TODO implement method to mark ingredients that can only be bought the day before + need day
+# TODO method to scale recipe to desired servings
+# TODO method to mark ingredients that can only be bought the day before
 ureg = UnitRegistry()
 ureg.default_format = ".2f"
 
@@ -35,7 +35,9 @@ DRIED_BEANS = [
 
 
 def retrieve_staple_ingredients(config):
-    with open(Path(config.grocery_list_path, config.staple_ingredients_file)) as file:
+    with open(
+        Path(config.grocery_list_path, config.staple_ingredients_file)
+    ) as file:
         weekly_template = yaml.load(file, Loader=yaml.FullLoader)
     return weekly_template
 
@@ -94,13 +96,13 @@ def assume_quantity(recipe_title, quantity, ingredient):
         return float(quantity)
 
 
-def naive_unit_extraction(ingredient, pattern="^{:s}s?\.?\s"):
-    # TODO: this makes assumptions about our specific ingredient format and should be generalized
+def naive_unit_extraction(ingredient, pattern=r"^{:s}s?\.?\s"):
+    # TODO: assumes specific ingredient format and should be generalized
     # TODO: mapping from long to abbreviated forms is missing
     detected = ""
-    for unit in ALLOWED_UNITS:
-        if re.match(pattern.format(unit), ingredient.strip()):
-            detected = unit
+    for allowed_unit in ALLOWED_UNITS:
+        if re.match(pattern.format(allowed_unit), ingredient.strip()):
+            detected = allowed_unit
             break
 
     if detected != "":
@@ -110,14 +112,14 @@ def naive_unit_extraction(ingredient, pattern="^{:s}s?\.?\s"):
 
 
 def regex_split_ingredient(
-    ingredient, pattern="^(\d+[\.\,\/]?\d*)?\s([\s\-\_\w\%]+)(\s?\(\w+\))?"
+    ingredient, pattern=r"^(\d+[\.\,\/]?\d*)?\s([\s\-\_\w\%]+)(\s?\(\w+\))?"
 ):
-    # TODO: this should be updated with crf model in the future to be MUCH more robust
-    # especially once we start cleaning other recipes that haven't been preprocessed
+    # TODO: update with crf model to be MUCH more robust
+    # especially for recipes that haven't been preprocessed
     from fractions import Fraction
 
     instruction = ""
-    ingredient = re.sub("\s+", " ", ingredient.strip())
+    ingredient = re.sub(r"\s+", " ", ingredient.strip())
 
     re_match = re.match(pattern, ingredient)
     if re_match:
@@ -138,14 +140,14 @@ def regex_split_ingredient(
 
 def identify_referenced_recipes(
     ingredients,
-    pattern="^#\s(\d+[\.\,]?\d*)?([\s\-\_\w]+)(\s?\(\w+\))?$",
+    pattern=r"^#\s(\d+[\.\,]?\d*)?([\s\-\_\w]+)(\s?\(\w+\))?$",
     base_factor=1.0,
     base_title="",
 ):
     referenced_recipes = []
     for line in ingredients.split("\n"):
 
-        stripped_line = re.sub("\s+", " ", line.strip())
+        stripped_line = re.sub(r"\s+", " ", line.strip())
         if len(stripped_line) == 0:
             continue
         re_match = re.match(pattern, stripped_line)
@@ -179,7 +181,7 @@ def separate_ingredients_for_grocery_list(
     optional_groups_reached = False
     for line in ingredients.split("\n"):
         is_optional = optional_groups_reached
-        stripped_line = re.sub("\s+", " ", line.strip())
+        stripped_line = re.sub(r"\s+", " ", line.strip())
 
         if stripped_line.lower() in [
             "[recommended sides]",
@@ -232,15 +234,17 @@ def separate_ingredients_for_grocery_list(
 
 def find_largest_unit(units, debug=False):
     all_units = []
-    for unit in units:
-        if unit.strip() == "":
+    for current_unit in units:
+        if current_unit.strip() == "":
             continue
         try:
-            all_units.append(ureg.parse_expression(unit))
+            all_units.append(ureg.parse_expression(current_unit))
         except Exception as e:
             if debug:
                 print(e)
-            print("Error while parsing unit {:s}! Ignoring!".format(unit))
+            print(
+                "Error while parsing unit {:s}! Ignoring!".format(current_unit)
+            )
     if len(all_units) == 0:
         return None
     try:
@@ -248,9 +252,7 @@ def find_largest_unit(units, debug=False):
     except Exception as e:
         if debug:
             print(e)
-        print(
-            f"Error while comparing units {all_units} and finding the maximum, please check!"
-        )
+        print(f"Error comparing units {all_units} for maximum, please check!")
         return None
 
 
@@ -271,7 +273,7 @@ def convert_values(row, desired_unit, debug=False):
 
 def pluralize_ingredients(grocery_list, ingredient_field="ingredient"):
     """
-    Check if the plural version of a certain ingredient exists and then switch all to plural for the aggregation.
+    If exists, switch to plural of ingredient for aggregation.
     :param grocery_list:
     :return: grocery_list with fixed inflection.
     """
@@ -281,7 +283,9 @@ def pluralize_ingredients(grocery_list, ingredient_field="ingredient"):
         plural = inf_engine.plural_noun(ingredient)
         return plural if plural in all_ingredients else ingredient
 
-    grocery_list[ingredient_field] = grocery_list[ingredient_field].apply(plural_helper)
+    grocery_list[ingredient_field] = grocery_list[ingredient_field].apply(
+        plural_helper
+    )
     return grocery_list
 
 
@@ -298,12 +302,14 @@ def aggregate_like_ingredient(grocery_list, convert_units=False):
                 if largest_unit is not None:
                     group["quantity"], group["unit"] = zip(
                         *group.apply(
-                            lambda row: convert_values(row, largest_unit), axis=1
+                            lambda row: convert_values(row, largest_unit),
+                            axis=1,
                         )
                     )
 
         aggregate = group.groupby(
-            ["unit", "ingredient", "manual_ingredient", "is_optional"], as_index=False
+            ["unit", "ingredient", "manual_ingredient", "is_optional"],
+            as_index=False,
         ).agg(
             {
                 "quantity": ["sum"],
@@ -367,7 +373,9 @@ def get_food_categories(grocery_list, config):
         match_helper = lambda item: get_fuzzy_match(
             item, master_file.ingredient.values, warn=True, limit=1, reject=80
         )[0]
-        grocery_list["best_match"] = grocery_list["ingredient"].apply(match_helper)
+        grocery_list["best_match"] = grocery_list["ingredient"].apply(
+            match_helper
+        )
         grocery_list["match_quality"] = grocery_list["best_match"].str[1]
         grocery_list["best_match"] = grocery_list["best_match"].str[0]
 
@@ -380,7 +388,9 @@ def get_food_categories(grocery_list, config):
             )
 
         grocery_list = pd.merge(
-            grocery_list[[col for col in grocery_list.columns if col not in ["group"]]],
+            grocery_list[
+                [col for col in grocery_list.columns if col not in ["group"]]
+            ],
             master_file[["ingredient", "group"]].rename(
                 columns={"ingredient": "master_ingredient"}
             ),
@@ -396,7 +406,7 @@ def get_food_categories(grocery_list, config):
         )
 
         print(
-            "There are {:d} unmatched grocery ingredients after using master list!".format(
+            "{:d} unmatched ingredients after using master list!".format(
                 unmatched_mask.sum()
             )
         )
@@ -410,24 +420,32 @@ def get_food_categories(grocery_list, config):
     )
     grocery_list = pd.concat([grocery_list, grocery_list_matched])
     # overwrite entries with explicit can/cans unit
-    grocery_list.loc[grocery_list.unit.isin(["can", "cans"]), "group"] = "Canned"
+    grocery_list.loc[
+        grocery_list.unit.isin(["can", "cans"]), "group"
+    ] = "Canned"
 
-    grocery_list = grocery_list.sort_values("manual_ingredient", ascending=False)
+    grocery_list = grocery_list.sort_values(
+        "manual_ingredient", ascending=False
+    )
 
     one_change = False
     if config.interactive_grouping:
-        print("Will query for user input to improve food grouping of selected recipes!")
+        print(
+            "Query for user input to improve food grouping of selected recipes!"
+        )
         for _, item in grocery_list.iterrows():
             if (item.group == "Unknown") or (
                 item.manual_ingredient and (item.match_quality < 95)
             ):
                 if not item.manual_ingredient:
                     print(
-                        "\nGroup unknown for ingredient: {:s}".format(item.ingredient)
+                        "\nGroup unknown for ingredient: {:s}".format(
+                            item.ingredient
+                        )
                     )
                 else:
                     print(
-                        "\nManual ingredient {:s} not in the list, please provide input to add it!".format(
+                        "\nManual ingredient {:s} not found, add it!".format(
                             item.ingredient
                         )
                     )
@@ -457,14 +475,14 @@ def get_food_categories(grocery_list, config):
                         one_change = True
                         break
                     except Exception as e:
-                        print(
-                            "Error while updating group, please check input and retry!"
-                        )
+                        print("Error updating group, please check and retry!")
                         print(e)
         if one_change:
             print("All uncertain groups have been updated!")
             print("Updating master file with added ingredients and groups!")
-            master_file.to_csv(config.master_list_file, index=False, header=True)
+            master_file.to_csv(
+                config.master_list_file, index=False, header=True
+            )
             print("Written to {:s}".format(config.master_list_file.as_posix()))
 
     return grocery_list
@@ -495,9 +513,14 @@ def upload_groceries_to_todoist(
     groceries["group"] = groceries["group"].map(todoist_mapping)
 
     if clean:
-        print("Cleaning previous items/tasks in project {:s}".format(project_name))
+        print(
+            "Cleaning previous items/tasks in project {:s}".format(project_name)
+        )
         if not dry_mode:
-            [todoist_helper.delete_all_items_in_project(project_name) for _ in range(3)]
+            [
+                todoist_helper.delete_all_items_in_project(project_name)
+                for _ in range(3)
+            ]
 
     if dry_mode:
         print("Dry mode! Will only simulate actions but not upload to todoist!")
@@ -505,9 +528,10 @@ def upload_groceries_to_todoist(
     for _, item in groceries.iterrows():
         formatted_item = (
             f"{item.ingredient}, {significant_digits_str(item.quantity)} "
-            f"{abbreviate_units(item.unit)}{' (optional)' if item.is_optional else ''}"
+            f"{abbreviate_units(item.unit)}"
+            f"{' (optional)' if item.is_optional else ''}"
         )
-        formatted_item = re.sub("\s+", " ", formatted_item).strip()
+        formatted_item = re.sub(r"\s+", " ", formatted_item).strip()
         print(
             "Adding item {:s} from group {:s} to "
             "todoist (recipe source(s): {})".format(
@@ -519,7 +543,10 @@ def upload_groceries_to_todoist(
             if item.is_optional:
                 all_labels.append("Optional")
             todoist_helper.add_item_to_project(
-                formatted_item, project_name, section=item.group, labels=all_labels
+                formatted_item,
+                project_name,
+                section=item.group,
+                labels=all_labels,
             )
     return
 
@@ -549,14 +576,19 @@ def add_preparation_tasks_to_todoist(
     todoist_token_file_path="todoist_token.txt",
     add_cans_for_freezing=1,
 ):
-    from sous_chef.menu.prepare_fixed_menu import get_anchor_date, get_due_date
+    from sous_chef.menu.prepare_fixed_menu import get_due_date
 
     todoist_helper = TodoistHelper(todoist_token_file_path)
 
     if clean:
-        print("Cleaning previous items/tasks in project {:s}".format(project_name))
+        print(
+            "Cleaning previous items/tasks in project {:s}".format(project_name)
+        )
         if not dry_mode:
-            [todoist_helper.delete_all_items_in_project(project_name) for _ in range(3)]
+            [
+                todoist_helper.delete_all_items_in_project(project_name)
+                for _ in range(3)
+            ]
 
     if dry_mode:
         print("Dry mode! Will only simulate actions but not upload to Todoist!")
@@ -578,10 +610,11 @@ def add_preparation_tasks_to_todoist(
                 f"BEAN prep: {item.ingredient}, "
                 f"{significant_digits_str(item.quantity + add_for_freeze)} "
                 f"{abbreviate_units(item.unit)} "
-                f"(cook & freeze {significant_digits_str(add_for_freeze)} {abbreviate_units(item.unit)})"
+                f"(cook & freeze {significant_digits_str(add_for_freeze)}"
+                f" {abbreviate_units(item.unit)})"
                 f"{' (optional)' if item.is_optional else ''}"
             )
-            formatted_item = re.sub("\s+", " ", formatted_item).strip()
+            formatted_item = re.sub(r"\s+", " ", formatted_item).strip()
 
             # add entry on Saturday
             due_date = get_due_date(
@@ -612,7 +645,7 @@ def add_preparation_tasks_to_todoist(
     return
 
 
-# TODO: further generalize and improve this function (staple detection, other fields etc.)
+# TODO: generalize/improve this function (staple detection, other fields etc.)
 def parse_add_ingredient_entry_to_grocery_list(
     ingredient_line,
     grocery_list,
@@ -632,7 +665,9 @@ def parse_add_ingredient_entry_to_grocery_list(
             ingredient_line
         )
     else:
-        quantity, unit, ingredient = separate_unit_from_ingredient(ingredient_line)
+        quantity, unit, ingredient = separate_unit_from_ingredient(
+            ingredient_line
+        )
 
     quantity = assume_quantity("", quantity, ingredient)
 
@@ -651,7 +686,8 @@ def parse_add_ingredient_entry_to_grocery_list(
             "quantity": factor * quantity,
             "unit": unit.lower(),
             "ingredient": ingredient.lower(),
-            "is_staple": is_staple_ingredient(staple_list, ingredient) or is_staple,
+            "is_staple": is_staple_ingredient(staple_list, ingredient)
+            or is_staple,
             "is_optional": is_optional,
             "manual_ingredient": manual_entry,
             "from_recipe": from_recipe,
@@ -685,7 +721,7 @@ def identify_recipe_by_title(search_title, recipes, reject_below=95):
         return search_title
 
     print(
-        "Couldn't directly find recipe title {:s}. Attempting (very strict) fuzzy match!".format(
+        "Couldn't find recipe {:s}. Attempting (strict) fuzzy match!".format(
             search_title
         )
     )
@@ -720,8 +756,13 @@ def generate_grocery_list(config, recipes, verbose=False):
     if config.only_clean_todoist:
         project_name = "Groceries"
         todoist_helper = TodoistHelper(config.todoist_token_file)
-        print("Cleaning previous items/tasks in project {:s}".format(project_name))
-        [todoist_helper.delete_all_items_in_project(project_name) for _ in range(3)]
+        print(
+            "Cleaning previous items/tasks in project {:s}".format(project_name)
+        )
+        [
+            todoist_helper.delete_all_items_in_project(project_name)
+            for _ in range(3)
+        ]
         return
 
     filepath = Path(config.menu_path, config.menu_file)
@@ -748,16 +789,18 @@ def generate_grocery_list(config, recipes, verbose=False):
         for _, entry in getter(day):
             if len(entry) > 0:
 
-                # manual ingredient or addition, no matching to known recipes should be done
+                # manual ingredient, skip match to known recipes
                 if entry.get("type", None).lower() == "ingredient":
                     if entry.get("grocery_list", None) == "Y":
-                        grocery_list = parse_add_ingredient_entry_to_grocery_list(
-                            entry["item"],
-                            grocery_list,
-                            staple_ingredients,
-                            factor=entry["factor"],
-                            from_recipe="manual",
-                            from_day=day,
+                        grocery_list = (
+                            parse_add_ingredient_entry_to_grocery_list(
+                                entry["item"],
+                                grocery_list,
+                                staple_ingredients,
+                                factor=entry["factor"],
+                                from_recipe="manual",
+                                from_day=day,
+                            )
                         )
                 else:
                     # will hold current recipe and potential referenced recipes
@@ -770,12 +813,15 @@ def generate_grocery_list(config, recipes, verbose=False):
                         if "uuid" in current_recipe:
                             mask_entry = recipes.uuid == current_recipe["uuid"]
                         elif "item" in current_recipe:
-                            mask_entry = recipes.title == identify_recipe_by_title(
-                                current_recipe["item"], recipes
+                            mask_entry = (
+                                recipes.title
+                                == identify_recipe_by_title(
+                                    current_recipe["item"], recipes
+                                )
                             )
                         else:
                             AssertionError(
-                                "No way of matching entry {} to recipe db!".format(
+                                "No matching entry {} in recipe db!".format(
                                     current_recipe
                                 )
                             )
@@ -783,17 +829,17 @@ def generate_grocery_list(config, recipes, verbose=False):
                         # should match a recipe but couldn't detect it
                         if mask_entry is not None and np.sum(mask_entry) == 0:
                             print(
-                                "Warning! Could not find recipe {} in recipes db! "
-                                "Will continue without adding ingredients! Please check!".format(
-                                    current_recipe
-                                )
+                                f"Warning! Recipe {current_recipe} not found! "
+                                "Continued without adding ingredients!"
+                                "Please check!"
                             )
                             all_recipes = all_recipes[1:]
                             continue
 
                         selected_recipe = recipes[mask_entry].iloc[0]
                         recipe_title = "{:s}{:s}".format(
-                            selected_recipe.title, current_recipe.get("base_title", "")
+                            selected_recipe.title,
+                            current_recipe.get("base_title", ""),
                         )
                         ingredients = selected_recipe.ingredients
 
@@ -806,7 +852,7 @@ def generate_grocery_list(config, recipes, verbose=False):
                             mult_factor=float(current_recipe.get("factor", 1)),
                             regex_match=True,
                         )
-                        # identify references recipes within referenced recipes (and recursively forever :)
+                        # recursively find referenced recipes
                         referenced_recipes = identify_referenced_recipes(
                             ingredients,
                             base_factor=current_recipe.get("factor", 1),
@@ -825,7 +871,7 @@ def generate_grocery_list(config, recipes, verbose=False):
     )
 
     print(
-        "Number of grocery list entries after extraction and aggregation: {:d}".format(
+        "# grocery list entries after extraction and aggregation: {:d}".format(
             grocery_list.shape[0]
         )
     )

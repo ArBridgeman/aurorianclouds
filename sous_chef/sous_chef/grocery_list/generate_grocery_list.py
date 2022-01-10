@@ -51,13 +51,13 @@ def remove_instruction(ingredient):
 
 
 def separate_unit_from_ingredient(ingredient):
-    unit = parser.parse(ingredient)
+    unit_here = parser.parse(ingredient)
     # TODO remove if-statement once all empty strings handled
-    if len(unit) > 0:
-        unit_end = unit[0].span[1]
-        unit_name = unit[0].unit.name
+    if len(unit_here) > 0:
+        unit_end = unit_here[0].span[1]
+        unit_name = unit_here[0].unit.name
         return (
-            unit[0].value,
+            unit_here[0].value,
             unit_name if unit_name != "dimensionless" else "",
             ingredient[unit_end:].strip(),
         )
@@ -134,8 +134,8 @@ def regex_split_ingredient(
     else:
         quantity = 1
 
-    ingredient, unit = naive_unit_extraction(ingredient)
-    return quantity, unit, ingredient, instruction
+    ingredient, unit_here = naive_unit_extraction(ingredient)
+    return quantity, unit_here, ingredient, instruction
 
 
 def identify_referenced_recipes(
@@ -275,6 +275,7 @@ def pluralize_ingredients(grocery_list, ingredient_field="ingredient"):
     """
     If exists, switch to plural of ingredient for aggregation.
     :param grocery_list:
+    :param ingredient_field: optional str of ingredient column.
     :return: grocery_list with fixed inflection.
     """
     all_ingredients = grocery_list[ingredient_field].unique()
@@ -370,7 +371,7 @@ def get_food_categories(grocery_list, config):
 
     grocery_list_matched = None
     if master_file is not None:
-        match_helper = lambda item: get_fuzzy_match(
+        match_helper = lambda item: get_fuzzy_match(  # noqa: E731
             item, master_file.ingredient.values, warn=True, limit=1, reject=80
         )[0]
         grocery_list["best_match"] = grocery_list["ingredient"].apply(
@@ -661,11 +662,11 @@ def parse_add_ingredient_entry_to_grocery_list(
     ingredient_line = str(ingredient_line.strip())
     instruction = ""
     if use_regex:
-        quantity, unit, ingredient, instruction = regex_split_ingredient(
+        quantity, unit_here, ingredient, instruction = regex_split_ingredient(
             ingredient_line
         )
     else:
-        quantity, unit, ingredient = separate_unit_from_ingredient(
+        quantity, unit_here, ingredient = separate_unit_from_ingredient(
             ingredient_line
         )
 
@@ -684,7 +685,7 @@ def parse_add_ingredient_entry_to_grocery_list(
     grocery_list = grocery_list.append(
         {
             "quantity": factor * quantity,
-            "unit": unit.lower(),
+            "unit": unit_here.lower(),
             "ingredient": ingredient.lower(),
             "is_staple": is_staple_ingredient(staple_list, ingredient)
             or is_staple,
@@ -773,11 +774,11 @@ def generate_grocery_list(config, recipes, verbose=False):
         with open(filepath) as f:
             menu = json.load(f)
         days = menu.keys()
-        getter = lambda d: menu[d].items()
+        getter = lambda d: menu[d].items()  # noqa: E731
     elif filepath.suffix == ".csv":
         menu = pd.read_csv(filepath, sep=";")
         days = menu.weekday.unique()
-        getter = lambda d: menu[menu.weekday == d].iterrows()
+        getter = lambda d: menu[menu.weekday == d].iterrows()  # noqa: E731
 
     assert (
         getter is not None

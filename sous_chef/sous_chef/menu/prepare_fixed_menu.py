@@ -8,11 +8,11 @@ from sous_chef.definitions import DAYS_OF_WEEK, DESIRED_MEAL_TIMES
 from sous_chef.messaging.gsheets_api import GsheetsHelper
 from sous_chef.messaging.todoist_api import TodoistHelper
 
-MENU_FILE_PATTERN = lambda num: f"menu-{num}.csv"
+MENU_FILE_PATTERN = "menu-{}.csv"
 
 
 def obtain_fixed_menu(menu_path: Path, menu_number: int, sep: str = ";"):
-    fixed_menu_file = MENU_FILE_PATTERN(menu_number)
+    fixed_menu_file = MENU_FILE_PATTERN.format(menu_number)
     fixed_menu = Path(menu_path, fixed_menu_file)
     if fixed_menu.is_file():
         return pd.read_csv(fixed_menu, sep=sep)
@@ -175,7 +175,7 @@ def join_recipe_information(
     from sous_chef.grocery_list.grocery_matching_mapping import get_fuzzy_match
 
     checked_menu = checked_menu.reset_index()
-    match_helper = lambda item: get_fuzzy_match(
+    match_helper = lambda item: get_fuzzy_match(  # noqa: E731
         item,
         recipes.title.values,
         warn=True,

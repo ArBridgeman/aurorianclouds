@@ -1,12 +1,34 @@
 repos:
-  - repo: https://github.com/psf/black
-    rev: 21.5b0
-    hooks:
-      - id: black
-        language_version: python3
-  - repo: https://github.com/pycqa/isort
-    rev: 5.8.0
+  - repo: local
     hooks:
       - id: isort
-        name: isort (python)
-        args: ["--profile", "black"]
+        name: isort
+        description: 'Sort imports'
+        entry: poetry run isort --profile black
+        language: system
+        require_serial: true
+
+      - id: autoflake
+        name: autoflake
+        description: 'Remove unused imports'
+        entry: poetry run autoflake --in-place --remove-all-unused-imports --remove-unused-variables --expand-star-imports
+        language: system
+        types: ['python']
+        require_serial: true
+
+      - id: black
+        name: black
+        description: 'Alters code for style consistency across Python projects'
+        entry: poetry run black --line-length 80
+        minimum_pre_commit_version: 2.9.2
+        language: system
+        require_serial: true
+        types_or: [python, pyi]
+
+      - id: flake8
+        name: flake8
+        description: 'Enforces style consistency across Python projects'
+        entry: poetry run flake8
+        language: system
+        require_serial: true
+        types: [ python ]

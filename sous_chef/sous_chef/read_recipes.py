@@ -35,32 +35,40 @@ def create_timedelta(row_entry):
         row_entry = re.sub("prep", "", row_entry)
         row_entry = re.sub("cooking", "", row_entry)
         row_entry = re.sub("minut[eo]s.?", "min", row_entry)
-        row_entry = re.sub("^[\D]+", "", row_entry)
-        row_entry = re.sub("mins\.?$", "min", row_entry)
-        if re.match("^\d{1,2}:\d{1,2}$", row_entry):
+        row_entry = re.sub(r"^[\D]+", "", row_entry)
+        row_entry = re.sub(r"mins\.?$", "min", row_entry)
+        if re.match(r"^\d{1,2}:\d{1,2}$", row_entry):
             row_entry = "{}:00".format(row_entry)
 
         # handle fractions properly
         # todo outsource to separate clean function
         if "/" in row_entry:
-            groups = re.match("^(\d?\s\d+[\.\,\/]?\d*)?\s([\s\-\_\w\%]+)", row_entry)
+            groups = re.match(
+                r"^(\d?\s\d+[\.\,\/]?\d*)?\s([\s\-\_\w\%]+)", row_entry
+            )
             if groups:
-                float_conv = float(sum(Fraction(s) for s in groups.group(1).split()))
+                float_conv = float(
+                    sum(Fraction(s) for s in groups.group(1).split())
+                )
                 row_entry = f"{float_conv} {groups.group(2).strip()}"
 
-        # errors = "ignore" could be put if we are confident that we want to ignore further issues
+        # errors = "ignore", if confident we want to ignore further issues
         return pd.to_timedelta(row_entry, unit=None, errors="raise")
 
 
-# TODO figure out best way to separate active cooking vs inactive cooking; make resilient to problems
-def retrieve_format_recipe_df(json_file, cols_to_select=INP_JSON_COLUMNS.keys()):
+# TODO figure to separate active vs inactive cooking; make resilient to problems
+def retrieve_format_recipe_df(
+    json_file, cols_to_select=INP_JSON_COLUMNS.keys()
+):
     tmp_df = pd.read_json(json_file, dtype=INP_JSON_COLUMNS)
     for col in cols_to_select:
         if col not in tmp_df.columns:
             tmp_df[col] = None
     tmp_df = tmp_df[cols_to_select]
     tmp_df["totalTime"] = tmp_df["totalTime"].apply(create_timedelta)
-    tmp_df["preparationTime"] = tmp_df["preparationTime"].apply(create_timedelta)
+    tmp_df["preparationTime"] = tmp_df["preparationTime"].apply(
+        create_timedelta
+    )
     tmp_df["cookingTime"] = tmp_df["cookingTime"].apply(create_timedelta)
     tmp_df["categories"] = tmp_df.categories.apply(flatten_dict_to_list)
     tmp_df["tags"] = tmp_df.tags.apply(flatten_dict_to_list)
@@ -99,7 +107,7 @@ def read_recipes(recipe_path: Path, de_duplicate: bool = True):
     for json in recipe_path.glob(RECIPE_FILE_PATTERN):
         recipes = recipes.append(retrieve_format_recipe_df(json))
 
-    # if multiple recipes with exact same name exist, keep highest rated one
+    # if multiple recipes with exact name exist, keep highest rated one
     if de_duplicate:
         recipes = recipes.sort_values(["rating"], ascending=False)
         recipes = recipes.drop_duplicates(["title"], keep="first")
@@ -126,12 +134,16 @@ def label_calendar(calendar, recipes):
         left_on="recipeUuid",
         right_on="uuid",
     )
-    calendar["food_type"] = calendar.apply(lambda x: create_food_type(x), axis=1)
+    calendar["food_type"] = calendar.apply(
+        lambda x: create_food_type(x), axis=1
+    )
     return calendar
 
 
 def read_calendar(calendar_path, recipes):
     filepath = Path(calendar_path, CALENDAR_FILE_PATTERN)
-    calendar = pd.read_json(filepath, dtype=CALENDAR_COLUMNS)[CALENDAR_COLUMNS.keys()]
+    calendar = pd.read_json(filepath, dtype=CALENDAR_COLUMNS)[
+        CALENDAR_COLUMNS.keys()
+    ]
     calendar["date"] = pd.to_datetime(calendar["date"]).dt.date
     return label_calendar(calendar, recipes)

@@ -62,7 +62,8 @@ class Client:
             _format = kwargs["format"]
             assert isinstance(
                 _format, Format
-            ), f"'format' arg should be an instance of the noms.Format enum class. format object was {_format} instead."
+            ), f"""'format' arg should be an instance of the noms.
+             Format enum class. format object was {_format} instead."""
             data.update({"format": _format.value})
 
         if "nutrients" in kwargs:
@@ -84,9 +85,10 @@ class Client:
             _dataTypeEnums = kwargs["dataTypes"]
             _dataTypes = []
             for dt in _dataTypeEnums:
-                assert isinstance(
-                    dt, DataType
-                ), f"'dataType' should be a list of noms.DataType enums. '{dt}' not understood."
+                assert isinstance(dt, DataType), (
+                    "'dataType' should be a list of noms."
+                    f" DataType enums. '{dt}' not understood."
+                )
                 _dataTypes.append(dt.value)
             data.update({"dataType": ",".join(_dataTypes)})
             # data.update({'dataType': _dataTypes})
@@ -94,13 +96,16 @@ class Client:
 
         if "sortBy" in kwargs:
             _sortBy = kwargs["sortBy"]
-            assert isinstance(
-                _sortBy, Sorting
-            ), f"'sortBy' arg should be an instance of the noms.Sorting enum class. sortBy object was {_sortBy} instead."
+            assert isinstance(_sortBy, Sorting), (
+                "'sortBy' arg should be an instance of the noms."
+                f" Sorting enum class. sortBy object was {_sortBy} instead."
+            )
             data.update({"sortBy": _sortBy.value})
 
         if "reverse" in kwargs:
-            data.update({"sortOrder": "asc" if not kwargs["reverse"] else "desc"})
+            data.update(
+                {"sortOrder": "asc" if not kwargs["reverse"] else "desc"}
+            )
 
         if "pageSize" in kwargs:
             _pageSize = kwargs["pageSize"]
@@ -108,9 +113,7 @@ class Client:
                 _pageSize >= 1
             ), f"pageSize must be at least one. pageSize was {_pageSize}"
             if _pageSize > 200:
-                print(
-                    f"Warning: maximum page size is 200. pageSize passed is {_pageSize}"
-                )
+                print(f"Warning: max page size is 200 (pageSize={_pageSize})")
             data.update({"pageSize": _pageSize})
 
         if "pageNumber" in kwargs:
@@ -129,7 +132,10 @@ class Client:
         return data
 
     def food(
-        self, fdcId: str, format: Format = Format.abridged, nutrients: list = None
+        self,
+        fdcId: str,
+        format: Format = Format.abridged,
+        nutrients: list = None,
     ):
         """Retrieves a single food item by an FDC ID. Optional format and
         nutrients can be specified.
@@ -138,13 +144,17 @@ class Client:
         """
         data = self.process_args(**{"format": format, "nutrients": nutrients})
         response = requests.get(
-            BASE_URL + f"/food/{fdcId}", params={"api_key": self.api_key, **data}
+            BASE_URL + f"/food/{fdcId}",
+            params={"api_key": self.api_key, **data},
         )
         obj = json.loads(response.text) if response.status_code == 200 else None
         return response, obj
 
     def foods(
-        self, fdcIds: list, format: Format = Format.abridged, nutrients: list = None
+        self,
+        fdcIds: list,
+        format: Format = Format.abridged,
+        nutrients: list = None,
     ):
         """Retrieves a list of food items by a list of up to 20 FDC IDs.
         Optional format and nutrients can be specified. Invalid FDC ID's or ones
@@ -185,7 +195,9 @@ class Client:
             }
         )
         response = requests.post(
-            BASE_URL + "/foods/list", params={"api_key": self.api_key}, json=data
+            BASE_URL + "/foods/list",
+            params={"api_key": self.api_key},
+            json=data,
         )
         obj = json.loads(response.text) if response.status_code == 200 else None
         return response, obj

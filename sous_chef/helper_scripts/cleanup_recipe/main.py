@@ -13,7 +13,9 @@ ABS_FILE_PATH = Path(__file__).absolute().parent
 def generate_parser():
     parser = argparse.ArgumentParser(description="sous chef activities")
     parser.add_argument(
-        "--recipe_path", type=Path, default=Path(ABS_FILE_PATH, "../../recipe_data")
+        "--recipe_path",
+        type=Path,
+        default=Path(ABS_FILE_PATH, "../../recipe_data"),
     )
     parser.add_argument("--recipe_pattern", type=str, default="recipes*.json")
     return parser
@@ -21,7 +23,8 @@ def generate_parser():
 
 def transform_ingredient_line(ingredient_line):
     std_ingredient_line = standardize_unit_values(ingredient_line)
-    # standard_ingredient_line = standardize_unit_names(standard_ingredient_line)
+    # standard_ingredient_line =
+    # standardize_unit_names(standard_ingredient_line)
     std_ingredient_line = convert_to_desired_unit(std_ingredient_line)
     return std_ingredient_line
 
@@ -43,7 +46,9 @@ def main():
     orig_recipes["modified_ingredients"] = orig_recipes.ingredients.apply(
         lambda row: split_ingredients_perform_operation(row)
     )
-    orig_recipes[["title", "ingredients", "modified_ingredients"]].to_csv("recipes.csv")
+    orig_recipes[["title", "ingredients", "modified_ingredients"]].to_csv(
+        "recipes.csv"
+    )
 
 
 if __name__ == "__main__":

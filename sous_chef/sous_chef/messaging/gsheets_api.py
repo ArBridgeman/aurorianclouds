@@ -10,7 +10,9 @@ class GsheetsHelper:
     token_str: str
 
     def __post_init__(self):
-        self.connection = pygsheets.authorize(service_file=self.token_str, retries=3)
+        self.connection = pygsheets.authorize(
+            service_file=self.token_str, retries=3
+        )
 
     def get_sheet_as_df(self, workbook_name, sheet_name):
         """
@@ -76,13 +78,14 @@ class GsheetsHelper:
                 workbook = conn.open(workbook_name)
             except pygsheets.SpreadsheetNotFound:
                 print(
-                    f"Could not locate workbook with name {workbook_name}! Trying to create anew!"
+                    f"Could not locate workbook with name {workbook_name}!"
+                    " Trying to create anew!"
                 )
                 workbook = conn.create(workbook_name)
 
         if workbook is None:
             raise ValueError(
-                f"Could not find or create google spreadsheet with workbook_name {workbook_name}"
+                f"Could not find/create workbook with name {workbook_name}"
             )
 
         try:

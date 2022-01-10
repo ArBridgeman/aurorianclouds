@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Helper script to create master ingredient list for selected recipes (e.g. only rated ones).
+# Helper script to create master ingredient list for rated recipes
 #
 #
 import argparse
@@ -20,14 +20,18 @@ ABS_FILE_PATH = Path(__file__).absolute().parent
 
 def generate_parser():
     parser = argparse.ArgumentParser(description="script activities")
-    sub_parser = parser.add_subparsers(help="type of operation")
+    parser.add_subparsers(help="type of operation")
 
     parser.add_argument(
-        "--recipe_path", type=Path, default=Path(ABS_FILE_PATH, "../recipe_data")
+        "--recipe_path",
+        type=Path,
+        default=Path(ABS_FILE_PATH, "../recipe_data"),
     )
     parser.add_argument("--recipe_pattern", type=str, default="recipes*.json")
     parser.add_argument(
-        "--grocery_list_path", type=str, default=Path(ABS_FILE_PATH, "../grocery_list")
+        "--grocery_list_path",
+        type=str,
+        default=Path(ABS_FILE_PATH, "../grocery_list"),
     )
     parser.add_argument(
         "--staple_ingredients_file", type=str, default="staple_ingredients.yml"
@@ -41,7 +45,9 @@ def generate_parser():
     parser.add_argument(
         "--master_list_out_file",
         type=Path,
-        default=Path(ABS_FILE_PATH, "../nutrition_data/master_ingredient_list.csv"),
+        default=Path(
+            ABS_FILE_PATH, "../nutrition_data/master_ingredient_list.csv"
+        ),
     )
     parser.add_argument(
         "--only_rated",
@@ -55,9 +61,17 @@ def generate_parser():
 def generate_master_list(config, recipes, only_rated=True):
     staple_ingredients = retrieve_staple_ingredients(config)
 
-    # TODO how to handle or options (e.g. lettuce or tortillas?) -> special type in ingredient list?
+    # TODO how to handle OR-options (e.g. lettuce or tortillas?)
+    #  -> special type in ingredient list?
     grocery_list = pd.DataFrame(
-        columns=["quantity", "unit", "ingredient", "is_staple", "is_optional", "group"]
+        columns=[
+            "quantity",
+            "unit",
+            "ingredient",
+            "is_staple",
+            "is_optional",
+            "group",
+        ]
     )
 
     selected_recipes = recipes.copy()
@@ -77,7 +91,8 @@ def generate_master_list(config, recipes, only_rated=True):
     # quantities are not immediately of interest for the ingredient master list
     # grocery_list = aggregate_like_ingredient(grocery_list)
     # de-duplicate on ingredient
-    # TODO: fuzzy logic here would be better, if two ingredients are 99% similar, probably the same ingredient...
+    # TODO: fuzzy logic here would be better
+    #  if two ingredients are 99% similar, probably the same ingredient...
     grocery_list = grocery_list.drop_duplicates(["ingredient"])
 
     # get all food categories using USDA data

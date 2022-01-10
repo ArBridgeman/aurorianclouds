@@ -8,11 +8,11 @@ from sous_chef.definitions import DAYS_OF_WEEK, DESIRED_MEAL_TIMES
 from sous_chef.messaging.gsheets_api import GsheetsHelper
 from sous_chef.messaging.todoist_api import TodoistHelper
 
-MENU_FILE_PATTERN = lambda num: f"menu-{num}.csv"
+MENU_FILE_PATTERN = "menu-{}.csv"
 
 
 def obtain_fixed_menu(menu_path: Path, menu_number: int, sep: str = ";"):
-    fixed_menu_file = MENU_FILE_PATTERN(menu_number)
+    fixed_menu_file = MENU_FILE_PATTERN.format(menu_number)
     fixed_menu = Path(menu_path, fixed_menu_file)
     if fixed_menu.is_file():
         return pd.read_csv(fixed_menu, sep=sep)
@@ -22,7 +22,9 @@ def obtain_fixed_menu(menu_path: Path, menu_number: int, sep: str = ";"):
 
 def edit_menu_by_item(row):
     print(" editing ".center(20, "-"))
-    changed_factor = input(f"new factor for {row['item']} (old: {row['factor']}): \n")
+    changed_factor = input(
+        f"new factor for {row['item']} (old: {row['factor']}): \n"
+    )
     row["factor"] = float(changed_factor)
     return row
 
@@ -52,12 +54,16 @@ def check_menu(fixed_menu: pd.DataFrame):
 
 def get_anchor_date(weekday_index):
     today = datetime.datetime.today()
-    return today + datetime.timedelta(days=max(0, weekday_index - today.weekday()))
+    return today + datetime.timedelta(
+        days=max(0, weekday_index - today.weekday())
+    )
 
 
-def get_due_date(day, anchor_date=get_anchor_date(4), hour=0, minute=0, second=0):
+def get_due_date(
+    day, anchor_date=get_anchor_date(4), hour=0, minute=0, second=0
+):
     """
-    Transfer day to proper due date datetime. Will always use the week after given anchor date.
+    Transfer day to proper due date. Use the week after given anchor date.
     :param day: weekday in int (monday: 0) or str.
     :param anchor_date: anchor date to set day before specified week.
     :param hour: hour of datetime
@@ -76,7 +82,9 @@ def get_due_date(day, anchor_date=get_anchor_date(4), hour=0, minute=0, second=0
     if new_date.date() == anchor_date.date():
         new_date = new_date + datetime.timedelta(days=7)
 
-    new_date = new_date.replace(hour=int(hour), minute=int(minute), second=int(second))
+    new_date = new_date.replace(
+        hour=int(hour), minute=int(minute), second=int(second)
+    )
 
     return new_date
 
@@ -93,7 +101,9 @@ def upload_menu_to_todoist(
     todoist_helper = TodoistHelper(todoist_token_file_path)
 
     if clean:
-        print("Cleaning previous items/tasks in project {:s}".format(project_name))
+        print(
+            "Cleaning previous items/tasks in project {:s}".format(project_name)
+        )
         if not dry_mode:
             [
                 todoist_helper.delete_all_items_in_project(
@@ -143,7 +153,7 @@ def upload_menu_to_todoist(
             if not pd.isna(item.totalTime)
             else "",
         )
-        formatted_item = re.sub("\s+", " ", formatted_item).strip()
+        formatted_item = re.sub(r"\s+", " ", formatted_item).strip()
         print(
             "Adding item {:s} to todoist for date {}".format(
                 formatted_item, due_date_str
@@ -165,8 +175,13 @@ def join_recipe_information(
     from sous_chef.grocery_list.grocery_matching_mapping import get_fuzzy_match
 
     checked_menu = checked_menu.reset_index()
-    match_helper = lambda item: get_fuzzy_match(
-        item, recipes.title.values, warn=True, limit=1, reject=90, warn_thresh=95
+    match_helper = lambda item: get_fuzzy_match(  # noqa: E731
+        item,
+        recipes.title.values,
+        warn=True,
+        limit=1,
+        reject=90,
+        warn_thresh=95,
     )[0][0]
     checked_menu_recipes_filter = checked_menu.type == "recipe"
     checked_menu_recipes = checked_menu[checked_menu_recipes_filter].copy()

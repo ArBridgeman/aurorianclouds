@@ -60,7 +60,9 @@ food_items_joined_pd = pd.merge(
 )
 
 food_items_joined_pd["desc_long"] = food_items_joined_pd.desc_long.str.lower()
-food_items_joined_pd["is_raw"] = food_items_joined_pd.desc_long.str.contains(", raw")
+food_items_joined_pd["is_raw"] = food_items_joined_pd.desc_long.str.contains(
+    ", raw"
+)
 food_items_joined_pd["desc_len"] = food_items_joined_pd.desc_long.str.len()
 
 feather.write_feather(

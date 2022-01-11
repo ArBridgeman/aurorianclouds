@@ -11,7 +11,8 @@ repos:
       - id: autoflake
         name: autoflake
         description: 'Remove unused imports'
-        entry: poetry run autoflake --in-place --remove-all-unused-imports --remove-unused-variables --expand-star-imports
+        entry: "poetry run autoflake --in-place --remove-all-unused-imports \
+                 --remove-unused-variables --expand-star-imports"
         language: system
         types: ['python']
         require_serial: true
@@ -31,4 +32,11 @@ repos:
         entry: poetry run flake8
         language: system
         require_serial: true
-        types: [ python ]
+        types: [python]
+
+      - id: yamllint
+        name: yamllint
+        descript: 'Enforces style consistency for YAML files'
+        entry: poetry run yamllint
+        language: system
+        types_or: [yaml]

@@ -456,10 +456,13 @@ def get_food_categories(grocery_list, config):
                 while True:
                     try:
                         user_input = input(
-                            "Please select: (0 - {:d}) >> ".format(
+                            "Please select (or blank enter to skip): "
+                            "(0 - {:d}) >> ".format(
                                 len(relevant_macro_groups) - 1
                             )
                         )
+                        if user_input.strip() == "":
+                            break
                         group_update = relevant_macro_groups[int(user_input)]
                         grocery_list.loc[
                             grocery_list.ingredient == item.ingredient, "group"

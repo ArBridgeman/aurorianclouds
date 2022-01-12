@@ -456,7 +456,7 @@ def get_food_categories(grocery_list, config):
                 while True:
                     try:
                         user_input = input(
-                            "Please select (or blank enter to skip): "
+                            "Please select (enter to skip): "
                             "(0 - {:d}) >> ".format(
                                 len(relevant_macro_groups) - 1
                             )

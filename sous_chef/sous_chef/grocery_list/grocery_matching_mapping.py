@@ -137,6 +137,7 @@ def get_fuzzy_match(
 
 
 class IngredientsHelper(object):
+    # TODO decide if to keep and move to separate area similar to pantry list
     def __init__(self, path_ingredients):
         self.path_ingredients = path_ingredients
         self.ingredient_df = feather.read_feather(self.path_ingredients)

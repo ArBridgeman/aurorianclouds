@@ -1,6 +1,6 @@
 import pandas as pd
 import pytest
-from sous_chef.read_recipes import create_timedelta
+from sous_chef.recipe_book.read_recipe_book import create_timedelta
 
 
 @pytest.mark.parametrize(

@@ -36,7 +36,7 @@ repos:
 
       - id: yamllint
         name: yamllint
-        descript: 'Enforces style consistency for YAML files'
+        description: 'Enforces style consistency for YAML files'
         entry: poetry run yamllint
         language: system
         types_or: [yaml]

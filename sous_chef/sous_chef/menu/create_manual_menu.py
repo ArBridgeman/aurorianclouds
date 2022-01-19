@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 import yaml
 from fuzzywuzzy import fuzz
-from sous_chef.filter_recipes import (
+from recipe_book.filter_recipes import (
     create_previously_tried_filter,
     create_protein_filter,
     create_tags_or_filter,

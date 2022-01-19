@@ -9,10 +9,8 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-from sous_chef.grocery_list.generate_grocery_list import generate_grocery_list
+from recipe_book.read_recipe_book import read_calendar, read_recipes
 from sous_chef.menu.create_manual_menu import create_menu
-from sous_chef.menu.prepare_fixed_menu import finalize_fixed_menu
-from sous_chef.read_recipes import read_calendar, read_recipes
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
 HOME_PATH = str(Path.home())
@@ -27,8 +25,6 @@ def generate_parser():
     sub_parser = parser.add_subparsers(help="type of operation")
     parse_default_settings(parser)
     parse_manual_menu(sub_parser)
-    parse_fixed_menu(sub_parser)
-    parse_grocery_list(sub_parser)
     return parser
 
 
@@ -78,87 +74,6 @@ def parse_default_settings(parser):
     )
 
 
-def parse_fixed_menu(sub_parser):
-    fixed_menu_parser = sub_parser.add_parser("fixed_menu")
-    fixed_menu_parser.set_defaults(which="fixed_menu")
-    fixed_menu_parser.add_argument(
-        "--fixed_menu_path",
-        type=Path,
-        default=Path(ABS_FILE_PATH, "../food_plan/fixed_menu"),
-    )
-    fixed_menu_parser.add_argument(
-        "--google_drive_menu_prefix", type=str, default="menu-"
-    )
-    fixed_menu_parser.add_argument(
-        "--fixed_menu_number", type=int, required=True
-    )
-
-    fixed_menu_parser.add_argument(
-        "--dry_mode",
-        action="store_true",
-        help="Perform a dry run printing actions to terminal.",
-    )
-    fixed_menu_parser.add_argument(
-        "--menu_sorting",
-        type=str,
-        default="original",
-    )
-    fixed_menu_parser.add_argument(
-        "--no_cleaning",
-        action="store_true",
-        help="Do not clean previously existing tasks in Menu project.",
-    )
-
-
-def parse_grocery_list(sub_parser):
-    grocery_list_parser = sub_parser.add_parser("grocery_list")
-    grocery_list_parser.set_defaults(which="grocery_list")
-    grocery_list_parser.add_argument(
-        "--menu_file",
-        type=str,
-        default=Path(ABS_FILE_PATH, "../food_plan/fixed_menu/menu-tmp.csv"),
-    )
-    grocery_list_parser.add_argument(
-        "--grocery_list_path",
-        type=str,
-        default=Path(ABS_FILE_PATH, "../grocery_list"),
-    )
-    grocery_list_parser.add_argument(
-        "--staple_ingredients_file", type=str, default="staple_ingredients.yml"
-    )
-    grocery_list_parser.add_argument(
-        "--interactive_grouping",
-        action="store_true",
-        help="Will ask for user input for uncertain food groups.",
-        required=False,
-    )
-    grocery_list_parser.add_argument(
-        "--no_cleaning",
-        action="store_true",
-        help="Do not clean previously existing tasks in Groceries project.",
-        required=False,
-    )
-    grocery_list_parser.add_argument(
-        "--dry_mode",
-        action="store_true",
-        help="Perform a dry run by printing actions to terminal.",
-        required=False,
-    )
-    grocery_list_parser.add_argument(
-        "--only_clean_todoist",
-        action="store_true",
-        help="Remove existing entries in todoist (and nothing else).",
-        required=False,
-    )
-    grocery_list_parser.add_argument(
-        "--add_bean_cans_for_freezing",
-        type=int,
-        default=1,
-        help="Will bump quantity of cans to prepare for freezing.",
-        required=False,
-    )
-
-
 def parse_manual_menu(sub_parser):
     manual_menu = sub_parser.add_parser("manual_menu")
     manual_menu.set_defaults(which="manual_menu")
@@ -199,12 +114,6 @@ def main():
     if args.which == "manual_menu":
         calendar = read_calendar(args.recetteTek_path, recipes)
         create_menu(args, recipes, calendar)
-
-    elif args.which == "fixed_menu":
-        finalize_fixed_menu(args, recipes)
-
-    elif args.which == "grocery_list":
-        generate_grocery_list(args, recipes)
 
 
 if __name__ == "__main__":

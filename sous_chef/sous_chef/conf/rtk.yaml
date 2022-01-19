@@ -1,0 +1,5 @@
+# relative to home_path
+rtk:
+  delete_older_file: true
+  path: ./Dropbox/SharedApps/RecetteTek
+  file_pattern: backup*.rtk

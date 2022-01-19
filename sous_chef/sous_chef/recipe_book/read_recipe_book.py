@@ -1,17 +1,63 @@
-import os
 import re
+from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
-from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
+from sous_chef.abstract.search_dataframe import DataframeSearchable
 from sous_chef.definitions import (
     CALENDAR_COLUMNS,
     CALENDAR_FILE_PATTERN,
     INP_JSON_COLUMNS,
-    RECIPE_FILE_PATTERN,
-    RTK_FILE_PATTERN,
 )
+from structlog import get_logger
+
+HOME_PATH = str(Path.home())
+FILE_LOGGER = get_logger(__name__)
+
+
+@dataclass
+class Recipe:
+    title: str
+    rating: float
+    total_cook_time: datetime
+    ingredient_field: str
+    factor: float = 1.0
+
+
+@dataclass
+class RecipeBook(DataframeSearchable):
+    def __post_init__(self):
+        # load basic recipe book to self.dataframe
+        self._load_basic_recipe_book()
+
+    def get_recipe_by_title(self, title):
+        result = self.retrieve_direct_match_or_fuzzy_fallback(
+            field="title", search_term=title
+        )
+        return Recipe(
+            title=result.title,
+            rating=result.rating,
+            ingredient_field=result.ingredients,
+            total_cook_time=result.totalTime,
+        )
+
+    def _load_basic_recipe_book(self):
+        self._read_recipe_file()
+        if self.config.deduplicate:
+            self._select_highest_rated_when_duplicated_name()
+
+    def _read_recipe_file(self):
+        recipe_book_path = Path(HOME_PATH, self.config.path)
+        for recipe_file in recipe_book_path.glob(self.config.file_pattern):
+            self.dataframe = self.dataframe.append(
+                retrieve_format_recipe_df(recipe_file)
+            )
+
+    def _select_highest_rated_when_duplicated_name(self):
+        self.dataframe = self.dataframe.sort_values(["rating"], ascending=False)
+        self.dataframe = self.dataframe.drop_duplicates(["title"], keep="first")
 
 
 def flatten_dict_to_list(row_entry):
@@ -73,46 +119,6 @@ def retrieve_format_recipe_df(
     tmp_df["categories"] = tmp_df.categories.apply(flatten_dict_to_list)
     tmp_df["tags"] = tmp_df.tags.apply(flatten_dict_to_list)
     return tmp_df
-
-
-def delete_older_files(latest_file, rtk_list):
-    for file in rtk_list:
-        if file != latest_file:
-            os.remove(file)
-
-
-def find_latest_rtk_file(recipe_path: Path):
-    rtk_list = [file for file in recipe_path.glob(RTK_FILE_PATTERN)]
-    if len(rtk_list) > 0:
-        latest_file = max(rtk_list, key=lambda p: p.stat().st_ctime)
-        delete_older_files(latest_file, rtk_list)
-        return latest_file
-    return None
-
-
-def unzip_rtk(recipe_path):
-    rtk_file = find_latest_rtk_file(recipe_path)
-    if rtk_file is not None:
-        with ZipFile(rtk_file, "r") as zip_ref:
-            files_in_zip = zip_ref.namelist()
-            for fileName in files_in_zip:
-                if fileName.endswith(".json"):
-                    zip_ref.extract(fileName, path=recipe_path)
-        rtk_file.unlink()
-
-
-def read_recipes(recipe_path: Path, de_duplicate: bool = True):
-    unzip_rtk(recipe_path)
-    recipes = pd.DataFrame()
-    for json in recipe_path.glob(RECIPE_FILE_PATTERN):
-        recipes = recipes.append(retrieve_format_recipe_df(json))
-
-    # if multiple recipes with exact name exist, keep highest rated one
-    if de_duplicate:
-        recipes = recipes.sort_values(["rating"], ascending=False)
-        recipes = recipes.drop_duplicates(["title"], keep="first")
-
-    return recipes
 
 
 def create_food_type(row):

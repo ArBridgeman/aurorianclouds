@@ -130,6 +130,7 @@ dmypy.json
 
 # IntelliJ
 .idea
+outputs
 
 # Google API
 tokens/

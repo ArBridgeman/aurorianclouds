@@ -24,7 +24,7 @@ class RtkService:
             latest_file.unlink()
 
     @staticmethod
-    def _delete_older_file(latest_file: Path, file_list: List[Path]):
+    def _delete_older_files(latest_file: Path, file_list: List[Path]):
         for file in file_list:
             if file != latest_file:
                 file.unlink()
@@ -36,7 +36,7 @@ class RtkService:
         file_list = self._find_all_file()
         if len(file_list) > 0:
             latest_file = max(file_list, key=lambda p: p.stat().st_ctime)
-            if self.delete_older_file:
-                self._delete_older_file(latest_file, file_list)
+            if self.delete_older_files:
+                self._delete_older_files(latest_file, file_list)
             return latest_file
         return None

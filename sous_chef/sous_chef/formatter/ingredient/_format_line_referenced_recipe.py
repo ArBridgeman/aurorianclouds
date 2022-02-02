@@ -29,7 +29,7 @@ class ReferencedRecipeLine(LineFormatter):
 
     def _remove_unit_override_quantity(self):
         # TODO properly implement with quantity & units
-        if not self.unit:
+        if self.unit:
             FILE_LOGGER.warning(
                 "[not implemented] unit-specified reference recipes."
                 "Override factor=1",

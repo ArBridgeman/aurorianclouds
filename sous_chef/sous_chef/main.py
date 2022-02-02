@@ -9,8 +9,8 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-from recipe_book.read_recipe_book import read_calendar, read_recipes
 from sous_chef.menu.create_manual_menu import create_menu
+from sous_chef.recipe_book.read_recipe_book import read_calendar, read_recipes
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
 HOME_PATH = str(Path.home())

@@ -17,7 +17,7 @@ from structlog import get_logger
 LOG = get_logger()
 
 
-@hydra.main(config_path="../conf", config_name="grocery_list")
+@hydra.main(config_path="../config", config_name="grocery_list")
 def main(config: DictConfig) -> None:
     if config.grocery_list.run_mode.only_clean_todoist_mode:
         # TODO all should be contained in todoist helper method & executed here

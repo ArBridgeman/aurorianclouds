@@ -1,0 +1,9 @@
+pantry_list:
+  workbook_name: pantry_list
+  ingredient_sheet_name: ingredients
+  misspelling_sheet_name: misspelled_ingredients
+  fuzzy_match:
+    limit_number_results: 1
+    warn: true
+    min_thresh_ok_match: 75
+    min_thresh_to_accept: 95

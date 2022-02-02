@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from sous_chef.filter_recipes import (
+from sous_chef.menu.create_manual_menu import retrieve_cuisine_map
+from sous_chef.recipe_book.filter_recipes import (
     create_category_or_filter,
     create_tags_or_filter,
 )
-from sous_chef.menu.create_manual_menu import retrieve_cuisine_map
-from sous_chef.read_recipes import read_recipes
+from sous_chef.recipe_book.read_recipe_book import read_recipes
 
 g = 1
 

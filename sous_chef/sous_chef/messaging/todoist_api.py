@@ -1,21 +1,30 @@
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
+from datetime import date
+from pathlib import Path
 from time import sleep
 from typing import Any
 
 import pandas as pd
 import todoist
+from omegaconf import DictConfig
+from structlog import get_logger
+
+FILE_LOGGER = get_logger(__name__)
+ABS_FILE_PATH = Path(__file__).absolute().parent
 
 
 @dataclass
 class TodoistHelper:
+    config: DictConfig
     connection: Any = field(init=False)
-    token_str: str
     active_labels: dict = field(init=False)
 
+    # TODO what is proper way for paths? relative or wih home?
+    # TODO distinguish private methods with leading _
     def __post_init__(self):
-        with open(self.token_str, "r") as f:
+        with open(Path(ABS_FILE_PATH, self.config.token_file_path), "r") as f:
             token = f.read().strip()
         self.connection = todoist.TodoistAPI(token)
         self.sync()
@@ -90,6 +99,16 @@ class TodoistHelper:
         labels=None,
         due_date_dict=None,
     ):
+
+        FILE_LOGGER.info(
+            "[todoist add]",
+            item=item,
+            due_date_dict=due_date_dict,
+            project=project,
+            section=section,
+            labels=labels,
+        )
+
         project_id = None
         if project is not None:
             project_id = self.get_project_id(project)
@@ -156,11 +175,11 @@ class TodoistHelper:
     def delete_all_items_in_project(
         self,
         project,
-        no_recurring=True,
-        only_app_generated=True,
-        only_delete_after_date=None,
-        prior_move="Deleted",
-        sleep_s=1,
+        no_recurring: bool = True,
+        only_app_generated: bool = True,
+        only_delete_after_date: date = None,
+        prior_move: str = "Deleted",
+        sleep_in_seconds: int = 1,
     ):
         """
         Deletes items in project "project" that fulfil specified properties.
@@ -174,9 +193,17 @@ class TodoistHelper:
         Delete entries with a due date after this date.
         :param prior_move: string (optional).
         If not None, move items to relevant section before deleting them.
+        :param sleep_in_seconds: int (optional)
+        Adds wait time in specified seconds before syncing
         """
+        FILE_LOGGER.info(
+            "[todoist delete]",
+            action="delete items in project",
+            project=project,
+        )
+
         project_id = self.get_project_id(project)
-        sleep(sleep_s)
+        sleep(sleep_in_seconds)
         self.sync()
 
         section_id = None
@@ -217,7 +244,9 @@ class TodoistHelper:
                     continue
                 for_deletion.append(task["id"])
 
-        print("Identified {:d} tasks for deletion!".format(len(for_deletion)))
+        FILE_LOGGER.info(
+            "[todoist delete]", action=f"Deleting {len(for_deletion)} tasks!"
+        )
         for to_delete in for_deletion:
             if section_id is not None:
                 self.connection.items.move(to_delete, section_id=section_id)

@@ -1,0 +1,2 @@
+gsheets:
+  service_file: "../tokens/google_client_key.json"

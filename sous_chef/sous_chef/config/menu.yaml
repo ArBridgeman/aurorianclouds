@@ -1,0 +1,23 @@
+defaults:
+  - _self_
+  - pantry_list
+  - recipe_book
+  - rtk
+  - formatter/format_ingredient
+  - formatter/format_unit
+  - messaging/gsheets_api
+  - messaging/todoist_api
+
+menu:
+  input_method: fixed
+  output_method: local
+  fixed:
+    file_prefix: menu-
+    menu_number:
+  local:
+    file_path: ../menu/menu-tmp.csv
+  run_mode:
+    with_todoist: false
+  todoist:
+    project_name: Menu
+    remove_existing_task: true

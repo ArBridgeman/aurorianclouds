@@ -1,0 +1,33 @@
+# TODO add conversion & preferred spelling?
+# TODO add unit class
+# TODO auto SI with metric based units
+format_unit:
+  metric:
+    - m
+    - l
+    - g
+  empirical:
+    - inch
+    - cup
+    - lb
+    - ounce
+    - pint
+    - quart
+    - tbsp
+    - tsp
+  # TODO add default plural
+  # TODO filter down to only accepted ones here
+  undefined:
+    - ball
+    - can
+    - cans
+    - cube
+    - drop
+    - head
+    - jar
+    - package
+    - pinch
+    - pkg
+    - pack
+    - packet
+    - slice

@@ -1,0 +1,10 @@
+recipe_book:
+  path: ./Dropbox/SharedApps/RecetteTek
+  file_pattern: recipes*.json
+  # selects recipe with highest rating if name duplicated
+  deduplicate: true
+  fuzzy_match:
+    limit_number_results: 1
+    warn: true
+    min_thresh_ok_match: 75
+    min_thresh_to_accept: 95

@@ -1,5 +1,5 @@
 import pytest
-from sous_chef.filter_recipes import (
+from sous_chef.recipe_book.filter_recipes import (
     create_tags_and_filter,
     has_recipe_category_or_tag,
 )

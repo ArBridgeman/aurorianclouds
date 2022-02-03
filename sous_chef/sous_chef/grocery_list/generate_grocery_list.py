@@ -92,13 +92,13 @@ class GroceryList:
         due_date_dict = {"string": due_date.strftime("on %Y-%m-%d at %H:%M")}
 
         for item in self.queue_bean_preparation:
-            ingredient_str = self._format_ingredient_as_str(item["ingredient"])
+            ingredient_str = self._format_ingredient_as_str(item["group"])
             freeze_str = f"{item['number_can_to_freeze']} can"
             task_str = f"BEAN PREP: {ingredient_str} (freeze: {freeze_str})"
             todoist_helper.add_item_to_project(
                 task_str,
                 project_name,
-                labels=item.from_recipe + item.from_day,
+                labels=item["group"].from_recipe + item["group"].from_day,
                 due_date_dict=due_date_dict,
             )
 
@@ -276,7 +276,7 @@ class GroceryList:
                 row["item_plural"] = "s"
             self.queue_bean_preparation.append(
                 {
-                    "ingredient": row,
+                    "group": row,
                     "number_can_to_freeze": bean_config.number_can_to_freeze,
                 }
             )

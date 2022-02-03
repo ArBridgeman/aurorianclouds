@@ -109,7 +109,7 @@ class Menu:
 
             # TODO move default cook time to config
             cooking_time_min = 20
-            if not pd.isna(item.totalTime):
+            if not pd.isna(item.total_cook_time):
                 cooking_time_min = int(
                     item.total_cook_time.total_seconds() / 60
                 )

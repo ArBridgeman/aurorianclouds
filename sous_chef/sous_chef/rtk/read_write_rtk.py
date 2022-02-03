@@ -9,7 +9,7 @@ HOME_PATH = str(Path.home())
 
 class RtkService:
     def __init__(self, config: DictConfig):
-        self.delete_older_file = config.delete_older_file
+        self.delete_older_files = config.delete_older_files
         self.path = Path(HOME_PATH, config.path)
         self.file_pattern = config.file_pattern
 

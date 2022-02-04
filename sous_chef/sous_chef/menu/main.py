@@ -10,7 +10,7 @@ from sous_chef.recipe_book.read_recipe_book import RecipeBook
 from sous_chef.rtk.read_write_rtk import RtkService
 
 
-@hydra.main(config_path="../config", config_name="menu")
+@hydra.main(config_path="../../config", config_name="menu")
 def main(config: DictConfig):
     # unzip latest recipe versions
     rtk_service = RtkService(config.rtk)

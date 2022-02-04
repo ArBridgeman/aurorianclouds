@@ -13,7 +13,7 @@ from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.formatter.ingredient.format_ingredient_field import (
     IngredientFieldFormatter,
 )
-from sous_chef.menu.create_menu import Menu, MenuIngredient, MenuRecipe
+from sous_chef.menu.create_menu import MenuIngredient, MenuRecipe
 from sous_chef.messaging.todoist_api import TodoistHelper
 from sous_chef.recipe_book.read_recipe_book import Recipe
 from structlog import get_logger
@@ -28,15 +28,23 @@ FILE_LOGGER = get_logger(__name__)
 class GroceryList:
     config: DictConfig
     ingredient_field_formatter: IngredientFieldFormatter
-    menu: Menu
     # TODO do properly? pass everything inside methods? only set final list?
-    queue_menu_recipe = []
-    queue_bean_preparation = []
-    grocery_list_raw: pd.DataFrame = pd.DataFrame()
-    grocery_list = pd.DataFrame()
+    queue_menu_recipe: List[MenuRecipe] = None
+    queue_bean_preparation: List = None
+    grocery_list_raw: pd.DataFrame = None
+    grocery_list: pd.DataFrame = None
 
-    def get_grocery_list(self):
-        self._parse_menu_entries()
+    def get_grocery_list_from_menu(
+        self,
+        menu_ingredient_list: List[MenuIngredient],
+        menu_recipe_list: List[MenuRecipe],
+    ):
+        self._add_bulk_manual_ingredient_to_grocery_list(menu_ingredient_list)
+        [
+            self._add_menu_recipe_to_queue(menu_recipe)
+            for menu_recipe in menu_recipe_list
+        ]
+
         self._process_recipe_queue()
         self._aggregate_grocery_list_by_item_and_dimension()
         self._save_aggregated_grocery_list()
@@ -116,6 +124,8 @@ class GroceryList:
         from_recipe: str,
         from_day: str,
     ):
+        if self.grocery_list_raw is None:
+            self.grocery_list_raw = pd.DataFrame()
 
         self.grocery_list_raw = self.grocery_list_raw.append(
             {
@@ -157,6 +167,11 @@ class GroceryList:
             for manual_ingredient in manual_ingredient_list
         ]
 
+    def _add_menu_recipe_to_queue(self, menu_recipe: MenuRecipe):
+        if self.queue_menu_recipe is None:
+            self.queue_menu_recipe = []
+        self.queue_menu_recipe.append(menu_recipe)
+
     def _add_referenced_recipe_to_queue(
         self, menu_recipe: MenuRecipe, recipe_list: List[Recipe]
     ):
@@ -169,7 +184,7 @@ class GroceryList:
                 factor=recipe.factor,
                 recipe=recipe,
             )
-            self.queue_menu_recipe.append(new_menu_recipe)
+            self._add_menu_recipe_to_queue(new_menu_recipe)
 
     def _aggregate_group_to_grocery_list(
         self, group: pd.DataFrame
@@ -197,7 +212,9 @@ class GroceryList:
 
     def _aggregate_grocery_list_by_item_and_dimension(self):
         # do not drop nas, as some items are dimensionless (None)
-        grocery_list = pd.DataFrame()
+        if self.grocery_list is None:
+            self.grocery_list = pd.DataFrame()
+
         grouped = self.grocery_list_raw.groupby(
             ["item", "dimension"], dropna=False
         )
@@ -209,20 +226,20 @@ class GroceryList:
                 self._get_pint_unit_as_abbreviated_unit, axis=1
             )
             agg_group = self._aggregate_group_to_grocery_list(group)
-            grocery_list = grocery_list.append(agg_group)
+            grocery_list = self.grocery_list.append(agg_group)
 
         # get aisle/store
-        grocery_list["aisle_group"] = grocery_list.food_group.apply(
+        grocery_list["aisle_group"] = self.grocery_list.food_group.apply(
             self._transform_food_to_aisle_group
         )
 
         # replace aisle group to store name when not default store
-        grocery_list["aisle_group"] = grocery_list.apply(
+        grocery_list["aisle_group"] = self.grocery_list.apply(
             self._override_aisle_group_when_not_default_store, axis=1
         )
 
         # reset index and set in class
-        self.grocery_list = grocery_list.reset_index(drop=True)
+        self.grocery_list = self.grocery_list.reset_index(drop=True)
 
     @staticmethod
     def _format_ingredient_as_str(ingredient: pd.Series) -> str:
@@ -263,6 +280,9 @@ class GroceryList:
         # TODO move to ingredient formatter or somewhere more appropriate?
         # TODO should we do this with other things like rice?
         # TODO create custom pint unit or table between wet & dry?
+        if self.queue_bean_preparation is None:
+            self.queue_bean_preparation = []
+
         if row["item"] in bean_config.bean_list:
             row["item"] = f"dried {row['item']}"
             row["food_group"] = "Beans"
@@ -293,7 +313,9 @@ class GroceryList:
         while len(self.queue_menu_recipe) > 0:
             current_recipe = self.queue_menu_recipe[0]
             FILE_LOGGER.info(
-                "[grocery list]", recipe=current_recipe.recipe.title
+                "[grocery list]",
+                action="processing",
+                recipe=current_recipe.recipe.title,
             )
             self._parse_ingredient_from_recipe(current_recipe)
             self.queue_menu_recipe = self.queue_menu_recipe[1:]
@@ -325,11 +347,6 @@ class GroceryList:
                 from_recipe=menu_recipe.from_recipe,
                 from_day=menu_recipe.from_day,
             )
-
-    def _parse_menu_entries(self):
-        ingredient_list, recipe_list = self.menu.get_menu_for_grocery_list()
-        self._add_bulk_manual_ingredient_to_grocery_list(ingredient_list)
-        self.queue_menu_recipe.extend(recipe_list)
 
     def _save_aggregated_grocery_list(self):
         self.grocery_list.to_csv("grocery_list.csv")

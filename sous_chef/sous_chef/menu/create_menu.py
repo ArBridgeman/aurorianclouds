@@ -55,7 +55,9 @@ class Menu:
         )
         self._save_menu()
 
-    def get_menu_for_grocery_list(self):
+    def get_menu_for_grocery_list(
+        self,
+    ) -> (List[MenuIngredient], List[MenuRecipe]):
         self._load_local_menu()
         mask_grocery_list = self.dataframe["grocery_list"] == "Y"
         menu_for_grocery_list = self.dataframe[mask_grocery_list].copy(

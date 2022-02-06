@@ -10,15 +10,8 @@ from sous_chef.formatter.format_unit import (
 )
 
 
-@pytest.fixture
-def unit_formatter():
-    with initialize(config_path="../../../config/formatter"):
-        config = compose(config_name="format_unit")
-        return UnitFormatter(config.format_unit)
-
-
-def test_unit_formatter_post_init(unit_formatter):
-    assert unit_formatter.standard_unit_list == [
+class UnitLists:
+    metric_unit_list = [
         "m",
         "l",
         "g",
@@ -43,6 +36,8 @@ def test_unit_formatter_post_init(unit_formatter):
         "mm",
         "ml",
         "mg",
+    ]
+    empirical_unit_list = [
         "inch",
         "cup",
         "lb",
@@ -52,7 +47,8 @@ def test_unit_formatter_post_init(unit_formatter):
         "tbsp",
         "tsp",
     ]
-    assert unit_formatter.dimensionless_list == [
+    standard_unit_list = metric_unit_list + empirical_unit_list
+    dimensionless_list = [
         "ball",
         "can",
         "cans",
@@ -67,6 +63,18 @@ def test_unit_formatter_post_init(unit_formatter):
         "packet",
         "slice",
     ]
+
+
+@pytest.fixture
+def unit_formatter():
+    with initialize(config_path="../../../config/formatter"):
+        config = compose(config_name="format_unit")
+        return UnitFormatter(config.format_unit)
+
+
+def test_unit_formatter_post_init(unit_formatter):
+    assert unit_formatter.standard_unit_list == UnitLists.standard_unit_list
+    assert unit_formatter.dimensionless_list == UnitLists.dimensionless_list
 
 
 @pytest.mark.parametrize(
@@ -202,3 +210,16 @@ def test_convert_quantity_to_desired_unit(
 )
 def test_get_unit_as_abbreviated_str(unit, expected_result):
     assert get_unit_as_abbreviated_str(unit) == expected_result
+
+
+def test_unit_formatter__get_standard_unit_list(unit_formatter):
+    assert (
+        unit_formatter._get_standard_unit_list() == UnitLists.standard_unit_list
+    )
+
+
+def test_unit_formatter__get_all_relevant_metric_units(unit_formatter):
+    assert (
+        unit_formatter._get_all_relevant_metric_units()
+        == UnitLists.metric_unit_list
+    )

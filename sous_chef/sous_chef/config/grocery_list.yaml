@@ -20,7 +20,7 @@ grocery_list:
     remove_existing_task: true
     skip_group: [garden]
   run_mode:
-    with_todoist: false
+    with_todoist: true
     # remove existing entries in todoist (and nothing else)
     only_clean_todoist_mode: false
   ingredient_replacement:

@@ -24,12 +24,12 @@ def main(config: DictConfig) -> None:
         todoist_helper = TodoistHelper(config.messaging.todoist)
         print(
             "Deleting previous tasks in project {}".format(
-                config.grocery_list.todoist_project_name
+                config.grocery_list.todoist.project_name
             )
         )
         [
             todoist_helper.delete_all_items_in_project(
-                config.grocery_list.todoist_project_name
+                config.grocery_list.todoist.project_name
             )
             for _ in range(3)
         ]

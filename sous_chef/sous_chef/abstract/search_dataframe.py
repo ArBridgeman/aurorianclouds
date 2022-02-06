@@ -76,7 +76,7 @@ class DataframeSearchable:
         field_values = self.dataframe[field].apply(self._purify_string).values
         limit_number_results = self.config.fuzzy_match.limit_number_results
 
-        result, quality = process.extract(
+        best_match_search_term, best_match_quality = process.extract(
             self._purify_string(search_term),
             field_values,
             scorer=fuzz.ratio,
@@ -84,26 +84,26 @@ class DataframeSearchable:
         )[0]
 
         min_threshold_to_accept = self.config.fuzzy_match.min_thresh_to_accept
-        if quality < min_threshold_to_accept:
+        if best_match_quality < min_threshold_to_accept:
             raise FuzzySearchError(
                 field=field,
                 search_term=search_term,
-                result=result,
-                match_quality=quality,
+                result=best_match_search_term,
+                match_quality=best_match_quality,
                 threshold=min_threshold_to_accept,
             )
 
         min_thresh_ok_match = self.config.fuzzy_match.min_thresh_ok_match
-        if quality < min_thresh_ok_match:
+        if best_match_quality < min_thresh_ok_match:
             FILE_LOGGER.warning(
                 "[fuzzy search poor]",
                 field=field,
                 value=search_term,
-                match_quality=quality,
+                match_quality=best_match_quality,
                 threshold=min_thresh_ok_match,
             )
 
-        mask_result = self.dataframe[field] == result
+        mask_result = field_values == best_match_search_term
         return self.dataframe[mask_result].iloc[0]
 
     @staticmethod

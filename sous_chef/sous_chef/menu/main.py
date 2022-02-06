@@ -29,7 +29,7 @@ def main(config: DictConfig):
     if config.menu.input_method == "fixed":
         menu.finalize_fixed_menu(gsheets_helper)
 
-    if config.run_mode.with_todoist:
+    if config.menu.run_mode.with_todoist:
         todoist_helper = TodoistHelper(config.messaging.todoist)
         menu.upload_menu_to_todoist(todoist_helper)
 

@@ -17,7 +17,7 @@ menu:
   local:
     file_path: ../menu/menu-tmp.csv
   run_mode:
-    with_todoist: false
+    with_todoist: true
   todoist:
     project_name: Menu
     remove_existing_task: true

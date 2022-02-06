@@ -226,15 +226,15 @@ class GroceryList:
                 self._get_pint_unit_as_abbreviated_unit, axis=1
             )
             agg_group = self._aggregate_group_to_grocery_list(group)
-            grocery_list = self.grocery_list.append(agg_group)
+            self.grocery_list = self.grocery_list.append(agg_group)
 
         # get aisle/store
-        grocery_list["aisle_group"] = self.grocery_list.food_group.apply(
+        self.grocery_list["aisle_group"] = self.grocery_list.food_group.apply(
             self._transform_food_to_aisle_group
         )
 
         # replace aisle group to store name when not default store
-        grocery_list["aisle_group"] = self.grocery_list.apply(
+        self.grocery_list["aisle_group"] = self.grocery_list.apply(
             self._override_aisle_group_when_not_default_store, axis=1
         )
 

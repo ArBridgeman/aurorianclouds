@@ -13,6 +13,9 @@ METRIC_BASE = [""]
 
 REGEX_UNIT_TEXT = r"^\s*{}\s+"
 
+unit_registry = UnitRegistry()
+unit_registry.default_format = ".2f"
+
 
 @dataclass
 class UnitExtractionError(Exception):
@@ -23,14 +26,12 @@ class UnitExtractionError(Exception):
         super().__init__(self.message)
 
     def __str__(self):
-        return f"{self.message}: text={self.text}"
+        return f"{self.message} text={self.text}"
 
 
 @dataclass
 class UnitFormatter:
     config: DictConfig
-    unit_registry = UnitRegistry()
-    unit_registry.default_format = ".2f"
 
     def __post_init__(self):
         self.standard_unit_list = self._get_standard_unit_list()
@@ -40,7 +41,7 @@ class UnitFormatter:
         for unit in self.standard_unit_list:
             result = re.match(REGEX_UNIT_TEXT.format(unit), text)
             if result is not None:
-                return unit, self._get_pint_unit(unit)
+                return unit, get_pint_unit(unit)
 
         for unit in self.dimensionless_list:
             result = re.match(REGEX_UNIT_TEXT.format(unit), text)
@@ -62,16 +63,18 @@ class UnitFormatter:
             for unit in self.config.metric
         ]
 
-    def _get_pint_unit(self, unit):
-        return self.unit_registry.parse_expression(unit).units
-
 
 def convert_quantity_to_desired_unit(
     quantity: float, unit: Unit, desired_unit: Unit
 ) -> (float, Unit):
     original_value = quantity * unit
     converted_value = original_value.to(desired_unit)
-    return converted_value.magnitude, converted_value.units
+    # round to significant digits per defined unit_registry
+    return round(converted_value.magnitude, 2), converted_value.units
+
+
+def get_pint_unit(unit: str):
+    return unit_registry.parse_expression(unit).units
 
 
 def get_unit_as_abbreviated_str(unit: Unit) -> str:

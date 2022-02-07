@@ -17,7 +17,7 @@ from structlog import get_logger
 LOG = get_logger()
 
 
-@hydra.main(config_path="../config", config_name="grocery_list")
+@hydra.main(config_path="../../config", config_name="grocery_list")
 def main(config: DictConfig) -> None:
     if config.grocery_list.run_mode.only_clean_todoist_mode:
         # TODO all should be contained in todoist helper method & executed here
@@ -38,9 +38,33 @@ def main(config: DictConfig) -> None:
         rtk_service = RtkService(config.rtk)
         rtk_service.unzip()
 
+        recipe_book = RecipeBook(config.recipe_book)
+        ingredient_formatter = _get_ingredient_formatter(config)
+        ingredient_field_formatter = IngredientFieldFormatter(
+            config.formatter.format_ingredient_field,
+            ingredient_formatter=ingredient_formatter,
+            recipe_book=recipe_book,
+        )
+
+        # get menu for grocery list
+        menu = Menu(
+            config.menu,
+            ingredient_formatter=ingredient_formatter,
+            recipe_book=recipe_book,
+        )
+        (
+            menu_ingredient_list,
+            menu_recipe_list,
+        ) = menu.get_menu_for_grocery_list()
+
         # get grocery list
-        grocery_list = _create_grocery_list_service(config)
-        grocery_list.get_grocery_list()
+        grocery_list = GroceryList(
+            config.grocery_list,
+            ingredient_field_formatter=ingredient_field_formatter,
+        )
+        grocery_list.get_grocery_list_from_menu(
+            menu_ingredient_list, menu_recipe_list
+        )
 
         # send grocery list to desired output
         # TODO add functionality to choose which helper/function
@@ -48,29 +72,6 @@ def main(config: DictConfig) -> None:
             todoist_helper = TodoistHelper(config.messaging.todoist)
             grocery_list.upload_grocery_list_to_todoist(todoist_helper)
             grocery_list.send_bean_preparation_to_todoist(todoist_helper)
-
-
-def _create_grocery_list_service(config):
-    ingredient_formatter = _get_ingredient_formatter(config)
-    recipe_book = RecipeBook(config.recipe_book)
-
-    menu = Menu(
-        config.menu,
-        ingredient_formatter=ingredient_formatter,
-        recipe_book=recipe_book,
-    )
-
-    ingredient_field_formatter = IngredientFieldFormatter(
-        config.formatter.format_ingredient_field,
-        ingredient_formatter=ingredient_formatter,
-        recipe_book=recipe_book,
-    )
-
-    return GroceryList(
-        config.grocery_list,
-        ingredient_field_formatter=ingredient_field_formatter,
-        menu=menu,
-    )
 
 
 def _get_ingredient_formatter(config: DictConfig):

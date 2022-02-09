@@ -4,11 +4,11 @@ format_ingredient:
   # formats for referenced recipe
   referenced_recipe_format:
     basic:
-      pattern: '^#(\s[\p{L}+\s]+)'
+      pattern: '^#(\s[\p{L}+\-\s]+)'
       group: ['item']
     # TODO not yet properly implemented in code
     with_factor_and_potentially_unit_in_item:
-      pattern: '^#\s(\d+\.?\d*)(\s[\p{L}+\s]+)'
+      pattern: '^#\s(\d+\.?\d*)(\s[\p{L}+\-\s]+)'
       group: ['factor', 'item']
   ingredient_line_format:
     basic:

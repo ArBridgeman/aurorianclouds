@@ -35,6 +35,9 @@ class LineFormatter:
     pint_unit: Unit = None
     item: str = None
 
+    def __post_init__(self):
+        self._extract_field_list_from_line()
+
     def _set_quantity_float(self):
         if self.quantity:
             self.quantity_float += float(self.quantity)
@@ -44,18 +47,18 @@ class LineFormatter:
             self.quantity_float = 1.0
 
     def _extract_field_list_from_line(self):
-        for format_type in self.line_format_dict:
-            format_group = self.line_format_dict[format_type]
-            result = regex.match(format_group.pattern, self.line)
+        unit_with_ingredient = self.line_format_dict["unit_with_ingredient"]
+        for prefix_type in self.line_format_dict["prefix_pattern"]:
+            format_group = self.line_format_dict[prefix_type]
+            pattern = format_group.pattern + unit_with_ingredient
+            result = regex.match(pattern, self.line)
             if result is not None:
                 [
                     self.__setattr__(group, result.group(index + 1))
                     for index, group in enumerate(format_group.group)
                 ]
-
-        # item is always required
-        if self.item is None:
-            raise LineParsingError(line=self.line)
+                return
+        raise LineParsingError(line=self.line)
 
     def _split_item_and_unit(self):
         try:

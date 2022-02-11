@@ -11,18 +11,21 @@ format_ingredient:
       pattern: '^#\s(\d+\.?\d*)(\s[\p{L}+\-\s]+)'
       group: ['factor', 'item']
   ingredient_line_format:
-    basic:
-      pattern: '^([\p{L}+\-\s]+)'
+    unit_with_ingredient: '([\w+\-\s\%\.]+)'
+    prefix_pattern: [with_decimal_quantity, with_whole_and_fractional_quantity,
+                     with_fractional_quantity, with_integer, with_none]
+    with_none:
+      pattern: '^'
       group: ['item']
-    with_integer_quantity:
-      pattern: '^(\d+)(\s[\p{L}+\-\s]+)'
+    with_integer:
+      pattern: '^(\d+)\s'
       group: ['quantity', 'item']
     with_fractional_quantity:
-      pattern: '^(\d\/\d)(\s[\p{L}+\-\s]+)'
+      pattern: '^(\d\/\d)\s'
       group: ['fraction', 'item']
     with_whole_and_fractional_quantity:
-      pattern: '^(\d+)\s(\d\/\d)(\s[\p{L}+\-\s]+)'
+      pattern: '^(\d+)\s(\d\/\d)\s'
       group: ['quantity', 'fraction', 'item']
     with_decimal_quantity:
-      pattern: '^(\d+\.\d*)(\s[\p{L}+\-\s]+)'
+      pattern: '^(\d+\.\d*)\s'
       group: ['quantity', 'item']

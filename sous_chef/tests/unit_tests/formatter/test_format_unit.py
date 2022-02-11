@@ -1,8 +1,6 @@
 import pytest
-from hydra import compose, initialize
 from sous_chef.formatter.format_unit import (
     UnitExtractionError,
-    UnitFormatter,
     convert_quantity_to_desired_unit,
     get_pint_unit,
     get_unit_as_abbreviated_str,
@@ -63,13 +61,6 @@ class UnitLists:
         "packet",
         "slice",
     ]
-
-
-@pytest.fixture
-def unit_formatter():
-    with initialize(config_path="../../../config/formatter"):
-        config = compose(config_name="format_unit")
-        return UnitFormatter(config.format_unit)
 
 
 def test_unit_formatter_post_init(unit_formatter):

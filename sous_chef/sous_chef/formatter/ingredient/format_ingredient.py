@@ -134,7 +134,7 @@ class IngredientFormatter:
 
     @staticmethod
     def is_group(ingredient_line: str):
-        match = regex.match(r"^\[\w+\]$", ingredient_line)
+        match = regex.match(r"^\[[\w+\s]+\]$", ingredient_line)
         return match is not None
 
     @staticmethod

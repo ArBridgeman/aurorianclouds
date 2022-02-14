@@ -6,7 +6,6 @@ defaults:
   - rtk
   - formatter/format_ingredient
   - formatter/format_ingredient_field
-  - formatter/format_unit
   - messaging/gsheets_api
   - messaging/todoist_api
 

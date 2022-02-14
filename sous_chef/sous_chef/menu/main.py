@@ -38,10 +38,9 @@ def _get_ingredient_formatter(
     config: DictConfig, gsheets_helper: GsheetsHelper
 ):
     pantry_list = PantryList(config.pantry_list, gsheets_helper=gsheets_helper)
-    unit_formatter = UnitFormatter(config.formatter.format_unit)
     return IngredientFormatter(
         config.formatter.format_ingredient,
-        unit_formatter=unit_formatter,
+        unit_formatter=UnitFormatter(),
         pantry_list=pantry_list,
     )
 

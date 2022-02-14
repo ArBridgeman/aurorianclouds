@@ -1,14 +1,9 @@
-import re
 from dataclasses import dataclass
 from fractions import Fraction
 
 import regex
 from pint import Unit
-from sous_chef.formatter.format_unit import (
-    REGEX_UNIT_TEXT,
-    UnitExtractionError,
-    UnitFormatter,
-)
+from sous_chef.formatter.format_unit import UnitExtractionError, UnitFormatter
 
 
 @dataclass
@@ -61,15 +56,19 @@ class LineFormatter:
         raise LineParsingError(line=self.line)
 
     def _split_item_and_unit(self):
-        try:
-            unit, pint_unit = self.unit_formatter.extract_unit_from_text(
-                self.item
-            )
-            self.unit = unit
-            self.pint_unit = pint_unit
-            self.item = re.sub(REGEX_UNIT_TEXT.format(unit), "", self.item)
-        # expected as data often lacks units
-        except UnitExtractionError:
-            pass
-        finally:
-            self.item = self.item.strip()
+        # TODO replace with NER/NLP or make more general
+        text_split = self.item.split(" ")
+        if len(text_split) > 1:
+            try:
+                text_unit = text_split[0]
+                unit, pint_unit = self.unit_formatter.extract_unit_from_text(
+                    text_unit
+                )
+                self.pint_unit = pint_unit
+                self.unit = unit
+                self.item = " ".join(text_split[1:])
+            # expected as data often lacks units
+            except UnitExtractionError:
+                pass
+            finally:
+                self.item = self.item.strip()

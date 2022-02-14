@@ -197,7 +197,7 @@ class TestIngredientLine:
             ("1/2 tsp vanilla extract", 0.5, "tsp", "vanilla extract"),
             ("1 1/2 cup flour", 1.5, "cup", "flour"),
             ("12.5 ml 15% fat cream", 12.5, "ml", "15% fat cream"),
-            ("1 quart half-and-half", 1.0, "quart", "half-and-half"),
+            ("1 quart half-and-half", 1.0, "qt", "half-and-half"),
             ("100 g gruyère", 100, "g", "gruyère"),
         ],
     )

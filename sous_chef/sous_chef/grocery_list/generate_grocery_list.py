@@ -5,10 +5,7 @@ import pandas as pd
 from omegaconf import DictConfig
 from pint import Unit, UnitRegistry
 from sous_chef.formatter.format_str import convert_float_to_str
-from sous_chef.formatter.format_unit import (
-    convert_quantity_to_desired_unit,
-    get_unit_as_abbreviated_str,
-)
+from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.formatter.ingredient.format_ingredient_field import (
     IngredientFieldFormatter,
@@ -27,6 +24,7 @@ FILE_LOGGER = get_logger(__name__)
 @dataclass
 class GroceryList:
     config: DictConfig
+    unit_formatter: UnitFormatter
     ingredient_field_formatter: IngredientFieldFormatter
     # TODO do properly? pass everything inside methods? only set final list?
     queue_menu_recipe: List[MenuRecipe] = None
@@ -222,9 +220,6 @@ class GroceryList:
             # if more than 1 unit, use largest
             if group.pint_unit.nunique() > 1:
                 self._get_group_in_same_pint_unit(group)
-            group["unit"] = group.apply(
-                self._get_pint_unit_as_abbreviated_unit, axis=1
-            )
             agg_group = self._aggregate_group_to_grocery_list(group)
             self.grocery_list = self.grocery_list.append(agg_group)
 
@@ -257,23 +252,16 @@ class GroceryList:
 
         return ingredient_str
 
-    @staticmethod
-    def _get_group_in_same_pint_unit(group):
+    def _get_group_in_same_pint_unit(self, group):
         largest_unit = max(group.pint_unit.unique())
-        group["quantity"], group["pint_unit"] = zip(
+        group["quantity"], group["unit"], group["pint_unit"] = zip(
             *group.apply(
-                lambda row: convert_quantity_to_desired_unit(
+                lambda row: self.unit_formatter.convert_to_desired_unit(
                     row.quantity, row.pint_unit, largest_unit
                 ),
                 axis=1,
             )
         )
-
-    @staticmethod
-    def _get_pint_unit_as_abbreviated_unit(row: pd.Series):
-        if row.pint_unit is not None:
-            return get_unit_as_abbreviated_str(row.pint_unit)
-        return row.unit
 
     def _override_can_to_dried_bean(self, row: pd.Series) -> pd.DataFrame:
         bean_config = self.config.ingredient_replacement.can_to_dried_bean

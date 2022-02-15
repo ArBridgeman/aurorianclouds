@@ -33,9 +33,7 @@ class RecipeBook(DataframeSearchable):
         self._load_basic_recipe_book()
 
     def get_recipe_by_title(self, title):
-        result = self.retrieve_direct_match_or_fuzzy_fallback(
-            field="title", search_term=title
-        )
+        result = self.retrieve_match(field="title", search_term=title)
         return Recipe(
             title=result.title,
             rating=result.rating,

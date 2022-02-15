@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import List
 
 from omegaconf import DictConfig
 from sous_chef.formatter.ingredient.format_ingredient import (
@@ -26,12 +27,12 @@ class IngredientFieldFormatter:
     config: DictConfig
     ingredient_formatter: IngredientFormatter
     recipe_book: RecipeBook
-    # TODO find pep-acceptable way to do
-    ingredient_list = []
-    referenced_recipe_list = []
+    ingredient_list: List = None
+    referenced_recipe_list: List = None
 
     def parse_ingredient_field(self, ingredient_field):
-        self._create_empty_queues()
+        self.ingredient_list = []
+        self.referenced_recipe_list = []
         is_in_optional_group = False
         for line in ingredient_field.split("\n"):
             stripped_line = self.ingredient_formatter.strip_line(line)
@@ -44,17 +45,13 @@ class IngredientFieldFormatter:
                 )
                 continue
             elif stripped_line.startswith("#"):
-                self._format_referenced_recipe_to_recipe(stripped_line)
+                self._format_referenced_recipe(stripped_line)
             else:
                 self._format_ingredient(stripped_line, is_in_optional_group)
 
         return self.referenced_recipe_list, self.ingredient_list
 
-    def _create_empty_queues(self):
-        self.ingredient_list = []
-        self.referenced_recipe_list = []
-
-    def _format_referenced_recipe_to_recipe(self, line: str):
+    def _format_referenced_recipe(self, line: str):
         referenced_recipe = self.ingredient_formatter.format_referenced_recipe(
             line
         )

@@ -58,9 +58,7 @@ class DataframeSearchable:
             return self.dataframe[mask].iloc[0]
         raise DirectSearchError(field=field, search_term=search_term)
 
-    def retrieve_direct_match_or_fuzzy_fallback(
-        self, field: str, search_term: str
-    ) -> pd.Series:
+    def retrieve_match(self, field: str, search_term: str) -> pd.Series:
         for retrieval_method in [
             self.retrieve_direct_match,
             self._retrieve_fuzzy_fallback,

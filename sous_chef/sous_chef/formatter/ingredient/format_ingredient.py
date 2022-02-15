@@ -155,10 +155,8 @@ class IngredientFormatter:
 
     def _enrich_with_pantry_detail(self, ingredient: Ingredient):
         try:
-            pantry_item = (
-                self.pantry_list.retrieve_direct_match_or_fuzzy_fallback(
-                    "ingredient", ingredient.item
-                )
+            pantry_item = self.pantry_list.retrieve_match(
+                "ingredient", ingredient.item
             )
             ingredient.set_pantry_info(pantry_item)
         except FuzzySearchError:

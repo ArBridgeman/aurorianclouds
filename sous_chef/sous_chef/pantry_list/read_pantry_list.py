@@ -13,8 +13,7 @@ class PantryList(DataframeSearchable):
         super().__init__(config)
         self.gsheets_helper = gsheets_helper
         self.basic_pantry_list = self._retrieve_basic_pantry_list()
-        # load pantry list for matching to self.dataframe
-        self._load_complex_pantry_list_for_search()
+        self.dataframe = self._load_complex_pantry_list_for_search()
 
     @staticmethod
     def _get_pluralized_form(row: Series):
@@ -26,12 +25,10 @@ class PantryList(DataframeSearchable):
     def _load_complex_pantry_list_for_search(self):
         misspelled_pantry_list = self._retrieve_misspelled_pantry_list()
         plural_pantry_list = self._retrieve_plural_pantry_list()
-        # TODO use true_ingredient after matched & if quantity > 1
-        # TODO then use plural_ending
         self.basic_pantry_list["true_ingredient"] = self.basic_pantry_list[
             "ingredient"
         ]
-        self.dataframe = self.dataframe.append(
+        return pd.concat(
             [self.basic_pantry_list, misspelled_pantry_list, plural_pantry_list]
         )
 

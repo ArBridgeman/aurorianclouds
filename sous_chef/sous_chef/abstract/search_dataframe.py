@@ -49,7 +49,7 @@ class FuzzySearchError(Exception):
 @dataclass
 class DataframeSearchable:
     config: DictConfig
-    dataframe: pd.DataFrame = pd.DataFrame()
+    dataframe: pd.DataFrame = None
 
     def retrieve_direct_match(self, field: str, search_term: str) -> pd.Series:
         field_values = self.dataframe[field].apply(self._purify_string)

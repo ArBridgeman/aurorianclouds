@@ -25,7 +25,8 @@ grocery_list:
   ingredient_replacement:
     can_to_dried_bean:
       is_active: true
-      bean_list: [black bean, butter bean, chickpea, kidney bean, white bean]
+      bean_list: [black beans, butter beans, chickpeas, kidney beans,
+                  white beans]
       # conversion from can to dried grams
       g_per_can: 105
       # bump quantity of what to prepare for freezing

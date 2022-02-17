@@ -35,6 +35,7 @@ metric_list = [
     unit_registry.gram,
     unit_registry.kilogram,
     unit_registry.milliliter,
+    unit_registry.centiliter,
     unit_registry.liter,
 ]
 

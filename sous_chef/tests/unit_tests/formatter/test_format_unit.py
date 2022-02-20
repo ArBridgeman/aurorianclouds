@@ -76,6 +76,19 @@ class TestUnitFormatter:
 
     @staticmethod
     @pytest.mark.parametrize(
+        "text_unit,expected_unit",
+        [
+            ("Tbsps", unit_registry.tablespoon),
+            ("Tablespoons", unit_registry.tablespoon),
+        ],
+    )
+    def test_get_pint_unit_parses_upper_case_unit(
+        unit_formatter, text_unit, expected_unit
+    ):
+        assert unit_formatter._get_pint_unit(text_unit) == expected_unit
+
+    @staticmethod
+    @pytest.mark.parametrize(
         "quantity,pint_unit,desired_pint_unit,expected_quantity,expected_unit",
         [
             (3, unit_registry.tsp, unit_registry.tbsp, 1, "tbsp"),

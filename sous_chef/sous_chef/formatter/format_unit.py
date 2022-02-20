@@ -26,7 +26,9 @@ class UnitFormatter:
     @staticmethod
     def _get_pint_unit(text_unit: str):
         try:
-            pint_unit = unit_registry.parse_expression(text_unit).units
+            pint_unit = unit_registry.parse_expression(
+                text_unit.casefold()
+            ).units
             if pint_unit in allowed_unit_list:
                 return pint_unit
         except UndefinedUnitError:

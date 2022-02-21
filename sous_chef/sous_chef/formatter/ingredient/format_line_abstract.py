@@ -1,14 +1,9 @@
-import re
 from dataclasses import dataclass
 from fractions import Fraction
 
 import regex
 from pint import Unit
-from sous_chef.formatter.format_unit import (
-    REGEX_UNIT_TEXT,
-    UnitExtractionError,
-    UnitFormatter,
-)
+from sous_chef.formatter.format_unit import UnitExtractionError, UnitFormatter
 
 
 @dataclass
@@ -35,6 +30,9 @@ class LineFormatter:
     pint_unit: Unit = None
     item: str = None
 
+    def __post_init__(self):
+        self._extract_field_list_from_line()
+
     def _set_quantity_float(self):
         if self.quantity:
             self.quantity_float += float(self.quantity)
@@ -44,29 +42,33 @@ class LineFormatter:
             self.quantity_float = 1.0
 
     def _extract_field_list_from_line(self):
-        for format_type in self.line_format_dict:
-            format_group = self.line_format_dict[format_type]
-            result = regex.match(format_group.pattern, self.line)
+        unit_with_ingredient = self.line_format_dict["unit_with_ingredient"]
+        for prefix_type in self.line_format_dict["prefix_pattern"]:
+            format_group = self.line_format_dict[prefix_type]
+            pattern = format_group.pattern + unit_with_ingredient
+            result = regex.match(pattern, self.line)
             if result is not None:
                 [
                     self.__setattr__(group, result.group(index + 1))
                     for index, group in enumerate(format_group.group)
                 ]
-
-        # item is always required
-        if self.item is None:
-            raise LineParsingError(line=self.line)
+                return
+        raise LineParsingError(line=self.line)
 
     def _split_item_and_unit(self):
-        try:
-            unit, pint_unit = self.unit_formatter.extract_unit_from_text(
-                self.item
-            )
-            self.unit = unit
-            self.pint_unit = pint_unit
-            self.item = re.sub(REGEX_UNIT_TEXT.format(unit), "", self.item)
-        # expected as data often lacks units
-        except UnitExtractionError:
-            pass
-        finally:
-            self.item = self.item.strip()
+        # TODO replace with NER/NLP or make more general
+        text_split = self.item.split(" ")
+        if len(text_split) > 1:
+            try:
+                text_unit = text_split[0]
+                unit, pint_unit = self.unit_formatter.extract_unit_from_text(
+                    text_unit
+                )
+                self.pint_unit = pint_unit
+                self.unit = unit
+                self.item = " ".join(text_split[1:])
+            # expected as data often lacks units
+            except UnitExtractionError:
+                pass
+            finally:
+                self.item = self.item.strip()

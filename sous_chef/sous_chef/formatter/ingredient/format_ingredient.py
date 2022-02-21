@@ -6,8 +6,8 @@ from omegaconf import DictConfig
 from pint import Unit
 from sous_chef.abstract.search_dataframe import FuzzySearchError
 from sous_chef.formatter.format_unit import UnitFormatter
-from sous_chef.formatter.ingredient._format_line_abstract import LineFormatter
-from sous_chef.formatter.ingredient._format_line_referenced_recipe import (
+from sous_chef.formatter.ingredient.format_line_abstract import LineFormatter
+from sous_chef.formatter.ingredient.format_referenced_recipe import (
     ReferencedRecipe,
     ReferencedRecipeLine,
 )
@@ -33,7 +33,6 @@ class Ingredient:
 
     def set_pantry_info(self, pantry_item: pd.Series):
         self.item = pantry_item.true_ingredient
-        # TODO (grocery_list) make if not grocery store go to other section
         self.is_staple = pantry_item.is_staple
         self.group = pantry_item.group
         self.item_plural = pantry_item.item_plural
@@ -45,14 +44,12 @@ class Ingredient:
 class IngredientLine(LineFormatter):
     # TODO re-add optional check
     is_optional: bool = False
-
-    def __post_init__(self):
-        self._extract_field_list_from_line()
+    instruction: str = None
 
     def convert_to_ingredient(self) -> Ingredient:
         self._set_quantity_float()
         self._split_item_and_unit()
-        self._format_item()
+        self._split_item_instruction()
         ingredient = Ingredient(
             quantity=self.quantity_float,
             unit=self.unit,
@@ -63,15 +60,14 @@ class IngredientLine(LineFormatter):
             raise EmptyIngredientError(ingredient=ingredient)
         return ingredient
 
-    def _format_item(self):
-        self._remove_instruction()
-
-    def _remove_instruction(self):
+    def _split_item_instruction(self):
         # TODO change so that reformats ingredients to be (chopped)
-        # TODO have verbs in config instead
+        # TODO have verbs in config instead or NLP/NER-solution
         # TODO likely need to treat shredded differently
-        for verbs in ["chopped", "minced", "diced"]:
-            self.item = self.item.replace(verbs, "")
+        for verb in ["chopped", "minced", "diced"]:
+            if verb in self.item:
+                self.item = self.item.replace(verb, "").strip()
+                self.instruction = verb
 
 
 @dataclass
@@ -117,14 +113,15 @@ class IngredientFormatter:
             self.unit_formatter,
         )
         ingredient = ingredient_line.convert_to_ingredient()
-        self._enrich_with_pantry_information(ingredient)
+        self._enrich_with_pantry_detail(ingredient)
         return ingredient
 
     def format_manual_ingredient(
         self, quantity: float, unit: str, item: str
     ) -> Ingredient:
+        # TODO get pint unit
         ingredient = Ingredient(quantity=quantity, unit=unit, item=item)
-        self._enrich_with_pantry_information(ingredient)
+        self._enrich_with_pantry_detail(ingredient)
         return ingredient
 
     def format_referenced_recipe(self, recipe_line: str) -> ReferencedRecipe:
@@ -137,7 +134,8 @@ class IngredientFormatter:
 
     @staticmethod
     def is_group(ingredient_line: str):
-        return "[" in ingredient_line
+        match = regex.match(r"^\[[\w+\s]+\]$", ingredient_line)
+        return match is not None
 
     @staticmethod
     def is_optional_group(ingredient_line: str):
@@ -151,10 +149,11 @@ class IngredientFormatter:
 
     def strip_line(self, raw_ingredient_line: str):
         ingredient_line = regex.sub(r"\s+", " ", raw_ingredient_line.strip())
+        # TODO do we want to add a custom exception here instead of None?
         if len(ingredient_line) > self.config.min_line_length:
             return ingredient_line
 
-    def _enrich_with_pantry_information(self, ingredient: Ingredient):
+    def _enrich_with_pantry_detail(self, ingredient: Ingredient):
         try:
             pantry_item = (
                 self.pantry_list.retrieve_direct_match_or_fuzzy_fallback(

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from sous_chef.formatter.ingredient._format_line_abstract import LineFormatter
+from sous_chef.formatter.ingredient.format_line_abstract import LineFormatter
 from structlog import get_logger
 
 FILE_LOGGER = get_logger(__name__)
@@ -17,10 +17,7 @@ class ReferencedRecipe:
 
 @dataclass
 class ReferencedRecipeLine(LineFormatter):
-    # TODO should recipe book be here? not in grocery list
-    def __post_init__(self):
-        self._extract_field_list_from_line()
-
+    # TODO should recipe book be here instead?
     def convert_to_referenced_recipe(self) -> ReferencedRecipe:
         self._set_quantity_float()
         self._split_item_and_unit()

@@ -167,7 +167,7 @@ class Menu:
 
     def _retrieve_manual_menu_ingredient(self, row: pd.Series):
         ingredient = self.ingredient_formatter.format_manual_ingredient(
-            quantity=row["factor"], unit=row["unit"], item=row["item"]
+            quantity=float(row["factor"]), unit=row["unit"], item=row["item"]
         )
         return MenuIngredient(
             ingredient=ingredient, from_recipe="manual", from_day=row["weekday"]

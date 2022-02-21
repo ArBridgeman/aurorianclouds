@@ -1,20 +1,7 @@
-import re
 from dataclasses import dataclass
-from typing import List
 
-from omegaconf import DictConfig
-from pint import Unit, UnitRegistry
-
-# each subsequent one is * 10 greater
-METRIC_MACRO_PREFIX = ["da", "h", "k", "M"]
-# each subsequent one is / 10 lesser
-METRIC_MICRO_PREFIX = ["d", "c", "m"]
-METRIC_BASE = [""]
-
-REGEX_UNIT_TEXT = r"^\s*{}\s+"
-
-unit_registry = UnitRegistry()
-unit_registry.default_format = ".2f"
+from pint import UndefinedUnitError, Unit
+from sous_chef.formatter.units import allowed_unit_list, unit_registry
 
 
 @dataclass
@@ -31,54 +18,40 @@ class UnitExtractionError(Exception):
 
 @dataclass
 class UnitFormatter:
-    config: DictConfig
+    def extract_unit_from_text(self, text_unit: str) -> (str, Unit):
+        pint_unit = self._get_pint_unit(text_unit)
+        true_unit = self._get_unit_as_abbreviated_str(pint_unit)
+        return true_unit, pint_unit
 
-    def __post_init__(self):
-        self.standard_unit_list = self._get_standard_unit_list()
-        self.dimensionless_list = list(self.config.undefined)
+    @staticmethod
+    def _get_pint_unit(text_unit: str):
+        try:
+            pint_unit = unit_registry.parse_expression(
+                text_unit.casefold()
+            ).units
+            if pint_unit in allowed_unit_list:
+                return pint_unit
+        except UndefinedUnitError:
+            pass
+        raise UnitExtractionError(text=text_unit)
 
-    def extract_unit_from_text(self, text: str) -> (str, Unit):
-        for unit in self.standard_unit_list:
-            result = re.match(REGEX_UNIT_TEXT.format(unit), text)
-            if result is not None:
-                return unit, get_pint_unit(unit)
+    def convert_to_desired_unit(
+        self, quantity: float, pint_unit: Unit, desired_pint_unit: Unit
+    ) -> (float, str, Unit):
+        original_value = quantity * pint_unit
+        converted_value = original_value.to(desired_pint_unit)
 
-        for unit in self.dimensionless_list:
-            result = re.match(REGEX_UNIT_TEXT.format(unit), text)
-            if result is not None:
-                return unit, None
+        # round to significant digits per defined unit_registry
+        converted_quantity = round(converted_value.magnitude, 2)
+        converted_pint_unit = converted_value.units
+        converted_unit = self._get_unit_as_abbreviated_str(
+            converted_value.units
+        )
+        return converted_quantity, converted_unit, converted_pint_unit
 
-        raise UnitExtractionError(text=text)
-
-    def _get_standard_unit_list(self) -> List[str]:
-        metric = self._get_all_relevant_metric_units()
-        return metric + list(self.config.empirical)
-
-    def _get_all_relevant_metric_units(self) -> List[str]:
-        return [
-            f"{prefix}{unit}"
-            for prefix in METRIC_BASE
-            + METRIC_MACRO_PREFIX
-            + METRIC_MICRO_PREFIX
-            for unit in self.config.metric
-        ]
-
-
-def convert_quantity_to_desired_unit(
-    quantity: float, unit: Unit, desired_unit: Unit
-) -> (float, Unit):
-    original_value = quantity * unit
-    converted_value = original_value.to(desired_unit)
-    # round to significant digits per defined unit_registry
-    return round(converted_value.magnitude, 2), converted_value.units
-
-
-def get_pint_unit(unit: str):
-    return unit_registry.parse_expression(unit).units
-
-
-def get_unit_as_abbreviated_str(unit: Unit) -> str:
-    abbreviation = "{:~}".format(unit)
-    if abbreviation == "cp":
-        return "cup"
-    return abbreviation
+    @staticmethod
+    def _get_unit_as_abbreviated_str(unit: Unit) -> str:
+        abbreviation = "{:~}".format(unit)
+        if abbreviation == "cp":
+            return "cup"
+        return abbreviation

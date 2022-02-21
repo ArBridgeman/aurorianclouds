@@ -1,10 +1,10 @@
 format_ingredient_field:
   # TODO turn on again; serious issue potentially
   empty_ingredient:
-    raise_error_for: false
+    raise_error_for: true
     still_add_ingredient: false
   pantry_search:
-    raise_error_for: false
+    raise_error_for: true
     still_add_ingredient: true
   skip_ingredient:
     raise_error_for: false

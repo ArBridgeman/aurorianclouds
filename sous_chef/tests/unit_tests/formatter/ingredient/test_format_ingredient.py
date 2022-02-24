@@ -13,6 +13,9 @@ from sous_chef.formatter.ingredient.format_line_abstract import LineParsingError
 from sous_chef.formatter.ingredient.format_referenced_recipe import (
     ReferencedRecipe,
 )
+from tests.unit_tests.formatter.ingredient.conftest import (
+    setup_ingredient_formatter,
+)
 from tests.unit_tests.formatter.util import create_ingredient_line
 
 
@@ -25,6 +28,14 @@ def ingredient_line(unit_formatter):
             line_format_dict=config.format_ingredient.ingredient_line_format,
             unit_formatter=unit_formatter,
         )
+
+
+@pytest.fixture
+def ingredient_formatter_with_pantry_error(
+    mock_pantry_list, unit_formatter, error_arg
+):
+    mock_pantry_list.retrieve_match.side_effect = error_arg
+    return setup_ingredient_formatter(mock_pantry_list, unit_formatter)
 
 
 class TestIngredientLine:

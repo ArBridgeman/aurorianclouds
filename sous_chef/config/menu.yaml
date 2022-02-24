@@ -16,6 +16,7 @@ menu:
   local:
     file_path: ../menu/menu-tmp.csv
   run_mode:
+    with_inspect_unrated_recipe: true
     with_todoist: true
   todoist:
     project_name: Menu

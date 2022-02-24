@@ -7,27 +7,15 @@ from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
 from sous_chef.pantry_list.read_pantry_list import PantryList
 
 
-def setup_ingredient_formatter(pantry_list, unit_formatter):
+@pytest.fixture
+def ingredient_formatter(mock_pantry_list, unit_formatter):
     with initialize(config_path="../../../../config/formatter"):
         config = compose(config_name="format_ingredient")
         return IngredientFormatter(
             config=config.format_ingredient,
-            pantry_list=pantry_list,
+            pantry_list=mock_pantry_list,
             unit_formatter=unit_formatter,
         )
-
-
-@pytest.fixture
-def ingredient_formatter(mock_pantry_list, unit_formatter):
-    return setup_ingredient_formatter(mock_pantry_list, unit_formatter)
-
-
-@pytest.fixture
-def ingredient_formatter_find_pantry_entry(
-    mock_pantry_list, unit_formatter, pantry_entry
-):
-    mock_pantry_list.retrieve_match.return_value = pantry_entry
-    return setup_ingredient_formatter(mock_pantry_list, unit_formatter)
 
 
 @pytest.fixture

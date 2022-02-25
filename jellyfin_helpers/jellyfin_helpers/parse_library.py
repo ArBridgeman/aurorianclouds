@@ -1,6 +1,5 @@
 """Minimal import example main file."""
 import argparse
-import importlib.machinery
 import os
 import pathlib
 import sys
@@ -11,10 +10,10 @@ import pandas as pd
 music_extensions = [".mp3", ".m4a", ".wav", ".flac", ".ogg", ".mp4", ".mid"]
 
 
-def import_module_from_file(file_path: str, module_name: str = "cfg"):
-    return importlib.machinery.SourceFileLoader(
-        module_name, file_path
-    ).load_module()
+# def import_module_from_file(file_path: str, module_name: str = "cfg"):
+#     return importlib.machinery.SourceFileLoader(
+#         module_name, file_path
+#     ).load_module()
 
 
 def parse_cmd_arguments():
@@ -27,6 +26,29 @@ def parse_cmd_arguments():
     )
     args = parser.parse_args()
     return args
+
+
+def get_dir_stats(path_str: str, recursive: bool = False) -> {}:
+
+    if recursive:
+        sub_paths = list(path_str.rglob("*"))
+    else:
+        sub_paths = list(path_str.glob("*"))
+
+    # not defaultdict, need to explicitly set!
+    result_dict = {"n_dirs": 0, "n_files": 0, "n_music": 0, "n_other": 0}
+    for sub_path in sub_paths:
+        if sub_path.exists():  # should be redundant, keep for safety
+            if sub_path.is_dir():
+                result_dict["n_dirs"] += 1
+            else:
+                result_dict["n_files"] += 1
+                if os.path.splitext(sub_path)[-1] in music_extensions:
+                    result_dict["n_music"] += 1
+                else:
+                    result_dict["n_other"] += 1
+
+    return result_dict
 
 
 def get_library_as_df(
@@ -44,57 +66,19 @@ def get_library_as_df(
 
         lib_sub = defaultdict(list)
         if path.is_dir():
-            sub_paths = list(path.glob("*"))
-            sub_sub_paths = list(path.rglob("*"))
 
-            n_dirs = sum([1 for p in sub_paths if p.is_dir()])
-            n_files = sum(
-                [1 for p in sub_paths if (p.exists() and not p.is_dir())]
-            )
-            n_music = sum(
-                [
-                    1
-                    for p in sub_paths
-                    if (
-                        p.exists()
-                        and not p.is_dir()
-                        and os.path.splitext(p)[-1] in music_extensions
-                    )
-                ]
-            )
-
-            n_dirs_all = sum([1 for p in sub_sub_paths if p.is_dir()])
-            n_files_all = sum(
-                [1 for p in sub_sub_paths if (p.exists() and not p.is_dir())]
-            )
-            n_music_all = sum(
-                [
-                    1
-                    for p in sub_sub_paths
-                    if (
-                        p.exists()
-                        and not p.is_dir()
-                        and os.path.splitext(p)[-1] in music_extensions
-                    )
-                ]
-            )
             lib_sub["path"].append(os.path.split(path)[-1])
             lib_sub["parent"].append(root_path)
             lib_sub["depth"].append(depth)
 
-            # stats directly in this directory
-            lib_sub["n_directories"].append(n_dirs)
-            lib_sub["n_files"].append(n_files)
-            lib_sub["n_music"].append(n_music)
-            lib_sub["n_other"].append(n_files - n_music)
+            dir_stats = get_dir_stats(path, recursive=False)
+            sub_dir_stats = get_dir_stats(path, recursive=True)
 
-            # stats in all subdirectories
-            lib_sub["n_sub_directories"].append(n_dirs_all - n_dirs)
-            lib_sub["n_sub_files"].append(n_files_all - n_files)
-            lib_sub["n_sub_music"].append(n_music_all - n_music)
-            lib_sub["n_sub_other"].append(
-                n_files_all - n_music_all - (n_files - n_music)
-            )
+            for k, v in dir_stats.items():
+                # stats directly in this directory
+                lib_sub[k].append(v)
+                # stats in all subdirectories (excluding root)
+                lib_sub[f"{k}_sub"].append(sub_dir_stats[k] - v)
 
             lib_df = pd.concat(
                 (lib_df, pd.DataFrame(lib_sub)), ignore_index=True

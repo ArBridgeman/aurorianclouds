@@ -647,6 +647,18 @@ toml = "*"
 testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "requests", "xmlschema"]
 
 [[package]]
+name = "pytest-structlog"
+version = "0.5"
+description = "Structured logging assertions"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+pytest = "*"
+structlog = "*"
+
+[[package]]
 name = "python-dateutil"
 version = "2.8.2"
 description = "Extensions to the standard Python datetime module"
@@ -855,7 +867,7 @@ pyyaml = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "d9672d37b49fbe8d8dd6ce211fce75cb7eb5fc3df758fd913901367351aac248"
+content-hash = "61cdab5d17297fe7df5c9653dd2d48ad40a5f7d51f5b3e8fafff778938939f26"
 
 [metadata.files]
 antlr4-python3-runtime = [
@@ -1237,6 +1249,10 @@ pyparsing = [
 pytest = [
     {file = "pytest-6.2.5-py3-none-any.whl", hash = "sha256:7310f8d27bc79ced999e760ca304d69f6ba6c6649c0b60fb0e04a4a77cacc134"},
     {file = "pytest-6.2.5.tar.gz", hash = "sha256:131b36680866a76e6781d13f101efb86cf674ebb9762eb70d3082b6f29889e89"},
+]
+pytest-structlog = [
+    {file = "pytest-structlog-0.5.tar.gz", hash = "sha256:e2a878e98ee1d4d8883c918ebc318f800fbf7992cdaec1f4792a7b92a0369118"},
+    {file = "pytest_structlog-0.5-py2.py3-none-any.whl", hash = "sha256:057c9e6b20cedc10071b65623e6dc9af4a025e5a13d73defa992da465e32ac22"},
 ]
 python-dateutil = [
     {file = "python-dateutil-2.8.2.tar.gz", hash = "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86"},

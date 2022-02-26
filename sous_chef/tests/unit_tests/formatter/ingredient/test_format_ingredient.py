@@ -1,25 +1,19 @@
-from unittest.mock import Mock, patch
-
 import pytest
 from hydra import compose, initialize
-from pandas import Series
 from sous_chef.abstract.search_dataframe import FuzzySearchError
 from sous_chef.formatter.format_unit import unit_registry
 from sous_chef.formatter.ingredient.format_ingredient import (
     EmptyIngredientError,
     Ingredient,
-    IngredientFormatter,
     IngredientLine,
     PantrySearchError,
     SkipIngredientError,
 )
 from sous_chef.formatter.ingredient.format_line_abstract import LineParsingError
-from sous_chef.pantry_list.read_pantry_list import PantryList
-
-
-@pytest.fixture
-def no_pantry_list():
-    pass
+from sous_chef.formatter.ingredient.format_referenced_recipe import (
+    ReferencedRecipe,
+)
+from tests.unit_tests.formatter.util import create_ingredient_line
 
 
 @pytest.fixture
@@ -31,63 +25,6 @@ def ingredient_line(unit_formatter):
             line_format_dict=config.format_ingredient.ingredient_line_format,
             unit_formatter=unit_formatter,
         )
-
-
-def ingredient_formatter(pantry_list_arg, unit_formatter):
-    with initialize(config_path="../../../../config/formatter"):
-        config = compose(config_name="format_ingredient")
-        return IngredientFormatter(
-            config=config.format_ingredient,
-            pantry_list=pantry_list_arg,
-            unit_formatter=unit_formatter,
-        )
-
-
-@pytest.fixture
-def ingredient_formatter_no_pantry_list(no_pantry_list, unit_formatter):
-    return ingredient_formatter(no_pantry_list, unit_formatter)
-
-
-def create_pantry_entry(
-    true_ingredient: str,
-    is_staple: bool = False,
-    group: str = "Prepared",
-    item_plural: str = "s",
-    store: str = "grocery store",
-    skip: str = "N",
-):
-    return Series(
-        {
-            "true_ingredient": true_ingredient,
-            "is_staple": is_staple,
-            "group": group,
-            "item_plural": item_plural,
-            "store": store,
-            "skip": skip,
-        }
-    )
-
-
-@pytest.fixture
-def pantry_list():
-    with initialize(config_path="../../../../config"):
-        config = compose(config_name="pantry_list")
-        with patch.object(PantryList, "__init__", lambda x, y, z: None):
-            return Mock(PantryList(config, None))
-
-
-@pytest.fixture
-def ingredient_formatter_with_pantry_list(
-    pantry_list, unit_formatter, entry_arg
-):
-    pantry_list.retrieve_direct_match_or_fuzzy_fallback.return_value = entry_arg
-    return ingredient_formatter(pantry_list, unit_formatter)
-
-
-@pytest.fixture
-def ingredient_formatter_with_error(pantry_list, unit_formatter, error_arg):
-    pantry_list.retrieve_direct_match_or_fuzzy_fallback.side_effect = error_arg
-    return ingredient_formatter(pantry_list, unit_formatter)
 
 
 class TestIngredientLine:
@@ -113,7 +50,6 @@ class TestIngredientLine:
         expected_item,
     ):
         result = ingredient_line(line)
-        result._extract_field_list_from_line()
         assert result.quantity == expected_quantity
         assert result.fraction == expected_fraction
         assert result.item == expected_item
@@ -230,13 +166,8 @@ class TestIngredientFormatter:
             ("not_group", False),
         ],
     )
-    def test_is_group(
-        ingredient_formatter_no_pantry_list, ingredient_line, expected_result
-    ):
-        assert (
-            ingredient_formatter_no_pantry_list.is_group(ingredient_line)
-            == expected_result
-        )
+    def test_is_group(ingredient_formatter, ingredient_line, expected_result):
+        assert ingredient_formatter.is_group(ingredient_line) == expected_result
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -251,12 +182,10 @@ class TestIngredientFormatter:
         ],
     )
     def test_is_optional_group(
-        ingredient_formatter_no_pantry_list, ingredient_line, expected_result
+        ingredient_formatter, ingredient_line, expected_result
     ):
         assert (
-            ingredient_formatter_no_pantry_list.is_optional_group(
-                ingredient_line
-            )
+            ingredient_formatter.is_optional_group(ingredient_line)
             == expected_result
         )
 
@@ -272,42 +201,39 @@ class TestIngredientFormatter:
         ],
     )
     def test_strip_line_removes_extra_spaces(
-        ingredient_formatter_no_pantry_list,
+        ingredient_formatter,
         raw_ingredient_line,
         expected_result,
     ):
         assert (
-            ingredient_formatter_no_pantry_list.strip_line(raw_ingredient_line)
+            ingredient_formatter.strip_line(raw_ingredient_line)
             == expected_result
         )
 
     @staticmethod
     def test_strip_line_ignores_too_small_line(
-        ingredient_formatter_no_pantry_list,
+        ingredient_formatter,
     ):
-        assert ingredient_formatter_no_pantry_list.strip_line("cup") is None
+        assert ingredient_formatter.strip_line("cup") is None
 
     @staticmethod
     @pytest.mark.parametrize(
-        "item,entry_arg",
-        [
-            ("sugar", create_pantry_entry(true_ingredient="sugar")),
-            ("eggs", create_pantry_entry(true_ingredient="egg")),
-        ],
+        "item,skip",
+        [("sugar", "N"), ("eggs", "N")],
     )
     def test__enrich_with_pantry_information(
-        ingredient_formatter_with_pantry_list, item, entry_arg
+        ingredient_formatter_find_pantry_entry, pantry_entry, item, skip
     ):
         ingredient = Ingredient(quantity=1, item=item)
-        ingredient_formatter_with_pantry_list._enrich_with_pantry_detail(
+        ingredient_formatter_find_pantry_entry._enrich_with_pantry_detail(
             ingredient
         )
-        assert ingredient.item == entry_arg.true_ingredient
-        assert ingredient.is_staple == entry_arg.is_staple
-        assert ingredient.group == entry_arg.group
-        assert ingredient.item_plural == entry_arg.item_plural
-        assert ingredient.store == entry_arg.store
-        assert ingredient.should_skip == (entry_arg.skip == "Y")
+        assert ingredient.item == item
+        assert not ingredient.is_staple
+        assert ingredient.group == pantry_entry.group
+        assert ingredient.item_plural == pantry_entry.item_plural
+        assert ingredient.store == pantry_entry.store
+        assert ingredient.should_skip == (pantry_entry.skip == "Y")
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -326,87 +252,101 @@ class TestIngredientFormatter:
         ],
     )
     def test__enrich_with_pantry_information_raise_pantry_search_error(
-        ingredient_formatter_with_error, item, error_arg
+        ingredient_formatter_with_pantry_error, item, error_arg
     ):
         ingredient = Ingredient(quantity=1, item=item)
         with pytest.raises(PantrySearchError):
-            ingredient_formatter_with_error._enrich_with_pantry_detail(
+            ingredient_formatter_with_pantry_error._enrich_with_pantry_detail(
                 ingredient
             )
 
     @staticmethod
     @pytest.mark.parametrize(
-        "item,entry_arg",
-        [("celery", create_pantry_entry(true_ingredient="celery", skip="Y"))],
+        "item,skip",
+        [("celery", "Y")],
     )
     def test__enrich_with_pantry_information_raise_skip_ingredient_error(
-        ingredient_formatter_with_pantry_list, item, entry_arg
+        ingredient_formatter_find_pantry_entry, pantry_entry, item, skip
     ):
         ingredient = Ingredient(quantity=1, item=item)
         with pytest.raises(SkipIngredientError):
-            ingredient_formatter_with_pantry_list._enrich_with_pantry_detail(
+            ingredient_formatter_find_pantry_entry._enrich_with_pantry_detail(
                 ingredient
             )
 
     @staticmethod
     @pytest.mark.parametrize(
-        "line,entry_arg,quantity,unit,item",
+        "quantity,unit,item,skip",
         [
             (
-                "2 avocados",
-                create_pantry_entry(true_ingredient="avocado"),
                 2.0,
                 None,
                 "avocado",
+                "N",
             ),
-            (
-                "1 cup sugar",
-                create_pantry_entry(true_ingredient="sugar"),
-                1.0,
-                "cup",
-                "sugar",
-            ),
+            (1.0, "cup", "sugar", "N"),
         ],
     )
     def test_format_ingredient_line(
-        ingredient_formatter_with_pantry_list,
-        line,
-        entry_arg,
+        ingredient_formatter_find_pantry_entry,
+        pantry_entry,
         quantity,
         unit,
         item,
     ):
         pint_unit = unit_registry[unit] if unit is not None else None
-        ingredient = Ingredient(
+        line_str = create_ingredient_line(item, quantity, unit)
+
+        expected_ingredient = Ingredient(
             quantity=quantity, unit=unit, pint_unit=pint_unit, item=item
         )
-        ingredient.set_pantry_info(entry_arg)
+        expected_ingredient.set_pantry_info(pantry_entry)
         assert (
-            ingredient_formatter_with_pantry_list.format_ingredient_line(line)
+            ingredient_formatter_find_pantry_entry.format_ingredient_line(
+                line_str
+            )
+            == expected_ingredient
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "quantity,unit,item,skip",
+        [
+            (1, "cup", "rice", "N"),
+            (0.5, "head", "salad", "N"),
+        ],
+    )
+    def test_format_manual_ingredient(
+        ingredient_formatter_find_pantry_entry,
+        pantry_entry,
+        quantity,
+        unit,
+        item,
+        skip,
+    ):
+        ingredient = Ingredient(quantity=quantity, unit=unit, item=item)
+        ingredient.set_pantry_info(pantry_entry)
+        assert (
+            ingredient_formatter_find_pantry_entry.format_manual_ingredient(
+                quantity, unit, item
+            )
             == ingredient
         )
 
     @staticmethod
     @pytest.mark.parametrize(
-        "quantity,unit,item,entry_arg",
+        "line,quantity_float,title",
         [
-            (1, "cup", "rice", create_pantry_entry(true_ingredient="rice")),
-            (
-                0.5,
-                "head",
-                "salad",
-                create_pantry_entry(true_ingredient="salad"),
-            ),
+            ("# garlic aioli", 1, "garlic aioli"),
+            ("# 0.5 baguette", 0.5, "baguette"),
+            ("# 1 cup french onion soup", 1, "french onion soup"),
+            # recipe factor with unit not yet implemented
+            ("# 2 cups salsa brava", 1, "salsa brava"),
         ],
     )
-    def test_format_manual_ingredient(
-        ingredient_formatter_with_pantry_list, quantity, unit, item, entry_arg
+    def test_format_referenced_recipe(
+        ingredient_formatter, line, quantity_float, title
     ):
-        ingredient = Ingredient(quantity=quantity, unit=unit, item=item)
-        ingredient.set_pantry_info(entry_arg)
-        assert (
-            ingredient_formatter_with_pantry_list.format_manual_ingredient(
-                quantity, unit, item
-            )
-            == ingredient
-        )
+        assert ingredient_formatter.format_referenced_recipe(
+            line
+        ) == ReferencedRecipe(quantity=quantity_float, title=title)

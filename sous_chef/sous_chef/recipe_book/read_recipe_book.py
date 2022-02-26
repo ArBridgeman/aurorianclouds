@@ -30,12 +30,13 @@ class Recipe:
 class RecipeBook(DataframeSearchable):
     def __post_init__(self):
         # load basic recipe book to self.dataframe
-        self._load_basic_recipe_book()
+        self.dataframe = self._read_recipe_book()
+
+        if self.config.deduplicate:
+            self._select_highest_rated_when_duplicated_name()
 
     def get_recipe_by_title(self, title):
-        result = self.retrieve_direct_match_or_fuzzy_fallback(
-            field="title", search_term=title
-        )
+        result = self.retrieve_match(field="title", search_term=title)
         return Recipe(
             title=result.title,
             rating=result.rating,
@@ -43,17 +44,16 @@ class RecipeBook(DataframeSearchable):
             total_cook_time=result.totalTime,
         )
 
-    def _load_basic_recipe_book(self):
-        self._read_recipe_file()
-        if self.config.deduplicate:
-            self._select_highest_rated_when_duplicated_name()
-
-    def _read_recipe_file(self):
+    def _read_recipe_book(self):
         recipe_book_path = Path(HOME_PATH, self.config.path)
-        for recipe_file in recipe_book_path.glob(self.config.file_pattern):
-            self.dataframe = self.dataframe.append(
+        return pd.concat(
+            [
                 retrieve_format_recipe_df(recipe_file)
-            )
+                for recipe_file in recipe_book_path.glob(
+                    self.config.file_pattern
+                )
+            ]
+        )
 
     def _select_highest_rated_when_duplicated_name(self):
         self.dataframe = self.dataframe.sort_values(["rating"], ascending=False)

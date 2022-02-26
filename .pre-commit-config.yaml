@@ -4,7 +4,7 @@ repos:
       - id: isort
         name: isort
         description: 'Sort imports'
-        entry: poetry run isort --profile black
+        entry: poetry run isort --profile black --line-length=80
         language: system
         require_serial: true
 

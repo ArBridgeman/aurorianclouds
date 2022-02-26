@@ -4,7 +4,7 @@ from typing import List
 import pandas as pd
 from omegaconf import DictConfig
 from pint import Unit, UnitRegistry
-from sous_chef.formatter.format_str import convert_float_to_str
+from sous_chef.formatter.format_str import convert_number_to_str
 from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.formatter.ingredient.format_ingredient_field import (
@@ -238,7 +238,7 @@ class GroceryList:
 
     @staticmethod
     def _format_ingredient_as_str(ingredient: pd.Series) -> str:
-        quantity_str = convert_float_to_str(ingredient.quantity)
+        quantity_str = convert_number_to_str(ingredient.quantity)
 
         ingredient_str = "{item}, {quantity}".format(
             item=ingredient["item"], quantity=quantity_str

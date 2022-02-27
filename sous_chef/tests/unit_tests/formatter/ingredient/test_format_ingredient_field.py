@@ -15,6 +15,7 @@ from sous_chef.formatter.ingredient.format_ingredient_field import (
 from sous_chef.recipe_book.read_recipe_book import Recipe
 from structlog import get_logger
 from tests.unit_tests.formatter.util import create_ingredient_line
+from tests.unit_tests.util import create_recipe
 
 FILE_LOGGER = get_logger(__name__)
 
@@ -92,7 +93,6 @@ class TestIngredientFieldFormatter:
         ingredient_field_formatter,
         mock_pantry_list,
         mock_recipe_book,
-        recipe_with_recipe_title,
         pantry_entry,
         quantity,
         unit,
@@ -104,6 +104,7 @@ class TestIngredientFieldFormatter:
         recipe_str = "# " + create_ingredient_line(
             quantity=factor, item=recipe_title
         )
+        recipe_with_recipe_title = create_recipe(title=recipe_title)
         ingredient_str = create_ingredient_line(item, quantity, unit)
         ingredient_field = f"{recipe_str}\n{ingredient_str}"
         mock_pantry_list.retrieve_match.return_value = pantry_entry
@@ -164,7 +165,6 @@ class TestIngredientFieldFormatter:
     def test__format_referenced_recipe_to_recipe(
         ingredient_field_formatter,
         mock_recipe_book,
-        recipe_with_recipe_title,
         factor,
         unit,
         recipe_title,
@@ -172,6 +172,8 @@ class TestIngredientFieldFormatter:
         line_str = "# " + create_ingredient_line(
             quantity=factor, unit=unit, item=recipe_title
         )
+        recipe_with_recipe_title = create_recipe(title=recipe_title)
+
         ingredient_field_formatter.referenced_recipe_list = []
         mock_recipe_book.get_recipe_by_title.return_value = (
             recipe_with_recipe_title

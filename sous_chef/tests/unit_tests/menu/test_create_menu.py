@@ -8,22 +8,7 @@ from sous_chef.formatter.ingredient.format_ingredient import (
     IngredientFormatter,
 )
 from sous_chef.menu.create_menu import Menu, MenuIngredient, MenuRecipe
-from tests.util import RecipeBuilder
-
-
-@pytest.fixture
-def recipe_with_total_cook_time(recipe_title, total_cook_time_str):
-    return (
-        RecipeBuilder()
-        .with_recipe_title(recipe_title)
-        .with_total_cook_time(total_cook_time_str)
-        .build()
-    )
-
-
-@pytest.fixture
-def recipe_with_rating(rating):
-    return RecipeBuilder().with_rating(rating).build()
+from tests.unit_tests.util import create_recipe
 
 
 @pytest.fixture
@@ -38,7 +23,7 @@ def mock_ingredient_formatter():
         return Mock(IngredientFormatter(config, None, None))
 
 
-@pytest.fixture()
+@pytest.fixture
 def menu_config():
     with initialize(config_path="../../../config"):
         return compose(config_name="menu").menu
@@ -108,8 +93,10 @@ class TestMenu:
         mock_recipe_book,
         recipe_title,
         total_cook_time_str,
-        recipe_with_total_cook_time,
     ):
+        recipe_with_total_cook_time = create_recipe(
+            title=recipe_title, total_cook_time=total_cook_time_str
+        )
         row = create_menu_row(item=recipe_title, item_type="recipe")
         mock_recipe_book.get_recipe_by_title.return_value = (
             recipe_with_total_cook_time
@@ -129,12 +116,11 @@ class TestMenu:
         log,
         menu_config,
         menu,
-        recipe_with_rating,
         rating,
     ):
         menu_config.run_mode.with_inspect_unrated_recipe = True
 
-        menu._inspect_unrated_recipe(recipe_with_rating)
+        menu._inspect_unrated_recipe(create_recipe(rating=rating))
         out, err = capsys.readouterr()
 
         assert log.events == [
@@ -171,10 +157,10 @@ class TestMenu:
     def test__retrieve_menu_recipe(
         menu,
         mock_recipe_book,
-        recipe_with_recipe_title,
         factor,
         recipe_title,
     ):
+        recipe_with_recipe_title = create_recipe(title=recipe_title)
         row = create_menu_row(
             factor=factor, item=recipe_title, item_type="recipe"
         )

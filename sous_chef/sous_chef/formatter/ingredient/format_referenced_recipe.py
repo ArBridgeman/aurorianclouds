@@ -50,8 +50,8 @@ class ReferencedRecipeLine(LineFormatter):
         # TODO properly implement with quantity & units
         if self.unit is not None:
             FILE_LOGGER.warning(
-                "[not implemented] unit-specified reference recipes."
-                "Override factor=1",
+                "[not implemented] reference recipes with units",
+                action="drop unit; change factor to 1",
                 item=self.item,
                 unit=self.unit,
             )

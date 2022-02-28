@@ -99,12 +99,23 @@ class TestReferencedRecipeLine:
         ],
     )
     def test__remove_unit_override_quantity(
-        referenced_recipe_line, quantity_float, unit, expected_quantity
+        log, referenced_recipe_line, quantity_float, unit, expected_quantity
     ):
         result = referenced_recipe_line("# dummy string")
         result.quantity_float = quantity_float
         result.unit = unit
         result._remove_unit_override_quantity()
+
+        if unit is not None:
+            assert log.events == [
+                {
+                    "event": "[not implemented] reference recipes with units",
+                    "action": "drop unit; change factor to 1",
+                    "item": "dummy string",
+                    "level": "warning",
+                    "unit": unit,
+                }
+            ]
         assert result.quantity_float == expected_quantity
         assert result.unit is None
 

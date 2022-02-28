@@ -1,5 +1,3 @@
-from unittest.mock import Mock, patch
-
 import pytest
 from hydra import compose, initialize
 from omegaconf import OmegaConf
@@ -14,76 +12,23 @@ from sous_chef.formatter.ingredient.format_ingredient_field import (
     IngredientFieldFormatter,
     raise_or_log_exception,
 )
-from sous_chef.recipe_book.read_recipe_book import Recipe, RecipeBook
+from sous_chef.recipe_book.read_recipe_book import Recipe
 from structlog import get_logger
 from tests.unit_tests.formatter.util import create_ingredient_line
+from tests.unit_tests.util import create_recipe
 
 FILE_LOGGER = get_logger(__name__)
 
 
 @pytest.fixture
-def mock_recipe_book():
-    with initialize(config_path="../../../../config"):
-        config = compose(config_name="recipe_book")
-        with patch.object(RecipeBook, "__init__", lambda x, y, z: None):
-            return Mock(RecipeBook(config, None))
-
-
-def setup_ingredient_field_formatter(ingredient_formatter, recipe_book):
+def ingredient_field_formatter(ingredient_formatter, mock_recipe_book):
     with initialize(config_path="../../../../config/formatter"):
         config = compose(config_name="format_ingredient_field")
         return IngredientFieldFormatter(
             ingredient_formatter=ingredient_formatter,
             config=config,
-            recipe_book=recipe_book,
+            recipe_book=mock_recipe_book,
         )
-
-
-@pytest.fixture
-def ingredient_field_formatter(ingredient_formatter, mock_recipe_book):
-    return setup_ingredient_field_formatter(
-        ingredient_formatter, mock_recipe_book
-    )
-
-
-@pytest.fixture
-def ingredient_field_formatter_find_pantry_entry(
-    ingredient_formatter_find_pantry_entry, mock_recipe_book
-):
-    return setup_ingredient_field_formatter(
-        ingredient_formatter_find_pantry_entry, mock_recipe_book
-    )
-
-
-@pytest.fixture
-def recipe(recipe_title):
-    return Recipe(
-        title=recipe_title,
-        rating=3.0,
-        ingredient_field=None,
-        total_cook_time=None,
-        factor=1.0,
-    )
-
-
-@pytest.fixture
-def ingredient_field_formatter_find_recipe(
-    ingredient_formatter, mock_recipe_book, recipe
-):
-    mock_recipe_book.get_recipe_by_title.return_value = recipe
-    return setup_ingredient_field_formatter(
-        ingredient_formatter, mock_recipe_book
-    )
-
-
-@pytest.fixture
-def ingredient_field_formatter_complete(
-    ingredient_formatter_find_pantry_entry, mock_recipe_book, recipe
-):
-    mock_recipe_book.get_recipe_by_title.return_value = recipe
-    return setup_ingredient_field_formatter(
-        ingredient_formatter_find_pantry_entry, mock_recipe_book
-    )
 
 
 def create_error_config(raise_error_for: bool, still_add_ingredient: bool):
@@ -122,7 +67,7 @@ def assert_recipe(result, recipe, factor):
             title=recipe.title,
             rating=recipe.rating,
             total_cook_time=recipe.total_cook_time,
-            ingredient_field=recipe.total_cook_time,
+            ingredient_field=recipe.ingredient_field,
             factor=factor,
         )
     ]
@@ -145,8 +90,9 @@ class TestIngredientFieldFormatter:
         [(2.5, "tbsp", "sugar", "N", 0.25, "garlic aioli")],
     )
     def test_parse_ingredient_field(
-        ingredient_field_formatter_complete,
-        recipe,
+        ingredient_field_formatter,
+        mock_pantry_list,
+        mock_recipe_book,
         pantry_entry,
         quantity,
         unit,
@@ -158,16 +104,19 @@ class TestIngredientFieldFormatter:
         recipe_str = "# " + create_ingredient_line(
             quantity=factor, item=recipe_title
         )
+        recipe_with_recipe_title = create_recipe(title=recipe_title)
         ingredient_str = create_ingredient_line(item, quantity, unit)
         ingredient_field = f"{recipe_str}\n{ingredient_str}"
+        mock_pantry_list.retrieve_match.return_value = pantry_entry
+        mock_recipe_book.get_recipe_by_title.return_value = (
+            recipe_with_recipe_title
+        )
 
         (
             recipe_list,
             ingredient_list,
-        ) = ingredient_field_formatter_complete.parse_ingredient_field(
-            ingredient_field
-        )
-        assert_recipe(recipe_list, recipe, factor)
+        ) = ingredient_field_formatter.parse_ingredient_field(ingredient_field)
+        assert_recipe(recipe_list, recipe_with_recipe_title, factor)
         assert_ingredient(
             ingredient_list,
             pantry_entry,
@@ -182,7 +131,8 @@ class TestIngredientFieldFormatter:
         "quantity,unit,item,skip", [(1.25, "cup", "flour", "N")]
     )
     def test_parse_ingredient_field_in_optional_group(
-        ingredient_field_formatter_find_pantry_entry,
+        ingredient_field_formatter,
+        mock_pantry_list,
         pantry_entry,
         quantity,
         unit,
@@ -191,13 +141,13 @@ class TestIngredientFieldFormatter:
     ):
         ingredient_str = create_ingredient_line(item, quantity, unit)
         ingredient_field = f"[garnish]\n{ingredient_str}"
+        mock_pantry_list.retrieve_match.return_value = pantry_entry
 
         (
             recipe_list,
             ingredient_list,
-        ) = ingredient_field_formatter_find_pantry_entry.parse_ingredient_field(
-            ingredient_field
-        )
+        ) = ingredient_field_formatter.parse_ingredient_field(ingredient_field)
+
         assert recipe_list == []
         assert_ingredient(
             ingredient_list,
@@ -213,8 +163,8 @@ class TestIngredientFieldFormatter:
         "factor,unit,recipe_title", [(0.5, None, "patatas bravas")]
     )
     def test__format_referenced_recipe_to_recipe(
-        ingredient_field_formatter_find_recipe,
-        recipe,
+        ingredient_field_formatter,
+        mock_recipe_book,
         factor,
         unit,
         recipe_title,
@@ -222,12 +172,16 @@ class TestIngredientFieldFormatter:
         line_str = "# " + create_ingredient_line(
             quantity=factor, unit=unit, item=recipe_title
         )
-        ingredient_field_formatter_find_recipe.referenced_recipe_list = []
-        ingredient_field_formatter_find_recipe._format_referenced_recipe(
-            line_str
+        recipe_with_recipe_title = create_recipe(title=recipe_title)
+
+        ingredient_field_formatter.referenced_recipe_list = []
+        mock_recipe_book.get_recipe_by_title.return_value = (
+            recipe_with_recipe_title
         )
-        result = ingredient_field_formatter_find_recipe.referenced_recipe_list
-        assert_recipe(result, recipe, factor=factor)
+
+        ingredient_field_formatter._format_referenced_recipe(line_str)
+        result = ingredient_field_formatter.referenced_recipe_list
+        assert_recipe(result, recipe_with_recipe_title, factor=factor)
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -235,7 +189,8 @@ class TestIngredientFieldFormatter:
         [("rice", 1.0, "cup", False, "N"), ("avocado", 2.0, None, False, "N")],
     )
     def test__format_ingredient(
-        ingredient_field_formatter_find_pantry_entry,
+        ingredient_field_formatter,
+        mock_pantry_list,
         pantry_entry,
         item,
         quantity,
@@ -244,12 +199,13 @@ class TestIngredientFieldFormatter:
         skip,
     ):
         line_str = create_ingredient_line(item, quantity, unit)
-        ingredient_field_formatter_find_pantry_entry.ingredient_list = []
+        ingredient_field_formatter.ingredient_list = []
+        mock_pantry_list.retrieve_match.return_value = pantry_entry
 
-        ingredient_field_formatter_find_pantry_entry._format_ingredient(
+        ingredient_field_formatter._format_ingredient(
             line_str, is_in_optional_group
         )
-        result = ingredient_field_formatter_find_pantry_entry.ingredient_list
+        result = ingredient_field_formatter.ingredient_list
         assert_ingredient(
             result,
             pantry_entry,

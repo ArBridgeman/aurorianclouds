@@ -44,9 +44,10 @@ class Menu:
     config: DictConfig
     ingredient_formatter: IngredientFormatter
     recipe_book: RecipeBook
-    dataframe: pd.DataFrame = pd.DataFrame()
+    dataframe: pd.DataFrame = None
 
     def finalize_fixed_menu(self, gsheets_helper: GsheetsHelper):
+        # TODO simplify logic; improve validation
         self.dataframe = self._load_fixed_menu(gsheets_helper)
         self._validate_menu_with_user()
         self.dataframe = self.dataframe[self.dataframe.factor > 0]
@@ -58,7 +59,7 @@ class Menu:
     def get_menu_for_grocery_list(
         self,
     ) -> (List[MenuIngredient], List[MenuRecipe]):
-        self._load_local_menu()
+        self.dataframe = self._load_local_menu()
         mask_grocery_list = self.dataframe["grocery_list"] == "Y"
         menu_for_grocery_list = self.dataframe[mask_grocery_list].copy(
             deep=True
@@ -151,7 +152,20 @@ class Menu:
             recipe = self.recipe_book.get_recipe_by_title(row["item"])
             row["item"] = recipe.title
             row["total_cook_time"] = recipe.total_cook_time
+
+            # TODO remove/replace once recipes easily viewable in UI
+            self._inspect_unrated_recipe(recipe)
         return row
+
+    def _inspect_unrated_recipe(self, recipe: Recipe):
+        if self.config.run_mode.with_inspect_unrated_recipe:
+            if recipe.rating == 0.0:
+                FILE_LOGGER.warning(
+                    "[unrated recipe]",
+                    action="print out ingredient_field",
+                    recipe_title=recipe.title,
+                )
+                print(recipe.ingredient_field)
 
     def _load_fixed_menu(self, gsheets_helper):
         menu_number = self._check_fixed_menu_number(
@@ -163,7 +177,7 @@ class Menu:
 
     def _load_local_menu(self):
         file_path = Path(ABS_FILE_PATH, self.config.local.file_path)
-        self.dataframe = pd.read_csv(file_path, sep=";")
+        return pd.read_csv(file_path, sep=";")
 
     def _retrieve_manual_menu_ingredient(self, row: pd.Series):
         ingredient = self.ingredient_formatter.format_manual_ingredient(

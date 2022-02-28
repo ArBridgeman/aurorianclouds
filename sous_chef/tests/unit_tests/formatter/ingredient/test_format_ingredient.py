@@ -222,12 +222,12 @@ class TestIngredientFormatter:
         [("sugar", "N"), ("eggs", "N")],
     )
     def test__enrich_with_pantry_information(
-        ingredient_formatter_find_pantry_entry, pantry_entry, item, skip
+        ingredient_formatter, mock_pantry_list, pantry_entry, item, skip
     ):
         ingredient = Ingredient(quantity=1, item=item)
-        ingredient_formatter_find_pantry_entry._enrich_with_pantry_detail(
-            ingredient
-        )
+        mock_pantry_list.retrieve_match.return_value = pantry_entry
+        ingredient_formatter._enrich_with_pantry_detail(ingredient)
+
         assert ingredient.item == item
         assert not ingredient.is_staple
         assert ingredient.group == pantry_entry.group
@@ -252,13 +252,12 @@ class TestIngredientFormatter:
         ],
     )
     def test__enrich_with_pantry_information_raise_pantry_search_error(
-        ingredient_formatter_with_pantry_error, item, error_arg
+        ingredient_formatter, mock_pantry_list, item, error_arg
     ):
         ingredient = Ingredient(quantity=1, item=item)
+        mock_pantry_list.retrieve_match.side_effect = error_arg
         with pytest.raises(PantrySearchError):
-            ingredient_formatter_with_pantry_error._enrich_with_pantry_detail(
-                ingredient
-            )
+            ingredient_formatter._enrich_with_pantry_detail(ingredient)
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -266,13 +265,12 @@ class TestIngredientFormatter:
         [("celery", "Y")],
     )
     def test__enrich_with_pantry_information_raise_skip_ingredient_error(
-        ingredient_formatter_find_pantry_entry, pantry_entry, item, skip
+        ingredient_formatter, mock_pantry_list, pantry_entry, item, skip
     ):
         ingredient = Ingredient(quantity=1, item=item)
+        mock_pantry_list.retrieve_match.return_value = pantry_entry
         with pytest.raises(SkipIngredientError):
-            ingredient_formatter_find_pantry_entry._enrich_with_pantry_detail(
-                ingredient
-            )
+            ingredient_formatter._enrich_with_pantry_detail(ingredient)
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -288,7 +286,8 @@ class TestIngredientFormatter:
         ],
     )
     def test_format_ingredient_line(
-        ingredient_formatter_find_pantry_entry,
+        ingredient_formatter,
+        mock_pantry_list,
         pantry_entry,
         quantity,
         unit,
@@ -296,15 +295,14 @@ class TestIngredientFormatter:
     ):
         pint_unit = unit_registry[unit] if unit is not None else None
         line_str = create_ingredient_line(item, quantity, unit)
+        mock_pantry_list.retrieve_match.return_value = pantry_entry
 
         expected_ingredient = Ingredient(
             quantity=quantity, unit=unit, pint_unit=pint_unit, item=item
         )
         expected_ingredient.set_pantry_info(pantry_entry)
         assert (
-            ingredient_formatter_find_pantry_entry.format_ingredient_line(
-                line_str
-            )
+            ingredient_formatter.format_ingredient_line(line_str)
             == expected_ingredient
         )
 
@@ -317,7 +315,8 @@ class TestIngredientFormatter:
         ],
     )
     def test_format_manual_ingredient(
-        ingredient_formatter_find_pantry_entry,
+        ingredient_formatter,
+        mock_pantry_list,
         pantry_entry,
         quantity,
         unit,
@@ -325,11 +324,11 @@ class TestIngredientFormatter:
         skip,
     ):
         ingredient = Ingredient(quantity=quantity, unit=unit, item=item)
+        mock_pantry_list.retrieve_match.return_value = pantry_entry
+
         ingredient.set_pantry_info(pantry_entry)
         assert (
-            ingredient_formatter_find_pantry_entry.format_manual_ingredient(
-                quantity, unit, item
-            )
+            ingredient_formatter.format_manual_ingredient(quantity, unit, item)
             == ingredient
         )
 

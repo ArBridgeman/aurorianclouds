@@ -1,4 +1,5 @@
 import datetime
+import itertools
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -123,10 +124,10 @@ class TodoistHelper:
         if section is not None:
             section_id = self._get_section_id(section)
 
-        for (task, due_date) in zip(task_list, label_list):
+        for (task, labels) in zip(task_list, label_list):
             self.add_task_to_project(
                 task=task,
-                label_list=label_list,
+                label_list=list(itertools.chain(*labels)),
                 project=project,
                 project_id=project_id,
                 section=section,

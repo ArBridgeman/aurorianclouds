@@ -23,6 +23,14 @@ def create_datetime(
 class TestDueDatetimeFormatter:
     @staticmethod
     @freeze_time(FROZEN_DATE)
+    def test_get_anchor_date():
+        # TODO update when anchor date made configurable
+        anchor_date = DueDatetimeFormatter().get_anchor_date()
+        assert anchor_date == datetime.date(year=2022, month=1, day=14)
+        assert anchor_date.weekday() == 4
+
+    @staticmethod
+    @freeze_time(FROZEN_DATE)
     def test_get_due_datetime_with_meal_time():
         assert DueDatetimeFormatter().get_due_datetime_with_meal_time(
             "monday", "dinner"

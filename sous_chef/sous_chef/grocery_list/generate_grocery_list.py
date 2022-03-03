@@ -53,7 +53,7 @@ class GroceryList:
                 for _ in range(3)
             ]
 
-        for name, group in self.grocery_list.groupby("ingredient.aisle_group"):
+        for name, group in self.grocery_list.groupby("aisle_group"):
             if name in self.config.todoist.skip_group:
                 FILE_LOGGER.warning(
                     "[skip group]",
@@ -64,10 +64,12 @@ class GroceryList:
                 continue
 
             todoist_helper.add_task_list_to_project_with_label_list(
-                task_list=group(self._format_ingredient_str, axis=1).tolist(),
+                task_list=group.apply(
+                    self._format_ingredient_str, axis=1
+                ).tolist(),
                 project=project_name,
                 section=name,
-                label_list=group[["from_recipe", "from_day"]].tolist(),
+                label_list=group[["from_recipe", "from_day"]].values.tolist(),
             )
 
     def send_bean_preparation_to_todoist(self, todoist_helper: TodoistHelper):
@@ -236,14 +238,14 @@ class GroceryList:
 
     def _format_ingredient_str(self, ingredient: pd.Series) -> str:
         item = ingredient["item"]
-        if ingredient["quantity"] > 1 and ingredient["pint_unit"] is None:
-            item = ingredient["item"] + ingredient["item_plural"]
+        if ingredient["quantity"] > 1 and pd.isnull(ingredient["pint_unit"]):
+            item = ingredient["item_plural"]
         ingredient_str = "{item}, {quantity}".format(
             item=item, quantity=convert_number_to_str(ingredient.quantity)
         )
 
         # TODO: do we need .unit anymore?
-        if ingredient.pint_unit:
+        if not pd.isnull(ingredient.pint_unit):
             unit_str = self.unit_formatter.get_unit_str(
                 ingredient["quantity"], ingredient["pint_unit"]
             )
@@ -276,11 +278,11 @@ class GroceryList:
 
         cans = row["quantity"] + config_bean.number_can_to_freeze
         row["item"] = f"dried {row['item']}"
+        row["item_plural"] = f"dried {row['item_plural']}"
         row["food_group"] = "Beans"
         row["unit"] = "g"
         row["pint_unit"] = unit_registry.gram
         row["quantity"] = cans * config_bean.g_per_can
-        row["item_plural"] = ""
 
         if self.queue_bean_preparation is None:
             self.queue_bean_preparation = []

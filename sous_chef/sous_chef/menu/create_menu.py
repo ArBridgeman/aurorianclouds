@@ -79,12 +79,11 @@ class Menu:
     def upload_menu_to_todoist(self, todoist_helper: TodoistHelper):
         project_name = self.config.todoist.project_name
         if self.config.todoist.remove_existing_task:
+            anchor_date = DueDatetimeFormatter().get_anchor_date()
             [
                 todoist_helper.delete_all_items_in_project(
                     project_name,
-                    only_delete_after_date=DueDatetimeFormatter(
-                        "Friday"
-                    ).get_date(),
+                    only_delete_after_date=anchor_date,
                 )
                 for _ in range(3)
             ]
@@ -140,7 +139,7 @@ class Menu:
 
     @staticmethod
     def _get_cooking_time_min(total_cook_time: timedelta):
-        if not total_cook_time:
+        if not isinstance(total_cook_time, timedelta):
             return 20
         return int(total_cook_time.total_seconds() / 60)
 

@@ -28,7 +28,7 @@ def create_grocery_list_row(
     is_staple: bool = False,
     food_group: str = "Vegetables",
     store: str = "grocery store",
-    item_plural: str = "s",
+    plural_ending: str = "s",
     from_recipe: str = "dummy recipe",
     from_day: str = "Friday",
     aisle_group: str = None,
@@ -43,7 +43,7 @@ def create_grocery_list_row(
             "is_staple": is_staple,
             "food_group": food_group,
             "store": store,
-            "item_plural": item_plural,
+            "item_plural": item + plural_ending,
             "from_recipe": from_recipe,
             "from_day": from_day,
             "aisle_group": aisle_group,
@@ -59,7 +59,7 @@ def create_ingredient_and_grocery_entry_raw(
     is_staple: bool = False,
     pint_unit: Unit = None,
     group: str = "Vegetables",
-    item_plural: str = "s",
+    plural_ending: str = "s",
     store: str = "grocery store",
     should_skip: bool = False,
     recipe_factor: float = 1.0,
@@ -79,7 +79,7 @@ def create_ingredient_and_grocery_entry_raw(
         is_optional=is_optional,
         is_staple=is_staple,
         group=group,
-        item_plural=item_plural,
+        item_plural=item + plural_ending,
         store=store,
         should_skip=should_skip,
     )
@@ -94,7 +94,7 @@ def create_ingredient_and_grocery_entry_raw(
             "is_optional": is_optional,
             "food_group": group,
             "store": store,
-            "item_plural": item_plural,
+            "item_plural": item + plural_ending,
             "from_recipe": from_recipe,
             "from_day": from_day,
         },
@@ -201,7 +201,7 @@ class TestGroceryList:
                     "pint_unit": unit_registry.gram,
                     "item": "black beans",
                     "is_optional": False,
-                    "item_plural": "",
+                    "item_plural": "black beans",
                 }
             ),
             "number_can_to_freeze": number_can_to_freeze,
@@ -213,7 +213,7 @@ class TestGroceryList:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "quantity,pint_unit,item,is_optional,item_plural,expected_result",
+        "quantity,pint_unit,item,is_optional,plural_ending,expected_result",
         [
             (1, None, "zucchini", False, "s", "zucchini, 1"),
             (1, unit_registry.cup, "rice", False, "", "rice, 1 cup"),
@@ -229,7 +229,7 @@ class TestGroceryList:
         pint_unit,
         item,
         is_optional,
-        item_plural,
+        plural_ending,
         expected_result,
     ):
         ingredient = pd.Series(
@@ -238,7 +238,7 @@ class TestGroceryList:
                 "pint_unit": pint_unit,
                 "item": item,
                 "is_optional": is_optional,
-                "item_plural": item_plural,
+                "item_plural": item + plural_ending,
             }
         )
         assert (
@@ -289,7 +289,11 @@ class TestGroceryList:
     ):
         config = config_grocery_list.ingredient_replacement.can_to_dried_bean
         row = create_grocery_list_row(
-            quantity=1, item=item, unit="can", pint_unit=unit_registry.can
+            quantity=1,
+            item=item,
+            unit="can",
+            pint_unit=unit_registry.can,
+            plural_ending="",
         )
 
         assert config.g_per_can == 105
@@ -301,7 +305,7 @@ class TestGroceryList:
                 food_group="Beans",
                 unit="g",
                 pint_unit=unit_registry.g,
-                item_plural="",
+                plural_ending="",
             ),
         )
 

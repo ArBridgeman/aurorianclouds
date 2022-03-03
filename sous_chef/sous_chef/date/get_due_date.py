@@ -22,7 +22,10 @@ class MealTime(Enum):
 class DueDatetimeFormatter:
     # TODO add anchor date, default time in config?
     def __init__(self):
-        self.anchor_date = self._get_anchor_date_at_midnight("Friday")
+        self.anchor_datetime = self._get_anchor_date_at_midnight("Friday")
+
+    def get_anchor_date(self):
+        return self.anchor_datetime.date()
 
     def get_due_datetime_with_meal_time(self, weekday: str, meal_time: str):
         due_date = self._get_date_relative_to_anchor(weekday=weekday)
@@ -49,9 +52,11 @@ class DueDatetimeFormatter:
     def _get_date_relative_to_anchor(self, weekday: str) -> datetime.datetime:
         weekday_index = self._get_weekday_index(weekday)
         # TODO could anchor date and logic here be simplified?
-        relative_date = weekday_index - self.anchor_date.weekday() + 7
-        due_date = self.anchor_date + datetime.timedelta(days=relative_date % 7)
-        if due_date.date() == self.anchor_date.date():
+        relative_date = weekday_index - self.anchor_datetime.weekday() + 7
+        due_date = self.anchor_datetime + datetime.timedelta(
+            days=relative_date % 7
+        )
+        if due_date.date() == self.anchor_datetime.date():
             due_date += datetime.timedelta(days=7)
         return due_date
 

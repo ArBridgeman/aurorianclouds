@@ -192,7 +192,7 @@ class TestMenu:
         total_cook_time_str,
     ):
         recipe_with_total_cook_time = create_recipe(
-            title=recipe_title, total_cook_time=total_cook_time_str
+            title=recipe_title, total_cook_time_str=total_cook_time_str
         )
         row = create_menu_row(item=recipe_title, item_type="recipe")
         mock_recipe_book.get_recipe_by_title.return_value = (
@@ -206,6 +206,22 @@ class TestMenu:
             result["total_cook_time"]
             == recipe_with_total_cook_time.total_cook_time
         )
+
+    @staticmethod
+    def test__check_recipe_and_add_cooking_time_nat(menu, mock_recipe_book):
+        recipe_title = "recipe_without_cooktime"
+        recipe_with_total_cook_time = create_recipe(
+            title=recipe_title, total_cook_time_str=""
+        )
+        row = create_menu_row(item=recipe_title, item_type="recipe")
+        mock_recipe_book.get_recipe_by_title.return_value = (
+            recipe_with_total_cook_time
+        )
+
+        result = menu._check_recipe_and_add_cooking_time(row)
+
+        assert result["item"] == recipe_with_total_cook_time.title
+        assert result["total_cook_time"] is pd.NaT
 
     @staticmethod
     @freeze_time(FROZEN_DATE)
@@ -239,6 +255,9 @@ class TestMenu:
         "total_cook_time,expected_result",
         [
             ("", 20),
+            (None, 20),
+            # expected type from recipe book
+            (pd.NaT, 20),
             (datetime.timedelta(seconds=25), 0),
             (datetime.timedelta(minutes=25), 25),
             (datetime.timedelta(hours=1, minutes=25), 85),

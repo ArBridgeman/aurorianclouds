@@ -119,6 +119,7 @@ class GroceryList:
         self.grocery_list_raw = self.grocery_list_raw.append(
             {
                 "quantity": quantity,
+                # TODO do we need unit?
                 "unit": unit,
                 "pint_unit": pint_unit,
                 # TODO already add to Ingredient when first created?

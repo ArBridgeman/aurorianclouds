@@ -33,7 +33,7 @@ class TestGmailHelper:
     @staticmethod
     def test__create_path(gmail_helper):
         assert gmail_helper._create_path("../test/path").parts[-6:] == (
-            "sous_chef",
+            "sous-chef",
             "sous_chef",
             "messaging",
             "..",

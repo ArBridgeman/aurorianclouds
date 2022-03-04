@@ -1,0 +1,81 @@
+---
+- hosts: localhost
+
+  vars_files:
+    - vault.yml
+
+  vars:
+    postgres_db: house_keeper
+    postgres_user: postgres
+    django_superuser: root
+
+  tasks:
+    - name: Run django server for house_keeper
+      docker_compose:
+        project_name: house_keeper
+        definition:
+          version: '2'
+          services:
+            database:
+              image: postgres
+              environment:
+                POSTGRES_DB: "{{ postgres_db }}"
+                POSTGRES_USER: "{{ postgres_user }}"
+                POSTGRES_PASSWORD: "{{ postgres_password }}"
+              ports:
+                - "5001:5432"
+            backup:
+              image: prodrigestivill/postgres-backup-local
+              user: postgres:postgres
+              environment:
+                POSTGRES_HOST: database
+                POSTGRES_DB: "{{ postgres_db }}"
+                POSTGRES_USER: "{{ postgres_user }}"
+                POSTGRES_PASSWORD: "{{ postgres_password }}"
+                SCHEDULE: '@hourly'
+                POSTGRES_EXTRA_OPTS: -Z6 --schema=public --blobs
+                BACKUP_KEEP_DAYS: 7
+                BACKUP_KEEP_WEEKS: 4
+                BACKUP_KEEP_MONTHS: 6
+                HEALTHCHECK_PORT: 8080
+              volumes:
+                - /var/opt/pgbackups:/backups
+              links:
+                - database
+              depends_on:
+                - database
+            django:
+              build:
+                context: "{{ playbook_dir }}/../../house-keeper/"
+                dockerfile: Dockerfile.django
+              restart: always
+              command: >
+                bash -c "python manage.py migrate
+                && python manage.py createsuperuser --noinput
+                && python manage.py loaddata category.yaml
+                && python manage.py runserver 0.0.0.0:8000"
+              volumes:
+                - "{{ playbook_dir }}/../../house-keeper/:/code"
+              ports:
+                - "8000:8000"
+              environment:
+                POSTGRES_NAME: "{{ postgres_db }}"
+                POSTGRES_USER: "{{ postgres_user }}"
+                POSTGRES_PASSWORD: "{{ postgres_password }}"
+                DJANGO_SUPERUSER_USERNAME: "{{ django_superuser }}"
+                DJANGO_SUPERUSER_EMAIL: "{{ django_superuser_email }}"
+                DJANGO_SUPERUSER_PASSWORD: "{{ django_superuser_password }}"
+              depends_on:
+                - database
+      register: output
+
+    - name: Sleep for 5 seconds before continuing
+      wait_for:
+        timeout: 5
+      delegate_to: localhost
+
+    - assert:
+        that:
+          - "output.services.database.house_keeper_database_1.state.running"
+          - "output.services.backup.house_keeper_backup_1.state.running"
+          - "output.services.django.house_keeper_django_1.state.running"

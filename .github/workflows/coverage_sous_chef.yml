@@ -12,21 +12,23 @@ jobs:
       - name: Check out our repo branch
         uses: actions/checkout@v2
       - name: Setup Python environment
-        uses: ./.github/actions/python-setup
+        uses: ./.github/actions/sous-chef-setup
         with:
           python-version: ${{ matrix.python-version }}
           poetry-version: ${{ matrix.poetry-version }}
           address-book: ${{ secrets.ADDRESS_BOOK }}
-          gmail-auth-token: ${{ secrets.GMAIL_AUTH_TOKEN }}
-          gmail-client-key: ${{ secrets.GMAIL_CLIENT_KEY}}
           gsheets-service-token: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
       - name: Get coverage
+        working-directory: ./sous-chef
         run: |
           poetry run coverage run  --rcfile .coveragerc. -m pytest \
-          sous_chef/tests/unit_tests sous_chef/tests/integration_tests/
+           -k "not test_send_dataframe_in_email" \
+          ./tests/unit_tests ./tests/integration_tests
       - name: Create coverage XML
+        working-directory: ./sous-chef
         run: poetry run coverage xml
       - name: Output coverage report
+        working-directory: ./sous-chef
         run: poetry run coverage report
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2

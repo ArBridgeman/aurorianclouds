@@ -138,10 +138,14 @@ class Menu:
         return task_str, due_date
 
     @staticmethod
-    def _get_cooking_time_min(total_cook_time: timedelta):
+    def _get_cooking_time_min(
+        total_cook_time: timedelta, default_time: int = 20
+    ):
         if not isinstance(total_cook_time, timedelta):
-            return 20
-        return int(total_cook_time.total_seconds() / 60)
+            return default_time
+        if (cook_time := int(total_cook_time.total_seconds() / 60)) < 0:
+            return default_time
+        return cook_time
 
     def _inspect_unrated_recipe(self, recipe: Recipe):
         if self.config.run_mode.with_inspect_unrated_recipe:

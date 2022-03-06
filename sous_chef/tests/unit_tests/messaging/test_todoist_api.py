@@ -21,6 +21,7 @@ class TestTodoistHelper:
         [
             ("french onion soup", "french_onion_soup"),
             ("pb and jelly", "pb_and_jelly"),
+            ("cali _ burgers", "cali_burgers"),
         ],
     )
     def test__clean_label(mock_todoist_helper, label, cleaned_label):

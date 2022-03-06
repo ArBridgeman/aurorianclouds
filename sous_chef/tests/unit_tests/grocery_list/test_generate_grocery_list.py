@@ -148,44 +148,25 @@ def grocery_list(
 
 class TestGroceryList:
     @staticmethod
-    def test_get_grocery_list_from_menu(
-        grocery_list, mock_ingredient_field_formatter
-    ):
-        # TODO test 3 different scenarios
-        menu_recipe = create_menu_recipe()
-        ingredient, grocery_raw = create_ingredient_and_grocery_entry_raw()
-        mock_ingredient_field_formatter.parse_ingredient_field.return_value = (
-            [],
-            [ingredient],
-        )
-
-        grocery_list.get_grocery_list_from_menu([], [menu_recipe])
-        assert_equal_dataframe(grocery_list.grocery_list_raw, grocery_raw)
-
-        result_grocery_list = grocery_list.grocery_list
-        expected_grocery_list = grocery_raw.copy()
-        expected_grocery_list["aisle_group"] = "Farmland pride"
-        expected_grocery_list["from_recipe"] = [["dummy recipe"]]
-        expected_grocery_list["from_day"] = [["Friday"]]
-        assert_equal_dataframe(
-            result_grocery_list,
-            expected_grocery_list[result_grocery_list.columns],
-        )
-
-    @staticmethod
     def test__add_referenced_recipe_to_queue(grocery_list):
-        # TODO implement
-        pass
+        menu_recipe_base = create_menu_recipe()
+        menu_recipe_ref = create_recipe(title="referenced", factor=1.0)
 
-    @staticmethod
-    def test__aggregate_grocery_list_by_item_and_dimension(grocery_list):
-        # TODO implement
-        pass
+        grocery_list._add_referenced_recipe_to_queue(
+            menu_recipe_base, [menu_recipe_ref]
+        )
 
-    @staticmethod
-    def test__aggregate_group_to_grocery_list(grocery_list):
-        # TODO implement
-        pass
+        added_recipe = MenuRecipe(
+            from_recipe=f"{menu_recipe_ref.title}_"
+            f"{menu_recipe_base.recipe.title}",
+            from_day=menu_recipe_base.from_day,
+            eat_factor=menu_recipe_base.eat_factor * menu_recipe_ref.factor,
+            freeze_factor=menu_recipe_base.freeze_factor
+            * menu_recipe_ref.factor,
+            recipe=menu_recipe_ref,
+        )
+
+        assert grocery_list.queue_menu_recipe == [added_recipe]
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -314,6 +295,7 @@ class TestGroceryList:
         "item,unit,pint_unit",
         [
             ("black beans", "g", unit_registry.g),
+            ("black beans", "can", unit_registry.g),
             ("whole tomatoes", "can", unit_registry.can),
         ],
     )

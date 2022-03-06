@@ -293,7 +293,7 @@ class TodoistHelper:
     @staticmethod
     def _clean_label(label):
         cleaned = re.sub(r"\s&\s", " and ", label).strip()
-        return re.sub(r"\s+", "_", cleaned).strip()
+        return re.sub(r"[\s\_]+", "_", cleaned).strip()
 
     def _get_active_labels(self):
         label_dict = {}

@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Union
 from unittest.mock import Mock, patch
 
+import numpy as np
 import pandas as pd
 import pytest
 from freezegun import freeze_time
@@ -256,9 +257,13 @@ class TestMenu:
         [
             ("", 20),
             (None, 20),
+            ("nan", 20),
+            (np.Inf, 20),
+            (np.nan, 20),
             # expected type from recipe book
             (pd.NaT, 20),
             (datetime.timedelta(seconds=25), 0),
+            (datetime.timedelta(minutes=-25), 20),
             (datetime.timedelta(minutes=25), 25),
             (datetime.timedelta(hours=1, minutes=25), 85),
         ],

@@ -1,3 +1,5 @@
+import datetime
+import itertools
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -16,6 +18,19 @@ ABS_FILE_PATH = Path(__file__).absolute().parent
 
 
 @dataclass
+class TodoistKeyError(Exception):
+    tag: str
+    value: str
+    message: str = "[todoist key error]"
+
+    def __post_init__(self):
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f"{self.message}: tag={self.tag} for value={self.value}"
+
+
+@dataclass
 class TodoistHelper:
     config: DictConfig
     connection: Any = field(init=False)
@@ -28,31 +43,13 @@ class TodoistHelper:
             token = f.read().strip()
         self.connection = todoist.TodoistAPI(token)
         self.sync()
-        self.active_labels = self.get_active_labels()
+        self.active_labels = self._get_active_labels()
 
     def sync(self):
         self.connection.sync()
 
     def commit(self):
         self.connection.commit()
-
-    def get_active_labels(self):
-        label_dict = {}
-        for label in self.connection.labels.state["labels"]:
-            label_dict[label["name"]] = label["id"]
-        return label_dict
-
-    def get_project_id(self, desired_project):
-        for project in self.connection.state["projects"]:
-            if desired_project == project.data.get("name"):
-                return project.data.get("id")
-        return None
-
-    def get_section_id(self, desired_section):
-        for project in self.connection.state["sections"]:
-            if desired_section == project.data.get("name"):
-                return project.data.get("id")
-        return None
 
     # TODO implement defrost task uploader
     def add_defrost_task_to_active_tasks(self):
@@ -61,19 +58,14 @@ class TodoistHelper:
     def retrieve_freezer(self):
         freezer_contents = defaultdict(list)
         for task in self.connection.state["items"]:
-            if task["project_id"] in [self.get_project_id("Freezer")]:
+            if task["project_id"] in [self._get_project_id("Freezer")]:
                 freezer_contents["title"].append(task["content"])
                 # TODO implement type based on section name
                 freezer_contents["type"].append("undefined")
         return pd.DataFrame(freezer_contents)
 
-    @staticmethod
-    def clean_label(label):
-        cleaned = re.sub(r"\s\&\s", " and ", label).strip()
-        return re.sub(r"\s+", "_", cleaned).strip()
-
     def get_label_id_or_add_new(self, label):
-        label = self.clean_label(label)
+        label = self._clean_label(label)
         if label in self.active_labels.keys():
             return self.active_labels[label]
         else:
@@ -91,60 +83,105 @@ class TodoistHelper:
             label_ids.append(self.get_label_id_or_add_new(label))
         return label_ids
 
-    def add_item_to_project(
+    def add_task_list_to_project_with_due_date_list(
         self,
-        item,
-        project,
-        section=None,
-        labels=None,
-        due_date_dict=None,
+        task_list: list[str],
+        project: str = None,
+        section: str = None,
+        due_date_list: list[datetime.datetime] = None,
     ):
-
-        FILE_LOGGER.info(
-            "[todoist add]",
-            item=item,
-            due_date_dict=due_date_dict,
-            project=project,
-            section=section,
-            labels=labels,
-        )
 
         project_id = None
         if project is not None:
-            project_id = self.get_project_id(project)
-            assert (
-                project_id is not None
-            ), "Id of project {:s} could not be found!".format(project)
+            project_id = self._get_project_id(project)
+
         section_id = None
         if section is not None:
-            section_id = self.get_section_id(section)
-            assert (
-                section_id is not None
-            ), "Id of section {:s} could not be found!".format(section)
+            section_id = self._get_section_id(section)
 
-        if labels is None:
-            labels = ["app"]
-        labels += ["app"]
+        for (task, due_date) in zip(task_list, due_date_list):
+            self.add_task_to_project(
+                task=task,
+                due_date=due_date,
+                project=project,
+                project_id=project_id,
+                section=section,
+                section_id=section_id,
+            )
+
+    def add_task_list_to_project_with_label_list(
+        self,
+        task_list: list[str],
+        project: str = None,
+        section: str = None,
+        label_list: list[tuple] = None,
+    ):
+        project_id = None
+        if project is not None:
+            project_id = self._get_project_id(project)
+
+        section_id = None
+        if section is not None:
+            section_id = self._get_section_id(section)
+
+        for (task, labels) in zip(task_list, label_list):
+            self.add_task_to_project(
+                task=task,
+                label_list=list(itertools.chain(*labels)),
+                project=project,
+                project_id=project_id,
+                section=section,
+                section_id=section_id,
+            )
+
+    def add_task_to_project(
+        self,
+        task: str,
+        due_date: datetime.datetime = None,
+        project: str = None,
+        project_id: int = None,
+        section: str = None,
+        section_id: int = None,
+        label_list: list = None,
+    ):
+        due_date_str = self._get_due_date_str(due_date)
+        FILE_LOGGER.info(
+            "[todoist add]",
+            task=task,
+            due_date=due_date_str,
+            project=project,
+            section=section,
+            labels=label_list,
+        )
+
+        if project_id is None and project is not None:
+            project_id = self._get_project_id(project)
+
+        if section_id is None and section is not None:
+            section_id = self._get_section_id(section)
+
+        # TODO consolidate label_list and label_ids into 1-2 methods
+        # TODO have functions handle None cases below instead of here
+        # (e.g. _get_due_date_str)
+        if label_list is None:
+            label_list = ["app"]
+        label_list += ["app"]
 
         label_ids = None
-        if labels is not None:
-            label_ids = self.get_label_ids(labels)
-
-        date_string = None
-        if due_date_dict is not None:
-            date_string = due_date_dict.get("string", None)
+        if label_list is not None:
+            label_ids = self.get_label_ids(label_list)
 
         new_item = self.connection.add_item(
-            item,
+            task,
+            date_string=due_date_str,
             project_id=project_id,
             labels=label_ids,
-            date_string=date_string,
         )
         self.commit()
 
         # sometimes due to Todoist api, new_item gets lost/changed in process
         if "id" not in new_item:
-            new_item = self.get_item_in_project(project, item)
+            new_item = self.get_item_in_project(project, task)
 
         # somehow, the section is not correctly set with the previous command
         # as such, the following is necessary
@@ -163,10 +200,8 @@ class TodoistHelper:
     # todo: change to generator logic?
     def get_all_items_in_project(self, project):
         items = []
-        project_id = self.get_project_id(project)
-        assert (
-            project_id is not None
-        ), "Id of project {:s} could not be found!".format(project)
+        project_id = self._get_project_id(project)
+
         for item in self.connection.state["items"]:
             if item["project_id"] == project_id:
                 items.append(item)
@@ -202,13 +237,13 @@ class TodoistHelper:
             project=project,
         )
 
-        project_id = self.get_project_id(project)
+        project_id = self._get_project_id(project)
         sleep(sleep_in_seconds)
         self.sync()
 
         section_id = None
         if prior_move is not None:
-            section_id = self.get_section_id(prior_move)
+            section_id = self._get_section_id(prior_move)
             assert (
                 section_id is not None
             ), "Id of section {:s} could not be found!".format(prior_move)
@@ -254,3 +289,32 @@ class TodoistHelper:
             self.commit()
 
         self.sync()
+
+    @staticmethod
+    def _clean_label(label):
+        cleaned = re.sub(r"\s&\s", " and ", label).strip()
+        return re.sub(r"[\s\_]+", "_", cleaned).strip()
+
+    def _get_active_labels(self):
+        label_dict = {}
+        for label in self.connection.labels.state["labels"]:
+            label_dict[label["name"]] = label["id"]
+        return label_dict
+
+    @staticmethod
+    def _get_due_date_str(due_date: datetime.datetime) -> str:
+        if due_date is None:
+            return due_date
+        return due_date.strftime("on %Y-%m-%d at %H:%M")
+
+    def _get_project_id(self, desired_project):
+        for project in self.connection.state["projects"]:
+            if desired_project == project.data.get("name"):
+                return project.data.get("id")
+        raise TodoistKeyError(tag="project_id", value=desired_project)
+
+    def _get_section_id(self, desired_section):
+        for project in self.connection.state["sections"]:
+            if desired_section == project.data.get("name"):
+                return project.data.get("id")
+        raise TodoistKeyError(tag="section_id", value=desired_section)

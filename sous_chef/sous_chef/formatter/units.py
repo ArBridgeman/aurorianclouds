@@ -24,12 +24,12 @@ custom_list = [
     unit_registry.head,
     unit_registry.jar,
     unit_registry.pinch,
-    unit_registry.package,
-    unit_registry.packet,
     unit_registry.slice,
 ]
 
-metric_list = [
+custom_list_abbr = [unit_registry.package, unit_registry.packet]
+
+metric = [
     unit_registry.millimeter,
     unit_registry.centimeter,
     unit_registry.gram,
@@ -39,7 +39,7 @@ metric_list = [
     unit_registry.liter,
 ]
 
-empirical_list = [
+empirical = [
     unit_registry.inch,
     unit_registry.ounce,
     unit_registry.pound,
@@ -50,4 +50,6 @@ empirical_list = [
     unit_registry.cup,
 ]
 
-allowed_unit_list = custom_list + metric_list + empirical_list
+allowed_unit_list = custom_list + custom_list_abbr + metric + empirical
+
+not_abbreviated = custom_list + [unit_registry.cup]

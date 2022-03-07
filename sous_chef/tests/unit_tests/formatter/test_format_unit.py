@@ -5,6 +5,28 @@ from sous_chef.formatter.format_unit import UnitExtractionError, unit_registry
 class TestUnitFormatter:
     @staticmethod
     @pytest.mark.parametrize(
+        "quantity,pint_unit,desired_pint_unit,expected_quantity,expected_unit",
+        [
+            (3, unit_registry.tsp, unit_registry.tbsp, 1, "tbsp"),
+            (4, unit_registry.tbsp, unit_registry.cup, 0.25, "cup"),
+            (400, unit_registry.gram, unit_registry.kg, 0.4, "kg"),
+            (16, unit_registry.ounce, unit_registry.g, 453.59, "g"),
+        ],
+    )
+    def test_convert_to_desired_unit(
+        unit_formatter,
+        quantity,
+        pint_unit,
+        desired_pint_unit,
+        expected_quantity,
+        expected_unit,
+    ):
+        assert unit_formatter.convert_to_desired_unit(
+            quantity, pint_unit, desired_pint_unit
+        ) == (expected_quantity, expected_unit, desired_pint_unit)
+
+    @staticmethod
+    @pytest.mark.parametrize(
         "text,expected_unit,expected_pint_unit",
         [
             ("cp", "cup", unit_registry.cup),
@@ -22,6 +44,24 @@ class TestUnitFormatter:
             expected_unit,
             expected_pint_unit,
         )
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "quantity,unit,expected_str",
+        [
+            (1, unit_registry.cup, "cup"),
+            (2, unit_registry.cup, "cups"),
+            (1, unit_registry.tablespoon, "tbsp"),
+            (2, unit_registry.tablespoon, "tbsp"),
+            (1, unit_registry.slice, "slice"),
+            (2, unit_registry.slice, "slices"),
+            (1, unit_registry.pinch, "pinch"),
+            # TODO not implemented correctly
+            (2, unit_registry.pinch, "pinchs"),
+        ],
+    )
+    def test_get_unit_str(unit_formatter, quantity, unit, expected_str):
+        assert unit_formatter.get_unit_str(quantity, unit) == expected_str
 
     @staticmethod
     def test__get_pint_unit_raise_error_for_not_unit(unit_formatter):
@@ -86,28 +126,6 @@ class TestUnitFormatter:
         unit_formatter, text_unit, expected_unit
     ):
         assert unit_formatter._get_pint_unit(text_unit) == expected_unit
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "quantity,pint_unit,desired_pint_unit,expected_quantity,expected_unit",
-        [
-            (3, unit_registry.tsp, unit_registry.tbsp, 1, "tbsp"),
-            (4, unit_registry.tbsp, unit_registry.cup, 0.25, "cup"),
-            (400, unit_registry.gram, unit_registry.kg, 0.4, "kg"),
-            (16, unit_registry.ounce, unit_registry.g, 453.59, "g"),
-        ],
-    )
-    def test_convert_quantity_to_desired_unit(
-        unit_formatter,
-        quantity,
-        pint_unit,
-        desired_pint_unit,
-        expected_quantity,
-        expected_unit,
-    ):
-        assert unit_formatter.convert_to_desired_unit(
-            quantity, pint_unit, desired_pint_unit
-        ) == (expected_quantity, expected_unit, desired_pint_unit)
 
     @staticmethod
     @pytest.mark.parametrize(

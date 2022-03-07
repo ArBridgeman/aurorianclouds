@@ -323,7 +323,12 @@ class TestIngredientFormatter:
         item,
         skip,
     ):
-        ingredient = Ingredient(quantity=quantity, unit=unit, item=item)
+        ingredient = Ingredient(
+            quantity=quantity,
+            unit=unit,
+            pint_unit=unit_registry[unit],
+            item=item,
+        )
         mock_pantry_list.retrieve_match.return_value = pantry_entry
 
         ingredient.set_pantry_info(pantry_entry)

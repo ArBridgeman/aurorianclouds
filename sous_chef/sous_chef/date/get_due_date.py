@@ -2,8 +2,14 @@ import datetime
 from enum import Enum
 
 
-# TODO move to config?
-class Weekday(Enum):
+class ExtendedEnum(Enum):
+    @classmethod
+    def name_list(cls, string_method: str = "casefold"):
+        return list(map(lambda c: getattr(c.name, string_method)(), cls))
+
+
+# TODO make configurable?
+class Weekday(ExtendedEnum):
     monday = 0
     tuesday = 1
     wednesday = 2
@@ -13,7 +19,7 @@ class Weekday(Enum):
     sunday = 6
 
 
-class MealTime(Enum):
+class MealTime(ExtendedEnum):
     breakfast = {"hour": 8, "minute": 30}
     lunch = {"hour": 11, "minute": 30}
     dinner = {"hour": 18, "minute": 15}

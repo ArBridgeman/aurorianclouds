@@ -312,6 +312,7 @@ class TestIngredientFormatter:
         [
             (1, "cup", "rice", "N"),
             (0.5, "head", "salad", "N"),
+            (4, "", "bread rolls", "N"),
         ],
     )
     def test_format_manual_ingredient(
@@ -326,7 +327,7 @@ class TestIngredientFormatter:
         ingredient = Ingredient(
             quantity=quantity,
             unit=unit,
-            pint_unit=unit_registry[unit],
+            pint_unit=unit_registry[unit] if unit else None,
             item=item,
         )
         mock_pantry_list.retrieve_match.return_value = pantry_entry

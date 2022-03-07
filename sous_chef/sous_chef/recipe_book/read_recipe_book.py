@@ -2,10 +2,14 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Callable
 
 import numpy as np
 import pandas as pd
-from sous_chef.abstract.search_dataframe import DataframeSearchable
+from sous_chef.abstract.search_dataframe import (
+    DataframeSearchable,
+    DirectSearchError,
+)
 from sous_chef.definitions import (
     CALENDAR_COLUMNS,
     CALENDAR_FILE_PATTERN,
@@ -15,6 +19,10 @@ from structlog import get_logger
 
 HOME_PATH = str(Path.home())
 FILE_LOGGER = get_logger(__name__)
+
+
+class SelectRandomRecipeError(DirectSearchError):
+    message = "[select random recipe failed]"
 
 
 @dataclass
@@ -31,11 +39,22 @@ class RecipeBook(DataframeSearchable):
     def __post_init__(self):
         # load basic recipe book to self.dataframe
         self.dataframe = self._read_recipe_book()
-
         if self.config.deduplicate:
             self._select_highest_rated_when_duplicated_name()
 
-    def get_recipe_by_title(self, title):
+    def get_random_recipe_by_category(self, category: str) -> Recipe:
+        return self._select_random_recipe_weighted_by_rating(
+            method_match=self._is_value_in_list,
+            field="categories",
+            search_term=category,
+        )
+
+    def get_random_recipe_by_tag(self, tag: str) -> Recipe:
+        return self._select_random_recipe_weighted_by_rating(
+            method_match=self._is_value_in_list, field="tags", search_term=tag
+        )
+
+    def get_recipe_by_title(self, title) -> Recipe:
         result = self.retrieve_match(field="title", search_term=title)
         return Recipe(
             title=result.title,
@@ -43,6 +62,11 @@ class RecipeBook(DataframeSearchable):
             ingredient_field=result.ingredients,
             total_cook_time=result.totalTime,
         )
+
+    @staticmethod
+    def _is_value_in_list(row: pd.Series, search_term: str):
+        # TODO would be better if columns handled upon import to casefold
+        return search_term.casefold() in [entry.casefold() for entry in row]
 
     def _read_recipe_book(self):
         recipe_book_path = Path(HOME_PATH, self.config.path)
@@ -54,6 +78,36 @@ class RecipeBook(DataframeSearchable):
                 )
             ]
         )
+
+    def _select_random_recipe_weighted_by_rating(
+        self, method_match: Callable, field: str, search_term: str
+    ):
+        config_random = self.config.random_select
+        mask_selection = self.dataframe[field].apply(
+            lambda row: method_match(row, search_term)
+        )
+        # TODO CODE-167 need way to remove recent entries per history log
+        if (count := sum(mask_selection)) > config_random.min_thresh_error:
+            if count < config_random.min_thresh_warning:
+                FILE_LOGGER.warning(
+                    "[select random recipe]",
+                    selection=f"{field}={search_term}",
+                    warning=f"only {count} entries available",
+                    thresh=config_random.min_thresh_warning,
+                )
+
+            result_df = self.dataframe[mask_selection]
+            weighting = result_df.rating.copy(deep=True).replace(
+                0, config_random.default_rating
+            )
+            result = result_df.sample(n=1, weights=weighting).iloc[0]
+            return Recipe(
+                title=result.title,
+                rating=result.rating,
+                ingredient_field=result.ingredients,
+                total_cook_time=result.totalTime,
+            )
+        raise SelectRandomRecipeError(field=field, search_term=search_term)
 
     def _select_highest_rated_when_duplicated_name(self):
         self.dataframe = self.dataframe.sort_values(["rating"], ascending=False)

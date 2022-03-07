@@ -11,6 +11,7 @@ menu:
   input_method: fixed
   output_method: local
   fixed:
+    basic: menu-basic
     file_prefix: menu-
     menu_number:
   local:

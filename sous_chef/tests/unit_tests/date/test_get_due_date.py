@@ -2,7 +2,7 @@ import datetime
 
 import pytest
 from freezegun import freeze_time
-from sous_chef.date.get_due_date import DueDatetimeFormatter
+from sous_chef.date.get_due_date import DueDatetimeFormatter, MealTime
 
 FROZEN_DATE = "2022-01-14"
 
@@ -18,6 +18,21 @@ def create_datetime(
     return datetime.datetime(
         year=year, month=month, day=day, hour=hour, minute=minute, second=second
     )
+
+
+class TestExtendedEnum:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "string_method,expected_list",
+        [
+            ("casefold", ["breakfast", "lunch", "dinner"]),
+            ("lower", ["breakfast", "lunch", "dinner"]),
+            ("capitalize", ["Breakfast", "Lunch", "Dinner"]),
+            ("upper", ["BREAKFAST", "LUNCH", "DINNER"]),
+        ],
+    )
+    def test_name_list(string_method, expected_list):
+        assert MealTime.name_list(string_method) == expected_list
 
 
 class TestDueDatetimeFormatter:

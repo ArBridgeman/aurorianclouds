@@ -5,6 +5,7 @@ import pandas as pd
 from sous_chef.definitions import PROTEIN_SOURCE
 
 
+# TODO move this and other to RecipeBook
 def has_recipe_category_or_tag(recipe_tags, desired_category_or_tag):
     return desired_category_or_tag in recipe_tags
 

@@ -43,8 +43,6 @@ class MenuBuilder:
         eat_unit: str = "",
         freeze_factor: float = 0.0,
         item: str = "dummy",
-        grocery_list: str = "Y",
-        menu_list: str = "Y",
     ) -> pd.Series:
         row = DataFrame[MenuSchema](
             {
@@ -55,8 +53,6 @@ class MenuBuilder:
                 "freeze_factor": freeze_factor,
                 "item": item,
                 "type": item_type,
-                "grocery_list": grocery_list,
-                "menu_list": menu_list,
             },
             index=[0],
         )

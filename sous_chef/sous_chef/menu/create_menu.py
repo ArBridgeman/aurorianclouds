@@ -50,8 +50,6 @@ class MenuSchema(pa.SchemaModel):
     eat_unit: Series[str]
     freeze_factor: Series[float] = pa.Field(ge=0, nullable=False)
     item: Series[str]
-    grocery_list: Series[str] = pa.Field(isin=["Y", "N"])
-    menu_list: Series[str] = pa.Field(isin=["Y", "N"])
 
 
 @dataclass
@@ -71,20 +69,15 @@ class Menu:
         self,
     ) -> (list[MenuIngredient], list[MenuRecipe]):
         self.dataframe = self._load_local_menu()
-        mask_grocery_list = self.dataframe["grocery_list"] == "Y"
 
-        mask_manual_ingredient = self.dataframe["type"] == "ingredient"
-        mask_manual_ingredient &= mask_grocery_list
         manual_ingredient_list = (
-            self.dataframe[mask_manual_ingredient]
+            self.dataframe[self.dataframe["type"] == "ingredient"]
             .apply(self._retrieve_manual_menu_ingredient, axis=1)
             .tolist()
         )
 
-        mask_recipe = self.dataframe["type"] == "recipe"
-        mask_recipe &= mask_grocery_list
         recipe_list = (
-            self.dataframe[mask_recipe]
+            self.dataframe[self.dataframe["type"] == "recipe"]
             .apply(self._retrieve_menu_recipe, axis=1)
             .tolist()
         )
@@ -102,19 +95,15 @@ class Menu:
                 for _ in range(3)
             ]
 
-        mask_menu_task = self.dataframe["menu_list"] == "Y"
-        if sum(mask_menu_task) > 0:
-            task_list, due_date_list = zip(
-                *self.dataframe[mask_menu_task].apply(
-                    self._format_task_and_due_date_list, axis=1
-                )
-            )
+        task_list, due_date_list = zip(
+            *self.dataframe.apply(self._format_task_and_due_date_list, axis=1)
+        )
 
-            todoist_helper.add_task_list_to_project_with_due_date_list(
-                task_list=task_list,
-                project=project_name,
-                due_date_list=due_date_list,
-            )
+        todoist_helper.add_task_list_to_project_with_due_date_list(
+            task_list=task_list,
+            project=project_name,
+            due_date_list=due_date_list,
+        )
 
     @staticmethod
     def _check_fixed_menu_number(menu_number: int):
@@ -211,7 +200,7 @@ class Menu:
             return self._select_random_recipe(
                 row, "get_random_recipe_by_category"
             )
-        if row["type"] == "ingredient" and row["grocery_list"] == "Y":
+        if row["type"] == "ingredient":
             # do NOT need returned as found as is
             self._check_manual_ingredient(row)
             return row

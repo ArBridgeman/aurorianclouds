@@ -12,11 +12,8 @@ from sous_chef.formatter.ingredient.format_ingredient_field import (
 )
 from sous_chef.grocery_list.generate_grocery_list import GroceryList
 from sous_chef.menu.create_menu import MenuRecipe
-from tests.unit_tests.util import (
-    assert_equal_dataframe,
-    assert_equal_series,
-    create_recipe,
-)
+from tests.unit_tests.util import create_recipe
+from tests.util import assert_equal_dataframe, assert_equal_series
 
 
 def create_grocery_list_row(

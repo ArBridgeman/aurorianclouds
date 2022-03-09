@@ -167,7 +167,7 @@ class Menu:
 
     def _load_fixed_menu(self, gsheets_helper):
         menu_basic_file = self.config.fixed.basic
-        menu_basic = gsheets_helper.get_sheet_as_df(
+        menu_basic = gsheets_helper.get_worksheet(
             menu_basic_file, menu_basic_file
         )
 
@@ -175,7 +175,7 @@ class Menu:
             self.config.fixed.menu_number
         )
         menu_fixed_file = f"{self.config.fixed.file_prefix}{menu_number}"
-        menu_fixed = gsheets_helper.get_sheet_as_df(
+        menu_fixed = gsheets_helper.get_worksheet(
             menu_fixed_file, menu_fixed_file
         )
         return pd.concat([menu_basic, menu_fixed]).sort_values(

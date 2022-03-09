@@ -10,7 +10,7 @@ from sous_chef.recipe_book.read_recipe_book import (
     RecipeBook,
     SelectRandomRecipeError,
 )
-from tests.unit_tests.util import assert_equal_dataframe
+from tests.util import assert_equal_dataframe
 
 
 @pytest.fixture

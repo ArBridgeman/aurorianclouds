@@ -20,11 +20,8 @@ from sous_chef.menu.create_menu import (
     MenuSchema,
 )
 from sous_chef.messaging.gsheets_api import GsheetsHelper
-from tests.unit_tests.util import (
-    assert_equal_dataframe,
-    assert_equal_series,
-    create_recipe,
-)
+from tests.unit_tests.util import create_recipe
+from tests.util import assert_equal_dataframe, assert_equal_series
 
 FROZEN_DATE = "2022-01-14"
 
@@ -119,7 +116,7 @@ class TestMenu:
     @staticmethod
     def test_finalize_fixed_menu(menu, menu_config, menu_default, mock_gsheets):
         menu_config.fixed.menu_number = 1
-        mock_gsheets.get_sheet_as_df.return_value = menu_default
+        mock_gsheets.get_worksheet.return_value = menu_default
         menu.finalize_fixed_menu(mock_gsheets)
         assert Path(menu_config.local.file_path).exists()
 

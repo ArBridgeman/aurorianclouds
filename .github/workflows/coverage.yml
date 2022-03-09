@@ -11,25 +11,21 @@ jobs:
     steps:
       - name: Check out our repo branch
         uses: actions/checkout@v2
-      - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+      - name: Setup Python environment
+        uses: ./.github/actions/python-setup
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Run image
-        uses: abatilo/actions-poetry@v2.0.0
-        with:
           poetry-version: ${{ matrix.poetry-version }}
-      - name: Install dependencies
-        run: poetry install
+          gsheets-service-token: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
       - name: Get coverage
         run: |
           poetry run coverage run  --rcfile .coveragerc. -m pytest \
-          sous_chef/tests/unit_tests
+          sous_chef/tests/unit_tests sous_chef/tests/integration_tests/
       - name: Create coverage XML
         run: poetry run coverage xml
       - name: Output coverage report
         run: poetry run coverage report
-      - name: Upload Coverage to Codecov
+      - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

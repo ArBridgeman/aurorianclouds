@@ -6,6 +6,9 @@ from sous_chef.formatter.units import (
     not_abbreviated,
     unit_registry,
 )
+from structlog import get_logger
+
+FILE_LOGGER = get_logger(__name__)
 
 
 @dataclass
@@ -55,6 +58,11 @@ class UnitFormatter:
             ).units
             if pint_unit in allowed_unit_list:
                 return pint_unit
+            FILE_LOGGER.warning(
+                "[get pint unit]",
+                warn="unit not in allowed_unit_list",
+                unit=pint_unit,
+            )
         except UndefinedUnitError:
             pass
         raise UnitExtractionError(text=text_unit)

@@ -177,7 +177,7 @@ class TestMenu:
     @staticmethod
     @pytest.mark.parametrize("menu_number", [1, 12])
     def test__check_fixed_menu_number(menu, menu_number):
-        assert menu._check_fixed_menu_number(menu_number) == menu_number
+        menu._check_fixed_menu_number(menu_number)
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -191,9 +191,9 @@ class TestMenu:
     def test__check_fixed_menu_number_raise_value_error(
         menu, menu_number, error_message
     ):
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError) as error:
             menu._check_fixed_menu_number(menu_number)
-        assert e.value.args[0] == error_message
+        assert str(error.value) == error_message
 
     @staticmethod
     def test__check_recipe_and_add_cooking_time_nat(menu, mock_recipe_book):

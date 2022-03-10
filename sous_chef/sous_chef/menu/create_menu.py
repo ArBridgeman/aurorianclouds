@@ -111,7 +111,6 @@ class Menu:
             raise ValueError("fixed menu number not specified")
         if not isinstance(menu_number, int):
             raise ValueError(f"fixed menu number ({menu_number}) not an int")
-        return menu_number
 
     def _check_manual_ingredient(self, row: pd.Series):
         return self.ingredient_formatter.format_manual_ingredient(
@@ -171,9 +170,8 @@ class Menu:
             menu_basic_file, menu_basic_file
         )
 
-        menu_number = self._check_fixed_menu_number(
-            self.config.fixed.menu_number
-        )
+        menu_number = self.config.fixed.menu_number
+        self._check_fixed_menu_number(menu_number)
         menu_fixed_file = f"{self.config.fixed.file_prefix}{menu_number}"
         menu_fixed = gsheets_helper.get_worksheet(
             menu_fixed_file, menu_fixed_file

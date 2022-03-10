@@ -140,5 +140,6 @@ class TestReferencedRecipeLine:
     @staticmethod
     def test_convert_to_referenced_recipe_raise_error(referenced_recipe_line):
         result = referenced_recipe_line("# 1 cup ")
-        with pytest.raises(NoTitleReferencedRecipeError):
+        with pytest.raises(NoTitleReferencedRecipeError) as error:
             result.convert_to_referenced_recipe()
+        assert str(error.value) == "[empty title] referenced_recipe="

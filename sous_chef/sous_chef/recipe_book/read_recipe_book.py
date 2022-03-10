@@ -10,15 +10,26 @@ from sous_chef.abstract.search_dataframe import (
     DataframeSearchable,
     DirectSearchError,
 )
-from sous_chef.definitions import (
-    CALENDAR_COLUMNS,
-    CALENDAR_FILE_PATTERN,
-    INP_JSON_COLUMNS,
-)
 from structlog import get_logger
 
 HOME_PATH = str(Path.home())
 FILE_LOGGER = get_logger(__name__)
+
+INP_JSON_COLUMNS = {
+    "title": str,
+    "preparationTime": str,
+    "cookingTime": str,
+    "totalTime": str,
+    "ingredients": str,
+    "instructions": str,
+    "rating": float,
+    "favorite": bool,
+    "categories": list,
+    # TODO quantity should be split/standardized...it's bad!!!
+    "quantity": str,
+    "tags": list,
+    "uuid": str,
+}
 
 
 class SelectRandomRecipeError(DirectSearchError):
@@ -156,7 +167,7 @@ def create_timedelta(row_entry):
         return pd.to_timedelta(row_entry, unit=None, errors="raise")
 
 
-# TODO figure to separate active vs inactive cooking; make resilient to problems
+# TODO separate active vs inactive cooking; make resilient to problems
 def retrieve_format_recipe_df(
     json_file, cols_to_select=INP_JSON_COLUMNS.keys()
 ):
@@ -173,37 +184,3 @@ def retrieve_format_recipe_df(
     tmp_df["categories"] = tmp_df.categories.apply(flatten_dict_to_list)
     tmp_df["tags"] = tmp_df.tags.apply(flatten_dict_to_list)
     return tmp_df
-
-
-def create_food_type(row):
-    if "veggies" in row.tags:
-        return "veggies"
-    elif "starch" in row.tags:
-        return "starch"
-    elif "Entree" in row.categories:
-        return "protein"
-    else:
-        return "dessert"
-
-
-def label_calendar(calendar, recipes):
-    calendar = pd.merge(
-        calendar,
-        recipes[["uuid", "tags", "categories"]],
-        how="inner",
-        left_on="recipeUuid",
-        right_on="uuid",
-    )
-    calendar["food_type"] = calendar.apply(
-        lambda x: create_food_type(x), axis=1
-    )
-    return calendar
-
-
-def read_calendar(calendar_path, recipes):
-    filepath = Path(calendar_path, CALENDAR_FILE_PATTERN)
-    calendar = pd.read_json(filepath, dtype=CALENDAR_COLUMNS)[
-        CALENDAR_COLUMNS.keys()
-    ]
-    calendar["date"] = pd.to_datetime(calendar["date"]).dt.date
-    return label_calendar(calendar, recipes)

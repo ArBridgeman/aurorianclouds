@@ -1,0 +1,4 @@
+gmail:
+  address_file_path: ../tokens/address_book.json
+  client_file_path: ../tokens/gmail_client_key.json
+  auth_file_path: ../tokens/gmail_auth_token.json

@@ -13,8 +13,8 @@ import todoist
 from omegaconf import DictConfig
 from structlog import get_logger
 
-FILE_LOGGER = get_logger(__name__)
 ABS_FILE_PATH = Path(__file__).absolute().parent
+FILE_LOGGER = get_logger(__name__)
 
 
 @dataclass

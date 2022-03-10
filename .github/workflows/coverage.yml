@@ -16,6 +16,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           poetry-version: ${{ matrix.poetry-version }}
+          address-book: ${{ secrets.ADDRESS_BOOK }}
+          gmail-auth-token: ${{ secrets.GMAIL_AUTH_TOKEN }}
+          gmail-client-key: ${{ secrets.GMAIL_CLIENT_KEY}}
           gsheets-service-token: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
       - name: Get coverage
         run: |

@@ -1,0 +1,11 @@
+create_menu:
+  input_method:
+  output_method: local
+  fixed:
+    basic: menu-basic
+    file_prefix: menu-
+    menu_number:
+  local:
+    file_path: ../menu/menu-tmp.csv
+  run_mode:
+    with_inspect_unrated_recipe: true

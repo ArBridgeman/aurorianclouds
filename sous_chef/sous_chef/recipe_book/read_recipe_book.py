@@ -49,7 +49,7 @@ class Recipe:
 class RecipeBook(DataframeSearchable):
     def __post_init__(self):
         # load basic recipe book to self.dataframe
-        self.dataframe = self._read_recipe_book()
+        self._read_recipe_book()
         if self.config.deduplicate:
             self._select_highest_rated_when_duplicated_name()
 
@@ -81,7 +81,7 @@ class RecipeBook(DataframeSearchable):
 
     def _read_recipe_book(self):
         recipe_book_path = Path(HOME_PATH, self.config.path)
-        return pd.concat(
+        self.dataframe = pd.concat(
             [
                 retrieve_format_recipe_df(recipe_file)
                 for recipe_file in recipe_book_path.glob(
@@ -176,6 +176,7 @@ def retrieve_format_recipe_df(
         if col not in tmp_df.columns:
             tmp_df[col] = None
     tmp_df = tmp_df[cols_to_select]
+    tmp_df["rating"] = tmp_df["rating"].fillna(0.0)
     tmp_df["totalTime"] = tmp_df["totalTime"].apply(create_timedelta)
     tmp_df["preparationTime"] = tmp_df["preparationTime"].apply(
         create_timedelta

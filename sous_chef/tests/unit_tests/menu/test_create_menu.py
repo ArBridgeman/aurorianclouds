@@ -14,6 +14,7 @@ from sous_chef.formatter.ingredient.format_ingredient import (
     IngredientFormatter,
 )
 from sous_chef.menu.create_menu import (
+    FinalizedMenuSchema,
     Menu,
     MenuIngredient,
     MenuRecipe,
@@ -21,7 +22,7 @@ from sous_chef.menu.create_menu import (
 )
 from sous_chef.messaging.gsheets_api import GsheetsHelper
 from tests.unit_tests.util import create_recipe
-from tests.util import assert_equal_dataframe, assert_equal_series
+from tests.util import assert_equal_dataframe_backup, assert_equal_series
 
 FROZEN_DATE = "2022-01-14"
 
@@ -30,8 +31,19 @@ FROZEN_DATE = "2022-01-14"
 class MenuBuilder:
     menu: pd.DataFrame = None
 
-    def add_row(
-        self,
+    def add_menu_row(self, row: pd.DataFrame):
+        if self.menu is None:
+            self.menu = row
+        else:
+            self.menu = pd.concat([self.menu, row], ignore_index=True)
+
+    def add_menu_list(self, menu_row_list: list[pd.DataFrame]):
+        for menu_row in menu_row_list:
+            self.add_menu_row(menu_row)
+        return self
+
+    @staticmethod
+    def create_menu_row(
         weekday: str = "Friday",
         meal_time: str = "dinner",
         item_type: str = "recipe",
@@ -40,44 +52,53 @@ class MenuBuilder:
         eat_unit: str = "",
         freeze_factor: float = 0.0,
         item: str = "dummy",
-    ) -> pd.Series:
-        row = DataFrame[MenuSchema](
-            {
-                "weekday": weekday,
-                "meal_time": meal_time,
-                "eat_factor": eat_factor,
-                "eat_unit": eat_unit,
-                "freeze_factor": freeze_factor,
-                "item": item,
-                "type": item_type,
-            },
-            index=[0],
-        )
-
-        if self.menu is None:
-            self.menu = row
-        else:
-            self.menu = pd.concat([self.menu, row], ignore_index=True)
-        return row.squeeze().copy(deep=True)
+        post_process_recipe: bool = False,
+        rating: float = 0.0,
+        total_cook_time: pd.Timedelta = pd.to_timedelta("5 min"),
+    ) -> pd.DataFrame:
+        menu = {
+            "weekday": weekday,
+            "meal_time": meal_time,
+            "eat_factor": eat_factor,
+            "eat_unit": eat_unit,
+            "freeze_factor": freeze_factor,
+            "item": item,
+            "type": item_type,
+        }
+        if not post_process_recipe:
+            return DataFrame[MenuSchema](menu, index=[0])
+        menu["rating"] = rating
+        menu["total_cook_time"] = total_cook_time
+        return DataFrame[FinalizedMenuSchema](menu, index=[0])
 
     def get_menu(self) -> pd.DataFrame:
         return self.menu
 
 
 @pytest.fixture
-def menu_default(menu):
-    menu_builder = MenuBuilder()
-    menu_builder.add_row(item="recipe_no_freezing", freeze_factor=0.0)
-    menu_builder.add_row(item="recipe_with_freezing", freeze_factor=0.5)
-    menu_builder.add_row(
-        item="manual ingredient",
-        item_type="ingredient",
-        eat_factor=1.0,
-        eat_unit="pkg",
-    )
+def menu_builder():
+    return MenuBuilder()
 
-    menu_default = menu_builder.get_menu()
-    return menu_default
+
+@pytest.fixture
+def menu_default(menu_builder):
+    menu_builder.add_menu_list(
+        [
+            menu_builder.create_menu_row(
+                item="recipe_no_freezing", freeze_factor=0.0
+            ),
+            menu_builder.create_menu_row(
+                item="recipe_with_freezing", freeze_factor=0.5
+            ),
+            menu_builder.create_menu_row(
+                item="manual ingredient",
+                item_type="ingredient",
+                eat_factor=1.0,
+                eat_unit="pkg",
+            ),
+        ]
+    )
+    return menu_builder.get_menu()
 
 
 @pytest.fixture
@@ -97,8 +118,8 @@ def mock_ingredient_formatter():
 
 @pytest.fixture
 def menu_config(tmp_path):
-    with initialize(config_path="../../../config"):
-        config = compose(config_name="menu").menu
+    with initialize(config_path="../../../config/menu"):
+        config = compose(config_name="create_menu").create_menu
         config.local.file_path = str(tmp_path / "menu-tmp.csv")
         return config
 
@@ -114,65 +135,22 @@ def menu(menu_config, mock_ingredient_formatter, mock_recipe_book):
 
 class TestMenu:
     @staticmethod
-    def test_finalize_fixed_menu(menu, menu_config, menu_default, mock_gsheets):
+    def test_finalize_fixed_menu(
+        menu, menu_config, menu_builder, mock_gsheets, mock_recipe_book
+    ):
         menu_config.fixed.menu_number = 1
-        mock_gsheets.get_worksheet.return_value = menu_default
+        mock_recipe_book.get_recipe_by_title.return_value = create_recipe()
+        mock_gsheets.get_worksheet.return_value = menu_builder.create_menu_row()
         menu.finalize_fixed_menu(mock_gsheets)
         assert Path(menu_config.local.file_path).exists()
 
     @staticmethod
-    @pytest.mark.parametrize(
-        "quantity,unit,item,recipe_title,total_cook_time_str",
-        [(1.0, "cup", "frozen broccoli", "garlic aioli", "5 minutes")],
-    )
-    def test_get_menu_for_grocery_list(
-        menu,
-        mock_ingredient_formatter,
-        mock_recipe_book,
-        quantity,
-        unit,
-        item,
-        recipe_title,
-        total_cook_time_str,
-    ):
-        recipe_with_recipe_title = create_recipe(title=recipe_title)
-        menu_builder = MenuBuilder()
-        recipe = menu_builder.add_row(
-            item=recipe_title, item_type="recipe", freeze_factor=0.5
-        )
-        menu_builder.add_row(
-            eat_factor=quantity,
-            eat_unit=unit,
-            item=item,
-            item_type="ingredient",
-        )
-        menu.dataframe = menu_builder.get_menu()
+    def test_load_local_menu(menu, menu_builder):
+        fake_menu = menu_builder.create_menu_row(post_process_recipe=True)
+        menu.dataframe = fake_menu
         menu._save_menu()
-
-        ingredient = Ingredient(quantity=quantity, unit=unit, item=item)
-        mock_ingredient_formatter.format_manual_ingredient.return_value = (
-            ingredient
-        )
-        mock_recipe_book.get_recipe_by_title.return_value = (
-            recipe_with_recipe_title
-        )
-
-        manual_ingredient_list, recipe_list = menu.get_menu_for_grocery_list()
-
-        assert manual_ingredient_list == [
-            MenuIngredient(
-                ingredient=ingredient, from_day="Friday", from_recipe="manual"
-            )
-        ]
-        assert recipe_list == [
-            MenuRecipe(
-                recipe=recipe_with_recipe_title,
-                eat_factor=recipe["eat_factor"],
-                freeze_factor=recipe["freeze_factor"],
-                from_day=recipe["weekday"],
-                from_recipe=recipe["item"],
-            )
-        ]
+        menu.load_local_menu()
+        assert_equal_dataframe_backup(menu.dataframe, fake_menu)
 
     @staticmethod
     @pytest.mark.parametrize("menu_number", [1, 12])
@@ -196,32 +174,37 @@ class TestMenu:
         assert str(error.value) == error_message
 
     @staticmethod
-    def test__check_recipe_and_add_cooking_time_nat(menu, mock_recipe_book):
+    def test__check_recipe_and_add_cooking_time_nat(
+        menu, menu_builder, mock_recipe_book
+    ):
         recipe_title = "recipe_without_cook_time"
+        row = menu_builder.create_menu_row(
+            item=recipe_title, item_type="recipe"
+        ).squeeze()
 
-        menu_builder = MenuBuilder()
-        row = menu_builder.add_row(item=recipe_title, item_type="recipe")
-
-        recipe_with_total_cook_time = create_recipe(
+        recipe_without_total_cook_time = create_recipe(
             title=recipe_title, total_cook_time_str=""
         )
         mock_recipe_book.get_recipe_by_title.return_value = (
-            recipe_with_total_cook_time
+            recipe_without_total_cook_time
         )
 
-        result = menu._check_recipe_and_add_cooking_time(row)
+        result = menu._add_recipe_cook_time_and_rating(row.copy(deep=True))
 
-        assert result["item"] == recipe_with_total_cook_time.title
+        assert result["item"] == recipe_without_total_cook_time.title
         assert result["total_cook_time"] is pd.NaT
 
     @staticmethod
     @freeze_time(FROZEN_DATE)
-    def test__format_task_and_due_date_list(menu):
-        menu_builder = MenuBuilder()
-        row = menu_builder.add_row(
-            item="french onion soup", weekday="Friday", meal_time="dinner"
-        )
-        row["total_cook_time"] = datetime.timedelta(minutes=40)
+    def test__format_task_and_due_date_list(menu, menu_builder):
+        recipe_title = "french onion soup"
+        row = menu_builder.create_menu_row(
+            post_process_recipe=True,
+            item=recipe_title,
+            weekday="Friday",
+            meal_time="dinner",
+            total_cook_time=pd.to_timedelta("40 min"),
+        ).squeeze()
         assert menu._format_task_and_due_date_list(row) == (
             "french onion soup (x eat: 1.0) [40 min]",
             datetime.datetime(2022, 1, 21, 17, 35),
@@ -229,18 +212,18 @@ class TestMenu:
 
     @staticmethod
     @freeze_time(FROZEN_DATE)
-    def test__format_menu_task_with_freeze_factor(menu):
-        menu_builder = MenuBuilder()
-        row = menu_builder.add_row(
-            item="french onion soup",
-            weekday="Monday",
+    def test__format_menu_task_with_freeze_factor(menu, menu_builder):
+        recipe_title = "french onion soup"
+        row = menu_builder.create_menu_row(
+            post_process_recipe=True,
+            item=recipe_title,
+            weekday="Friday",
             meal_time="dinner",
             freeze_factor=0.5,
-        )
-        row["total_cook_time"] = ""
+        ).squeeze()
         assert menu._format_task_and_due_date_list(row) == (
-            "french onion soup (x eat: 1.0, x freeze: 0.5) [20 min]",
-            datetime.datetime(2022, 1, 17, 17, 55),
+            "french onion soup (x eat: 1.0, x freeze: 0.5) [5 min]",
+            datetime.datetime(2022, 1, 21, 18, 10),
         )
 
     @staticmethod
@@ -314,13 +297,11 @@ class TestMenu:
         [("garlic aioli", "5 minutes"), ("banana souffle", "1 hour 4 minutes")],
     )
     def test__process_menu_recipe(
-        menu,
-        mock_recipe_book,
-        recipe_title,
-        total_cook_time_str,
+        menu, menu_builder, mock_recipe_book, recipe_title, total_cook_time_str
     ):
-        menu_builder = MenuBuilder()
-        row = menu_builder.add_row(item=recipe_title, item_type="recipe")
+        row = menu_builder.create_menu_row(
+            item=recipe_title, item_type="recipe"
+        ).squeeze()
 
         recipe_with_total_cook_time = create_recipe(
             title=recipe_title, total_cook_time_str=total_cook_time_str
@@ -331,10 +312,14 @@ class TestMenu:
 
         result = menu._process_menu(row.copy(deep=True))
 
-        assert result["item"] == recipe_with_total_cook_time.title
-        assert (
-            result["total_cook_time"]
-            == recipe_with_total_cook_time.total_cook_time
+        assert_equal_series(
+            result,
+            menu_builder.create_menu_row(
+                post_process_recipe=True,
+                item=recipe_title,
+                item_type="recipe",
+                total_cook_time=pd.to_timedelta(total_cook_time_str),
+            ).squeeze(),
         )
 
     @staticmethod
@@ -342,15 +327,14 @@ class TestMenu:
         "quantity,unit,item", [(1.0, "cup", "frozen broccoli")]
     )
     def test__process_menu_ingredient(
-        menu, mock_ingredient_formatter, quantity, unit, item
+        menu, menu_builder, mock_ingredient_formatter, quantity, unit, item
     ):
-        menu_builder = MenuBuilder()
-        row = menu_builder.add_row(
+        row = menu_builder.create_menu_row(
             eat_factor=quantity,
             eat_unit=unit,
             item=item,
             item_type="ingredient",
-        )
+        ).squeeze()
 
         ingredient = Ingredient(quantity=quantity, unit=unit, item=item)
         mock_ingredient_formatter.format_manual_ingredient.return_value = (
@@ -369,53 +353,58 @@ class TestMenu:
         ],
     )
     def test__process_menu_category_or_tag(
-        menu, mock_recipe_book, log, item_type, method
+        menu, menu_builder, mock_recipe_book, log, item_type, method
     ):
-        menu_builder = MenuBuilder()
-        row = menu_builder.add_row(
+        row = menu_builder.create_menu_row(
             item_type=item_type, item=f"dummy_{item_type}"
-        )
+        ).squeeze()
 
         recipe = create_recipe(title="dummy_recipe")
         getattr(mock_recipe_book, method).return_value = recipe
+        mock_recipe_book.get_recipe_by_title.return_value = recipe
 
         result = menu._process_menu(row.copy(deep=True))
 
-        expected_row = row.copy(deep=True)
-        expected_row["item"] = recipe.title
-        expected_row["type"] = "recipe"
-        assert_equal_series(result, expected_row)
+        assert_equal_series(
+            result,
+            menu_builder.create_menu_row(
+                post_process_recipe=True,
+                item=recipe.title,
+                item_type="recipe",
+                total_cook_time=recipe.total_cook_time,
+                rating=recipe.rating,
+            ).squeeze(),
+        )
         assert log.events == [
             {
                 "event": "[process menu]",
-                "action": "processing",
-                "day": row["weekday"],
-                "item": row["item"],
                 "level": "info",
+                "action": "processing",
+                "day": "Friday",
+                "item": f"dummy_{item_type}",
                 "type": item_type,
-            }
+            },
+            {
+                "event": "[unrated recipe]",
+                "level": "warning",
+                "action": "print out ingredient_field",
+                "recipe_title": "dummy_recipe",
+            },
         ]
-
-    @staticmethod
-    def test__load_local_menu(menu, menu_default):
-        menu.dataframe = menu_default
-        menu._save_menu()
-        assert_equal_dataframe(menu._load_local_menu(), menu_default)
 
     @staticmethod
     @pytest.mark.parametrize(
         "quantity,unit,item", [(1.0, "cup", "frozen broccoli")]
     )
     def test__retrieve_manual_menu_ingredient(
-        menu, mock_ingredient_formatter, quantity, unit, item
+        menu, menu_builder, mock_ingredient_formatter, quantity, unit, item
     ):
-        menu_builder = MenuBuilder()
-        row = menu_builder.add_row(
+        row = menu_builder.create_menu_row(
             eat_factor=quantity,
             eat_unit=unit,
             item=item,
             item_type="ingredient",
-        )
+        ).squeeze()
 
         ingredient = Ingredient(quantity=quantity, unit=unit, item=item)
         mock_ingredient_formatter.format_manual_ingredient.return_value = (
@@ -433,12 +422,13 @@ class TestMenu:
     )
     def test__retrieve_menu_recipe(
         menu,
+        menu_builder,
         mock_recipe_book,
         recipe_title,
     ):
-        menu_builder = MenuBuilder()
-        row = menu_builder.add_row(item=recipe_title, item_type="recipe")
-
+        row = menu_builder.create_menu_row(
+            item=recipe_title, item_type="recipe"
+        ).squeeze()
         recipe_with_recipe_title = create_recipe(title=recipe_title)
         mock_recipe_book.get_recipe_by_title.return_value = (
             recipe_with_recipe_title
@@ -455,12 +445,12 @@ class TestMenu:
         )
 
     @staticmethod
-    def test__save_menu(menu, menu_config, menu_default):
-        menu.dataframe = menu_default
+    def test__save_menu(menu, menu_builder, menu_config):
+        menu.dataframe = menu_builder.create_menu_row(post_process_recipe=True)
         menu._save_menu()
         assert Path(menu_config.local.file_path).exists()
 
     @staticmethod
-    def test__validate_menu(menu, menu_default):
-        menu.dataframe = menu_default
-        menu._validate_menu()
+    def test__validate_menu_schema(menu, menu_builder):
+        menu.dataframe = menu_builder.create_menu_row()
+        menu._validate_menu_schema()

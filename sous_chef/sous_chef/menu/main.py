@@ -3,6 +3,7 @@ from omegaconf import DictConfig
 from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
 from sous_chef.menu.create_menu import Menu
+from sous_chef.messaging.gmail_api import GmailHelper
 from sous_chef.messaging.gsheets_api import GsheetsHelper
 from sous_chef.messaging.todoist_api import TodoistHelper
 from sous_chef.pantry_list.read_pantry_list import PantryList
@@ -10,7 +11,7 @@ from sous_chef.recipe_book.read_recipe_book import RecipeBook
 from sous_chef.rtk.read_write_rtk import RtkService
 
 
-@hydra.main(config_path="../../config", config_name="menu")
+@hydra.main(config_path="../../config/", config_name="menu_main")
 def main(config: DictConfig):
     # unzip latest recipe versions
     rtk_service = RtkService(config.rtk)
@@ -22,16 +23,22 @@ def main(config: DictConfig):
 
     # TODO move manual method here
     menu = Menu(
-        config.menu,
+        config.menu.create_menu,
         ingredient_formatter=ingredient_formatter,
         recipe_book=recipe_book,
     )
-    if config.menu.input_method == "fixed":
+    if config.menu.create_menu.input_method == "fixed":
         menu.finalize_fixed_menu(gsheets_helper)
+    elif config.menu.create_menu.input_method == "local":
+        menu.load_local_menu()
 
     if config.menu.run_mode.with_todoist:
         todoist_helper = TodoistHelper(config.messaging.todoist)
         menu.upload_menu_to_todoist(todoist_helper)
+
+    if config.menu.run_mode.with_gmail:
+        gmail_helper = GmailHelper(config.messaging.gmail)
+        menu.send_menu_to_gmail(gmail_helper)
 
 
 def _get_ingredient_formatter(

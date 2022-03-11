@@ -1,23 +1,19 @@
 defaults:
-  - _self_
   - pantry_list
   - recipe_book
   - rtk
   - formatter/format_ingredient
+  - menu/create_menu
+  - messaging/gmail_api
   - messaging/gsheets_api
   - messaging/todoist_api
+  - _self_
 
 menu:
-  input_method: fixed
-  output_method: local
-  fixed:
-    basic: menu-basic
-    file_prefix: menu-
-    menu_number:
-  local:
-    file_path: ../menu/menu-tmp.csv
+  create_menu:
+    input_method: fixed
   run_mode:
-    with_inspect_unrated_recipe: true
+    with_gmail: true
     with_todoist: true
   todoist:
     project_name: Menu

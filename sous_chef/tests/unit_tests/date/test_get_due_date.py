@@ -46,6 +46,11 @@ class TestDueDatetimeFormatter:
 
     @staticmethod
     @freeze_time(FROZEN_DATE)
+    def test_get_calendar_week():
+        assert DueDatetimeFormatter().get_calendar_week() == 2
+
+    @staticmethod
+    @freeze_time(FROZEN_DATE)
     def test_get_due_datetime_with_meal_time():
         assert DueDatetimeFormatter().get_due_datetime_with_meal_time(
             "monday", "dinner"

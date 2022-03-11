@@ -1,6 +1,5 @@
 defaults:
-  - _self_
-  - menu
+  - menu/create_menu
   - pantry_list
   - recipe_book
   - rtk
@@ -8,10 +7,11 @@ defaults:
   - formatter/format_ingredient_field
   - messaging/gsheets_api
   - messaging/todoist_api
+  - _self_
 
 menu:
-  input_method: local
-  output_method:
+  create_menu:
+    input_method: local
 
 grocery_list:
   todoist:

@@ -49,7 +49,7 @@ def main(config: DictConfig) -> None:
 
         # get menu for grocery list
         menu = Menu(
-            config.menu,
+            config.menu.create_menu,
             ingredient_formatter=ingredient_formatter,
             recipe_book=recipe_book,
         )

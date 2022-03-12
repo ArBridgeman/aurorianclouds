@@ -144,7 +144,11 @@ class TodoistHelper:
         section_id: int = None,
         label_list: list = None,
     ):
-        due_date_str = self._get_due_date_str(due_date)
+        due_date_str = (
+            self._get_due_date_str(due_date)
+            if isinstance(due_date, str)
+            else None
+        )
         FILE_LOGGER.info(
             "[todoist add]",
             task=task,
@@ -213,7 +217,6 @@ class TodoistHelper:
         no_recurring: bool = True,
         only_app_generated: bool = True,
         only_delete_after_date: date = None,
-        prior_move: str = "Deleted",
         sleep_in_seconds: int = 1,
     ):
         """
@@ -226,8 +229,6 @@ class TodoistHelper:
         that is added to all app-generated entries by default.
         :param only_delete_after_date: date (default: None).
         Delete entries with a due date after this date.
-        :param prior_move: string (optional).
-        If not None, move items to relevant section before deleting them.
         :param sleep_in_seconds: int (optional)
         Adds wait time in specified seconds before syncing
         """
@@ -240,13 +241,6 @@ class TodoistHelper:
         project_id = self._get_project_id(project)
         sleep(sleep_in_seconds)
         self.sync()
-
-        section_id = None
-        if prior_move is not None:
-            section_id = self._get_section_id(prior_move)
-            assert (
-                section_id is not None
-            ), "Id of section {:s} could not be found!".format(prior_move)
 
         app_added_label_id = self.get_label_id_or_add_new("app")
 
@@ -283,8 +277,6 @@ class TodoistHelper:
             "[todoist delete]", action=f"Deleting {len(for_deletion)} tasks!"
         )
         for to_delete in for_deletion:
-            if section_id is not None:
-                self.connection.items.move(to_delete, section_id=section_id)
             self.connection.items.delete(to_delete)
             self.commit()
 
@@ -303,8 +295,6 @@ class TodoistHelper:
 
     @staticmethod
     def _get_due_date_str(due_date: datetime.datetime) -> str:
-        if due_date is None:
-            return due_date
         return due_date.strftime("on %Y-%m-%d at %H:%M")
 
     def _get_project_id(self, desired_project):

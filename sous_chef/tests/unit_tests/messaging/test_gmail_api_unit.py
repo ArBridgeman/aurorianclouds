@@ -1,3 +1,5 @@
+import re
+
 import pandas as pd
 import pytest
 from hydra import compose, initialize
@@ -48,5 +50,11 @@ class TestGmailHelper:
     @staticmethod
     def test__format_dataframe_to_html(gmail_helper):
         fake_df = pd.DataFrame({"Vars": ["a", "b"], "Vals": [1.1, 2.4]})
+        expected_html = """<html><head></head>
+        <body><tableborder="1"class="dataframe"><thead><trstyle="text-align:right;">
+        <th></th><th>Vars</th><th>Vals</th></tr></thead>
+        <tbody><tr><th>0</th><td>a</td><td>1.1</td></tr><tr><th>1</th><td>b</td><td>2.4</td></tr>
+        </tbody></table></body></html>"""
         # testing html str is messy
-        gmail_helper._format_dataframe_to_html(fake_df)
+        out_html = gmail_helper._format_dataframe_to_html(fake_df)
+        assert re.sub(r"\s+", "", out_html) == re.sub(r"\s+", "", expected_html)

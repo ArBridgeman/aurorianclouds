@@ -1,4 +1,5 @@
 import uuid
+from dataclasses import dataclass
 from unittest.mock import patch
 
 import numpy as np
@@ -32,6 +33,7 @@ def recipe_book(config_recipe_book):
         return RecipeBook(config_recipe_book)
 
 
+@dataclass
 class RecipeBookBuilder:
     recipe_book: pd.DataFrame = None
 

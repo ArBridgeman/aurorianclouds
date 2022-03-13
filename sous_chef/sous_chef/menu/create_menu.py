@@ -48,7 +48,7 @@ class MenuSchema(pa.SchemaModel):
         isin=["category", "ingredient", "recipe", "tag"]
     )
     eat_factor: Series[float] = pa.Field(gt=0, nullable=False)
-    eat_unit: Series[str]
+    eat_unit: Series[str] = pa.Field(nullable=True)
     freeze_factor: Series[float] = pa.Field(ge=0, nullable=False)
     item: Series[str]
 
@@ -135,8 +135,9 @@ class Menu:
     def load_local_menu(self):
         file_path = Path(ABS_FILE_PATH, self.config.local.file_path)
         # fillna("") to keep consistent with gsheets implementation
-        df = pd.read_csv(file_path, sep=";").fillna("")
+        df = pd.read_csv(file_path, sep=";")
         df.total_cook_time = pd.to_timedelta(df.total_cook_time)
+        df.eat_unit = df.eat_unit.fillna("").astype(str)
         self.dataframe = df
         self._validate_finalized_menu_schema()
 

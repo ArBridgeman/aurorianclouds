@@ -120,7 +120,7 @@ class IngredientFormatter:
         self, quantity: float, unit: str, item: str
     ) -> Ingredient:
         pint_unit = None
-        if unit is not None:
+        if isinstance(unit, str) and unit != "":
             unit, pint_unit = self.unit_formatter.extract_unit_from_text(unit)
         ingredient = Ingredient(
             quantity=quantity, unit=unit, pint_unit=pint_unit, item=item

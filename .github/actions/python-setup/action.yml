@@ -1,0 +1,48 @@
+name: Setup Python environment
+description: "Setup Python Environment"
+inputs:
+  python-version:
+    required: true
+    description: "Python version to use"
+  poetry-version:
+    required: true
+    description: "Poetry version to use"
+  address-book:
+    required: true
+    description: "Address book for sending emails via gmail"
+  gmail-auth-token:
+    required: true
+    description: "Authority token for gmail usage"
+  gmail-client-key:
+    required: true
+    description: "Clien key token for gmail project"
+  gsheets-service-token:
+    required: true
+    description: "Token for Gsheets service"
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Python ${{ inputs.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ inputs.python-version }}
+    - name: Run image
+      uses: abatilo/actions-poetry@v2.0.0
+      with:
+        poetry-version: ${{ inputs.poetry-version }}
+    - name: Install dependencies
+      shell: bash
+      run: poetry install
+    - name: Setup token directory
+      shell: bash
+      run: |
+        TOKEN_DIR=./sous_chef/sous_chef/tokens
+        mkdir $TOKEN_DIR
+        ADDRESS_TOKEN="${TOKEN_DIR}/address_book.json"
+        GMAIL_AUTH_TOKEN="${TOKEN_DIR}/gmail_auth_token.json"
+        GMAIL_CLIENT_KEY="${TOKEN_DIR}/gmail_client_key.json"
+        GSHEETS_TOKEN="${TOKEN_DIR}/google_client_key.json"
+        echo ${{ inputs.address-book }} > $ADDRESS_TOKEN
+        echo ${{ inputs.gmail-auth-token }} > $GMAIL_AUTH_TOKEN
+        echo ${{ inputs.gmail-client-key }} > $GMAIL_CLIENT_KEY
+        echo ${{ inputs.gsheets-service-token }} > $GSHEETS_TOKEN

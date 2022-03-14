@@ -33,7 +33,7 @@ class PantryList(DataframeSearchable):
         )
 
     def _retrieve_basic_pantry_list(self) -> DataFrame:
-        dataframe = self.gsheets_helper.get_sheet_as_df(
+        dataframe = self.gsheets_helper.get_worksheet(
             self.config.workbook_name, self.config.ingredient_sheet_name
         )
         dataframe["item_plural"] = dataframe.apply(
@@ -42,7 +42,7 @@ class PantryList(DataframeSearchable):
         return dataframe
 
     def _retrieve_misspelled_pantry_list(self) -> DataFrame:
-        misspelled_pantry_list = self.gsheets_helper.get_sheet_as_df(
+        misspelled_pantry_list = self.gsheets_helper.get_worksheet(
             self.config.workbook_name, self.config.misspelling_sheet_name
         )
 

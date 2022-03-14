@@ -5,6 +5,7 @@ unit_registry.default_format = ".2f"
 
 # custom units
 unit_registry.define("ball = 1")
+unit_registry.define("block = 1")
 unit_registry.define("can = 1")
 unit_registry.define("cube = 1")
 unit_registry.define("drop = 1")
@@ -18,6 +19,7 @@ unit_registry.define("slice = 1")
 
 custom_list = [
     unit_registry.ball,
+    unit_registry.block,
     unit_registry.can,
     unit_registry.cube,
     unit_registry.drop,

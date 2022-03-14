@@ -64,14 +64,29 @@ class TestUnitFormatter:
         assert unit_formatter.get_unit_str(quantity, unit) == expected_str
 
     @staticmethod
-    def test__get_pint_unit_raise_error_for_not_unit(unit_formatter):
-        with pytest.raises(UnitExtractionError):
+    def test__get_pint_unit_raise_error_for_not_unit(unit_formatter, log):
+        with pytest.raises(UnitExtractionError) as error:
             unit_formatter._get_pint_unit("not-a-unit")
 
+        assert log.events == []
+        assert str(error.value) == "[unit extraction failed] text=not-a-unit"
+
     @staticmethod
-    def test__get_pint_unit_raise_error_for_not_allowed_unit(unit_formatter):
-        with pytest.raises(UnitExtractionError):
+    def test__get_pint_unit_raise_error_for_not_allowed_unit(
+        unit_formatter, log
+    ):
+        with pytest.raises(UnitExtractionError) as error:
             unit_formatter._get_pint_unit("mile")
+
+        assert log.events == [
+            {
+                "event": "[get pint unit]",
+                "level": "warning",
+                "warn": "unit not in allowed_unit_list",
+                "unit": unit_registry.mile,
+            }
+        ]
+        assert str(error.value) == "[unit extraction failed] text=mile"
 
     @staticmethod
     @pytest.mark.parametrize(

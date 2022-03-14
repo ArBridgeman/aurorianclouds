@@ -58,8 +58,9 @@ class TestIngredientLine:
     def test__post_init__raises_error_when_not_able_to_parse_line(
         ingredient_line,
     ):
-        with pytest.raises(LineParsingError):
+        with pytest.raises(LineParsingError) as error:
             ingredient_line("????")
+        assert str(error.value) == "[line parsing failed]: text=????"
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -312,6 +313,7 @@ class TestIngredientFormatter:
         [
             (1, "cup", "rice", "N"),
             (0.5, "head", "salad", "N"),
+            (4, "", "bread rolls", "N"),
         ],
     )
     def test_format_manual_ingredient(
@@ -326,7 +328,7 @@ class TestIngredientFormatter:
         ingredient = Ingredient(
             quantity=quantity,
             unit=unit,
-            pint_unit=unit_registry[unit],
+            pint_unit=unit_registry[unit] if unit else None,
             item=item,
         )
         mock_pantry_list.retrieve_match.return_value = pantry_entry

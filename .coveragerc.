@@ -1,10 +1,13 @@
 [run]
 branch = True
+# TODO would be good to figure out automatic way to do
 source =
      sous_chef/sous_chef
      sous_chef/sous_chef/abstract
+     sous_chef/sous_chef/date
      sous_chef/sous_chef/formatter
      sous_chef/sous_chef/grocery_list
+     sous_chef/sous_chef/menu
      sous_chef/sous_chef/messaging
      sous_chef/sous_chef/pantry_list
      sous_chef/sous_chef/rtk

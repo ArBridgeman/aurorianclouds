@@ -12,9 +12,8 @@ defaults:
 menu:
   create_menu:
     input_method: fixed
+    todoist:
+      remove_existing_task: true
   run_mode:
     with_gmail: true
     with_todoist: true
-  todoist:
-    project_name: Menu
-    remove_existing_task: true

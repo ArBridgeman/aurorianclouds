@@ -53,9 +53,15 @@ class MenuBuilder:
         freeze_factor: float = 0.0,
         item: str = "dummy",
         post_process_recipe: bool = False,
-        rating: float = 0.0,
-        total_cook_time: pd.Timedelta = pd.to_timedelta("5 min"),
+        rating: float = np.nan,
+        total_cook_time_str: str = np.nan,
     ) -> pd.DataFrame:
+        if item_type == "recipe":
+            if total_cook_time_str is np.nan:
+                total_cook_time_str = "5 min"
+            if rating is np.nan:
+                rating = 0.0
+
         menu = {
             "weekday": weekday,
             "meal_time": meal_time,
@@ -68,8 +74,11 @@ class MenuBuilder:
         if not post_process_recipe:
             return DataFrame[MenuSchema](menu, index=[0])
         menu["rating"] = rating
-        menu["total_cook_time"] = total_cook_time
-        return DataFrame[FinalizedMenuSchema](menu, index=[0])
+        menu["total_cook_time"] = total_cook_time_str
+        menu_df = pd.DataFrame(menu, index=[0])
+        menu_df.total_cook_time = pd.to_timedelta(menu_df.total_cook_time)
+        FinalizedMenuSchema.validate(menu_df)
+        return menu_df
 
     def get_menu(self) -> pd.DataFrame:
         return self.menu
@@ -174,7 +183,7 @@ class TestMenu:
         assert str(error.value) == error_message
 
     @staticmethod
-    def test__check_recipe_and_add_cooking_time_nat(
+    def test__add_recipe_cook_time_and_rating_nat(
         menu, menu_builder, mock_recipe_book
     ):
         recipe_title = "recipe_without_cook_time"
@@ -197,22 +206,38 @@ class TestMenu:
     @staticmethod
     @freeze_time(FROZEN_DATE)
     def test__format_task_and_due_date_list(menu, menu_builder):
-        recipe_title = "french onion soup"
         row = menu_builder.create_menu_row(
             post_process_recipe=True,
-            item=recipe_title,
+            item="french onion soup",
             weekday="Friday",
             meal_time="dinner",
-            total_cook_time=pd.to_timedelta("40 min"),
+            total_cook_time_str=pd.to_timedelta("40 min"),
         ).squeeze()
         assert menu._format_task_and_due_date_list(row) == (
-            "french onion soup (x eat: 1.0) [40 min]",
+            f"{row['item']} (x eat: {row.eat_factor}) [40 min]",
             datetime.datetime(2022, 1, 21, 17, 35),
         )
 
     @staticmethod
     @freeze_time(FROZEN_DATE)
-    def test__format_menu_task_with_freeze_factor(menu, menu_builder):
+    def test__format_task_and_due_date_list_ingredient(menu, menu_builder):
+        row = menu_builder.create_menu_row(
+            post_process_recipe=True,
+            item="fries",
+            item_type="ingredient",
+            weekday="Friday",
+            meal_time="dinner",
+        ).squeeze()
+        assert menu._format_task_and_due_date_list(row) == (
+            f"{row['item']} (x eat: {row.eat_factor}) [20 min]",
+            datetime.datetime(2022, 1, 21, 17, 55),
+        )
+
+    @staticmethod
+    @freeze_time(FROZEN_DATE)
+    def test__format_task_and_due_date_list_with_freeze_factor(
+        menu, menu_builder
+    ):
         recipe_title = "french onion soup"
         row = menu_builder.create_menu_row(
             post_process_recipe=True,
@@ -318,7 +343,7 @@ class TestMenu:
                 post_process_recipe=True,
                 item=recipe_title,
                 item_type="recipe",
-                total_cook_time=pd.to_timedelta(total_cook_time_str),
+                total_cook_time_str=pd.to_timedelta(total_cook_time_str),
             ).squeeze(),
         )
 
@@ -371,7 +396,7 @@ class TestMenu:
                 post_process_recipe=True,
                 item=recipe.title,
                 item_type="recipe",
-                total_cook_time=recipe.total_cook_time,
+                total_cook_time_str=recipe.total_cook_time,
                 rating=recipe.rating,
             ).squeeze(),
         )

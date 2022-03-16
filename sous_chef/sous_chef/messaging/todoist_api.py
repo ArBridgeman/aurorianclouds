@@ -144,11 +144,11 @@ class TodoistHelper:
         section_id: int = None,
         label_list: list = None,
     ):
-        due_date_str = (
-            self._get_due_date_str(due_date)
-            if isinstance(due_date, str)
-            else None
-        )
+
+        due_date_str = None
+        if due_date:
+            due_date_str = self._get_due_date_str(due_date)
+
         FILE_LOGGER.info(
             "[todoist add]",
             task=task,

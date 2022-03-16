@@ -134,9 +134,9 @@ class Menu:
 
     def load_local_menu(self):
         file_path = Path(ABS_FILE_PATH, self.config.local.file_path)
-        # fillna("") to keep consistent with gsheets implementation
         df = pd.read_csv(file_path, sep=";")
         df.total_cook_time = pd.to_timedelta(df.total_cook_time)
+        # fillna("") to keep consistent with gsheets implementation
         df.eat_unit = df.eat_unit.fillna("").astype(str)
         self.dataframe = df
         self._validate_finalized_menu_schema()
@@ -178,7 +178,7 @@ class Menu:
         due_date = DueDatetimeFormatter().get_due_datetime_with_meal_time(
             weekday=row.weekday, meal_time=row.meal_time
         )
-        due_date -= row.total_cook_time
+        due_date -= timedelta(minutes=cooking_time_min)
         return task_str, due_date
 
     @staticmethod

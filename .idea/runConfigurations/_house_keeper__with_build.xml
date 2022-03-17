@@ -5,6 +5,7 @@
         <option name="envFilePath" value="" />
         <option name="commandLineOptions" value="--build" />
         <option name="sourceFilePath" value="house-keeper/docker-compose.yml" />
+        <option name="upAlwaysRecreate" value="true" />
       </settings>
     </deployment>
     <method v="2">

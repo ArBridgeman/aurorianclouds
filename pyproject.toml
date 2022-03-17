@@ -9,7 +9,7 @@ python = "^3.9"
 
 [tool.poetry.dev-dependencies]
 autoflake = "^1.4"
-black = "^21.5b0"
+black = "^22.1"
 coverage = "^6.3"
 flake8 = "^4.0.1"
 isort = "^5.8.0"

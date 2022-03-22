@@ -4,7 +4,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
-import numpy as np
 import pandas as pd
 from sous_chef.abstract.search_dataframe import (
     DataframeSearchable,
@@ -75,20 +74,43 @@ class RecipeBook(DataframeSearchable):
         )
 
     @staticmethod
+    def _flatten_dict_to_list(cell: list[dict]) -> list[str]:
+        if not isinstance(cell, list):
+            return []
+        return [entry["title"].casefold() for entry in cell]
+
+    def _format_recipe_row(self, row: pd.Series) -> pd.Series:
+        FILE_LOGGER.info("[format recipe row]", recipe=row.title)
+        for time_col in ["totalTime", "preparationTime", "cookingTime"]:
+            row[time_col] = create_timedelta(row[time_col])
+        for col in ["categories", "tags"]:
+            row[col] = self._flatten_dict_to_list(row[col])
+        return row
+
+    @staticmethod
     def _is_value_in_list(row: pd.Series, search_term: str):
-        # TODO would be better if columns handled upon import to casefold
-        return search_term.casefold() in [entry.casefold() for entry in row]
+        return search_term.casefold() in row
 
     def _read_recipe_book(self):
         recipe_book_path = Path(HOME_PATH, self.config.path)
         self.dataframe = pd.concat(
             [
-                retrieve_format_recipe_df(recipe_file)
+                self._retrieve_format_recipe_df(recipe_file)
                 for recipe_file in recipe_book_path.glob(
                     self.config.file_pattern
                 )
             ]
         )
+
+    def _retrieve_format_recipe_df(
+        self, json_file, cols_to_select=INP_JSON_COLUMNS.keys()
+    ):
+        tmp_df = pd.read_json(json_file, dtype=INP_JSON_COLUMNS)
+        for col in cols_to_select:
+            if col not in tmp_df.columns:
+                tmp_df[col] = None
+        tmp_df = tmp_df[cols_to_select]
+        return tmp_df.apply(self._format_recipe_row, axis=1)
 
     def _select_random_recipe_weighted_by_rating(
         self, method_match: Callable, field: str, search_term: str
@@ -125,14 +147,6 @@ class RecipeBook(DataframeSearchable):
         self.dataframe = self.dataframe.drop_duplicates(["title"], keep="first")
 
 
-def flatten_dict_to_list(row_entry):
-    values = []
-    if row_entry is not np.nan and row_entry is not None:
-        for entry in row_entry:
-            values.extend(entry.values())
-    return values
-
-
 def create_timedelta(row_entry):
     from fractions import Fraction
 
@@ -165,23 +179,3 @@ def create_timedelta(row_entry):
 
         # errors = "ignore", if confident we want to ignore further issues
         return pd.to_timedelta(row_entry, unit=None, errors="raise")
-
-
-# TODO separate active vs inactive cooking; make resilient to problems
-def retrieve_format_recipe_df(
-    json_file, cols_to_select=INP_JSON_COLUMNS.keys()
-):
-    tmp_df = pd.read_json(json_file, dtype=INP_JSON_COLUMNS)
-    for col in cols_to_select:
-        if col not in tmp_df.columns:
-            tmp_df[col] = None
-    tmp_df = tmp_df[cols_to_select]
-    tmp_df["rating"] = tmp_df["rating"].fillna(0.0)
-    tmp_df["totalTime"] = tmp_df["totalTime"].apply(create_timedelta)
-    tmp_df["preparationTime"] = tmp_df["preparationTime"].apply(
-        create_timedelta
-    )
-    tmp_df["cookingTime"] = tmp_df["cookingTime"].apply(create_timedelta)
-    tmp_df["categories"] = tmp_df.categories.apply(flatten_dict_to_list)
-    tmp_df["tags"] = tmp_df.tags.apply(flatten_dict_to_list)
-    return tmp_df

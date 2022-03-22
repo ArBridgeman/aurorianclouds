@@ -128,7 +128,6 @@ dmypy.json
 .pyre/
 
 # IntelliJ
-.idea
 outputs
 
 # Google API

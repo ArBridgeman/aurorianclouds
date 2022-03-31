@@ -89,6 +89,7 @@ class TodoistHelper:
         project: str = None,
         section: str = None,
         due_date_list: list[datetime.datetime] = None,
+        priority: int = 4,
     ):
 
         project_id = None
@@ -107,6 +108,7 @@ class TodoistHelper:
                 project_id=project_id,
                 section=section,
                 section_id=section_id,
+                priority=priority,
             )
 
     def add_task_list_to_project_with_label_list(
@@ -115,6 +117,7 @@ class TodoistHelper:
         project: str = None,
         section: str = None,
         label_list: list[tuple] = None,
+        priority: int = 4,
     ):
         project_id = None
         if project is not None:
@@ -131,6 +134,7 @@ class TodoistHelper:
                 project=project,
                 project_id=project_id,
                 section=section,
+                priority=priority,
                 section_id=section_id,
             )
 
@@ -143,6 +147,7 @@ class TodoistHelper:
         section: str = None,
         section_id: int = None,
         label_list: list = None,
+        priority: int = 4,
     ):
 
         due_date_str = None
@@ -155,6 +160,7 @@ class TodoistHelper:
             due_date=due_date_str,
             project=project,
             section=section,
+            priority=priority,
             labels=label_list,
         )
 

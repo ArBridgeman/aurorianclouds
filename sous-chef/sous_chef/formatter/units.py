@@ -13,6 +13,7 @@ unit_registry.define("drop = 1")
 unit_registry.define("head = 1")
 unit_registry.define("jar = 1")
 unit_registry.define("pinch = 1")
+unit_registry.define("sheet = 1")
 unit_registry.define("@alias pinch = pinches")
 unit_registry.define("package = 1 =  pkg")
 unit_registry.define("packet = 1 = pkt")
@@ -28,6 +29,7 @@ custom_list = [
     unit_registry.head,
     unit_registry.jar,
     unit_registry.pinch,
+    unit_registry.sheet,
     unit_registry.slice,
 ]
 

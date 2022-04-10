@@ -1,5 +1,6 @@
 import uuid
 from dataclasses import dataclass
+from typing import Union
 from unittest.mock import patch
 
 import numpy as np
@@ -12,7 +13,7 @@ from sous_chef.recipe_book.read_recipe_book import (
     SelectRandomRecipeError,
     create_timedelta,
 )
-from tests.util import assert_equal_dataframe
+from tests.util import assert_equal_dataframe, assert_equal_series
 
 
 @pytest.fixture
@@ -59,41 +60,64 @@ class RecipeBookBuilder:
             total_cook_time=row.totalTime,
         )
 
-    @staticmethod
     def create_recipe(
+        self,
         title: str = "Roasted corn salsa",
-        preparation_time: pd.Timedelta = pd.Timedelta(minutes=5),
-        cooking_time: pd.Timedelta = pd.Timedelta(minutes=15),
+        preparation_time_str: str = "5 min",
+        cooking_time_str: str = "15 min",
         ingredients: str = "100 g sweet corn\n0.5 red onion",
         instructions: str = "Heat frying pan on high heat",
         rating: float = 4.0,
         favorite: bool = False,
-        categories: list[str] = None,
+        categories: Union[list[dict], list[str]] = None,
         quantity: str = "2 Ariel sides",
-        tags: list[str] = None,
+        tags: Union[list[dict], list[str]] = None,
+        uuid_value=uuid.uuid1(),
+        post_process_recipe: bool = True,
     ) -> pd.DataFrame:
-        if categories is None:
-            categories = ["Side/veggie"]
-        if tags is None:
-            tags = ["cuisine/Mexican", "ariel/poison"]
-
-        return pd.DataFrame(
-            {
-                "title": [title],
-                "preparationTime": [preparation_time],
-                "cookingTime": [cooking_time],
-                "totalTime": [preparation_time + cooking_time],
-                "ingredients": [ingredients],
-                "instructions": [instructions],
-                "rating": [rating],
-                "favorite": [favorite],
-                "categories": [categories],
-                "quantity": [quantity],
-                "tags": [tags],
-                "uuid": [uuid.uuid1()],
-            },
-            index=[0],
+        categories, tags = self._check_categories_and_tags(
+            post_process_recipe, categories, tags
         )
+
+        recipe = {
+            "title": [title],
+            "preparationTime": [preparation_time_str],
+            "cookingTime": [cooking_time_str],
+            "totalTime": [preparation_time_str + cooking_time_str],
+            "ingredients": [ingredients],
+            "instructions": [instructions],
+            "rating": [rating],
+            "favorite": [favorite],
+            "categories": [categories],
+            "quantity": [quantity],
+            "tags": [tags],
+            "uuid": [uuid_value],
+        }
+        if not post_process_recipe:
+            return pd.DataFrame(recipe, index=[0])
+
+        recipe["preparationTime"] = pd.to_timedelta(preparation_time_str)
+        recipe["cookingTime"] = pd.to_timedelta(cooking_time_str)
+        recipe["totalTime"] = recipe["preparationTime"] + recipe["cookingTime"]
+        return pd.DataFrame(recipe, index=[0])
+
+    @staticmethod
+    def _check_categories_and_tags(post_process_recipe, categories, tags):
+        if not post_process_recipe:
+            if categories is None:
+                categories = [{"title": "side/veggie"}]
+            if tags is None:
+                tags = [{"title": "cuisine/mexican"}, {"title": "ariel/poison"}]
+            assert isinstance(categories[0], dict)
+            assert isinstance(tags[0], dict)
+        else:
+            if categories is None:
+                categories = ["side/veggie"]
+            if tags is None:
+                tags = ["cuisine/mexican", "ariel/poison"]
+            assert isinstance(categories[0], str)
+            assert isinstance(tags[0], str)
+        return categories, tags
 
     def get_recipe_book(self):
         return self.recipe_book
@@ -122,8 +146,43 @@ class TestRecipeBook:
 
     @staticmethod
     @pytest.mark.parametrize(
+        "cell,expected_result",
+        [
+            (np.nan, []),
+            (None, []),
+            ([{"title": "Dessert"}], ["dessert"]),
+            (
+                [{"title": "protein/milk"}, {"title": "cuisine/Brazilian"}],
+                ["protein/milk", "cuisine/brazilian"],
+            ),
+        ],
+    )
+    def test__flatten_dict_to_list(recipe_book, cell, expected_result):
+        assert recipe_book._flatten_dict_to_list(cell) == expected_result
+
+    @staticmethod
+    def test__format_recipe_row(recipe_book, recipe_book_builder, log):
+        recipe = recipe_book_builder.create_recipe(
+            post_process_recipe=False
+        ).squeeze()
+        expected_recipe = recipe_book_builder.create_recipe(
+            uuid_value=recipe.uuid
+        ).squeeze()
+        assert_equal_series(
+            recipe_book._format_recipe_row(recipe), expected_recipe
+        )
+        assert log.events == [
+            {
+                "level": "info",
+                "event": "[format recipe row]",
+                "recipe": "Roasted corn salsa",
+            }
+        ]
+
+    @staticmethod
+    @pytest.mark.parametrize(
         "search_term,expected_result",
-        [("found_me", True), ("do_not_find_me", False)],
+        [("found_me", True), ("FOUND_me", True), ("do_not_find_me", False)],
     )
     def test__is_value_in_list(
         recipe_book, recipe_book_builder, search_term, expected_result

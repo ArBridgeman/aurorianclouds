@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "ansible-docker"
+version = "0.0.1"
+description = "Env for ansible setup"
+authors = ["Aurorian Clouds"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+ansible = "^5.5.0"
+docker = "^5.0.3"
+docker-compose = "^1.29.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

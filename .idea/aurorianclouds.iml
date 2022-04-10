@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/sous_chef/sous_chef" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/sous_chef/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/sous_chef/helper_scripts/cleanup_recipe" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/sous_chef/helper_scripts/tests" isTestSource="true" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+  <component name="PackageRequirementsSettings">
+    <option name="requirementsPath" value="" />
+  </component>
+  <component name="PyDocumentationSettings">
+    <option name="renderExternalDocumentation" value="true" />
+  </component>
+  <component name="TestRunnerService">
+    <option name="PROJECT_TEST_RUNNER" value="pytest" />
+  </component>
+</module>

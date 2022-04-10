@@ -1,0 +1,38 @@
+name: coverage
+on: [pull_request]
+jobs:
+  coverage:
+    strategy:
+      matrix:
+        python-version: [3.9]
+        poetry-version: [1.1.12]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out our repo branch
+        uses: actions/checkout@v2
+      - name: Setup Python environment
+        uses: ./.github/actions/sous-chef-setup
+        with:
+          python-version: ${{ matrix.python-version }}
+          poetry-version: ${{ matrix.poetry-version }}
+          address-book: ${{ secrets.ADDRESS_BOOK }}
+          gsheets-service-token: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
+      - name: Get coverage
+        working-directory: ./sous-chef
+        run: |
+          poetry run coverage run  --rcfile .coveragerc. -m pytest \
+           -k "not test_send_dataframe_in_email" \
+          ./tests/unit_tests ./tests/integration_tests
+      - name: Create coverage XML
+        working-directory: ./sous-chef
+        run: poetry run coverage xml
+      - name: Output coverage report
+        working-directory: ./sous-chef
+        run: poetry run coverage report
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          verbose: false

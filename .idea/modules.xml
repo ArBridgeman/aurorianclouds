@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/ansible/ansible.iml" filepath="$PROJECT_DIR$/ansible/ansible.iml" />
+      <module fileurl="file://$PROJECT_DIR$/aurorianclouds.iml" filepath="$PROJECT_DIR$/aurorianclouds.iml" />
+      <module fileurl="file://$PROJECT_DIR$/house-keeper/house-keeper.iml" filepath="$PROJECT_DIR$/house-keeper/house-keeper.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sous-chef/sous-chef.iml" filepath="$PROJECT_DIR$/sous-chef/sous-chef.iml" />
+    </modules>
+  </component>
+</project>

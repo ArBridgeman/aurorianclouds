@@ -97,7 +97,7 @@ class GroceryList:
                 project=project_name,
                 label_list=label_list,
                 due_date=due_date,
-                priority=1,
+                priority=4,
             )
 
     def _add_to_grocery_list_raw(

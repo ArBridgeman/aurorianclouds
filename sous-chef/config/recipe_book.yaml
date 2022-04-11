@@ -7,7 +7,7 @@ recipe_book:
     limit_number_results: 1
     warn: true
     min_thresh_ok_match: 75
-    min_thresh_to_accept: 95
+    min_thresh_to_accept: 90
   random_select:
     min_thresh_error: 0
     min_thresh_warning: 10

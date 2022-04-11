@@ -89,7 +89,7 @@ class TodoistHelper:
         project: str = None,
         section: str = None,
         due_date_list: list[datetime.datetime] = None,
-        priority: int = 4,
+        priority: int = 1,
     ):
 
         project_id = None
@@ -117,7 +117,7 @@ class TodoistHelper:
         project: str = None,
         section: str = None,
         label_list: list[tuple] = None,
-        priority: int = 4,
+        priority: int = 1,
     ):
         project_id = None
         if project is not None:
@@ -147,7 +147,7 @@ class TodoistHelper:
         section: str = None,
         section_id: int = None,
         label_list: list = None,
-        priority: int = 4,
+        priority: int = 1,
     ):
 
         due_date_str = None
@@ -186,6 +186,7 @@ class TodoistHelper:
             date_string=due_date_str,
             project_id=project_id,
             labels=label_ids,
+            priority=priority,
         )
         self.commit()
 

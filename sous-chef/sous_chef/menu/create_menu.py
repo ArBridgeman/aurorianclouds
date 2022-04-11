@@ -130,7 +130,7 @@ class Menu:
             task_list=task_list,
             project=project_name,
             due_date_list=due_date_list,
-            priority=1,
+            priority=4,
         )
 
     def load_local_menu(self):

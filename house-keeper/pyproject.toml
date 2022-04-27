@@ -6,7 +6,7 @@ authors = ["Aurorian Clouds"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-Django = "^3.0.0"
+Django = "^3.2.13"
 psycopg2 = "^2.9.3"
 PyYAML = "^6.0"
 

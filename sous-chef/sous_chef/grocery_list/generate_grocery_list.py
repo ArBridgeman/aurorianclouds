@@ -90,15 +90,16 @@ class GroceryList:
         )
 
         # TODO change queue_bean_preparation into dataframe to use pandas here
-        for item in self.queue_bean_preparation:
-            label_list = item["group"].from_recipe + item["group"].from_day
-            todoist_helper.add_task_to_project(
-                task=self._format_bean_prep_task_str(item),
-                project=project_name,
-                label_list=label_list,
-                due_date=due_date,
-                priority=4,
-            )
+        if self.queue_bean_preparation:
+            for item in self.queue_bean_preparation:
+                label_list = item["group"].from_recipe + item["group"].from_day
+                todoist_helper.add_task_to_project(
+                    task=self._format_bean_prep_task_str(item),
+                    project=project_name,
+                    label_list=label_list,
+                    due_date=due_date,
+                    priority=4,
+                )
 
     def _add_to_grocery_list_raw(
         self,

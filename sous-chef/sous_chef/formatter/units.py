@@ -9,6 +9,8 @@ unit_registry.define("ball = 1")
 unit_registry.define("block = 1")
 unit_registry.define("can = 1")
 unit_registry.define("cube = 1")
+unit_registry.define("dash = 1")
+unit_registry.define("@alias dash = dashes")
 unit_registry.define("drop = 1")
 unit_registry.define("head = 1")
 unit_registry.define("jar = 1")
@@ -25,6 +27,7 @@ custom_list = [
     unit_registry.block,
     unit_registry.can,
     unit_registry.cube,
+    unit_registry.dash,
     unit_registry.drop,
     unit_registry.head,
     unit_registry.jar,

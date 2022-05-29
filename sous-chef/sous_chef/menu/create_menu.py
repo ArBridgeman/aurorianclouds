@@ -129,16 +129,16 @@ class Menu:
                 for _ in range(3)
             ]
 
-        task_list, due_date_list = zip(
-            *self.dataframe.apply(self._format_task_and_due_date_list, axis=1)
-        )
-
-        todoist_helper.add_task_list_to_project_with_due_date_list(
-            task_list=task_list,
-            project=project_name,
-            due_date_list=due_date_list,
-            priority=4,
-        )
+        project_id = todoist_helper.get_project_id(project_name)
+        for row in self.dataframe.iterrows():
+            task, due_date = self._format_task_and_due_date_list(row)
+            todoist_helper.add_task_to_project(
+                task=task,
+                project=project_name,
+                project_id=project_id,
+                due_date=due_date,
+                priority=4,
+            )
 
     def load_local_menu(self):
         file_path = Path(ABS_FILE_PATH, self.config.local.file_path)

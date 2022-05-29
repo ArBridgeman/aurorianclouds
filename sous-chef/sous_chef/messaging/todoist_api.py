@@ -82,34 +82,6 @@ class TodoistHelper:
             label_ids.append(self.get_label_id_or_add_new(label))
         return label_ids
 
-    def add_task_list_to_project_with_due_date_list(
-        self,
-        task_list: list[str],
-        project: str = None,
-        section: str = None,
-        due_date_list: list[datetime.datetime] = None,
-        priority: int = 1,
-    ):
-
-        project_id = None
-        if project is not None:
-            project_id = self.get_project_id(project)
-
-        section_id = None
-        if section is not None:
-            section_id = self.get_section_id(section)
-
-        for (task, due_date) in zip(task_list, due_date_list):
-            self.add_task_to_project(
-                task=task,
-                due_date=due_date,
-                project=project,
-                project_id=project_id,
-                section=section,
-                section_id=section_id,
-                priority=priority,
-            )
-
     def add_task_to_project(
         self,
         task: str,

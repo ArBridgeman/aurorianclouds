@@ -2,7 +2,11 @@ import datetime
 
 import pytest
 from freezegun import freeze_time
-from sous_chef.date.get_due_date import DueDatetimeFormatter, MealTime
+from sous_chef.date.get_due_date import (
+    DueDatetimeFormatter,
+    MealTime,
+    get_weekday_index,
+)
 from tests.unit_tests.conftest import FROZEN_DATE
 
 
@@ -32,6 +36,29 @@ class TestExtendedEnum:
     )
     def test_name_list(string_method, expected_list):
         assert MealTime.name_list(string_method) == expected_list
+
+
+class TestWeekdayIndex:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "weekday,index",
+        [
+            ("monday", 0),
+            ("tuesday", 1),
+            ("wednesday", 2),
+            ("thursday", 3),
+            ("friday", 4),
+            ("saturday", 5),
+            ("sunday", 6),
+        ],
+    )
+    def test_check_index(frozen_due_datetime_formatter, weekday, index):
+        assert get_weekday_index(weekday) == index
+
+    @staticmethod
+    @pytest.mark.parametrize("weekday", ["Monday", "moNDay", "MONDAY"])
+    def test_alternate_capitalization(weekday):
+        assert get_weekday_index(weekday) == 0
 
 
 class TestDueDatetimeFormatter:
@@ -113,12 +140,12 @@ class TestDueDatetimeFormatter:
             ("tuesday", 18),
         ],
     )
-    def test__get_date_relative_to_anchor_tuesday(
+    def test_get_date_relative_to_anchor_tuesday(
         frozen_due_datetime_formatter, weekday, day
     ):
         assert DueDatetimeFormatter(
             anchor_day="Tuesday"
-        )._get_date_relative_to_anchor(weekday) == create_datetime(day=day)
+        ).get_date_relative_to_anchor(weekday) == create_datetime(day=day)
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -133,10 +160,10 @@ class TestDueDatetimeFormatter:
             ("friday", 21),
         ],
     )
-    def test__get_date_relative_to_anchor_friday(
+    def test_get_date_relative_to_anchor_friday(
         frozen_due_datetime_formatter, weekday, day
     ):
-        assert frozen_due_datetime_formatter._get_date_relative_to_anchor(
+        assert frozen_due_datetime_formatter.get_date_relative_to_anchor(
             weekday
         ) == create_datetime(day=day)
 
@@ -166,31 +193,6 @@ class TestDueDatetimeFormatter:
             18,
             15,
         )
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "weekday,index",
-        [
-            ("monday", 0),
-            ("tuesday", 1),
-            ("wednesday", 2),
-            ("thursday", 3),
-            ("friday", 4),
-            ("saturday", 5),
-            ("sunday", 6),
-        ],
-    )
-    def test__get_weekday_index(frozen_due_datetime_formatter, weekday, index):
-        assert (
-            frozen_due_datetime_formatter._get_weekday_index(weekday) == index
-        )
-
-    @staticmethod
-    @pytest.mark.parametrize("weekday", ["Monday", "moNDay", "MONDAY"])
-    def test__get_weekday_index_alternate_capitalization(
-        frozen_due_datetime_formatter, weekday
-    ):
-        assert frozen_due_datetime_formatter._get_weekday_index(weekday) == 0
 
     @staticmethod
     @pytest.mark.parametrize("hour,minute", [(0, 0), (1, 31), (23, 59)])

@@ -1,5 +1,4 @@
 import datetime
-import itertools
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -58,7 +57,7 @@ class TodoistHelper:
     def retrieve_freezer(self):
         freezer_contents = defaultdict(list)
         for task in self.connection.state["items"]:
-            if task["project_id"] in [self._get_project_id("Freezer")]:
+            if task["project_id"] in [self.get_project_id("Freezer")]:
                 freezer_contents["title"].append(task["content"])
                 # TODO implement type based on section name
                 freezer_contents["type"].append("undefined")
@@ -94,11 +93,11 @@ class TodoistHelper:
 
         project_id = None
         if project is not None:
-            project_id = self._get_project_id(project)
+            project_id = self.get_project_id(project)
 
         section_id = None
         if section is not None:
-            section_id = self._get_section_id(section)
+            section_id = self.get_section_id(section)
 
         for (task, due_date) in zip(task_list, due_date_list):
             self.add_task_to_project(
@@ -109,33 +108,6 @@ class TodoistHelper:
                 section=section,
                 section_id=section_id,
                 priority=priority,
-            )
-
-    def add_task_list_to_project_with_label_list(
-        self,
-        task_list: list[str],
-        project: str = None,
-        section: str = None,
-        label_list: list[tuple] = None,
-        priority: int = 1,
-    ):
-        project_id = None
-        if project is not None:
-            project_id = self._get_project_id(project)
-
-        section_id = None
-        if section is not None:
-            section_id = self._get_section_id(section)
-
-        for (task, labels) in zip(task_list, label_list):
-            self.add_task_to_project(
-                task=task,
-                label_list=list(itertools.chain(*labels)),
-                project=project,
-                project_id=project_id,
-                section=section,
-                priority=priority,
-                section_id=section_id,
             )
 
     def add_task_to_project(
@@ -165,10 +137,10 @@ class TodoistHelper:
         )
 
         if project_id is None and project is not None:
-            project_id = self._get_project_id(project)
+            project_id = self.get_project_id(project)
 
         if section_id is None and section is not None:
-            section_id = self._get_section_id(section)
+            section_id = self.get_section_id(section)
 
         # TODO consolidate label_list and label_ids into 1-2 methods
         # TODO have functions handle None cases below instead of here
@@ -211,7 +183,7 @@ class TodoistHelper:
     # todo: change to generator logic?
     def get_all_items_in_project(self, project):
         items = []
-        project_id = self._get_project_id(project)
+        project_id = self.get_project_id(project)
 
         for item in self.connection.state["items"]:
             if item["project_id"] == project_id:
@@ -245,7 +217,7 @@ class TodoistHelper:
             project=project,
         )
 
-        project_id = self._get_project_id(project)
+        project_id = self.get_project_id(project)
         sleep(sleep_in_seconds)
         self.sync()
 
@@ -304,13 +276,13 @@ class TodoistHelper:
     def _get_due_date_str(due_date: datetime.datetime) -> str:
         return due_date.strftime("on %Y-%m-%d at %H:%M")
 
-    def _get_project_id(self, desired_project):
+    def get_project_id(self, desired_project):
         for project in self.connection.state["projects"]:
             if desired_project == project.data.get("name"):
                 return project.data.get("id")
         raise TodoistKeyError(tag="project_id", value=desired_project)
 
-    def _get_section_id(self, desired_section):
+    def get_section_id(self, desired_section):
         for project in self.connection.state["sections"]:
             if desired_section == project.data.get("name"):
                 return project.data.get("id")

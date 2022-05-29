@@ -14,9 +14,12 @@ menu:
     input_method: local
 
 grocery_list:
+  anchor_day: Monday
+  shopping:
+    secondary_day: Thursday
+    secondary_group: [fish, fresh herbs, fruits, meats, vegetables, Lidl]
   bean_prep:
     project_name: Menu
-    anchor_day: Tuesday
     prep_day: Saturday
     prep_hour: 9
   todoist:

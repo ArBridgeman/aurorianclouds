@@ -11,7 +11,7 @@ DEFAULT_TEST_SENDER = "test_sender"
 
 @pytest.fixture
 def gmail_helper():
-    with initialize(config_path="../../../config/messaging"):
+    with initialize(version_base=None, config_path="../../../config/messaging"):
         config = compose(config_name="gmail_api")
         gmail_helper = GmailHelper(config.gmail)
         gmail_helper.address_book = {

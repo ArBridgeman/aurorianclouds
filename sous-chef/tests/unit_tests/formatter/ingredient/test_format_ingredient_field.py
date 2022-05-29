@@ -22,7 +22,9 @@ FILE_LOGGER = get_logger(__name__)
 
 @pytest.fixture
 def ingredient_field_formatter(ingredient_formatter, mock_recipe_book):
-    with initialize(config_path="../../../../config/formatter"):
+    with initialize(
+        version_base=None, config_path="../../../../config/formatter"
+    ):
         config = compose(config_name="format_ingredient_field")
         return IngredientFieldFormatter(
             ingredient_formatter=ingredient_formatter,

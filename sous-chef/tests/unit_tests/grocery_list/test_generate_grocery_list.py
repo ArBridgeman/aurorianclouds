@@ -121,14 +121,14 @@ def create_menu_recipe(
 
 @pytest.fixture
 def mock_ingredient_field_formatter():
-    with initialize(config_path="../../../config/formatter"):
+    with initialize(version_base=None, config_path="../../../config/formatter"):
         config = compose(config_name="format_ingredient_field")
         return Mock(IngredientFieldFormatter(config, None, None))
 
 
 @pytest.fixture
 def config_grocery_list():
-    with initialize(config_path="../../../config"):
+    with initialize(version_base=None, config_path="../../../config"):
         return compose(config_name="grocery_list").grocery_list
 
 

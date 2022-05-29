@@ -11,7 +11,9 @@ from sous_chef.formatter.ingredient.format_referenced_recipe import (
 
 @pytest.fixture
 def referenced_recipe_line(unit_formatter):
-    with initialize(config_path="../../../../config/formatter"):
+    with initialize(
+        version_base=None, config_path="../../../../config/formatter"
+    ):
         config = compose(config_name="format_ingredient")
         return lambda line: ReferencedRecipeLine(
             line=line,

@@ -48,7 +48,7 @@ class TestExtendedEnum:
 @pytest.fixture
 @freeze_time(FROZEN_DATE)
 def due_datetime_formatter():
-    return DueDatetimeFormatter()
+    return DueDatetimeFormatter(anchor_day="Friday")
 
 
 @pytest.fixture

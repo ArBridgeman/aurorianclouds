@@ -18,7 +18,9 @@ from tests.unit_tests.formatter.util import create_ingredient_line
 
 @pytest.fixture
 def ingredient_line(unit_formatter):
-    with initialize(config_path="../../../../config/formatter"):
+    with initialize(
+        version_base=None, config_path="../../../../config/formatter"
+    ):
         config = compose(config_name="format_ingredient")
         return lambda line: IngredientLine(
             line=line,

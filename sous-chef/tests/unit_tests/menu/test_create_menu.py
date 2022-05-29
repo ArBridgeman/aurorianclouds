@@ -112,7 +112,7 @@ def menu_default(menu_builder):
 
 @pytest.fixture
 def mock_gsheets():
-    with initialize(config_path="../../../config/messaging"):
+    with initialize(version_base=None, config_path="../../../config/messaging"):
         config = compose(config_name="gsheets_api")
         with patch.object(GsheetsHelper, "__post_init__"):
             return Mock(GsheetsHelper(config))
@@ -120,14 +120,14 @@ def mock_gsheets():
 
 @pytest.fixture
 def mock_ingredient_formatter():
-    with initialize(config_path="../../../config/formatter"):
+    with initialize(version_base=None, config_path="../../../config/formatter"):
         config = compose(config_name="format_ingredient")
         return Mock(IngredientFormatter(config, None, None))
 
 
 @pytest.fixture
 def menu_config(tmp_path):
-    with initialize(config_path="../../../config/menu"):
+    with initialize(version_base=None, config_path="../../../config/menu"):
         config = compose(config_name="create_menu").create_menu
         config.local.file_path = str(tmp_path / "menu-tmp.csv")
         return config

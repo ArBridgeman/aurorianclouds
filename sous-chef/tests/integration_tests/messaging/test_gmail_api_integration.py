@@ -6,7 +6,7 @@ from sous_chef.messaging.gmail_api import GmailHelper
 
 @pytest.fixture
 def gmail_helper():
-    with initialize(config_path="../../../config/messaging"):
+    with initialize(version_base=None, config_path="../../../config/messaging"):
         config = compose(config_name="gmail_api")
         return GmailHelper(config.gmail)
 

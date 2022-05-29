@@ -1,4 +1,5 @@
 import datetime
+from collections import defaultdict
 from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
@@ -68,7 +69,9 @@ class Menu:
     dataframe: pd.DataFrame = None
 
     def finalize_fixed_menu(self, gsheets_helper: GsheetsHelper):
-        self.dataframe = self._load_fixed_menu(gsheets_helper)
+        self.dataframe = self._load_fixed_menu(gsheets_helper).reset_index(
+            drop=True
+        )
         self._validate_menu_schema()
         self.dataframe = self.dataframe.apply(self._process_menu, axis=1)
         self._save_menu()
@@ -78,18 +81,18 @@ class Menu:
     ) -> (list[MenuIngredient], list[MenuRecipe]):
         self.load_local_menu()
 
-        manual_ingredient_list = (
-            self.dataframe[self.dataframe["type"] == "ingredient"]
-            .apply(self._retrieve_manual_menu_ingredient, axis=1)
-            .tolist()
-        )
+        entry_funcs = {
+            "ingredient": self._retrieve_manual_menu_ingredient,
+            "recipe": self._retrieve_menu_recipe,
+        }
+        result_dict = defaultdict(list)
+        for entry, entry_fct in entry_funcs.items():
+            if (mask := self.dataframe["type"] == entry).sum() > 0:
+                result_dict[entry] = (
+                    self.dataframe[mask].apply(entry_fct, axis=1).tolist()
+                )
 
-        recipe_list = (
-            self.dataframe[self.dataframe["type"] == "recipe"]
-            .apply(self._retrieve_menu_recipe, axis=1)
-            .tolist()
-        )
-        return manual_ingredient_list, recipe_list
+        return result_dict["ingredient"], result_dict["recipe"]
 
     def send_menu_to_gmail(self, gmail_helper: GmailHelper):
         mask_recipe = self.dataframe["type"] == "recipe"

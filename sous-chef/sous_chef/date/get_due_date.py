@@ -32,7 +32,8 @@ def get_weekday_index(weekday: str) -> int:
 # TODO make configurable?
 class MealTime(ExtendedEnum):
     breakfast = {"hour": 8, "minute": 30}
-    lunch = {"hour": 11, "minute": 30}
+    lunch = {"hour": 12, "minute": 00}
+    snack = {"hour": 15, "minute": 00}
     dinner = {"hour": 17, "minute": 45}
 
 

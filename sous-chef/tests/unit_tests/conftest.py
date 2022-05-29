@@ -13,6 +13,7 @@ FROZEN_DATE = "2022-01-14"
 class MockMealTime(ExtendedEnum):
     breakfast = {"hour": 8, "minute": 30}
     lunch = {"hour": 11, "minute": 30}
+    snack = {"hour": 15, "minute": 00}
     dinner = {"hour": 18, "minute": 15}
 
 

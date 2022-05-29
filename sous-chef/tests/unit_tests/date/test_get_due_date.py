@@ -28,10 +28,10 @@ class TestExtendedEnum:
     @pytest.mark.parametrize(
         "string_method,expected_list",
         [
-            ("casefold", ["breakfast", "lunch", "dinner"]),
-            ("lower", ["breakfast", "lunch", "dinner"]),
-            ("capitalize", ["Breakfast", "Lunch", "Dinner"]),
-            ("upper", ["BREAKFAST", "LUNCH", "DINNER"]),
+            ("casefold", ["breakfast", "lunch", "snack", "dinner"]),
+            ("lower", ["breakfast", "lunch", "snack", "dinner"]),
+            ("capitalize", ["Breakfast", "Lunch", "Snack", "Dinner"]),
+            ("upper", ["BREAKFAST", "LUNCH", "SNACK", "DINNER"]),
         ],
     )
     def test_name_list(string_method, expected_list):

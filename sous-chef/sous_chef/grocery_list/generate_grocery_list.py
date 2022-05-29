@@ -77,16 +77,18 @@ class GroceryList:
         # TODO generalize beyond beans
         from sous_chef.date.get_due_date import DueDatetimeFormatter
 
-        project_name = "Menu"
+        bean_prep = self.config.bean_prep
+        project_name = bean_prep.project_name
         if self.config.todoist.remove_existing_task:
             [
                 todoist_helper.delete_all_items_in_project(project_name)
                 for _ in range(3)
             ]
 
-        # TODO add default date & time to config
-        due_date = DueDatetimeFormatter().get_due_datetime_with_hour_minute(
-            weekday="Saturday", hour=9, minute=0
+        due_date = DueDatetimeFormatter(
+            bean_prep.anchor_day
+        ).get_due_datetime_with_hour_minute(
+            weekday=bean_prep.prep_day, hour=bean_prep.prep_hour, minute=0
         )
 
         # TODO change queue_bean_preparation into dataframe to use pandas here

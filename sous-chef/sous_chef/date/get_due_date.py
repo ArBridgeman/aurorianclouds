@@ -1,5 +1,5 @@
 import datetime
-from enum import Enum
+from enum import Enum, IntEnum
 
 
 class ExtendedEnum(Enum):
@@ -8,8 +8,14 @@ class ExtendedEnum(Enum):
         return list(map(lambda c: getattr(c.name, string_method)(), cls))
 
 
+class ExtendedIntEnum(IntEnum):
+    @classmethod
+    def name_list(cls, string_method: str = "casefold"):
+        return list(map(lambda c: getattr(c.name, string_method)(), cls))
+
+
 # TODO make configurable?
-class Weekday(ExtendedEnum):
+class Weekday(ExtendedIntEnum):
     monday = 0
     tuesday = 1
     wednesday = 2
@@ -19,16 +25,18 @@ class Weekday(ExtendedEnum):
     sunday = 6
 
 
+# TODO make configurable?
 class MealTime(ExtendedEnum):
     breakfast = {"hour": 8, "minute": 30}
     lunch = {"hour": 11, "minute": 30}
-    dinner = {"hour": 18, "minute": 15}
+    dinner = {"hour": 17, "minute": 45}
 
 
 class DueDatetimeFormatter:
     # TODO add anchor date, default time in config?
     def __init__(self):
         self.anchor_datetime = self._get_anchor_date_at_midnight("Friday")
+        self.meal_time = MealTime
 
     def get_anchor_date(self) -> datetime.date:
         return self.anchor_datetime.date()
@@ -71,16 +79,13 @@ class DueDatetimeFormatter:
             due_date += datetime.timedelta(days=7)
         return due_date
 
-    @staticmethod
-    def _get_meal_time_hour_minute(meal_time: str) -> (str, str):
-        # TODO way to have inside MealTime class?
-        meal_time_dict = MealTime[meal_time.casefold()].value
+    def _get_meal_time_hour_minute(self, meal_time: str) -> (str, str):
+        meal_time_dict = self.meal_time[meal_time.casefold()].value
         return meal_time_dict["hour"], meal_time_dict["minute"]
 
     @staticmethod
     def _get_weekday_index(weekday: str) -> int:
-        # TODO way to have inside Weekday class?
-        return Weekday[weekday.casefold()].value
+        return Weekday[weekday.casefold()]
 
     def _replace_time_with_meal_time(
         self, due_date: datetime.datetime, meal_time: str

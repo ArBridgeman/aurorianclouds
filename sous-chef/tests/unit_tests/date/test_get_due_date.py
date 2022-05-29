@@ -2,9 +2,19 @@ import datetime
 
 import pytest
 from freezegun import freeze_time
-from sous_chef.date.get_due_date import DueDatetimeFormatter, MealTime
+from sous_chef.date.get_due_date import (
+    DueDatetimeFormatter,
+    ExtendedEnum,
+    MealTime,
+)
 
 FROZEN_DATE = "2022-01-14"
+
+
+class MockMealTime(ExtendedEnum):
+    breakfast = {"hour": 8, "minute": 30}
+    lunch = {"hour": 11, "minute": 30}
+    dinner = {"hour": 18, "minute": 15}
 
 
 def create_datetime(
@@ -35,33 +45,51 @@ class TestExtendedEnum:
         assert MealTime.name_list(string_method) == expected_list
 
 
+@pytest.fixture
+@freeze_time(FROZEN_DATE)
+def due_datetime_formatter():
+    return DueDatetimeFormatter()
+
+
+@pytest.fixture
+def due_datetime_formatter_fixed_meal(due_datetime_formatter):
+    due_datetime_formatter.meal_time = MockMealTime
+    return due_datetime_formatter
+
+
 class TestDueDatetimeFormatter:
     @staticmethod
-    @freeze_time(FROZEN_DATE)
-    def test_get_anchor_date():
+    def test_get_anchor_date(due_datetime_formatter):
         # TODO update when anchor date made configurable
-        anchor_date = DueDatetimeFormatter().get_anchor_date()
+        anchor_date = due_datetime_formatter.get_anchor_date()
         assert anchor_date == datetime.date(year=2022, month=1, day=14)
         assert anchor_date.weekday() == 4
 
     @staticmethod
-    @freeze_time(FROZEN_DATE)
-    def test_get_calendar_week():
-        assert DueDatetimeFormatter().get_calendar_week() == 2
+    def test_get_calendar_week(due_datetime_formatter):
+        assert due_datetime_formatter.get_calendar_week() == 2
 
     @staticmethod
-    @freeze_time(FROZEN_DATE)
-    def test_get_due_datetime_with_meal_time():
-        assert DueDatetimeFormatter().get_due_datetime_with_meal_time(
-            "monday", "dinner"
-        ) == create_datetime(day=17, hour=18, minute=15)
+    def test_get_due_datetime_with_meal_time(
+        due_datetime_formatter_fixed_meal,
+    ):
+        assert (
+            due_datetime_formatter_fixed_meal.get_due_datetime_with_meal_time(
+                "monday", "dinner"
+            )
+            == create_datetime(day=17, hour=18, minute=15)
+        )
 
     @staticmethod
-    @freeze_time(FROZEN_DATE)
-    def test_get_due_datetime_with_hour_minute():
-        assert DueDatetimeFormatter().get_due_datetime_with_hour_minute(
-            "monday", hour=14, minute=15
-        ) == create_datetime(day=17, hour=14, minute=15)
+    def test_get_due_datetime_with_hour_minute(
+        due_datetime_formatter_fixed_meal,
+    ):
+        assert (
+            due_datetime_formatter_fixed_meal.get_due_datetime_with_hour_minute(
+                "monday", hour=14, minute=15
+            )
+            == create_datetime(day=17, hour=14, minute=15)
+        )
 
     @staticmethod
     @freeze_time(FROZEN_DATE)
@@ -77,13 +105,12 @@ class TestDueDatetimeFormatter:
             ("thursday", 14),
         ],
     )
-    def test__get_anchor_date_at_midnight(weekday, day):
-        assert DueDatetimeFormatter()._get_anchor_date_at_midnight(
+    def test__get_anchor_date_at_midnight(due_datetime_formatter, weekday, day):
+        assert due_datetime_formatter._get_anchor_date_at_midnight(
             weekday
         ) == create_datetime(day)
 
     @staticmethod
-    @freeze_time(FROZEN_DATE)
     @pytest.mark.parametrize(
         "weekday,day",
         [
@@ -96,8 +123,8 @@ class TestDueDatetimeFormatter:
             ("friday", 21),
         ],
     )
-    def test__get_date_relative_to_anchor(weekday, day):
-        assert DueDatetimeFormatter()._get_date_relative_to_anchor(
+    def test__get_date_relative_to_anchor(due_datetime_formatter, weekday, day):
+        assert due_datetime_formatter._get_date_relative_to_anchor(
             weekday
         ) == create_datetime(day=day)
 
@@ -106,16 +133,24 @@ class TestDueDatetimeFormatter:
         "meal_time,hour,minute",
         [("breakfast", 8, 30), ("lunch", 11, 30), ("dinner", 18, 15)],
     )
-    def test__get_meal_time_hour_minute(meal_time, hour, minute):
-        assert DueDatetimeFormatter()._get_meal_time_hour_minute(meal_time) == (
+    def test__get_meal_time_hour_minute(
+        due_datetime_formatter_fixed_meal, meal_time, hour, minute
+    ):
+        assert due_datetime_formatter_fixed_meal._get_meal_time_hour_minute(
+            meal_time
+        ) == (
             hour,
             minute,
         )
 
     @staticmethod
     @pytest.mark.parametrize("meal_time", ["Dinner", "diNNeR", "DINNER"])
-    def test__get_meal_time_hour_minute_alternate_capitalization(meal_time):
-        assert DueDatetimeFormatter()._get_meal_time_hour_minute(meal_time) == (
+    def test__get_meal_time_hour_minute_alternate_capitalization(
+        due_datetime_formatter_fixed_meal, meal_time
+    ):
+        assert due_datetime_formatter_fixed_meal._get_meal_time_hour_minute(
+            meal_time
+        ) == (
             18,
             15,
         )
@@ -133,21 +168,23 @@ class TestDueDatetimeFormatter:
             ("sunday", 6),
         ],
     )
-    def test__get_weekday_index(weekday, index):
-        assert DueDatetimeFormatter()._get_weekday_index(weekday) == index
+    def test__get_weekday_index(due_datetime_formatter, weekday, index):
+        assert due_datetime_formatter._get_weekday_index(weekday) == index
 
     @staticmethod
     @pytest.mark.parametrize("weekday", ["Monday", "moNDay", "MONDAY"])
-    def test__get_weekday_index_alternate_capitalization(weekday):
-        assert DueDatetimeFormatter()._get_weekday_index(weekday) == 0
+    def test__get_weekday_index_alternate_capitalization(
+        due_datetime_formatter, weekday
+    ):
+        assert due_datetime_formatter._get_weekday_index(weekday) == 0
 
     @staticmethod
     @pytest.mark.parametrize("hour,minute", [(0, 0), (1, 31), (23, 59)])
-    def test__set_specified_time(hour, minute):
+    def test__set_specified_time(due_datetime_formatter, hour, minute):
         initial_datetime = create_datetime(day=17)
         assert initial_datetime.hour == 0
         assert initial_datetime.minute == 0
 
-        assert DueDatetimeFormatter()._set_specified_time(
+        assert due_datetime_formatter._set_specified_time(
             initial_datetime, hour, minute
         ) == create_datetime(day=17, hour=hour, minute=minute)

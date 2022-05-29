@@ -68,9 +68,11 @@ class Menu:
     recipe_book: RecipeBook
     dataframe: pd.DataFrame = None
     due_date_formatter: DueDatetimeFormatter = field(init=False)
+    cook_days: dict = field(init=False)
 
     def __post_init__(self):
         self.due_date_formatter = DueDatetimeFormatter(self.config.anchor_day)
+        self.cook_days = self.config.fixed.cook_days
 
     def finalize_fixed_menu(self, gsheets_helper: GsheetsHelper):
         self.dataframe = self._load_fixed_menu(gsheets_helper).reset_index(
@@ -199,6 +201,10 @@ class Menu:
             return default_time
         return cook_time
 
+    def _get_cook_day_as_weekday(self, cook_day: str):
+        if cook_day in self.cook_days:
+            return self.cook_days[cook_day]
+
     def _inspect_unrated_recipe(self, recipe: Recipe):
         if self.config.run_mode.with_inspect_unrated_recipe:
             if recipe.rating == 0.0:
@@ -221,9 +227,21 @@ class Menu:
         menu_fixed = gsheets_helper.get_worksheet(
             menu_fixed_file, menu_fixed_file
         )
-        return pd.concat([menu_basic, menu_fixed]).sort_values(
+
+        combined_menu = pd.concat([menu_basic, menu_fixed]).sort_values(
             by=["weekday", "meal_time"]
         )
+        combined_menu["weekday"] = combined_menu.weekday.apply(
+            self._get_cook_day_as_weekday
+        )
+
+        # TODO create test for
+        mask_skip_none = combined_menu["weekday"].isna()
+        FILE_LOGGER.warning(
+            "Menu entries ignored",
+            skipped_entries=combined_menu[mask_skip_none],
+        )
+        return combined_menu[~mask_skip_none]
 
     def _process_menu(self, row: pd.Series):
         # due to schema validation row["type"], may only be 1 of these 4 types

@@ -21,10 +21,9 @@ from sous_chef.menu.create_menu import (
     MenuSchema,
 )
 from sous_chef.messaging.gsheets_api import GsheetsHelper
+from tests.unit_tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
 from tests.util import assert_equal_dataframe_backup, assert_equal_series
-
-FROZEN_DATE = "2022-01-14"
 
 
 @dataclass
@@ -134,12 +133,20 @@ def menu_config(tmp_path):
 
 
 @pytest.fixture
-def menu(menu_config, mock_ingredient_formatter, mock_recipe_book):
-    return Menu(
+@freeze_time(FROZEN_DATE)
+def menu(
+    menu_config,
+    mock_ingredient_formatter,
+    mock_recipe_book,
+    frozen_due_datetime_formatter,
+):
+    menu = Menu(
         ingredient_formatter=mock_ingredient_formatter,
         config=menu_config,
         recipe_book=mock_recipe_book,
     )
+    menu.due_date_formatter = frozen_due_datetime_formatter
+    return menu
 
 
 class TestMenu:

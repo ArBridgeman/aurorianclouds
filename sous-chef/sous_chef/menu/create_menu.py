@@ -1,6 +1,6 @@
 import datetime
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
 
@@ -67,6 +67,10 @@ class Menu:
     ingredient_formatter: IngredientFormatter
     recipe_book: RecipeBook
     dataframe: pd.DataFrame = None
+    due_date_formatter: DueDatetimeFormatter = field(init=False)
+
+    def __post_init__(self):
+        self.due_date_formatter = DueDatetimeFormatter(self.config.anchor_day)
 
     def finalize_fixed_menu(self, gsheets_helper: GsheetsHelper):
         self.dataframe = self._load_fixed_menu(gsheets_helper).reset_index(
@@ -109,14 +113,14 @@ class Menu:
             lambda value: self._get_cooking_time_min(value, default_time=pd.NaT)
         )
 
-        calendar_week = DueDatetimeFormatter().get_calendar_week()
+        calendar_week = self.due_date_formatter.get_calendar_week()
         subject = f"[sous_chef_menu] week {calendar_week}"
         gmail_helper.send_dataframe_in_email(subject, tmp_df)
 
     def upload_menu_to_todoist(self, todoist_helper: TodoistHelper):
         project_name = self.config.todoist.project_name
         if self.config.todoist.remove_existing_task:
-            anchor_date = DueDatetimeFormatter().get_anchor_date()
+            anchor_date = self.due_date_formatter.get_anchor_date()
             [
                 todoist_helper.delete_all_items_in_project(
                     project_name,
@@ -179,7 +183,7 @@ class Menu:
             factor_str += f", x freeze: {row.freeze_factor}"
         task_str = f"{row['item']} ({factor_str}) [{cooking_time_min} min]"
 
-        due_date = DueDatetimeFormatter().get_due_datetime_with_meal_time(
+        due_date = self.due_date_formatter.get_due_datetime_with_meal_time(
             weekday=row.weekday, meal_time=row.meal_time
         )
         due_date -= timedelta(minutes=cooking_time_min)

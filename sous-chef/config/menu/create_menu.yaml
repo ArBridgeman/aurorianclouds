@@ -1,6 +1,7 @@
 create_menu:
   input_method:
   output_method: local
+  anchor_day: Monday
   todoist:
     project_name: Menu
     remove_existing_task: false

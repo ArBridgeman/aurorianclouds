@@ -33,9 +33,8 @@ class MealTime(ExtendedEnum):
 
 
 class DueDatetimeFormatter:
-    # TODO add anchor date, default time in config?
-    def __init__(self):
-        self.anchor_datetime = self._get_anchor_date_at_midnight("Friday")
+    def __init__(self, anchor_day: str):
+        self.anchor_datetime = self._get_anchor_date_at_midnight(anchor_day)
         self.meal_time = MealTime
 
     def get_anchor_date(self) -> datetime.date:

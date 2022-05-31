@@ -1,6 +1,6 @@
 import datetime
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
 
@@ -67,6 +67,12 @@ class Menu:
     ingredient_formatter: IngredientFormatter
     recipe_book: RecipeBook
     dataframe: pd.DataFrame = None
+    due_date_formatter: DueDatetimeFormatter = field(init=False)
+    cook_days: dict = field(init=False)
+
+    def __post_init__(self):
+        self.due_date_formatter = DueDatetimeFormatter(self.config.anchor_day)
+        self.cook_days = self.config.fixed.cook_days
 
     def finalize_fixed_menu(self, gsheets_helper: GsheetsHelper):
         self.dataframe = self._load_fixed_menu(gsheets_helper).reset_index(
@@ -109,14 +115,14 @@ class Menu:
             lambda value: self._get_cooking_time_min(value, default_time=pd.NaT)
         )
 
-        calendar_week = DueDatetimeFormatter().get_calendar_week()
+        calendar_week = self.due_date_formatter.get_calendar_week()
         subject = f"[sous_chef_menu] week {calendar_week}"
         gmail_helper.send_dataframe_in_email(subject, tmp_df)
 
     def upload_menu_to_todoist(self, todoist_helper: TodoistHelper):
         project_name = self.config.todoist.project_name
         if self.config.todoist.remove_existing_task:
-            anchor_date = DueDatetimeFormatter().get_anchor_date()
+            anchor_date = self.due_date_formatter.get_anchor_date()
             [
                 todoist_helper.delete_all_items_in_project(
                     project_name,
@@ -125,16 +131,16 @@ class Menu:
                 for _ in range(3)
             ]
 
-        task_list, due_date_list = zip(
-            *self.dataframe.apply(self._format_task_and_due_date_list, axis=1)
-        )
-
-        todoist_helper.add_task_list_to_project_with_due_date_list(
-            task_list=task_list,
-            project=project_name,
-            due_date_list=due_date_list,
-            priority=4,
-        )
+        project_id = todoist_helper.get_project_id(project_name)
+        for _, row in self.dataframe.iterrows():
+            task, due_date = self._format_task_and_due_date_list(row)
+            todoist_helper.add_task_to_project(
+                task=task,
+                project=project_name,
+                project_id=project_id,
+                due_date=due_date,
+                priority=4,
+            )
 
     def load_local_menu(self):
         file_path = Path(ABS_FILE_PATH, self.config.local.file_path)
@@ -179,7 +185,7 @@ class Menu:
             factor_str += f", x freeze: {row.freeze_factor}"
         task_str = f"{row['item']} ({factor_str}) [{cooking_time_min} min]"
 
-        due_date = DueDatetimeFormatter().get_due_datetime_with_meal_time(
+        due_date = self.due_date_formatter.get_due_datetime_with_meal_time(
             weekday=row.weekday, meal_time=row.meal_time
         )
         due_date -= timedelta(minutes=cooking_time_min)
@@ -194,6 +200,10 @@ class Menu:
         if (cook_time := int(total_cook_time.total_seconds() / 60)) < 0:
             return default_time
         return cook_time
+
+    def _get_cook_day_as_weekday(self, cook_day: str):
+        if cook_day in self.cook_days:
+            return self.cook_days[cook_day]
 
     def _inspect_unrated_recipe(self, recipe: Recipe):
         if self.config.run_mode.with_inspect_unrated_recipe:
@@ -217,9 +227,21 @@ class Menu:
         menu_fixed = gsheets_helper.get_worksheet(
             menu_fixed_file, menu_fixed_file
         )
-        return pd.concat([menu_basic, menu_fixed]).sort_values(
+
+        combined_menu = pd.concat([menu_basic, menu_fixed]).sort_values(
             by=["weekday", "meal_time"]
         )
+        combined_menu["weekday"] = combined_menu.weekday.apply(
+            self._get_cook_day_as_weekday
+        )
+
+        # TODO create test for
+        mask_skip_none = combined_menu["weekday"].isna()
+        FILE_LOGGER.warning(
+            "Menu entries ignored",
+            skipped_entries=combined_menu[mask_skip_none],
+        )
+        return combined_menu[~mask_skip_none]
 
     def _process_menu(self, row: pd.Series):
         # due to schema validation row["type"], may only be 1 of these 4 types

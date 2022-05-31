@@ -23,7 +23,7 @@ def random_seed():
 
 @pytest.fixture
 def config_recipe_book():
-    with initialize(config_path="../../../config"):
+    with initialize(version_base=None, config_path="../../../config"):
         config = compose(config_name="recipe_book")
         return config.recipe_book
 

@@ -9,7 +9,9 @@ from sous_chef.pantry_list.read_pantry_list import PantryList
 
 @pytest.fixture
 def ingredient_formatter(mock_pantry_list, unit_formatter):
-    with initialize(config_path="../../../../config/formatter"):
+    with initialize(
+        version_base=None, config_path="../../../../config/formatter"
+    ):
         config = compose(config_name="format_ingredient")
         return IngredientFormatter(
             config=config.format_ingredient,
@@ -20,7 +22,7 @@ def ingredient_formatter(mock_pantry_list, unit_formatter):
 
 @pytest.fixture
 def mock_pantry_list():
-    with initialize(config_path="../../../../config"):
+    with initialize(version_base=None, config_path="../../../../config"):
         config = compose(config_name="pantry_list")
         with patch.object(PantryList, "__init__", lambda x, y, z: None):
             return Mock(PantryList(config, None))

@@ -62,6 +62,8 @@ def create_ingredient_and_grocery_entry_raw(
     recipe_factor: float = 1.0,
     from_recipe: str = "dummy recipe",
     from_day: str = "Friday",
+    # frozen anchor date is Friday & second group includes vegetables
+    get_on_second_shopping_day: bool = True,
 ) -> (Ingredient, pd.DataFrame):
     unit = None
     if pint_unit is not None:
@@ -94,6 +96,7 @@ def create_ingredient_and_grocery_entry_raw(
             "item_plural": item + plural_ending,
             "from_recipe": from_recipe,
             "from_day": from_day,
+            "get_on_second_shopping_day": get_on_second_shopping_day,
         },
         index=[0],
     )
@@ -121,26 +124,32 @@ def create_menu_recipe(
 
 @pytest.fixture
 def mock_ingredient_field_formatter():
-    with initialize(config_path="../../../config/formatter"):
+    with initialize(version_base=None, config_path="../../../config/formatter"):
         config = compose(config_name="format_ingredient_field")
         return Mock(IngredientFieldFormatter(config, None, None))
 
 
 @pytest.fixture
 def config_grocery_list():
-    with initialize(config_path="../../../config"):
+    with initialize(version_base=None, config_path="../../../config"):
         return compose(config_name="grocery_list").grocery_list
 
 
 @pytest.fixture
 def grocery_list(
-    config_grocery_list, unit_formatter, mock_ingredient_field_formatter
+    config_grocery_list,
+    unit_formatter,
+    mock_ingredient_field_formatter,
+    frozen_due_datetime_formatter,
 ):
-    return GroceryList(
+    grocery_list = GroceryList(
         config=config_grocery_list,
         unit_formatter=unit_formatter,
         ingredient_field_formatter=mock_ingredient_field_formatter,
     )
+    grocery_list.due_date_formatter = frozen_due_datetime_formatter
+    grocery_list.second_shopping_day_group = ["vegetables"]
+    return grocery_list
 
 
 class TestGroceryList:
@@ -250,6 +259,25 @@ class TestGroceryList:
         assert np.all(result.quantity.values == expected_quantity)
         assert np.all(result.pint_unit.values == [larger_pint_unit] * 2)
         assert np.all(result.unit.values == [larger_pint_unit_str] * 2)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "from_day, food_group, expected_result",
+        [
+            ("Monday", "vegetables", False),
+            ("Friday", "vegetables", True),
+            ("Saturday", "Vegetables", True),
+            ("Saturday", "Fruits", False),
+        ],
+    )
+    def test__get_on_second_shopping_day(
+        grocery_list, from_day, food_group, expected_result
+    ):
+        # only vegetable entries on Fri., Sat., Sun. should be true
+        assert (
+            grocery_list._get_on_second_shopping_day(from_day, food_group)
+            == expected_result
+        )
 
     @staticmethod
     @pytest.mark.parametrize(

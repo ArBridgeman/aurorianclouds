@@ -10,7 +10,7 @@ from tests.util import assert_equal_dataframe
 
 @pytest.fixture
 def gsheets_helper():
-    with initialize(config_path="../../../config/messaging"):
+    with initialize(version_base=None, config_path="../../../config/messaging"):
         config = compose(config_name="gsheets_api")
         return GsheetsHelper(config.gsheets)
 

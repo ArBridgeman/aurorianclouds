@@ -1,9 +1,11 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime
 from typing import List
 
 import pandas as pd
 from omegaconf import DictConfig
 from pint import Unit
+from sous_chef.date.get_due_date import DueDatetimeFormatter, get_weekday_index
 from sous_chef.formatter.format_str import convert_number_to_str
 from sous_chef.formatter.format_unit import UnitFormatter, unit_registry
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
@@ -30,6 +32,22 @@ class GroceryList:
     queue_bean_preparation: List = None
     grocery_list_raw: pd.DataFrame = None
     grocery_list: pd.DataFrame = None
+    due_date_formatter: DueDatetimeFormatter = field(init=False)
+    second_shopping_date: datetime = field(init=False)
+    second_shopping_day_index: int = field(init=False)
+    second_shopping_day_group: List = field(init=False)
+
+    def __post_init__(self):
+        self.due_date_formatter = DueDatetimeFormatter(self.config.anchor_day)
+
+        second_shopping_day = self.config.shopping.secondary_day
+        self.second_shopping_day_index = get_weekday_index(second_shopping_day)
+        self.second_shopping_date = (
+            self.due_date_formatter.get_date_relative_to_anchor(
+                second_shopping_day
+            )
+        )
+        self.second_shopping_day_group = self.config.shopping.secondary_group
 
     def get_grocery_list_from_menu(
         self,
@@ -39,7 +57,7 @@ class GroceryList:
         self._add_bulk_manual_ingredient_to_grocery_list(menu_ingredient_list)
         self._add_menu_recipe_to_queue(menu_recipe_list)
         self._process_recipe_queue()
-        self._aggregate_grocery_list_by_item_and_dimension()
+        self._aggregate_grocery_list()
 
     def upload_grocery_list_to_todoist(self, todoist_helper: TodoistHelper):
         # TODO what should be in todoist (e.g. dry mode & messages?)
@@ -53,40 +71,49 @@ class GroceryList:
                 for _ in range(3)
             ]
 
-        for name, group in self.grocery_list.groupby("aisle_group"):
-            if name in self.config.todoist.skip_group:
+        for section, group in self.grocery_list.groupby("aisle_group"):
+            if section in self.config.todoist.skip_group:
                 FILE_LOGGER.warning(
                     "[skip group]",
                     action="do not add to todoist",
-                    aisle_group=name,
+                    aisle_group=section,
                     ingredient_list=group["item"].values,
                 )
                 continue
 
-            todoist_helper.add_task_list_to_project_with_label_list(
-                task_list=group.apply(
-                    self._format_ingredient_str, axis=1
-                ).tolist(),
-                project=project_name,
-                section=name,
-                label_list=group[["from_recipe", "from_day"]].values.tolist(),
-            )
+            project_id = todoist_helper.get_project_id(project_name)
+            section_id = todoist_helper.get_section_id(section)
+
+            # TODO modify due date to get_on_second_shopping_day -> Thursday
+            # TODO change priority for secondary shopping day
+            for _, entry in group.iterrows():
+                todoist_helper.add_task_to_project(
+                    task=self._format_ingredient_str(entry),
+                    due_date=self.second_shopping_date
+                    if entry["get_on_second_shopping_day"]
+                    else None,
+                    label_list=entry["from_recipe"] + entry["from_day"],
+                    project=project_name,
+                    project_id=project_id,
+                    section=section,
+                    section_id=section_id,
+                    priority=2 if entry["get_on_second_shopping_day"] else 1,
+                )
 
     def send_bean_preparation_to_todoist(self, todoist_helper: TodoistHelper):
         # TODO separate service? need freezer check for defrosts
         # TODO generalize beyond beans
-        from sous_chef.date.get_due_date import DueDatetimeFormatter
 
-        project_name = "Menu"
+        bean_prep = self.config.bean_prep
+        project_name = bean_prep.project_name
         if self.config.todoist.remove_existing_task:
             [
                 todoist_helper.delete_all_items_in_project(project_name)
                 for _ in range(3)
             ]
 
-        # TODO add default date & time to config
-        due_date = DueDatetimeFormatter().get_due_datetime_with_hour_minute(
-            weekday="Saturday", hour=9, minute=0
+        due_date = self.due_date_formatter.get_due_datetime_with_hour_minute(
+            weekday=bean_prep.prep_day, hour=bean_prep.prep_hour, minute=0
         )
 
         # TODO change queue_bean_preparation into dataframe to use pandas here
@@ -136,6 +163,9 @@ class GroceryList:
                 "item_plural": item_plural,
                 "from_recipe": from_recipe,
                 "from_day": from_day,
+                "get_on_second_shopping_day": self._get_on_second_shopping_day(
+                    from_day=from_day, food_group=food_group
+                ),
             },
             ignore_index=True,
         )
@@ -182,13 +212,16 @@ class GroceryList:
             )
             self._add_menu_recipe_to_queue([menu_recipe])
 
-    def _aggregate_grocery_list_by_item_and_dimension(self):
+    def _aggregate_grocery_list(self):
         # do not drop nas, as some items are dimensionless (None)
         if self.grocery_list is None:
             self.grocery_list = pd.DataFrame()
 
+        # TODO add from_day option
+
+        # TODO fix pantry list to not do lidl for meats (real group instead)
         grouped = self.grocery_list_raw.groupby(
-            ["item", "dimension"], dropna=False
+            ["item", "dimension", "get_on_second_shopping_day"], dropna=False
         )
         for name, group in grouped:
             # if more than 1 unit, use largest
@@ -223,6 +256,7 @@ class GroceryList:
             item_plural=("item_plural", "first"),
             from_recipe=("from_recipe", lambda x: list(set(x))),
             from_day=("from_day", lambda x: list(set(x))),
+            get_on_second_shopping_day=("get_on_second_shopping_day", "first"),
         )
         if self.config.ingredient_replacement.can_to_dried_bean.is_active:
             agg = agg.apply(self._override_can_to_dried_bean, axis=1)
@@ -270,6 +304,17 @@ class GroceryList:
             )
         )
         return group
+
+    def _get_on_second_shopping_day(
+        self, from_day: str, food_group: str
+    ) -> bool:
+        from_day_gt_secondary_shopping_day = (
+            get_weekday_index(from_day) >= self.second_shopping_day_index
+        )
+        food_group_is_secondary = (
+            food_group.casefold() in self.second_shopping_day_group
+        )
+        return from_day_gt_secondary_shopping_day and food_group_is_secondary
 
     def _override_can_to_dried_bean(self, row: pd.Series) -> pd.Series:
         config_bean = self.config.ingredient_replacement.can_to_dried_bean

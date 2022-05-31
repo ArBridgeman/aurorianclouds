@@ -8,7 +8,7 @@ from sous_chef.messaging.todoist_api import TodoistHelper
 
 @pytest.fixture
 def mock_todoist_helper():
-    with initialize(config_path="../../../config/messaging"):
+    with initialize(version_base=None, config_path="../../../config/messaging"):
         config = compose(config_name="todoist_api")
         with patch.object(TodoistHelper, "__post_init__", lambda x: None):
             return TodoistHelper(config)

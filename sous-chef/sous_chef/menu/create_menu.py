@@ -132,7 +132,7 @@ class Menu:
             ]
 
         project_id = todoist_helper.get_project_id(project_name)
-        for row in self.dataframe.iterrows():
+        for _, row in self.dataframe.iterrows():
             task, due_date = self._format_task_and_due_date_list(row)
             todoist_helper.add_task_to_project(
                 task=task,

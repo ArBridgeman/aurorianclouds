@@ -55,7 +55,7 @@ class DueDatetimeFormatter:
         due_date = self.anchor_datetime + datetime.timedelta(
             days=relative_date % 7
         )
-        if due_date.date() == self.anchor_datetime.date():
+        if due_date.date() <= self.anchor_datetime.date():
             due_date += datetime.timedelta(days=7)
         return due_date
 

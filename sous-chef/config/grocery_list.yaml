@@ -14,7 +14,7 @@ menu:
     input_method: local
 
 grocery_list:
-  anchor_day: Monday
+  anchor_day: Sunday
   shopping:
     secondary_day: Thursday
     secondary_group: [fish, fresh herbs, fruits, meats, vegetables, Lidl]

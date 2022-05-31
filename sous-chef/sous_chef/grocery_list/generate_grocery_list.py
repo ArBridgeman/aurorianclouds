@@ -86,13 +86,13 @@ class GroceryList:
 
             # TODO modify due date to get_on_second_shopping_day -> Thursday
             # TODO change priority for secondary shopping day
-            for entry in group:
+            for _, entry in group.iterrows():
                 todoist_helper.add_task_to_project(
                     task=self._format_ingredient_str(entry),
                     due_date=self.second_shopping_date
                     if entry["get_on_second_shopping_day"]
                     else None,
-                    label_list=entry[["from_recipe", "from_day"]],
+                    label_list=entry["from_recipe"] + entry["from_day"],
                     project=project_name,
                     project_id=project_id,
                     section=section,

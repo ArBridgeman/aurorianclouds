@@ -84,8 +84,7 @@ class GroceryList:
             project_id = todoist_helper.get_project_id(project_name)
             section_id = todoist_helper.get_section_id(section)
 
-            # TODO modify due date to get_on_second_shopping_day -> Thursday
-            # TODO change priority for secondary shopping day
+            # TODO CODE-197 add barcode (and later item name in description)
             for _, entry in group.iterrows():
                 todoist_helper.add_task_to_project(
                     task=self._format_ingredient_str(entry),
@@ -137,8 +136,9 @@ class GroceryList:
         is_staple: bool,
         is_optional: bool,
         food_group: str,
-        store: str,
         item_plural: str,
+        store: str,
+        barcode: str,
         from_recipe: str,
         from_day: str,
     ):
@@ -159,8 +159,9 @@ class GroceryList:
                 "is_staple": is_staple,
                 "is_optional": is_optional,
                 "food_group": food_group,
-                "store": store,
                 "item_plural": item_plural,
+                "store": store,
+                "barcode": barcode,
                 "from_recipe": from_recipe,
                 "from_day": from_day,
                 "get_on_second_shopping_day": self._get_on_second_shopping_day(
@@ -185,8 +186,9 @@ class GroceryList:
                 is_staple=x.is_staple,
                 is_optional=x.is_optional,
                 food_group=x.group,
-                store=x.store,
                 item_plural=x.item_plural,
+                store=x.store,
+                barcode=x.barcode,
                 from_recipe=manual_ingredient.from_recipe,
                 from_day=manual_ingredient.from_day,
             )
@@ -252,8 +254,9 @@ class GroceryList:
             quantity=("quantity", "sum"),
             is_staple=("is_staple", "first"),
             food_group=("food_group", "first"),
-            store=("store", "first"),
             item_plural=("item_plural", "first"),
+            store=("store", "first"),
+            barcode=("barcode", "first"),
             from_recipe=("from_recipe", lambda x: list(set(x))),
             from_day=("from_day", lambda x: list(set(x))),
             get_on_second_shopping_day=("get_on_second_shopping_day", "first"),
@@ -384,8 +387,9 @@ class GroceryList:
                 is_staple=ingredient.is_staple,
                 is_optional=ingredient.is_optional,
                 food_group=ingredient.group,
-                store=ingredient.store,
                 item_plural=ingredient.item_plural,
+                store=ingredient.store,
+                barcode=ingredient.barcode,
                 from_recipe=menu_recipe.from_recipe,
                 from_day=menu_recipe.from_day,
             )

@@ -58,6 +58,7 @@ def create_ingredient_and_grocery_entry_raw(
     group: str = "Vegetables",
     plural_ending: str = "s",
     store: str = "grocery store",
+    barcode: str = "4002015511713",
     recipe_factor: float = 1.0,
     from_recipe: str = "dummy recipe",
     from_day: str = "Friday",
@@ -79,6 +80,7 @@ def create_ingredient_and_grocery_entry_raw(
         group=group,
         item_plural=item + plural_ending,
         store=store,
+        barcode=barcode,
     )
     grocery_list_raw = pd.DataFrame(
         {
@@ -90,8 +92,9 @@ def create_ingredient_and_grocery_entry_raw(
             "is_staple": is_staple,
             "is_optional": is_optional,
             "food_group": group,
-            "store": store,
             "item_plural": item + plural_ending,
+            "store": store,
+            "barcode": barcode,
             "from_recipe": from_recipe,
             "from_day": from_day,
             "get_on_second_shopping_day": get_on_second_shopping_day,

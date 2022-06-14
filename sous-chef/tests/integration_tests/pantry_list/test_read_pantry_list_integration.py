@@ -19,7 +19,7 @@ PANTRY_COLUMNS = [
 PLURAL_COLUMNS = PANTRY_COLUMNS + ["true_ingredient", "label"]
 ALL_COLUMNS = PLURAL_COLUMNS + ["replace_factor", "replace_unit"]
 PLURAL_ENDINGS = ["es", "n", "s", "ves"]
-ALL_ENDINGS = PLURAL_ENDINGS + [""]
+ALL_ENDINGS = [""] + PLURAL_ENDINGS
 
 
 @pytest.fixture(scope="module")
@@ -30,17 +30,16 @@ def pantry_list_limit_init(gsheets_helper):
             return PantryList(config.pantry_list, gsheets_helper)
 
 
-# TODO add error list?
 class TestPantryList:
     @staticmethod
     def test__get_basic_pantry_list(pantry_list_limit_init):
         df = pantry_list_limit_init._get_basic_pantry_list()
         assert array_equal(
-            df.label.unique(), ["basic_singular_form", "basic_plural_form"]
+            df.label.unique(), ["basic_singular", "basic_plural"]
         )
         assert array_equal(df.replace_factor.unique(), [1])
         assert array_equal(df.replace_unit.unique(), [""])
-        assert array_equal(df.plural_ending.unique(), ALL_ENDINGS)
+        assert array_equal(sorted(df.plural_ending.unique()), ALL_ENDINGS)
         assert array_equal(df.columns, ALL_COLUMNS)
 
     @staticmethod
@@ -48,7 +47,7 @@ class TestPantryList:
         df = pantry_list_limit_init._get_replacement_pantry_list()
         assert array_equal(
             df.label.unique(),
-            ["replacement_singular_form", "replacement_plural_form"],
+            ["replacement_singular", "replacement_plural"],
         )
         assert array_equal(df.columns, ALL_COLUMNS)
 
@@ -58,29 +57,35 @@ class TestPantryList:
         assert array_equal(
             df.label.unique(),
             [
-                "basic_singular_form",
-                "basic_plural_form",
-                "misspelled_form",
-                "misspelled_replaced_form",
-                "replacement_singular_form",
-                "replacement_plural_form",
+                "basic_singular",
+                "basic_plural",
+                "bad_ingredient",
+                "misspelled",
+                "misspelled_replaced",
+                "replacement_singular",
+                "replacement_plural",
             ],
         )
-        assert array_equal(df.plural_ending.unique(), ALL_ENDINGS)
+        assert array_equal(sorted(df.plural_ending.unique()), ALL_ENDINGS)
         assert array_equal(df.columns, ALL_COLUMNS)
         assert df.ingredient.nunique() == df.shape[0]
 
     @staticmethod
     def test__retrieve_basic_pantry_list(pantry_list_limit_init):
         df = pantry_list_limit_init._retrieve_basic_pantry_list()
-        assert array_equal(df.plural_ending.unique(), ALL_ENDINGS)
+        assert array_equal(sorted(df.plural_ending.unique()), ALL_ENDINGS)
         assert array_equal(df.columns, PANTRY_COLUMNS)
+
+    @staticmethod
+    def test__retrieve_bad_pantry_list(pantry_list_limit_init):
+        df = pantry_list_limit_init._retrieve_bad_pantry_list()
+        assert array_equal(df.columns, ["ingredient", "plural_ending", "label"])
 
     @staticmethod
     def test__retrieve_misspelled_pantry_list(pantry_list_limit_init):
         df = pantry_list_limit_init._retrieve_misspelled_pantry_list()
         assert array_equal(
-            df.label.unique(), ["misspelled_form", "misspelled_replaced_form"]
+            df.label.unique(), ["misspelled", "misspelled_replaced"]
         )
         assert array_equal(df.columns, ALL_COLUMNS)
 

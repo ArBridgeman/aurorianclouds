@@ -1,6 +1,7 @@
 pantry_list:
   workbook_name: pantry_list
   ingredient_sheet_name: ingredients
+  bad_sheet_name: bad_ingredients
   misspelling_sheet_name: misspelled_ingredients
   replacement_sheet_name: replacement_ingredients
   fuzzy_match:

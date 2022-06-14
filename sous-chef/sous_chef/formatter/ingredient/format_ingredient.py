@@ -29,7 +29,8 @@ class Ingredient:
     group: str = None
     item_plural: str = None
     store: str = None
-    should_skip: bool = False
+    barcode: str = None
+    recipe_uuid: str = None
 
     def set_pantry_info(self, pantry_item: pd.Series):
         self.item = pantry_item.true_ingredient
@@ -37,7 +38,9 @@ class Ingredient:
         self.group = pantry_item.group
         self.item_plural = pantry_item.item_plural
         self.store = pantry_item.store
-        self.should_skip = pantry_item.skip == "Y"
+        self.factor *= pantry_item.replace_factor
+        self.barcode = pantry_item.barcode
+        self.recipe_uuid = pantry_item.recipe_uuid
 
 
 @dataclass
@@ -93,8 +96,8 @@ class PantrySearchError(IngredientError):
 
 
 @dataclass
-class SkipIngredientError(IngredientError):
-    message: str = "[skip ingredient]"
+class BadIngredientError(IngredientError):
+    message: str = "[bad ingredient]"
 
 
 @dataclass
@@ -162,9 +165,19 @@ class IngredientFormatter:
             pantry_item = self.pantry_list.retrieve_match(
                 "ingredient", ingredient.item
             )
+
+            if pantry_item.label == "bad_ingredient":
+                raise BadIngredientError(ingredient=ingredient)
+
             ingredient.set_pantry_info(pantry_item)
+
+            if pantry_item.replace_unit != "" and ingredient.unit is None:
+                (
+                    ingredient.unit,
+                    ingredient.pint_unit,
+                ) = self.unit_formatter.extract_unit_from_text(
+                    pantry_item.replace_unit
+                )
+
         except FuzzySearchError:
             raise PantrySearchError(ingredient=ingredient)
-
-        if ingredient.should_skip:
-            raise SkipIngredientError(ingredient=ingredient)

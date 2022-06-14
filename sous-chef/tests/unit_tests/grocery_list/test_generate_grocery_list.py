@@ -58,7 +58,6 @@ def create_ingredient_and_grocery_entry_raw(
     group: str = "Vegetables",
     plural_ending: str = "s",
     store: str = "grocery store",
-    should_skip: bool = False,
     recipe_factor: float = 1.0,
     from_recipe: str = "dummy recipe",
     from_day: str = "Friday",
@@ -80,7 +79,6 @@ def create_ingredient_and_grocery_entry_raw(
         group=group,
         item_plural=item + plural_ending,
         store=store,
-        should_skip=should_skip,
     )
     grocery_list_raw = pd.DataFrame(
         {

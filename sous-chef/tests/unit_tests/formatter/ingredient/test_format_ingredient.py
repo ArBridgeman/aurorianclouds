@@ -3,11 +3,11 @@ from hydra import compose, initialize
 from sous_chef.abstract.search_dataframe import FuzzySearchError
 from sous_chef.formatter.format_unit import unit_registry
 from sous_chef.formatter.ingredient.format_ingredient import (
+    BadIngredientError,
     EmptyIngredientError,
     Ingredient,
     IngredientLine,
     PantrySearchError,
-    SkipIngredientError,
 )
 from sous_chef.formatter.ingredient.format_line_abstract import LineParsingError
 from sous_chef.formatter.ingredient.format_referenced_recipe import (
@@ -220,12 +220,9 @@ class TestIngredientFormatter:
         assert ingredient_formatter.strip_line("cup") is None
 
     @staticmethod
-    @pytest.mark.parametrize(
-        "item,skip",
-        [("sugar", "N"), ("eggs", "N")],
-    )
+    @pytest.mark.parametrize("item", ["sugar", "eggs"])
     def test__enrich_with_pantry_information(
-        ingredient_formatter, mock_pantry_list, pantry_entry, item, skip
+        ingredient_formatter, mock_pantry_list, pantry_entry, item
     ):
         ingredient = Ingredient(quantity=1, item=item)
         mock_pantry_list.retrieve_match.return_value = pantry_entry
@@ -236,7 +233,6 @@ class TestIngredientFormatter:
         assert ingredient.group == pantry_entry.group
         assert ingredient.item_plural == pantry_entry.item_plural
         assert ingredient.store == pantry_entry.store
-        assert ingredient.should_skip == (pantry_entry.skip == "Y")
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -263,29 +259,26 @@ class TestIngredientFormatter:
             ingredient_formatter._enrich_with_pantry_detail(ingredient)
 
     @staticmethod
-    @pytest.mark.parametrize(
-        "item,skip",
-        [("celery", "Y")],
-    )
-    def test__enrich_with_pantry_information_raise_skip_ingredient_error(
-        ingredient_formatter, mock_pantry_list, pantry_entry, item, skip
+    @pytest.mark.parametrize("item", "celery")
+    def test__enrich_with_pantry_information_raise_bad_ingredient_error(
+        ingredient_formatter, mock_pantry_list, pantry_entry, item
     ):
         ingredient = Ingredient(quantity=1, item=item)
+        pantry_entry.label = "bad_ingredient"
         mock_pantry_list.retrieve_match.return_value = pantry_entry
-        with pytest.raises(SkipIngredientError):
+        with pytest.raises(BadIngredientError):
             ingredient_formatter._enrich_with_pantry_detail(ingredient)
 
     @staticmethod
     @pytest.mark.parametrize(
-        "quantity,unit,item,skip",
+        "quantity,unit,item",
         [
             (
                 2.0,
                 None,
                 "avocado",
-                "N",
             ),
-            (1.0, "cup", "sugar", "N"),
+            (1.0, "cup", "sugar"),
         ],
     )
     def test_format_ingredient_line(
@@ -311,11 +304,11 @@ class TestIngredientFormatter:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "quantity,unit,item,skip",
+        "quantity,unit,item",
         [
-            (1, "cup", "rice", "N"),
-            (0.5, "head", "salad", "N"),
-            (4, "", "bread rolls", "N"),
+            (1, "cup", "rice"),
+            (0.5, "head", "salad"),
+            (4, "", "bread rolls"),
         ],
     )
     def test_format_manual_ingredient(
@@ -325,7 +318,6 @@ class TestIngredientFormatter:
         quantity,
         unit,
         item,
-        skip,
     ):
         ingredient = Ingredient(
             quantity=quantity,

@@ -7,7 +7,6 @@ from sous_chef.formatter.ingredient.format_ingredient import (
     IngredientError,
     IngredientFormatter,
     PantrySearchError,
-    SkipIngredientError,
 )
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
 from structlog import get_logger
@@ -77,8 +76,6 @@ class IngredientFieldFormatter:
             self._handle_ingredient_exception(self.config.empty_ingredient, e)
         except PantrySearchError as e:
             self._handle_ingredient_exception(self.config.pantry_search, e)
-        except SkipIngredientError as e:
-            self._handle_ingredient_exception(self.config.skip_ingredient, e)
 
     def _handle_ingredient_exception(
         self, error_config: DictConfig, error: IngredientError

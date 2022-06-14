@@ -21,16 +21,16 @@ class PantryList(DataframeSearchable):
     def _get_basic_pantry_list(self):
         singular_list = self.basic_pantry_list.copy(deep=True)
         singular_list["true_ingredient"] = singular_list["ingredient"]
-        singular_list["label"] = "basic_singular_form"
+        singular_list["label"] = "basic_singular"
 
         mask_plural_items = singular_list["plural_ending"] != ""
         plural_list = singular_list[mask_plural_items].copy(deep=True)
         # create 'true_ingredient' to 'ingredient' for future aggregations
         plural_list["true_ingredient"] = plural_list["ingredient"]
         plural_list["ingredient"] = plural_list["item_plural"]
-        plural_list["label"] = "basic_plural_form"
+        plural_list["label"] = "basic_plural"
 
-        basic_list = pd.concat([singular_list, plural_list])
+        basic_list = pd.concat([singular_list, plural_list], ignore_index=True)
         basic_list["replace_factor"] = 1
         basic_list["replace_unit"] = ""
         return basic_list
@@ -44,14 +44,16 @@ class PantryList(DataframeSearchable):
 
     def _get_replacement_pantry_list(self):
         singular_list = self.replacement_pantry_list.copy(deep=True)
-        singular_list["label"] = "replacement_singular_form"
+        singular_list["label"] = "replacement_singular"
 
         mask_plural_items = singular_list["plural_ending"] != ""
         plural_list = singular_list[mask_plural_items].copy(deep=True)
         plural_list["replacement_ingredient"] = plural_list["item_plural"]
-        plural_list["label"] = "replacement_plural_form"
+        plural_list["label"] = "replacement_plural"
 
-        replacement_list = pd.concat([singular_list, plural_list])
+        replacement_list = pd.concat(
+            [singular_list, plural_list], ignore_index=True
+        )
         replacement_list = replacement_list[
             [
                 "replacement_ingredient",
@@ -77,9 +79,11 @@ class PantryList(DataframeSearchable):
         return pd.concat(
             [
                 self._get_basic_pantry_list(),
+                self._retrieve_bad_pantry_list(),
                 self._retrieve_misspelled_pantry_list(),
                 self._get_replacement_pantry_list(),
-            ]
+            ],
+            ignore_index=True,
         )
 
     def _retrieve_basic_pantry_list(self) -> DataFrame:
@@ -92,6 +96,14 @@ class PantryList(DataframeSearchable):
         )
         return dataframe
 
+    def _retrieve_bad_pantry_list(self) -> DataFrame:
+        bad_list = self.gsheets_helper.get_worksheet(
+            self.config.workbook_name, self.config.bad_sheet_name
+        )[["ingredient"]]
+        bad_list["plural_ending"] = ""
+        bad_list["label"] = "bad_ingredient"
+        return bad_list
+
     def _retrieve_misspelled_pantry_list(self) -> DataFrame:
         misspelled_list = self.gsheets_helper.get_worksheet(
             self.config.workbook_name, self.config.misspelling_sheet_name
@@ -102,12 +114,12 @@ class PantryList(DataframeSearchable):
         without_replacement = misspelled_list[~mask_and_replaced][
             ["misspelled_ingredient", "true_ingredient"]
         ]
-        without_replacement["label"] = "misspelled_form"
+        without_replacement["label"] = "misspelled"
         without_replacement["replace_factor"] = 1
         without_replacement["replace_unit"] = ""
         # set up misspelled ingredients that are replaced
         with_replacement = misspelled_list[mask_and_replaced]
-        with_replacement["label"] = "misspelled_replaced_form"
+        with_replacement["label"] = "misspelled_replaced"
         with_replacement = pd.merge(
             self.replacement_pantry_list,
             with_replacement,
@@ -125,7 +137,9 @@ class PantryList(DataframeSearchable):
         ]
 
         # join all misspelled ingredients with basic pantry list
-        misspelled_list = pd.concat([without_replacement, with_replacement])
+        misspelled_list = pd.concat(
+            [without_replacement, with_replacement], ignore_index=True
+        )
         misspelled_list = pd.merge(
             self.basic_pantry_list,
             misspelled_list,

@@ -1,23 +1,11 @@
 import pandas as pd
 from omegaconf import DictConfig
-from pandas import DataFrame, Series
+from pandas import DataFrame
 from sous_chef.abstract.search_dataframe import DataframeSearchable
 from sous_chef.messaging.gsheets_api import GsheetsHelper
 from structlog import get_logger
 
 FILE_LOGGER = get_logger(__name__)
-
-SELECT_BASIC_LIST_COLUMNS = [
-    "ingredient",
-    "plural_ending",
-    "is_staple",
-    "group",
-    "store",
-    "recipe_uuid",
-    "barcode",
-    "item_plural",
-    "true_ingredient",
-]
 
 
 class PantryList(DataframeSearchable):
@@ -25,29 +13,73 @@ class PantryList(DataframeSearchable):
         super().__init__(config)
         self.gsheets_helper = gsheets_helper
         self.basic_pantry_list = self._retrieve_basic_pantry_list()
+        self.replacement_pantry_list = self._retrieve_replacement_pantry_list()
 
     def __post_init__(self):
         self.dataframe = self._load_complex_pantry_list_for_search()
 
     def _get_basic_pantry_list(self):
-        basic_list = self.basic_pantry_list.copy(deep=True)
-        basic_list["true_ingredient"] = basic_list["ingredient"]
-        basic_list["label"] = "basic_form"
+        singular_list = self.basic_pantry_list.copy(deep=True)
+        singular_list["true_ingredient"] = singular_list["ingredient"]
+        singular_list["label"] = "basic_singular_form"
+
+        mask_plural_items = singular_list["plural_ending"] != ""
+        plural_list = singular_list[mask_plural_items].copy(deep=True)
+        # create 'true_ingredient' to 'ingredient' for future aggregations
+        plural_list["true_ingredient"] = plural_list["ingredient"]
+        plural_list["ingredient"] = plural_list["item_plural"]
+        plural_list["label"] = "basic_plural_form"
+
+        basic_list = pd.concat([singular_list, plural_list])
+        basic_list["replace_factor"] = 1
+        basic_list["replace_unit"] = ""
         return basic_list
 
     @staticmethod
-    def _get_pluralized_form(row: Series):
-        if row.plural_ending in ["ies", "ves"]:
-            return row.ingredient[:-1] + row.plural_ending
+    def _get_pluralized_form(plural_ending: str, ingredient: str):
+        if plural_ending in ["ies", "ves"]:
+            return ingredient[:-1] + plural_ending
         else:
-            return row.ingredient + row.plural_ending
+            return ingredient + plural_ending
+
+    def _get_replacement_pantry_list(self):
+        singular_list = self.replacement_pantry_list.copy(deep=True)
+        singular_list["label"] = "replacement_singular_form"
+
+        mask_plural_items = singular_list["plural_ending"] != ""
+        plural_list = singular_list[mask_plural_items].copy(deep=True)
+        plural_list["replacement_ingredient"] = plural_list["item_plural"]
+        plural_list["label"] = "replacement_plural_form"
+
+        replacement_list = pd.concat([singular_list, plural_list])
+        replacement_list = replacement_list[
+            [
+                "replacement_ingredient",
+                "true_ingredient",
+                "label",
+                "replace_factor",
+                "replace_unit",
+            ]
+        ]
+
+        replacement_list = pd.merge(
+            self.basic_pantry_list,
+            replacement_list,
+            left_on=["ingredient"],
+            right_on=["true_ingredient"],
+        )
+        replacement_list["ingredient"] = replacement_list[
+            "replacement_ingredient"
+        ]
+        return replacement_list.drop(columns=["replacement_ingredient"])
 
     def _load_complex_pantry_list_for_search(self):
-        basic_pantry_list = self._get_basic_pantry_list()
-        misspelled_pantry_list = self._retrieve_misspelled_pantry_list()
-        plural_pantry_list = self._retrieve_plural_pantry_list()
         return pd.concat(
-            [basic_pantry_list, misspelled_pantry_list, plural_pantry_list]
+            [
+                self._get_basic_pantry_list(),
+                self._retrieve_misspelled_pantry_list(),
+                self._get_replacement_pantry_list(),
+            ]
         )
 
     def _retrieve_basic_pantry_list(self) -> DataFrame:
@@ -55,7 +87,8 @@ class PantryList(DataframeSearchable):
             self.config.workbook_name, self.config.ingredient_sheet_name
         )
         dataframe["item_plural"] = dataframe.apply(
-            self._get_pluralized_form, axis=1
+            lambda x: self._get_pluralized_form(x.plural_ending, x.ingredient),
+            axis=1,
         )
         return dataframe
 
@@ -63,8 +96,36 @@ class PantryList(DataframeSearchable):
         misspelled_list = self.gsheets_helper.get_worksheet(
             self.config.workbook_name, self.config.misspelling_sheet_name
         )
-        misspelled_list["label"] = "misspelled_form"
 
+        mask_and_replaced = misspelled_list.replacement_ingredient != ""
+        # set up misspelled ingredients that are not replaced
+        without_replacement = misspelled_list[~mask_and_replaced][
+            ["misspelled_ingredient", "true_ingredient"]
+        ]
+        without_replacement["label"] = "misspelled_form"
+        without_replacement["replace_factor"] = 1
+        without_replacement["replace_unit"] = ""
+        # set up misspelled ingredients that are replaced
+        with_replacement = misspelled_list[mask_and_replaced]
+        with_replacement["label"] = "misspelled_replaced_form"
+        with_replacement = pd.merge(
+            self.replacement_pantry_list,
+            with_replacement,
+            how="inner",
+            on=["replacement_ingredient", "true_ingredient"],
+        )
+        with_replacement = with_replacement[
+            [
+                "misspelled_ingredient",
+                "true_ingredient",
+                "label",
+                "replace_factor",
+                "replace_unit",
+            ]
+        ]
+
+        # join all misspelled ingredients with basic pantry list
+        misspelled_list = pd.concat([without_replacement, with_replacement])
         misspelled_list = pd.merge(
             self.basic_pantry_list,
             misspelled_list,
@@ -72,21 +133,19 @@ class PantryList(DataframeSearchable):
             left_on=["ingredient"],
             right_on=["true_ingredient"],
         )
+
         # swap 'ingredient' to 'misspelled_ingredient' for search
         misspelled_list["ingredient"] = misspelled_list["misspelled_ingredient"]
-        return misspelled_list.drop(
-            columns=["misspelled_ingredient", "replacement_ingredient"]
+        return misspelled_list.drop(columns=["misspelled_ingredient"])
+
+    def _retrieve_replacement_pantry_list(self) -> DataFrame:
+        dataframe = self.gsheets_helper.get_worksheet(
+            self.config.workbook_name, self.config.replacement_sheet_name
         )
-
-    def _retrieve_plural_pantry_list(self) -> DataFrame:
-        # TODO want gsheets to convert '' to NAs or simple function?
-        # otherwise, we have to make sure to do this & not isna
-        mask_plural_items = self.basic_pantry_list["plural_ending"] != ""
-        plural_list = self.basic_pantry_list[mask_plural_items].copy(deep=True)
-
-        # create 'true_ingredient' to 'plural_form' for search
-        plural_list["true_ingredient"] = plural_list["ingredient"]
-        # swap 'ingredient' to 'item_plural' for search
-        plural_list["ingredient"] = plural_list["item_plural"]
-        plural_list["label"] = "plural_form"
-        return plural_list
+        dataframe["item_plural"] = dataframe.apply(
+            lambda x: self._get_pluralized_form(
+                x.plural_ending, x.replacement_ingredient
+            ),
+            axis=1,
+        )
+        return dataframe

@@ -1,6 +1,5 @@
 from unittest.mock import patch
 
-import pandas as pd
 import pytest
 from hydra import compose, initialize
 from sous_chef.pantry_list.read_pantry_list import PantryList
@@ -29,8 +28,7 @@ class TestPantryList:
     def test__get_pluralized_form(
         pantry_list, ingredient, plural_ending, expected_result
     ):
-        row = pd.DataFrame(
-            {"plural_ending": plural_ending, "ingredient": ingredient},
-            index=[0],
-        ).squeeze()
-        assert pantry_list._get_pluralized_form(row) == expected_result
+        assert (
+            pantry_list._get_pluralized_form(plural_ending, ingredient)
+            == expected_result
+        )

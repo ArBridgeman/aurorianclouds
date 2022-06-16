@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import pandas as pd
 from omegaconf import DictConfig
 from pandas import DataFrame
@@ -8,6 +10,23 @@ from structlog import get_logger
 FILE_LOGGER = get_logger(__name__)
 
 
+@dataclass
+class InnerJoinError(Exception):
+    join_df: str
+    old_shape: int
+    new_shape: int
+    message: str = "[inner join failed]"
+
+    def __post_init__(self):
+        super().__init__(self.message)
+
+    def __str__(self):
+        return (
+            f"{self.message}: mismatch of shapes of {self.join_df}, "
+            f"before: {self.old_shape}, afterwards: {self.new_shape}."
+        )
+
+
 class PantryList(DataframeSearchable):
     def __init__(self, config: DictConfig, gsheets_helper: GsheetsHelper):
         super().__init__(config)
@@ -15,6 +34,15 @@ class PantryList(DataframeSearchable):
         self.basic_pantry_list = self._retrieve_basic_pantry_list()
         self.replacement_pantry_list = self._retrieve_replacement_pantry_list()
         self.dataframe = self._load_complex_pantry_list_for_search()
+
+    @staticmethod
+    def _check_join(df_name: str, shape_before: int, shape_new: int):
+        if shape_new != shape_before:
+            raise InnerJoinError(
+                join_df=df_name,
+                old_shape=shape_before,
+                new_shape=shape_new,
+            )
 
     def _get_basic_pantry_list(self):
         singular_list = self.basic_pantry_list.copy(deep=True)
@@ -118,12 +146,18 @@ class PantryList(DataframeSearchable):
         # set up misspelled ingredients that are replaced
         with_replacement = misspelled_list[mask_and_replaced]
         with_replacement["label"] = "misspelled_replaced"
+
+        shape_before = with_replacement.shape[0]
         with_replacement = pd.merge(
             self.replacement_pantry_list,
             with_replacement,
             how="inner",
             on=["replacement_ingredient", "true_ingredient"],
         )
+        self._check_join(
+            "with_replacement", shape_before, with_replacement.shape[0]
+        )
+
         with_replacement = with_replacement[
             [
                 "misspelled_ingredient",
@@ -138,12 +172,17 @@ class PantryList(DataframeSearchable):
         misspelled_list = pd.concat(
             [without_replacement, with_replacement], ignore_index=True
         )
+
+        shape_before = misspelled_list.shape[0]
         misspelled_list = pd.merge(
             self.basic_pantry_list,
             misspelled_list,
             how="inner",
             left_on=["ingredient"],
             right_on=["true_ingredient"],
+        )
+        self._check_join(
+            "misspelled_list", shape_before, misspelled_list.shape[0]
         )
 
         # swap 'ingredient' to 'misspelled_ingredient' for search

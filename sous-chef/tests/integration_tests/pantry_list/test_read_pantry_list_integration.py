@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 import pytest
 from hydra import compose, initialize
 from numpy import array_equal
@@ -26,8 +24,7 @@ ALL_ENDINGS = [""] + PLURAL_ENDINGS
 def pantry_list_limit_init(gsheets_helper):
     with initialize(version_base=None, config_path="../../../config/"):
         config = compose(config_name="pantry_list")
-        with patch.object(PantryList, "__post_init__", return_value=None):
-            return PantryList(config.pantry_list, gsheets_helper)
+        return PantryList(config.pantry_list, gsheets_helper)
 
 
 class TestPantryList:
@@ -55,15 +52,15 @@ class TestPantryList:
     def test__load_complex_pantry_list_for_search(pantry_list_limit_init):
         df = pantry_list_limit_init._load_complex_pantry_list_for_search()
         assert array_equal(
-            df.label.unique(),
+            sorted(df.label.unique()),
             [
-                "basic_singular",
-                "basic_plural",
                 "bad_ingredient",
+                "basic_plural",
+                "basic_singular",
                 "misspelled",
                 "misspelled_replaced",
-                "replacement_singular",
                 "replacement_plural",
+                "replacement_singular",
             ],
         )
         assert array_equal(sorted(df.plural_ending.unique()), ALL_ENDINGS)
@@ -85,7 +82,7 @@ class TestPantryList:
     def test__retrieve_misspelled_pantry_list(pantry_list_limit_init):
         df = pantry_list_limit_init._retrieve_misspelled_pantry_list()
         assert array_equal(
-            df.label.unique(), ["misspelled", "misspelled_replaced"]
+            sorted(df.label.unique()), ["misspelled", "misspelled_replaced"]
         )
         assert array_equal(df.columns, ALL_COLUMNS)
 

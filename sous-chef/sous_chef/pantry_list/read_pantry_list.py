@@ -14,8 +14,6 @@ class PantryList(DataframeSearchable):
         self.gsheets_helper = gsheets_helper
         self.basic_pantry_list = self._retrieve_basic_pantry_list()
         self.replacement_pantry_list = self._retrieve_replacement_pantry_list()
-
-    def __post_init__(self):
         self.dataframe = self._load_complex_pantry_list_for_search()
 
     def _get_basic_pantry_list(self):

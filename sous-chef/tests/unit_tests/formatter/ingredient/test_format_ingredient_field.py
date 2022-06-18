@@ -6,7 +6,6 @@ from sous_chef.formatter.ingredient.format_ingredient import (
     EmptyIngredientError,
     Ingredient,
     PantrySearchError,
-    SkipIngredientError,
 )
 from sous_chef.formatter.ingredient.format_ingredient_field import (
     IngredientFieldFormatter,
@@ -58,7 +57,8 @@ def assert_ingredient(
             group=pantry_entry.group,
             item_plural=pantry_entry.item_plural,
             store=pantry_entry.store,
-            should_skip=(pantry_entry.skip == "Y"),
+            barcode=pantry_entry.barcode,
+            recipe_uuid=pantry_entry.recipe_uuid,
         )
     ]
 
@@ -88,8 +88,8 @@ def test_raise_or_log_exception_log_exception(log):
 class TestIngredientFieldFormatter:
     @staticmethod
     @pytest.mark.parametrize(
-        "quantity,unit,item,skip,factor,recipe_title",
-        [(2.5, "tbsp", "sugar", "N", 0.25, "garlic aioli")],
+        "quantity,unit,item,factor,recipe_title",
+        [(2.5, "tbsp", "sugar", 0.25, "garlic aioli")],
     )
     def test_parse_ingredient_field(
         ingredient_field_formatter,
@@ -99,7 +99,6 @@ class TestIngredientFieldFormatter:
         quantity,
         unit,
         item,
-        skip,
         factor,
         recipe_title,
     ):
@@ -129,9 +128,7 @@ class TestIngredientFieldFormatter:
         )
 
     @staticmethod
-    @pytest.mark.parametrize(
-        "quantity,unit,item,skip", [(1.25, "cup", "flour", "N")]
-    )
+    @pytest.mark.parametrize("quantity,unit,item", [(1.25, "cup", "flour")])
     def test_parse_ingredient_field_in_optional_group(
         ingredient_field_formatter,
         mock_pantry_list,
@@ -139,7 +136,6 @@ class TestIngredientFieldFormatter:
         quantity,
         unit,
         item,
-        skip,
     ):
         ingredient_str = create_ingredient_line(item, quantity, unit)
         ingredient_field = f"[garnish]\n{ingredient_str}"
@@ -187,8 +183,8 @@ class TestIngredientFieldFormatter:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "item,quantity,unit,is_in_optional_group,skip",
-        [("rice", 1.0, "cup", False, "N"), ("avocado", 2.0, None, False, "N")],
+        "item,quantity,unit,is_in_optional_group",
+        [("rice", 1.0, "cup", False), ("avocado", 2.0, None, False)],
     )
     def test__format_ingredient(
         ingredient_field_formatter,
@@ -198,7 +194,6 @@ class TestIngredientFieldFormatter:
         quantity,
         unit,
         is_in_optional_group,
-        skip,
     ):
         line_str = create_ingredient_line(item, quantity, unit)
         ingredient_field_formatter.ingredient_list = []
@@ -221,7 +216,7 @@ class TestIngredientFieldFormatter:
     @staticmethod
     @pytest.mark.parametrize(
         "error",
-        [EmptyIngredientError, PantrySearchError, SkipIngredientError],
+        [EmptyIngredientError, PantrySearchError],
     )
     def test__handle_ingredient_exception_raise_error(
         ingredient_field_formatter, error
@@ -243,7 +238,7 @@ class TestIngredientFieldFormatter:
     @staticmethod
     @pytest.mark.parametrize(
         "error",
-        [EmptyIngredientError, PantrySearchError, SkipIngredientError],
+        [EmptyIngredientError, PantrySearchError],
     )
     def test__handle_ingredient_exception_as_warning_ignore_ingredient(
         ingredient_field_formatter, log, error
@@ -269,7 +264,7 @@ class TestIngredientFieldFormatter:
     @staticmethod
     @pytest.mark.parametrize(
         "error",
-        [EmptyIngredientError, PantrySearchError, SkipIngredientError],
+        [EmptyIngredientError, PantrySearchError],
     )
     def test__handle_ingredient_exception_as_warning_still_add_to_list(
         ingredient_field_formatter, log, error

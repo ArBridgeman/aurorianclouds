@@ -3,16 +3,7 @@ from random import choice
 
 import pandas as pd
 import pytest
-from hydra import compose, initialize
-from sous_chef.messaging.gsheets_api import GsheetsHelper
 from tests.util import assert_equal_dataframe
-
-
-@pytest.fixture
-def gsheets_helper():
-    with initialize(version_base=None, config_path="../../../config/messaging"):
-        config = compose(config_name="gsheets_api")
-        return GsheetsHelper(config.gsheets)
 
 
 def random_string(length: int):

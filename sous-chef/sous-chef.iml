@@ -7,6 +7,12 @@
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/tests/.pytest_cache" />
       <excludeFolder url="file://$MODULE_DIR$/tests/unit_tests/.pytest_cache" />
+      <excludeFolder url="file://$MODULE_DIR$/sous_chef/.pytest_cache" />
+      <excludeFolder url="file://$MODULE_DIR$/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/.pytest_cache" />
+      <excludeFolder url="file://$MODULE_DIR$/sous_chef/tokens" />
+      <excludeFolder url="file://$MODULE_DIR$/sous_chef/menu/outputs" />
+      <excludeFolder url="file://$MODULE_DIR$/sous_chef/grocery_list/outputs" />
     </content>
     <orderEntry type="jdk" jdkName="sous-chef" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -31,16 +31,19 @@ def mock_pantry_list():
 @pytest.fixture
 def pantry_entry(
     item: str,
-    skip: str,
 ):
     return pd.Series(
         {
             "true_ingredient": item,
             "is_staple": False,
             "ingredient": item,
-            "group": "Prepared",
+            "group": "Canned",
             "item_plural": "s",
             "store": "grocery store",
-            "skip": skip,
+            "label": "basic_singular",
+            "replace_factor": 1,
+            "replace_unit": "",
+            "recipe_uuid": "",
+            "barcode": "4002015511713",
         }
     )

@@ -91,6 +91,7 @@ class TodoistHelper:
         section: str = None,
         section_id: int = None,
         label_list: list = None,
+        description: str = None,
         priority: int = 1,
     ):
 
@@ -106,6 +107,7 @@ class TodoistHelper:
             section=section,
             priority=priority,
             labels=label_list,
+            description=description,
         )
 
         if project_id is None and project is not None:
@@ -126,9 +128,11 @@ class TodoistHelper:
             label_ids = self.get_label_ids(label_list)
 
         new_item = self.connection.add_item(
-            task,
+            content=task,
             date_string=due_date_str,
+            description=description,
             project_id=project_id,
+            section_id=section_id,
             labels=label_ids,
             priority=priority,
         )
@@ -140,7 +144,7 @@ class TodoistHelper:
 
         # somehow, the section is not correctly set with the previous command
         # as such, the following is necessary
-        if section_id is not None:
+        if section_id is not None and new_item is not None:
             self.connection.items.move(new_item["id"], section_id=section_id)
 
         self.commit()

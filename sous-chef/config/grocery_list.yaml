@@ -20,7 +20,7 @@ grocery_list:
     secondary_group: [fish, fresh herbs, fruits, meats, vegetables, Lidl]
   bean_prep:
     project_name: Menu
-    prep_day: Saturday
+    prep_day: Tuesday
     prep_hour: 9
   todoist:
     project_name: Groceries

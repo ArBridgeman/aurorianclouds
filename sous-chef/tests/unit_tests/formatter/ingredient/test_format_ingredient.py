@@ -194,6 +194,24 @@ class TestIngredientFormatter:
 
     @staticmethod
     @pytest.mark.parametrize(
+        "ingredient_line,expected_result",
+        [
+            ("1 tomato", False),
+            ("(1 tomato)", True),
+            ("1 potato (cubed)", False),
+            ("(1-2) large potatoes", False),
+        ],
+    )
+    def test_is_ignored_entry(
+        ingredient_formatter, ingredient_line, expected_result
+    ):
+        assert (
+            ingredient_formatter.is_ignored_entry(ingredient_line)
+            == expected_result
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize(
         "raw_ingredient_line,expected_result",
         [
             ("extra spaces end   ", "extra spaces end"),

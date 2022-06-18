@@ -140,12 +140,12 @@ class IngredientFormatter:
         return recipe_line.convert_to_referenced_recipe()
 
     @staticmethod
-    def is_group(ingredient_line: str):
+    def is_group(ingredient_line: str) -> bool:
         match = regex.match(r"^\[[\w+\s]+\]$", ingredient_line)
         return match is not None
 
     @staticmethod
-    def is_optional_group(ingredient_line: str):
+    def is_optional_group(ingredient_line: str) -> bool:
         # TODO put into config as tuple?
         return ingredient_line.casefold() in [
             "[recommended sides]",
@@ -154,7 +154,13 @@ class IngredientFormatter:
             "[garnish]",
         ]
 
-    def strip_line(self, raw_ingredient_line: str):
+    @staticmethod
+    def is_ignored_entry(ingredient_line: str) -> bool:
+        if ingredient_line[0] == "(" and ingredient_line[-1] == ")":
+            return True
+        return False
+
+    def strip_line(self, raw_ingredient_line: str) -> str:
         ingredient_line = regex.sub(r"\s+", " ", raw_ingredient_line.strip())
         # TODO do we want to add a custom exception here instead of None?
         if len(ingredient_line) > self.config.min_line_length:

@@ -38,6 +38,8 @@ class IngredientFieldFormatter:
 
             if stripped_line is None:
                 continue
+            elif self.ingredient_formatter.is_ignored_entry(stripped_line):
+                continue
             elif self.ingredient_formatter.is_group(stripped_line):
                 is_in_optional_group = (
                     self.ingredient_formatter.is_optional_group(stripped_line)

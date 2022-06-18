@@ -92,6 +92,7 @@ class GroceryList:
                     if entry["get_on_second_shopping_day"]
                     else None,
                     label_list=entry["from_recipe"] + entry["from_day"],
+                    description=entry["barcode"],
                     project=project_name,
                     project_id=project_id,
                     section=section,

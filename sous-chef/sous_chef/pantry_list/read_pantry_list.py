@@ -139,12 +139,13 @@ class PantryList(DataframeSearchable):
         # set up misspelled ingredients that are not replaced
         without_replacement = misspelled_list[~mask_and_replaced][
             ["misspelled_ingredient", "true_ingredient"]
-        ]
+        ].copy()
+
         without_replacement["label"] = "misspelled"
         without_replacement["replace_factor"] = 1
         without_replacement["replace_unit"] = ""
         # set up misspelled ingredients that are replaced
-        with_replacement = misspelled_list[mask_and_replaced]
+        with_replacement = misspelled_list[mask_and_replaced].copy()
         with_replacement["label"] = "misspelled_replaced"
 
         shape_before = with_replacement.shape[0]

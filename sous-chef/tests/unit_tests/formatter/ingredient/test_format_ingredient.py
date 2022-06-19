@@ -339,7 +339,7 @@ class TestIngredientFormatter:
     ):
         ingredient = Ingredient(
             quantity=quantity,
-            unit=unit,
+            unit=unit if unit != "" else None,
             pint_unit=unit_registry[unit] if unit else None,
             item=item,
         )

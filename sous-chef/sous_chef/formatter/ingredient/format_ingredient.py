@@ -125,6 +125,8 @@ class IngredientFormatter:
         pint_unit = None
         if isinstance(unit, str) and unit != "":
             unit, pint_unit = self.unit_formatter.extract_unit_from_text(unit)
+        if unit == "":
+            unit = None
         ingredient = Ingredient(
             quantity=quantity, unit=unit, pint_unit=pint_unit, item=item
         )

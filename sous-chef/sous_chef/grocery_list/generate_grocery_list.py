@@ -116,7 +116,7 @@ class GroceryList:
             for _, row in self.queue_preparation.iterrows():
                 due_date = (
                     self.date_formatter.get_due_datetime_with_hour_minute(
-                        weekday=row.weekday, hour=row.hour, minute=row.minutet
+                        weekday=row.weekday, hour=row.hour, minute=row.minute
                     )
                 )
                 todoist_helper.add_task_to_project(

@@ -122,7 +122,7 @@ class GroceryList:
                 todoist_helper.add_task_to_project(
                     task=row.task,
                     project=project_name,
-                    label_list=row.from_recipe + row.from_day,
+                    label_list=[row.from_recipe, row.from_day],
                     due_date=due_date,
                     priority=4,
                 )

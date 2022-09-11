@@ -105,7 +105,7 @@ class GroceryList:
 
     def send_preparation_to_todoist(self, todoist_helper: TodoistHelper):
         # TODO separate service? need freezer check for defrosts
-        project_name = self.config.project_name
+        project_name = self.config.preparation.project_name
         if self.config.todoist.remove_existing_task:
             [
                 todoist_helper.delete_all_items_in_project(project_name)

@@ -112,7 +112,7 @@ class GroceryList:
                 for _ in range(3)
             ]
 
-        if self.queue_preparation:
+        if self.queue_preparation is not None:
             for _, row in self.queue_preparation.iterrows():
                 due_date = (
                     self.date_formatter.get_due_datetime_with_hour_minute(

@@ -1,3 +1,5 @@
+import builtins
+from unittest import mock
 from unittest.mock import Mock
 
 import numpy as np
@@ -148,7 +150,7 @@ def grocery_list(
         unit_formatter=unit_formatter,
         ingredient_field_formatter=mock_ingredient_field_formatter,
     )
-    grocery_list.due_date_formatter = frozen_due_datetime_formatter
+    grocery_list.date_formatter = frozen_due_datetime_formatter
     grocery_list.second_shopping_day_group = ["vegetables"]
     return grocery_list
 
@@ -159,9 +161,10 @@ class TestGroceryList:
         menu_recipe_base = create_menu_recipe()
         menu_recipe_ref = create_recipe(title="referenced", factor=1.0)
 
-        grocery_list._add_referenced_recipe_to_queue(
-            menu_recipe_base, [menu_recipe_ref]
-        )
+        with mock.patch.object(builtins, "input", lambda _: "Y"):
+            grocery_list._add_referenced_recipe_to_queue(
+                menu_recipe_base, [menu_recipe_ref]
+            )
 
         added_recipe = MenuRecipe(
             from_recipe=f"{menu_recipe_ref.title}_"
@@ -182,20 +185,17 @@ class TestGroceryList:
     def test__format_bean_prep_task_str(
         grocery_list, number_can_to_freeze, freeze_text
     ):
-        bean_item = {
-            "group": pd.Series(
-                {
-                    "quantity": 210,
-                    "pint_unit": unit_registry.gram,
-                    "item": "black beans",
-                    "is_optional": False,
-                    "item_plural": "black beans",
-                }
-            ),
-            "number_can_to_freeze": number_can_to_freeze,
-        }
+        row = pd.Series(
+            {
+                "quantity": 210,
+                "pint_unit": unit_registry.gram,
+                "item": "black beans",
+                "is_optional": False,
+                "item_plural": "black beans",
+            }
+        )
         assert (
-            grocery_list._format_bean_prep_task_str(bean_item)
+            grocery_list._format_bean_prep_task_str(row, number_can_to_freeze)
             == f"BEAN PREP: black beans, 210 g (freeze: {freeze_text})"
         )
 
@@ -386,7 +386,8 @@ class TestGroceryList:
             [ingredient],
         )
 
-        grocery_list._parse_ingredient_from_recipe(menu_recipe)
+        with mock.patch.object(builtins, "input", lambda _: "Y"):
+            grocery_list._parse_ingredient_from_recipe(menu_recipe)
 
         expected_menu_recipe = create_menu_recipe(
             recipe=recipe, from_recipe="dummy recipe 2_dummy recipe"

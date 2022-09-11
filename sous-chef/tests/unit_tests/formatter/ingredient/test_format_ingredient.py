@@ -367,4 +367,4 @@ class TestIngredientFormatter:
     ):
         assert ingredient_formatter.format_referenced_recipe(
             line
-        ) == ReferencedRecipe(quantity=quantity_float, title=title)
+        ) == ReferencedRecipe(quantity=quantity_float, title=title, amount=line)

@@ -10,6 +10,7 @@ FILE_LOGGER = get_logger(__name__)
 class ReferencedRecipe:
     quantity: float
     title: str
+    amount: str
     # TODO to implement
     # unit: str = None
     # pint_unit: Unit = None
@@ -38,7 +39,7 @@ class ReferencedRecipeLine(LineFormatter):
         self._remove_unit_override_quantity()
 
         referenced_recipe = ReferencedRecipe(
-            quantity=self.quantity_float, title=self.item
+            quantity=self.quantity_float, title=self.item, amount=self.line
         )
         if len(referenced_recipe.title) == 0:
             raise NoTitleReferencedRecipeError(

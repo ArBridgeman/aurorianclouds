@@ -136,7 +136,7 @@ class TestReferencedRecipeLine:
         result = referenced_recipe_line(line)
         referenced_recipe = result.convert_to_referenced_recipe()
         assert referenced_recipe == ReferencedRecipe(
-            quantity=quantity, title=title
+            quantity=quantity, title=title, amount=line
         )
 
     @staticmethod

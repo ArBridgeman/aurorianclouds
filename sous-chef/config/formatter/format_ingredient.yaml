@@ -3,7 +3,7 @@ format_ingredient:
   min_line_length: 3
   # formats for referenced recipe
   referenced_recipe_format:
-    unit_with_ingredient: '([\w+\-\s\%\.]+)'
+    unit_with_ingredient: '([\w+\-\s\%\.'']+)'
     prefix_pattern: [with_decimal_quantity, with_integer, with_none]
     with_none:
       pattern: '^#\s'
@@ -15,7 +15,7 @@ format_ingredient:
       pattern: '^#\s(\d+\.\d*)\s'
       group: ['quantity', 'item']
   ingredient_line_format:
-    unit_with_ingredient: '([\w+\-\s\%\.]+)'
+    unit_with_ingredient: '([\w+\-\s\%\.'']+)'
     prefix_pattern: [with_decimal_quantity, with_whole_and_fractional_quantity,
                      with_fractional_quantity, with_integer, with_none]
     with_none:

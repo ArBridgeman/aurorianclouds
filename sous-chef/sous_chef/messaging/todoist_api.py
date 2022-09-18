@@ -209,7 +209,7 @@ class TodoistHelper:
                     if no_recurring:
                         if (
                             task["due"]["is_recurring"] is True
-                            or task["due"]["date"] is not None
+                            and task["due"]["date"] is not None
                         ):
                             continue
                     if (

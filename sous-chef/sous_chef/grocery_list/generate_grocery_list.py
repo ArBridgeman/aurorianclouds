@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from itertools import chain
 from typing import List
 
 import pandas as pd
@@ -106,7 +107,7 @@ class GroceryList:
     def send_preparation_to_todoist(self, todoist_helper: TodoistHelper):
         # TODO separate service? need freezer check for defrosts
         project_name = self.config.preparation.project_name
-        if self.config.todoist.remove_existing_task:
+        if self.config.todoist.remove_existing_prep_task:
             [
                 todoist_helper.delete_all_items_in_project(project_name)
                 for _ in range(3)
@@ -122,7 +123,10 @@ class GroceryList:
                 todoist_helper.add_task_to_project(
                     task=row.task,
                     project=project_name,
-                    label_list=[row.from_recipe, row.from_day],
+                    label_list=list(
+                        chain.from_iterable([row.from_recipe, row.from_day])
+                    )
+                    + ["prep"],
                     due_date=due_date,
                     priority=4,
                 )
@@ -207,8 +211,8 @@ class GroceryList:
         weekday: str,
         hour: int,
         minute: int,
-        from_recipe: str,
-        from_day: str,
+        from_recipe: List[str],
+        from_day: List[str],
     ):
         preparation_task = pd.DataFrame(
             {
@@ -217,14 +221,15 @@ class GroceryList:
                 "hour": [hour],
                 "minute": [minute],
                 "from_recipe": [from_recipe],
-                "from_day": from_day,
+                "from_day": [from_day],
             }
         )
         if self.queue_preparation is None:
             self.queue_preparation = preparation_task
-        self.queue_preparation = pd.concat(
-            [self.queue_preparation, preparation_task]
-        )
+        else:
+            self.queue_preparation = pd.concat(
+                [self.queue_preparation, preparation_task]
+            )
 
     def _add_referenced_recipe_to_queue(
         self, menu_recipe: MenuRecipe, recipe_list: List[Recipe]
@@ -293,8 +298,8 @@ class GroceryList:
                                 weekday=weekday,
                                 hour=hour,
                                 minute=minute,
-                                from_recipe=from_recipe,
-                                from_day=menu_sub_recipe.from_day,
+                                from_recipe=[from_recipe],
+                                from_day=[menu_sub_recipe.from_day],
                             )
 
     def _aggregate_grocery_list(self):

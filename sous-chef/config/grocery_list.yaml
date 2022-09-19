@@ -26,6 +26,7 @@ grocery_list:
   todoist:
     project_name: Groceries
     remove_existing_task: true
+    remove_existing_prep_task: false
     skip_group: [garden]
   run_mode:
     with_todoist: true

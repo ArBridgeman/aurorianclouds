@@ -10,9 +10,9 @@ create_menu:
     cook_days:
       weekend_1: Saturday
       weekend_2: Sunday
-      work_day_1: Tuesday
+      work_day_1: Monday
       work_day_2: Friday
-      work_day_3: Thursday
+      work_day_3: Wednesday
     file_prefix: menu-
     menu_number:
   local:

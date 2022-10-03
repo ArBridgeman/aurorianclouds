@@ -16,6 +16,7 @@ def todoist_helper():
         return TodoistHelper(config.todoist)
 
 
+@pytest.mark.todoist
 class TestTodoistHelper:
     @staticmethod
     def _clean_up_add_task(todoist_helper, task_id: str) -> Task:

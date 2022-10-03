@@ -22,7 +22,7 @@ jobs:
         working-directory: ./sous-chef
         run: |
           poetry run coverage run  --rcfile .coveragerc. -m pytest \
-           -k "not test_send_dataframe_in_email" \
+           -k "not todoist and not gmail" \
           ./tests/unit_tests ./tests/integration_tests
       - name: Create coverage XML
         working-directory: ./sous-chef

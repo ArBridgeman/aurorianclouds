@@ -8,13 +8,13 @@ authors = ["Aurorian Clouds"]
 python = "^3.9"
 
 [tool.poetry.dev-dependencies]
-autoflake = "^1.4"
+autoflake = "^1.6"
 black = "^22.1"
-coverage = "^6.3"
+coverage = "^6.5"
 flake8 = "^5.0.4"
 isort = "^5.8.0"
 pre-commit = "^2.12.1"
-yamllint = "^1.26.3"
+yamllint = "^1.28"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

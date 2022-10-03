@@ -1,17 +1,17 @@
 [[package]]
 name = "ansible"
-version = "6.3.0"
+version = "6.4.0"
 description = "Radically simple IT automation"
 category = "main"
 optional = false
 python-versions = ">=3.8"
 
 [package.dependencies]
-ansible-core = ">=2.13.3,<2.14.0"
+ansible-core = ">=2.13.4,<2.14.0"
 
 [[package]]
 name = "ansible-core"
-version = "2.13.3"
+version = "2.13.4"
 description = "Radically simple IT automation"
 category = "main"
 optional = false
@@ -52,7 +52,7 @@ typecheck = ["mypy"]
 
 [[package]]
 name = "certifi"
-version = "2022.6.15.1"
+version = "2022.9.24"
 description = "Python package for providing Mozilla's CA Bundle."
 category = "main"
 optional = false
@@ -179,7 +179,7 @@ python-versions = "*"
 
 [[package]]
 name = "idna"
-version = "3.3"
+version = "3.4"
 description = "Internationalized Domain Names in Applications (IDNA)"
 category = "main"
 optional = false
@@ -399,7 +399,7 @@ six = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "d0a127b24fc0f7d650699c16887c588be6d03a01f9452e5b7333c2f03eea561c"
+content-hash = "c22a847e6a65f4d8aad54d3e5f9e3b7048b24e886e66071e75584932ded75b9d"
 
 [metadata.files]
 ansible = []
@@ -429,10 +429,7 @@ dockerpty = [
 docopt = [
     {file = "docopt-0.6.2.tar.gz", hash = "sha256:49b3a825280bd66b3aa83585ef59c4a8c82f2c8a522dbe754a8bc8d08c85c491"},
 ]
-idna = [
-    {file = "idna-3.3-py3-none-any.whl", hash = "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff"},
-    {file = "idna-3.3.tar.gz", hash = "sha256:9d643ff0a55b762d5cdb124b8eaa99c66322e2157b69160bc32796e824360e6d"},
-]
+idna = []
 jinja2 = [
     {file = "Jinja2-3.1.2-py3-none-any.whl", hash = "sha256:6088930bfe239f0e6710546ab9c19c9ef35e29792895fed6e6e31a023a182a61"},
     {file = "Jinja2-3.1.2.tar.gz", hash = "sha256:31351a702a408a9e7595a8fc6150fc3f43bb6bf7e319770cbc0db9df9437e852"},

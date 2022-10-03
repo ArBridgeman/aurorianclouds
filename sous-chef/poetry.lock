@@ -8,17 +8,17 @@ python-versions = "*"
 
 [[package]]
 name = "attrs"
-version = "22.1.0"
+version = "21.4.0"
 description = "Classes Without Boilerplate"
-category = "dev"
+category = "main"
 optional = false
-python-versions = ">=3.5"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [package.extras]
-dev = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "mypy (>=0.900,!=0.940)", "pytest-mypy-plugins", "zope.interface", "furo", "sphinx", "sphinx-notfound-page", "pre-commit", "cloudpickle"]
+dev = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins", "zope.interface", "furo", "sphinx", "sphinx-notfound-page", "pre-commit", "cloudpickle"]
 docs = ["furo", "sphinx", "zope.interface", "sphinx-notfound-page"]
-tests = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "mypy (>=0.900,!=0.940)", "pytest-mypy-plugins", "zope.interface", "cloudpickle"]
-tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "mypy (>=0.900,!=0.940)", "pytest-mypy-plugins", "cloudpickle"]
+tests = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins", "zope.interface", "cloudpickle"]
+tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins", "cloudpickle"]
 
 [[package]]
 name = "cachetools"
@@ -30,7 +30,7 @@ python-versions = "~=3.7"
 
 [[package]]
 name = "certifi"
-version = "2022.6.15.1"
+version = "2022.9.24"
 description = "Python package for providing Mozilla's CA Bundle."
 category = "main"
 optional = false
@@ -57,7 +57,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "coverage"
-version = "6.4.4"
+version = "6.5.0"
 description = "Code coverage measurement for Python"
 category = "dev"
 optional = false
@@ -90,7 +90,7 @@ speedup = ["python-levenshtein (>=0.12)"]
 
 [[package]]
 name = "google-api-core"
-version = "2.10.0"
+version = "2.10.1"
 description = "Google API client core library"
 category = "main"
 optional = false
@@ -109,7 +109,7 @@ grpcio-gcp = ["grpcio-gcp (>=0.2.2,<1.0dev)"]
 
 [[package]]
 name = "google-api-python-client"
-version = "2.60.0"
+version = "2.63.0"
 description = "Google API Client Library for Python"
 category = "main"
 optional = false
@@ -124,7 +124,7 @@ uritemplate = ">=3.0.1,<5"
 
 [[package]]
 name = "google-auth"
-version = "2.11.0"
+version = "2.12.0"
 description = "Google Authentication Library"
 category = "main"
 optional = false
@@ -157,7 +157,7 @@ six = "*"
 
 [[package]]
 name = "google-auth-oauthlib"
-version = "0.5.2"
+version = "0.5.3"
 description = "Google Authentication Library"
 category = "main"
 optional = false
@@ -210,7 +210,7 @@ packaging = "*"
 
 [[package]]
 name = "idna"
-version = "3.3"
+version = "3.4"
 description = "Internationalized Domain Names in Applications (IDNA)"
 category = "main"
 optional = false
@@ -367,7 +367,7 @@ testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
 name = "protobuf"
-version = "4.21.5"
+version = "4.21.7"
 description = ""
 category = "main"
 optional = false
@@ -517,7 +517,7 @@ python-versions = "*"
 
 [[package]]
 name = "pytz"
-version = "2022.2.1"
+version = "2022.4"
 description = "World timezone definitions, modern and historical"
 category = "main"
 optional = false
@@ -533,7 +533,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "regex"
-version = "2022.8.17"
+version = "2022.9.13"
 description = "Alternative regular expression module, to replace re."
 category = "main"
 optional = false
@@ -605,15 +605,16 @@ docs = ["furo", "myst-parser", "sphinx", "sphinx-notfound-page", "sphinxcontrib-
 tests = ["coverage", "freezegun (>=0.2.8)", "pretend", "pytest-asyncio (>=0.17)", "pytest (>=6.0)", "simplejson"]
 
 [[package]]
-name = "todoist-python"
-version = "8.1.3"
-description = "todoist-python - The official Todoist Python API library"
+name = "todoist-api-python"
+version = "2.0.0"
+description = "Official Python SDK for the Todoist REST API."
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = ">=3.9,<4.0"
 
 [package.dependencies]
-requests = "*"
+attrs = ">=21.2.0,<22.0.0"
+requests = ">=2.26.0,<3.0.0"
 
 [[package]]
 name = "tomli"
@@ -675,13 +676,16 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "c5a72e11cadaebe81ce9625fd60bafaf1b6c5785ebec18da1011254e068e4a5e"
+content-hash = "a6845c07d8976f934a6759d5781ab069dc40e96ed05fa51b3799ed8b32612bd3"
 
 [metadata.files]
 antlr4-python3-runtime = [
     {file = "antlr4-python3-runtime-4.9.3.tar.gz", hash = "sha256:f224469b4168294902bb1efa80a8bf7855f24c99aef99cbefc1bcd3cce77881b"},
 ]
-attrs = []
+attrs = [
+    {file = "attrs-21.4.0-py2.py3-none-any.whl", hash = "sha256:2d27e3784d7a565d36ab851fe94887c5eccd6a463168875832a1be79c82828b4"},
+    {file = "attrs-21.4.0.tar.gz", hash = "sha256:626ba8234211db98e869df76230a137c4c40a12d72445c45d5f5b716f076e2fd"},
+]
 cachetools = [
     {file = "cachetools-5.2.0-py3-none-any.whl", hash = "sha256:f9f17d2aec496a9aa6b76f53e3b614c965223c061982d434d160f930c698a9db"},
     {file = "cachetools-5.2.0.tar.gz", hash = "sha256:6a94c6402995a99c3970cc7e4884bb60b4a8639938157eeed436098bf9831757"},
@@ -702,10 +706,7 @@ google-auth-httplib2 = [
     {file = "google-auth-httplib2-0.1.0.tar.gz", hash = "sha256:a07c39fd632becacd3f07718dfd6021bf396978f03ad3ce4321d060015cc30ac"},
     {file = "google_auth_httplib2-0.1.0-py2.py3-none-any.whl", hash = "sha256:31e49c36c6b5643b57e82617cb3e021e3e1d2df9da63af67252c02fa9c1f4a10"},
 ]
-google-auth-oauthlib = [
-    {file = "google-auth-oauthlib-0.5.2.tar.gz", hash = "sha256:d5e98a71203330699f92a26bc08847a92e8c3b1b8d82a021f1af34164db143ae"},
-    {file = "google_auth_oauthlib-0.5.2-py2.py3-none-any.whl", hash = "sha256:6d6161d0ec0a62e2abf2207c6071c117ec5897b300823c4bb2d963ee86e20e4f"},
-]
+google-auth-oauthlib = []
 googleapis-common-protos = []
 httplib2 = [
     {file = "httplib2-0.20.4-py3-none-any.whl", hash = "sha256:8b6a905cb1c79eefd03f8669fd993c36dc341f7c558f056cb5a33b5c2f458543"},
@@ -715,10 +716,7 @@ hydra-core = [
     {file = "hydra-core-1.2.0.tar.gz", hash = "sha256:4990721ce4ac69abafaffee566d6b63a54faa6501ecce65b338d3251446ff634"},
     {file = "hydra_core-1.2.0-py3-none-any.whl", hash = "sha256:b6614fd6d6a97a9499f7ddbef02c9dd38f2fec6a9bc83c10e248db1dae50a528"},
 ]
-idna = [
-    {file = "idna-3.3-py3-none-any.whl", hash = "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff"},
-    {file = "idna-3.3.tar.gz", hash = "sha256:9d643ff0a55b762d5cdb124b8eaa99c66322e2157b69160bc32796e824360e6d"},
-]
+idna = []
 iniconfig = [
     {file = "iniconfig-1.1.1-py2.py3-none-any.whl", hash = "sha256:011e24c64b7f47f6ebd835bb12a743f2fbe9a26d4cecaa7f53bc4f35ee9da8b3"},
     {file = "iniconfig-1.1.1.tar.gz", hash = "sha256:bc3af051d7d14b2ee5ef9969666def0cd1a000e121eaea580d4a313df4b37f32"},
@@ -879,10 +877,7 @@ six = [
     {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
 ]
 structlog = []
-todoist-python = [
-    {file = "todoist-python-8.1.3.tar.gz", hash = "sha256:00544a0395510fa8f28a0b9960fed6390396a87ab51a35336ee7b3d1fd74ef45"},
-    {file = "todoist_python-8.1.3-py2.py3-none-any.whl", hash = "sha256:41293b5110420ec4c9a6c4c46b40da6341a17c09840c0c6b624f0cf1d53807db"},
-]
+todoist-api-python = []
 tomli = [
     {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
     {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},

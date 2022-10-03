@@ -86,7 +86,9 @@ class GroceryList:
                 continue
 
             project_id = todoist_helper.get_project_id(project_name)
-            section_id = todoist_helper.get_section_id(section)
+            section_id = todoist_helper.get_section_id(
+                project_id=project_id, section_name=section
+            )
 
             # TODO CODE-197 add barcode (and later item name in description)
             for _, entry in group.iterrows():
@@ -96,7 +98,7 @@ class GroceryList:
                     if entry["get_on_second_shopping_day"]
                     else None,
                     label_list=entry["from_recipe"] + entry["from_day"],
-                    description=entry["barcode"],
+                    description=str(entry["barcode"]),
                     project=project_name,
                     project_id=project_id,
                     section=section,

@@ -38,7 +38,7 @@ class TestTodoistHelper:
         ],
     )
     def test__get_due_date_str(mock_todoist_helper, due_date, string):
-        assert mock_todoist_helper._get_due_date_str(due_date) == string
+        assert mock_todoist_helper._get_due_datetime_str(due_date) == string
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -49,4 +49,4 @@ class TestTodoistHelper:
         mock_todoist_helper, due_date
     ):
         with pytest.raises(AttributeError):
-            mock_todoist_helper._get_due_date_str(due_date)
+            mock_todoist_helper._get_due_datetime_str(due_date)

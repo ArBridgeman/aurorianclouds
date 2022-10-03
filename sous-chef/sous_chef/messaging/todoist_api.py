@@ -1,16 +1,15 @@
 import datetime
 import re
-from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
-from time import sleep
-from typing import Any
+from typing import Dict
 
 import pandas as pd
-import todoist
 from omegaconf import DictConfig
 from structlog import get_logger
+from todoist_api_python.api import TodoistAPI
+from todoist_api_python.models import Project, Task
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
 FILE_LOGGER = get_logger(__name__)
@@ -32,72 +31,52 @@ class TodoistKeyError(Exception):
 @dataclass
 class TodoistHelper:
     config: DictConfig
-    connection: Any = field(init=False)
-    active_labels: dict = field(init=False)
+    connection: TodoistAPI = field(init=False)
+    projects: Dict[str, Project] = field(init=False)
+
+    # used_labels: dict = field(init=False)
 
     # TODO what is proper way for paths? relative or wih home?
-    # TODO distinguish private methods with leading _
     def __post_init__(self):
         with open(Path(ABS_FILE_PATH, self.config.token_file_path), "r") as f:
             token = f.read().strip()
-        self.connection = todoist.TodoistAPI(token)
-        self.sync()
-        self.active_labels = self._get_active_labels()
+        self.connection = TodoistAPI(token)
+        self.projects = self._get_projects()
 
-    def sync(self):
-        self.connection.sync()
+    @staticmethod
+    def _clean_label(label):
+        cleaned = re.sub(r"\s&\s", " and ", label).strip()
+        return re.sub(r"[\s_]+", "_", cleaned).strip()
 
-    def commit(self):
-        self.connection.commit()
+    @staticmethod
+    def _get_due_datetime_str(due_datetime: datetime.datetime) -> str:
+        return due_datetime.strftime("on %Y-%m-%d at %H:%M")
 
-    # TODO implement defrost task uploader
+    def _get_projects(self) -> Dict[str, Project]:
+        return {
+            project.name.casefold(): project
+            for project in self.connection.get_projects()
+        }
+
     def add_defrost_task_to_active_tasks(self):
-        NotImplementedError("Defrost tasks are not implemented yet!")
-
-    def retrieve_freezer(self):
-        freezer_contents = defaultdict(list)
-        for task in self.connection.state["items"]:
-            if task["project_id"] in [self.get_project_id("Freezer")]:
-                freezer_contents["title"].append(task["content"])
-                # TODO implement type based on section name
-                freezer_contents["type"].append("undefined")
-        return pd.DataFrame(freezer_contents)
-
-    def get_label_id_or_add_new(self, label):
-        label = self._clean_label(label)
-        if label in self.active_labels.keys():
-            return self.active_labels[label]
-        else:
-            new_label = self.connection.labels.add(label)
-            # get correct new label id; before, it has different transaction id
-            self.commit()
-            self.active_labels[label] = new_label["id"]
-            return new_label["id"]
-
-    def get_label_ids(self, labels):
-        label_ids = []
-        for label in labels:
-            if label is None or label == "":
-                continue
-            label_ids.append(self.get_label_id_or_add_new(label))
-        return label_ids
+        raise NotImplementedError("Defrost tasks are not implemented yet!")
 
     def add_task_to_project(
         self,
         task: str,
         due_date: datetime.datetime = None,
         project: str = None,
-        project_id: int = None,
+        project_id: str = None,
         section: str = None,
-        section_id: int = None,
+        section_id: str = None,
         label_list: list = None,
         description: str = None,
         priority: int = 1,
-    ):
+    ) -> Task:
 
         due_date_str = None
         if due_date:
-            due_date_str = self._get_due_date_str(due_date)
+            due_date_str = self._get_due_datetime_str(due_date)
 
         FILE_LOGGER.info(
             "[todoist add]",
@@ -112,81 +91,37 @@ class TodoistHelper:
 
         if project_id is None and project is not None:
             project_id = self.get_project_id(project)
+            if section_id is None and section is not None:
+                section_id = self.get_section_id(project_id, section)
 
-        if section_id is None and section is not None:
-            section_id = self.get_section_id(section)
-
-        # TODO consolidate label_list and label_ids into 1-2 methods
-        # TODO have functions handle None cases below instead of here
-        # (e.g. _get_due_date_str)
         if label_list is None:
             label_list = ["app"]
-        label_list += ["app"]
+        else:
+            label_list = [self._clean_label(label) for label in label_list]
+            label_list += ["app"]
 
-        label_ids = None
-        if label_list is not None:
-            label_ids = self.get_label_ids(label_list)
-
-        new_item = self.connection.add_item(
+        new_task = self.connection.add_task(
             content=task,
-            date_string=due_date_str,
+            due_string=due_date_str,
             description=description,
             project_id=project_id,
             section_id=section_id,
-            labels=label_ids,
+            labels=label_list,
             priority=priority,
         )
-        self.commit()
 
-        # sometimes due to Todoist api, new_item gets lost/changed in process
-        if "id" not in new_item:
-            new_item = self.get_item_in_project(project, task)
-
-        # somehow, the section is not correctly set with the previous command
-        # as such, the following is necessary
-        if section_id is not None and new_item is not None:
-            self.connection.items.move(new_item["id"], section_id=section_id)
-
-        self.commit()
-        self.sync()
-
-    def get_item_in_project(self, project, item_content):
-        all_in_project = self.get_all_items_in_project(project)
-        for one_item in all_in_project:
-            if one_item["content"] == item_content:
-                return one_item
-
-    # todo: change to generator logic?
-    def get_all_items_in_project(self, project):
-        items = []
-        project_id = self.get_project_id(project)
-
-        for item in self.connection.state["items"]:
-            if item["project_id"] == project_id:
-                items.append(item)
-        return items
+        # verify that new task found; if not fails
+        # TODO if fails often, then add tenacity around add/check
+        return self.connection.get_task(task_id=new_task.id)
 
     def delete_all_items_in_project(
         self,
-        project,
+        project: str,
         no_recurring: bool = True,
         only_app_generated: bool = True,
         only_delete_after_date: date = None,
-        sleep_in_seconds: int = 1,
     ):
-        """
-        Deletes items in project "project" that fulfil specified properties.
-        :param project: string, name of project.
-        :param no_recurring: boolean (default: True).
-        If True, do not delete recurring items from list.
-        :param only_app_generated: boolean (default: True).
-        If True, delete entries with label app, the label
-        that is added to all app-generated entries by default.
-        :param only_delete_after_date: date (default: None).
-        Delete entries with a due date after this date.
-        :param sleep_in_seconds: int (optional)
-        Adds wait time in specified seconds before syncing
-        """
+
         FILE_LOGGER.info(
             "[todoist delete]",
             action="delete items in project",
@@ -194,72 +129,50 @@ class TodoistHelper:
         )
 
         project_id = self.get_project_id(project)
-        sleep(sleep_in_seconds)
-        self.sync()
-
-        app_added_label_id = self.get_label_id_or_add_new("app")
-
-        for_deletion = []
-        for task in self.connection.state["items"]:
-            if task["project_id"] == project_id:
-                # check if task is already finished or deleted
-                if task["in_history"] == 1 or task["is_deleted"] == 1:
+        tasks_deleted = 0
+        for task in self.connection.get_tasks(project_id=project_id):
+            if task.is_completed:
+                continue
+            if task.due is not None:
+                if no_recurring and task.due.is_recurring and task.due.date:
                     continue
-                if task["due"] is not None:
-                    if no_recurring:
-                        if (
-                            task["due"]["is_recurring"] is True
-                            and task["due"]["date"] is not None
-                        ):
-                            continue
+                if only_delete_after_date and task.due.date:
                     if (
-                        only_delete_after_date is not None
-                        and task["due"]["date"] is not None
+                        pd.to_datetime(task.due.date).date()
+                        <= only_delete_after_date
                     ):
-                        if (
-                            pd.to_datetime(task["due"]["date"]).date()
-                            <= only_delete_after_date
-                        ):
-                            continue
-                if (
-                    only_app_generated
-                    and app_added_label_id not in task["labels"]
-                ):
-                    continue
-                for_deletion.append(task["id"])
+                        continue
+            if only_app_generated and "app" not in task.labels:
+                continue
+
+            self.connection.delete_task(task_id=task.id)
+            tasks_deleted += 1
 
         FILE_LOGGER.info(
-            "[todoist delete]", action=f"Deleting {len(for_deletion)} tasks!"
+            "[todoist delete]", action=f"Deleted {tasks_deleted} tasks!"
         )
-        for to_delete in for_deletion:
-            self.connection.items.delete(to_delete)
-            self.commit()
 
-        self.sync()
+    def get_project_id(self, project_name: str) -> str:
+        try:
+            return self.projects[project_name.casefold()].id
+        except KeyError:
+            raise TodoistKeyError(tag="project_id", value=project_name)
 
-    @staticmethod
-    def _clean_label(label):
-        cleaned = re.sub(r"\s&\s", " and ", label).strip()
-        return re.sub(r"[\s\_]+", "_", cleaned).strip()
+    def get_section_id(self, project_id: str, section_name: str) -> str:
+        # TODO could we save time by loading all sections
+        #  & putting in list with key for project_id?
+        for section in self.connection.get_sections(project_id=project_id):
+            if section.name.casefold() == section_name.casefold():
+                return section.id
+        raise TodoistKeyError(tag="section_id", value=section_name)
 
-    def _get_active_labels(self):
-        label_dict = {}
-        for label in self.connection.labels.state["labels"]:
-            label_dict[label["name"]] = label["id"]
-        return label_dict
-
-    @staticmethod
-    def _get_due_date_str(due_date: datetime.datetime) -> str:
-        return due_date.strftime("on %Y-%m-%d at %H:%M")
-
-    def get_project_id(self, desired_project):
-        for project in self.connection.state["projects"]:
-            if desired_project == project.data.get("name"):
-                return project.data.get("id")
-        raise TodoistKeyError(tag="project_id", value=desired_project)
-
-    def get_section_id(self, desired_section):
-        for project in self.connection.state["sections"]:
-            if desired_section == project.data.get("name"):
-                return project.data.get("id")
-        raise TodoistKeyError(tag="section_id", value=desired_section)
+    # TODO implement defrost task uploader
+    def retrieve_freezer(self):
+        raise NotImplementedError("Should implement this for defrost!")
+        # freezer_contents = defaultdict(list)
+        # for task in self.connection.state["items"]:
+        #     if task["project_id"] in [self.get_project_id("Freezer")]:
+        #         freezer_contents["title"].append(task["content"])
+        #         # TODO implement type based on section name
+        #         freezer_contents["type"].append("undefined")
+        # return pd.DataFrame(freezer_contents)

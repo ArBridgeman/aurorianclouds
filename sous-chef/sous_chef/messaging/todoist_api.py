@@ -120,7 +120,7 @@ class TodoistHelper:
         no_recurring: bool = True,
         only_app_generated: bool = True,
         only_delete_after_date: date = None,
-    ):
+    ) -> int:
 
         FILE_LOGGER.info(
             "[todoist delete]",
@@ -151,6 +151,7 @@ class TodoistHelper:
         FILE_LOGGER.info(
             "[todoist delete]", action=f"Deleted {tasks_deleted} tasks!"
         )
+        return tasks_deleted
 
     def get_project_id(self, project_name: str) -> str:
         try:

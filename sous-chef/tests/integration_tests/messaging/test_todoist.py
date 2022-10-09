@@ -96,7 +96,6 @@ class TestTodoistHelper:
             {"priority": 4},
             {"due_date": datetime(year=2050, month=1, day=1)},
             {"section": "Test-section"},
-            {"section_id": "102905558"},
         ],
     )
     def test_add_task_to_project(self, todoist_helper, log, task_kwarg):
@@ -111,7 +110,7 @@ class TestTodoistHelper:
         assert task.is_completed is False
         assert task.content == task_kwarg["task"]
         assert task.description == task_kwarg.get("description", "")
-        assert task.project_id == "2247094287"
+        assert task.project_id == todoist_helper.get_project_id("Pytest-area")
         assert task.labels == ["app"] + task_kwarg.get("label_list", [])
         assert task.priority == task_kwarg.get("priority", 1)
 
@@ -126,7 +125,7 @@ class TestTodoistHelper:
 
         if task_kwarg.get("section"):
             task_kwarg["section_id"] = todoist_helper.get_section_id(
-                project_id="2247094287", section_name=task_kwarg["section"]
+                project_id=task.project_id, section_name=task_kwarg["section"]
             )
         assert task.section_id == task_kwarg.get("section_id")
 
@@ -137,7 +136,11 @@ class TestTodoistHelper:
     @staticmethod
     def test_delete_all_items_in_project(todoist_helper, log):
         project = "Pytest-area"
-        project_id = "2247094287"
+        project_id = todoist_helper.get_project_id(project)
+
+        initial_delete = todoist_helper.delete_all_items_in_project(
+            project=project, no_recurring=False, only_app_generated=False
+        )
 
         todoist_helper.connection.add_task(
             content="app task", project_id=project_id, labels=["app"]
@@ -182,6 +185,17 @@ class TestTodoistHelper:
                 "project": "Pytest-area",
             },
             {
+                "action": f"Deleted {initial_delete} tasks!",
+                "event": "[todoist delete]",
+                "level": "info",
+            },
+            {
+                "action": "delete items in project",
+                "event": "[todoist delete]",
+                "level": "info",
+                "project": "Pytest-area",
+            },
+            {
                 "action": "Deleted 1 tasks!",
                 "event": "[todoist delete]",
                 "level": "info",
@@ -212,15 +226,15 @@ class TestTodoistHelper:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "project_name, project_id",
+        "project_name",
         [
-            ("Menu", "2228326717"),
-            ("Groceries", "2264128538"),
-            ("Pytest-area", "2247094287"),
+            "Menu",
+            "Groceries",
+            "Pytest-area",
         ],
     )
-    def test_get_project_id_if_exists(todoist_helper, project_name, project_id):
-        assert todoist_helper.get_project_id(project_name) == project_id
+    def test_get_project_id_if_exists(todoist_helper, project_name):
+        assert todoist_helper.get_project_id(project_name) is not None
 
     @staticmethod
     def test_get_project_id_if_not_exists(todoist_helper):
@@ -233,20 +247,21 @@ class TestTodoistHelper:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "project_id,section_name,section_id",
+        "project_name,section_name",
         [
-            ("2228326717", "Frozen", "57837704"),
-            ("2264128538", "Farmland pride", "46135424"),
+            ("Groceries", "Frozen 3"),
+            ("Groceries", "Farmland pride"),
         ],
     )
     def test_get_section_id_if_exists(
-        todoist_helper, project_id, section_name, section_id
+        todoist_helper, project_name, section_name
     ):
+        project_id = todoist_helper.get_project_id(project_name)
         assert (
             todoist_helper.get_section_id(
                 project_id=project_id, section_name=section_name
             )
-            == section_id
+            is not None
         )
 
     @staticmethod

@@ -60,33 +60,6 @@ class TestTodoistHelper:
             todoist_helper.projects.keys()
         )
 
-    @staticmethod
-    @pytest.mark.parametrize(
-        "label,result",
-        [
-            ("pasta & broccoli", "pasta_and_broccoli"),
-            ("pasta broccoli", "pasta_broccoli"),
-            ("pasta   broccoli", "pasta_broccoli"),
-            ("pasta___broccoli", "pasta_broccoli"),
-        ],
-    )
-    def test__clean_label(todoist_helper, label, result):
-        assert todoist_helper._clean_label(label) == result
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "due_datetime,result",
-        [
-            (datetime(year=2022, month=1, day=1), "on 2022-01-01 at 00:00"),
-            (
-                datetime(year=2022, month=1, day=1, hour=9, minute=30),
-                "on 2022-01-01 at 09:30",
-            ),
-        ],
-    )
-    def test__get_due_date_str(todoist_helper, due_datetime, result):
-        assert todoist_helper._get_due_datetime_str(due_datetime) == result
-
     @pytest.mark.parametrize(
         "task_kwarg",
         [

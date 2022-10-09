@@ -11,7 +11,7 @@ def mock_todoist_helper():
     with initialize(version_base=None, config_path="../../../config/messaging"):
         config = compose(config_name="todoist_api")
         with patch.object(TodoistHelper, "__post_init__", lambda x: None):
-            return TodoistHelper(config)
+            return TodoistHelper(config, dry_run=True)
 
 
 class TestTodoistHelper:
@@ -22,6 +22,10 @@ class TestTodoistHelper:
             ("french onion soup", "french_onion_soup"),
             ("pb and jelly", "pb_and_jelly"),
             ("cali _ burgers", "cali_burgers"),
+            ("pasta & broccoli", "pasta_and_broccoli"),
+            ("pasta broccoli", "pasta_broccoli"),
+            ("pasta   broccoli", "pasta_broccoli"),
+            ("pasta___broccoli", "pasta_broccoli"),
         ],
     )
     def test__clean_label(mock_todoist_helper, label, cleaned_label):
@@ -34,6 +38,11 @@ class TestTodoistHelper:
             (
                 datetime(year=2022, month=1, day=1, hour=12, minute=4),
                 "on 2022-01-01 at 12:04",
+            ),
+            (datetime(year=2022, month=1, day=1), "on 2022-01-01 at 00:00"),
+            (
+                datetime(year=2022, month=1, day=1, hour=9, minute=30),
+                "on 2022-01-01 at 09:30",
             ),
         ],
     )

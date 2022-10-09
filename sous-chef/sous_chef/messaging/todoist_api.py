@@ -3,7 +3,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Union
 
 import pandas as pd
 from omegaconf import DictConfig
@@ -33,10 +33,11 @@ class TodoistHelper:
     config: DictConfig
     connection: TodoistAPI = field(init=False)
     projects: Dict[str, Project] = field(init=False)
+    dry_run: bool = False
 
     # used_labels: dict = field(init=False)
 
-    # TODO what is proper way for paths? relative or wih home?
+    # TODO what is proper way for paths? relative or with home?
     def __post_init__(self):
         with open(Path(ABS_FILE_PATH, self.config.token_file_path), "r") as f:
             token = f.read().strip()
@@ -72,7 +73,7 @@ class TodoistHelper:
         label_list: list = None,
         description: str = None,
         priority: int = 1,
-    ) -> Task:
+    ) -> Union[None, Task]:
 
         due_date_str = None
         if due_date:
@@ -88,6 +89,9 @@ class TodoistHelper:
             labels=label_list,
             description=description,
         )
+
+        if self.dry_run:
+            return
 
         if project_id is None and project is not None:
             project_id = self.get_project_id(project)
@@ -127,6 +131,9 @@ class TodoistHelper:
             action="delete items in project",
             project=project,
         )
+
+        if self.dry_run:
+            return 0
 
         project_id = self.get_project_id(project)
         tasks_deleted = 0

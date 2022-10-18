@@ -19,7 +19,7 @@ from sous_chef.menu.create_menu import (
     MenuRecipe,
 )
 from sous_chef.messaging.gsheets_api import GsheetsHelper
-from tests.unit_tests.conftest import FROZEN_DATE
+from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
 from tests.util import assert_equal_dataframe_backup, assert_equal_series
 

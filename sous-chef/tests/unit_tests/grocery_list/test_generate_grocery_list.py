@@ -1,20 +1,13 @@
 import builtins
 from unittest import mock
-from unittest.mock import Mock, patch
 
 import numpy as np
 import pandas as pd
 import pytest
-from hydra import compose, initialize
 from pint import Unit
 from sous_chef.formatter.format_unit import UnitFormatter, unit_registry
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
-from sous_chef.formatter.ingredient.format_ingredient_field import (
-    IngredientFieldFormatter,
-)
-from sous_chef.grocery_list.generate_grocery_list import GroceryList
 from sous_chef.menu.create_menu import MenuRecipe
-from sous_chef.messaging.todoist_api import TodoistHelper
 from tests.unit_tests.util import create_recipe
 from tests.util import assert_equal_dataframe, assert_equal_series
 
@@ -124,44 +117,6 @@ def create_menu_recipe(
         from_day=from_day,
         from_recipe=from_recipe,
     )
-
-
-@pytest.fixture
-def mock_ingredient_field_formatter():
-    with initialize(version_base=None, config_path="../../../config/formatter"):
-        config = compose(config_name="format_ingredient_field")
-        return Mock(IngredientFieldFormatter(config, None, None))
-
-
-@pytest.fixture
-def config_grocery_list():
-    with initialize(version_base=None, config_path="../../../config"):
-        return compose(config_name="grocery_list").grocery_list
-
-
-@pytest.fixture
-def grocery_list(
-    config_grocery_list,
-    unit_formatter,
-    mock_ingredient_field_formatter,
-    frozen_due_datetime_formatter,
-):
-    grocery_list = GroceryList(
-        config=config_grocery_list,
-        unit_formatter=unit_formatter,
-        ingredient_field_formatter=mock_ingredient_field_formatter,
-    )
-    grocery_list.date_formatter = frozen_due_datetime_formatter
-    grocery_list.second_shopping_day_group = ["vegetables"]
-    return grocery_list
-
-
-@pytest.fixture(scope="module")
-def mock_todoist_helper():
-    with initialize(version_base=None, config_path="../../../config/messaging"):
-        config = compose(config_name="todoist_api")
-        with patch.object(TodoistHelper, "__post_init__", lambda x: None):
-            return TodoistHelper(config, dry_run=True)
 
 
 class TestGroceryList:
@@ -384,46 +339,6 @@ class TestGroceryList:
         assert_equal_dataframe(grocery_list.grocery_list_raw, grocery_raw)
 
     @staticmethod
-    def test__send_preparation_to_todoist(
-        grocery_list, mock_todoist_helper, log
-    ):
-        mock_prep_task_df = pd.DataFrame(
-            {
-                "task": ["test task"],
-                "weekday": ["Monday"],
-                "hour": [17],
-                "minute": [30],
-                "from_recipe": [["test recipe"]],
-                "from_day": [["Tuesday"]],
-            }
-        )
-        grocery_list.queue_preparation = mock_prep_task_df
-        grocery_list.send_preparation_to_todoist(mock_todoist_helper)
-        due_date = (
-            grocery_list.date_formatter.get_due_datetime_with_hour_minute(
-                weekday=mock_prep_task_df.iloc[0]["weekday"],
-                hour=mock_prep_task_df.iloc[0]["hour"],
-                minute=mock_prep_task_df.iloc[0]["minute"],
-            )
-        )
-
-        assert log.events[0] == {
-            "level": "info",
-            "event": "[todoist add]",
-            "task": mock_prep_task_df.iloc[0]["task"],
-            "due_date": mock_todoist_helper._get_due_datetime_str(due_date),
-            "project": grocery_list.config.preparation.project_name,
-            "priority": 4,
-            "labels": [
-                mock_prep_task_df.iloc[0].from_recipe[0],
-                mock_prep_task_df.iloc[0].from_day[0],
-                "prep",
-            ],
-            "section": None,
-            "description": None,
-        }
-
-    @staticmethod
     def test__parse_ingredient_from_recipe(
         grocery_list, mock_ingredient_field_formatter
     ):
@@ -474,7 +389,7 @@ class TestGroceryList:
 
     @staticmethod
     def test__transform_food_to_aisle_group_for_undefined_food_group(
-        grocery_list,
+        grocery_list, config_grocery_list
     ):
         config_grocery_list.food_group_to_aisle_map = {}
         assert (

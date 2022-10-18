@@ -7,7 +7,7 @@ from sous_chef.date.get_due_date import (
     MealTime,
     get_weekday_index,
 )
-from tests.unit_tests.conftest import FROZEN_DATE
+from tests.conftest import FROZEN_DATE
 
 
 def create_datetime(
@@ -101,7 +101,7 @@ class TestDueDatetimeFormatter:
     def test_get_due_datetime_with_hour_minute(
         frozen_due_datetime_formatter,
     ):
-        assert frozen_due_datetime_formatter.get_due_datetime_with_hour_minute(
+        assert frozen_due_datetime_formatter.get_due_datetime_with_time(
             "monday", hour=14, minute=15
         ) == create_datetime(day=17, hour=14, minute=15)
 

@@ -2,35 +2,13 @@ from datetime import date, datetime
 from typing import Dict, List, Optional
 
 import pytest
-from hydra import compose, initialize
-from requests.exceptions import HTTPError
-from sous_chef.messaging.todoist_api import TodoistHelper, TodoistKeyError
+from sous_chef.messaging.todoist_api import TodoistKeyError
+from tests.integration_tests.util import clean_up_add_todoist_task
 from todoist_api_python.api import TodoistAPI
-from todoist_api_python.models import Task
-
-
-@pytest.fixture(scope="module")
-def todoist_helper():
-    with initialize(version_base=None, config_path="../../../config/messaging"):
-        config = compose(config_name="todoist_api")
-        return TodoistHelper(config.todoist)
 
 
 @pytest.mark.todoist
 class TestTodoistHelper:
-    @staticmethod
-    def _clean_up_add_task(todoist_helper, task_id: str) -> Task:
-        # delete task
-        todoist_helper.connection.delete_task(task_id=task_id)
-
-        # verify task was deleted
-        with pytest.raises(HTTPError) as error:
-            todoist_helper.connection.get_task(task_id=task_id)
-        assert str(error.value) == (
-            "404 Client Error: Not Found for url: "
-            f"https://api.todoist.com/rest/v2/tasks/{task_id}"
-        )
-
     @staticmethod
     def _log_add_task(
         task: str,
@@ -77,7 +55,7 @@ class TestTodoistHelper:
             **task_kwarg,
             project="Pytest-area",
         )
-        self._clean_up_add_task(todoist_helper, task.id)
+        clean_up_add_todoist_task(todoist_helper, task.id)
 
         assert task.id == task.id
         assert task.is_completed is False

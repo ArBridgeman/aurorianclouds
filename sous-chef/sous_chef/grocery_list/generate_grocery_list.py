@@ -117,11 +117,6 @@ class GroceryList:
 
         if self.queue_preparation is not None:
             for _, row in self.queue_preparation.iterrows():
-                due_date = (
-                    self.date_formatter.get_due_datetime_with_hour_minute(
-                        weekday=row.weekday, hour=row.hour, minute=row.minute
-                    )
-                )
                 todoist_helper.add_task_to_project(
                     task=row.task,
                     project=project_name,
@@ -129,7 +124,9 @@ class GroceryList:
                         chain.from_iterable([row.from_recipe, row.from_day])
                     )
                     + ["prep"],
-                    due_date=due_date,
+                    due_date=self.date_formatter.get_due_datetime_with_time(
+                        weekday=row.weekday, hour=row.hour, minute=row.minute
+                    ),
                     priority=4,
                 )
 

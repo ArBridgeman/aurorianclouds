@@ -65,7 +65,7 @@ class DueDatetimeFormatter:
         due_date = self.get_date_relative_to_anchor(weekday=weekday)
         return self._replace_time_with_meal_time(due_date, meal_time)
 
-    def get_due_datetime_with_hour_minute(
+    def get_due_datetime_with_time(
         self, weekday: str, hour: int, minute: int
     ) -> datetime.datetime:
         due_date = self.get_date_relative_to_anchor(weekday=weekday)

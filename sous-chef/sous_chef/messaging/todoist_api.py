@@ -33,9 +33,6 @@ class TodoistHelper:
     config: DictConfig
     connection: TodoistAPI = field(init=False)
     projects: Dict[str, Project] = field(init=False)
-    dry_run: bool = False
-
-    # used_labels: dict = field(init=False)
 
     # TODO what is proper way for paths? relative or with home?
     def __post_init__(self):
@@ -90,9 +87,6 @@ class TodoistHelper:
             description=description,
         )
 
-        if self.dry_run:
-            return
-
         if project_id is None and project is not None:
             project_id = self.get_project_id(project)
             if section_id is None and section is not None:
@@ -131,9 +125,6 @@ class TodoistHelper:
             action="delete items in project",
             project=project,
         )
-
-        if self.dry_run:
-            return 0
 
         project_id = self.get_project_id(project)
         tasks_deleted = 0

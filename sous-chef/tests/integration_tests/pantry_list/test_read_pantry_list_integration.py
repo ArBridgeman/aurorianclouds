@@ -27,6 +27,7 @@ def pantry_list_limit_init(gsheets_helper):
         return PantryList(config.pantry_list, gsheets_helper)
 
 
+@pytest.mark.gsheets
 class TestPantryList:
     @staticmethod
     def test__get_basic_pantry_list(pantry_list_limit_init):

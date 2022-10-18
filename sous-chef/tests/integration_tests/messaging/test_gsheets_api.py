@@ -11,6 +11,7 @@ def random_string(length: int):
     return "".join(choice(pool) for i in range(length))
 
 
+@pytest.mark.gsheets
 class TestGSheetsHelper:
     @staticmethod
     def test_write_and_read_worksheet(gsheets_helper):

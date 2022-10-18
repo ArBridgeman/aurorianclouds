@@ -8,17 +8,17 @@ python-versions = "*"
 
 [[package]]
 name = "attrs"
-version = "21.4.0"
+version = "22.1.0"
 description = "Classes Without Boilerplate"
 category = "main"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+python-versions = ">=3.5"
 
 [package.extras]
-dev = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins", "zope.interface", "furo", "sphinx", "sphinx-notfound-page", "pre-commit", "cloudpickle"]
+dev = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "mypy (>=0.900,!=0.940)", "pytest-mypy-plugins", "zope.interface", "furo", "sphinx", "sphinx-notfound-page", "pre-commit", "cloudpickle"]
 docs = ["furo", "sphinx", "zope.interface", "sphinx-notfound-page"]
-tests = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins", "zope.interface", "cloudpickle"]
-tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins", "cloudpickle"]
+tests = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "mypy (>=0.900,!=0.940)", "pytest-mypy-plugins", "zope.interface", "cloudpickle"]
+tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "mypy (>=0.900,!=0.940)", "pytest-mypy-plugins", "cloudpickle"]
 
 [[package]]
 name = "cachetools"
@@ -90,7 +90,7 @@ speedup = ["python-levenshtein (>=0.12)"]
 
 [[package]]
 name = "google-api-core"
-version = "2.10.1"
+version = "2.10.2"
 description = "Google API client core library"
 category = "main"
 optional = false
@@ -99,7 +99,7 @@ python-versions = ">=3.7"
 [package.dependencies]
 google-auth = ">=1.25.0,<3.0dev"
 googleapis-common-protos = ">=1.56.2,<2.0dev"
-protobuf = ">=3.20.1,<5.0.0dev"
+protobuf = ">=3.19.5,<3.20.0 || >3.20.0,<3.20.1 || >3.20.1,<4.21.0 || >4.21.0,<4.21.1 || >4.21.1,<4.21.2 || >4.21.2,<4.21.3 || >4.21.3,<4.21.4 || >4.21.4,<4.21.5 || >4.21.5,<5.0.0dev"
 requests = ">=2.18.0,<3.0.0dev"
 
 [package.extras]
@@ -109,7 +109,7 @@ grpcio-gcp = ["grpcio-gcp (>=0.2.2,<1.0dev)"]
 
 [[package]]
 name = "google-api-python-client"
-version = "2.63.0"
+version = "2.64.0"
 description = "Google API Client Library for Python"
 category = "main"
 optional = false
@@ -124,7 +124,7 @@ uritemplate = ">=3.0.1,<5"
 
 [[package]]
 name = "google-auth"
-version = "2.12.0"
+version = "2.13.0"
 description = "Google Authentication Library"
 category = "main"
 optional = false
@@ -234,7 +234,7 @@ python-versions = "*"
 
 [[package]]
 name = "numpy"
-version = "1.23.3"
+version = "1.23.4"
 description = "NumPy is the fundamental package for array computing with Python."
 category = "main"
 optional = false
@@ -242,7 +242,7 @@ python-versions = ">=3.8"
 
 [[package]]
 name = "oauthlib"
-version = "3.2.1"
+version = "3.2.2"
 description = "A generic, spec-compliant, thorough implementation of the OAuth request-signing logic"
 category = "main"
 optional = false
@@ -517,7 +517,7 @@ python-versions = "*"
 
 [[package]]
 name = "pytz"
-version = "2022.4"
+version = "2022.5"
 description = "World timezone definitions, modern and historical"
 category = "main"
 optional = false
@@ -606,14 +606,14 @@ tests = ["coverage", "freezegun (>=0.2.8)", "pretend", "pytest-asyncio (>=0.17)"
 
 [[package]]
 name = "todoist-api-python"
-version = "2.0.0"
+version = "2.0.1"
 description = "Official Python SDK for the Todoist REST API."
 category = "main"
 optional = false
 python-versions = ">=3.9,<4.0"
 
 [package.dependencies]
-attrs = ">=21.2.0,<22.0.0"
+attrs = ">=22.0.0,<23.0.0"
 requests = ">=2.26.0,<3.0.0"
 
 [[package]]
@@ -626,7 +626,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "typing-extensions"
-version = "4.3.0"
+version = "4.4.0"
 description = "Backported and Experimental Type Hints for Python 3.7+"
 category = "main"
 optional = false
@@ -682,10 +682,7 @@ content-hash = "87a8607aabbb68c7a9c68a0bcad38738366e0828c779de3fe1b6f09e60726d77
 antlr4-python3-runtime = [
     {file = "antlr4-python3-runtime-4.9.3.tar.gz", hash = "sha256:f224469b4168294902bb1efa80a8bf7855f24c99aef99cbefc1bcd3cce77881b"},
 ]
-attrs = [
-    {file = "attrs-21.4.0-py2.py3-none-any.whl", hash = "sha256:2d27e3784d7a565d36ab851fe94887c5eccd6a463168875832a1be79c82828b4"},
-    {file = "attrs-21.4.0.tar.gz", hash = "sha256:626ba8234211db98e869df76230a137c4c40a12d72445c45d5f5b716f076e2fd"},
-]
+attrs = []
 cachetools = [
     {file = "cachetools-5.2.0-py3-none-any.whl", hash = "sha256:f9f17d2aec496a9aa6b76f53e3b614c965223c061982d434d160f930c698a9db"},
     {file = "cachetools-5.2.0.tar.gz", hash = "sha256:6a94c6402995a99c3970cc7e4884bb60b4a8639938157eeed436098bf9831757"},

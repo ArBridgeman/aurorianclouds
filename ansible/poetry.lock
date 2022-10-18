@@ -1,17 +1,17 @@
 [[package]]
 name = "ansible"
-version = "6.4.0"
+version = "6.5.0"
 description = "Radically simple IT automation"
 category = "main"
 optional = false
 python-versions = ">=3.8"
 
 [package.dependencies]
-ansible-core = ">=2.13.4,<2.14.0"
+ansible-core = ">=2.13.5,<2.14.0"
 
 [[package]]
 name = "ansible-core"
-version = "2.13.4"
+version = "2.13.5"
 description = "Radically simple IT automation"
 category = "main"
 optional = false
@@ -40,7 +40,7 @@ tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>
 
 [[package]]
 name = "bcrypt"
-version = "4.0.0"
+version = "4.0.1"
 description = "Modern password hashing for your software and your servers"
 category = "main"
 optional = false
@@ -90,7 +90,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
 name = "cryptography"
-version = "38.0.1"
+version = "38.0.2"
 description = "cryptography is a package which provides cryptographic recipes and primitives to Python developers."
 category = "main"
 optional = false
@@ -109,7 +109,7 @@ test = ["pytest (>=6.2.0)", "pytest-benchmark", "pytest-cov", "pytest-subtests",
 
 [[package]]
 name = "distro"
-version = "1.7.0"
+version = "1.8.0"
 description = "Distro - an OS platform information API"
 category = "main"
 optional = false
@@ -399,7 +399,7 @@ six = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "c22a847e6a65f4d8aad54d3e5f9e3b7048b24e886e66071e75584932ded75b9d"
+content-hash = "1c3bd58bfe9c91468158a4de843f26d0b4711037d07fdef0bf43afe06f32cadb"
 
 [metadata.files]
 ansible = []
@@ -411,10 +411,7 @@ cffi = []
 charset-normalizer = []
 colorama = []
 cryptography = []
-distro = [
-    {file = "distro-1.7.0-py3-none-any.whl", hash = "sha256:d596311d707e692c2160c37807f83e3820c5d539d5a83e87cfb6babd8ba3a06b"},
-    {file = "distro-1.7.0.tar.gz", hash = "sha256:151aeccf60c216402932b52e40ee477a939f8d58898927378a02abbe852c1c39"},
-]
+distro = []
 docker = [
     {file = "docker-5.0.3-py2.py3-none-any.whl", hash = "sha256:7a79bb439e3df59d0a72621775d600bc8bc8b422d285824cb37103eab91d1ce0"},
     {file = "docker-5.0.3.tar.gz", hash = "sha256:d916a26b62970e7c2f554110ed6af04c7ccff8e9f81ad17d0d40c75637e227fb"},

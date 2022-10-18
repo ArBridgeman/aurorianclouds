@@ -14,6 +14,7 @@ def gmail_helper():
 DEFAULT_SUBJECT = "[sous_chef_tests]"
 
 
+@pytest.mark.gmail
 class TestGmailHelper:
     @staticmethod
     @pytest.mark.skip(reason="need to frequently update credentials")

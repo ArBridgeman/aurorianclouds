@@ -58,6 +58,7 @@ class IngredientFieldFormatter:
         )
         recipe = self.recipe_book.get_recipe_by_title(referenced_recipe.title)
         recipe.factor *= referenced_recipe.quantity
+        recipe.amount = referenced_recipe.amount
         self.referenced_recipe_list.append(recipe)
 
     def _format_ingredient_line(self, line: str, is_in_optional_group: bool):

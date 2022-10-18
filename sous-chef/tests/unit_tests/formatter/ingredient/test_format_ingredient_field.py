@@ -63,7 +63,7 @@ def assert_ingredient(
     ]
 
 
-def assert_recipe(result, recipe, factor):
+def assert_recipe(result, recipe, factor, amount=None):
     assert result == [
         Recipe(
             title=recipe.title,
@@ -71,6 +71,7 @@ def assert_recipe(result, recipe, factor):
             total_cook_time=recipe.total_cook_time,
             ingredient_field=recipe.ingredient_field,
             factor=factor,
+            amount=amount,
         )
     ]
 
@@ -117,7 +118,7 @@ class TestIngredientFieldFormatter:
             recipe_list,
             ingredient_list,
         ) = ingredient_field_formatter.parse_ingredient_field(ingredient_field)
-        assert_recipe(recipe_list, recipe_with_recipe_title, factor)
+        assert_recipe(recipe_list, recipe_with_recipe_title, factor, recipe_str)
         assert_ingredient(
             ingredient_list,
             pantry_entry,
@@ -179,7 +180,9 @@ class TestIngredientFieldFormatter:
 
         ingredient_field_formatter._format_referenced_recipe(line_str)
         result = ingredient_field_formatter.referenced_recipe_list
-        assert_recipe(result, recipe_with_recipe_title, factor=factor)
+        assert_recipe(
+            result, recipe_with_recipe_title, factor=factor, amount=line_str
+        )
 
     @staticmethod
     @pytest.mark.parametrize(

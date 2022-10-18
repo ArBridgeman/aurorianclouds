@@ -4,7 +4,7 @@ create_menu:
   anchor_day: Sunday
   todoist:
     project_name: Menu
-    remove_existing_task: false
+    remove_existing_task: False
   fixed:
     basic: menu-basic
     cook_days:
@@ -12,6 +12,7 @@ create_menu:
       weekend_2: Sunday
       work_day_1: Tuesday
       work_day_2: Friday
+      work_day_3: Wednesday
     file_prefix: menu-
     menu_number:
   local:

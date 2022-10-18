@@ -18,13 +18,15 @@ grocery_list:
   shopping:
     secondary_day: Thursday
     secondary_group: [fish, fresh herbs, fruits, meats, vegetables, Lidl]
-  bean_prep:
+  preparation:
     project_name: Menu
+  bean_prep:
     prep_day: Tuesday
     prep_hour: 9
   todoist:
     project_name: Groceries
     remove_existing_task: true
+    remove_existing_prep_task: false
     skip_group: [garden]
   run_mode:
     with_todoist: true

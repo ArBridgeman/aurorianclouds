@@ -25,4 +25,4 @@ jobs:
         working-directory: ./sous-chef
         run: |
           poetry run pytest ./tests/integration_tests \
-          -k "not test_send_dataframe_in_email"
+          -k "not todoist and not gmail"

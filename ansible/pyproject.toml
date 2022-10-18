@@ -6,7 +6,7 @@ authors = ["Aurorian Clouds"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-ansible = "^5.9.0"
+ansible = "^6.4.0"
 docker = "^5.0.3"
 docker-compose = "^1.29.2"
 

@@ -73,7 +73,7 @@ def main(config: DictConfig) -> None:
         if config.grocery_list.run_mode.with_todoist:
             todoist_helper = TodoistHelper(config.messaging.todoist)
             grocery_list.upload_grocery_list_to_todoist(todoist_helper)
-            grocery_list.send_bean_preparation_to_todoist(todoist_helper)
+            grocery_list.send_preparation_to_todoist(todoist_helper)
 
 
 def _get_ingredient_formatter(

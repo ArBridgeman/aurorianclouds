@@ -1,11 +1,17 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
+from itertools import chain
 from typing import List
 
 import pandas as pd
 from omegaconf import DictConfig
 from pint import Unit
-from sous_chef.date.get_due_date import DueDatetimeFormatter, get_weekday_index
+from sous_chef.date.get_due_date import (
+    DueDatetimeFormatter,
+    MealTime,
+    Weekday,
+    get_weekday_index,
+)
 from sous_chef.formatter.format_str import convert_number_to_str
 from sous_chef.formatter.format_unit import UnitFormatter, unit_registry
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
@@ -29,23 +35,21 @@ class GroceryList:
     ingredient_field_formatter: IngredientFieldFormatter
     # TODO do properly? pass everything inside methods? only set final list?
     queue_menu_recipe: List[MenuRecipe] = None
-    queue_bean_preparation: List = None
+    queue_preparation: pd.DataFrame = None
     grocery_list_raw: pd.DataFrame = None
     grocery_list: pd.DataFrame = None
-    due_date_formatter: DueDatetimeFormatter = field(init=False)
+    date_formatter: DueDatetimeFormatter = field(init=False)
     second_shopping_date: datetime = field(init=False)
     second_shopping_day_index: int = field(init=False)
     second_shopping_day_group: List = field(init=False)
 
     def __post_init__(self):
-        self.due_date_formatter = DueDatetimeFormatter(self.config.anchor_day)
+        self.date_formatter = DueDatetimeFormatter(self.config.anchor_day)
 
         second_shopping_day = self.config.shopping.secondary_day
         self.second_shopping_day_index = get_weekday_index(second_shopping_day)
         self.second_shopping_date = (
-            self.due_date_formatter.get_date_relative_to_anchor(
-                second_shopping_day
-            )
+            self.date_formatter.get_date_relative_to_anchor(second_shopping_day)
         )
         self.second_shopping_day_group = self.config.shopping.secondary_group
 
@@ -82,7 +86,9 @@ class GroceryList:
                 continue
 
             project_id = todoist_helper.get_project_id(project_name)
-            section_id = todoist_helper.get_section_id(section)
+            section_id = todoist_helper.get_section_id(
+                project_id=project_id, section_name=section
+            )
 
             # TODO CODE-197 add barcode (and later item name in description)
             for _, entry in group.iterrows():
@@ -92,7 +98,7 @@ class GroceryList:
                     if entry["get_on_second_shopping_day"]
                     else None,
                     label_list=entry["from_recipe"] + entry["from_day"],
-                    description=entry["barcode"],
+                    description=str(entry["barcode"]),
                     project=project_name,
                     project_id=project_id,
                     section=section,
@@ -100,31 +106,27 @@ class GroceryList:
                     priority=2 if entry["get_on_second_shopping_day"] else 1,
                 )
 
-    def send_bean_preparation_to_todoist(self, todoist_helper: TodoistHelper):
+    def send_preparation_to_todoist(self, todoist_helper: TodoistHelper):
         # TODO separate service? need freezer check for defrosts
-        # TODO generalize beyond beans
-
-        bean_prep = self.config.bean_prep
-        project_name = bean_prep.project_name
-        if self.config.todoist.remove_existing_task:
+        project_name = self.config.preparation.project_name
+        if self.config.todoist.remove_existing_prep_task:
             [
                 todoist_helper.delete_all_items_in_project(project_name)
                 for _ in range(3)
             ]
 
-        due_date = self.due_date_formatter.get_due_datetime_with_hour_minute(
-            weekday=bean_prep.prep_day, hour=bean_prep.prep_hour, minute=0
-        )
-
-        # TODO change queue_bean_preparation into dataframe to use pandas here
-        if self.queue_bean_preparation:
-            for item in self.queue_bean_preparation:
-                label_list = item["group"].from_recipe + item["group"].from_day
+        if self.queue_preparation is not None:
+            for _, row in self.queue_preparation.iterrows():
                 todoist_helper.add_task_to_project(
-                    task=self._format_bean_prep_task_str(item),
+                    task=row.task,
                     project=project_name,
-                    label_list=label_list,
-                    due_date=due_date,
+                    label_list=list(
+                        chain.from_iterable([row.from_recipe, row.from_day])
+                    )
+                    + ["prep"],
+                    due_date=self.date_formatter.get_due_datetime_with_time(
+                        weekday=row.weekday, hour=row.hour, minute=row.minute
+                    ),
                     priority=4,
                 )
 
@@ -202,18 +204,102 @@ class GroceryList:
             self.queue_menu_recipe = []
         self.queue_menu_recipe.extend(menu_recipe_list)
 
+    def _add_preparation_task_to_queue(
+        self,
+        task: str,
+        weekday: str,
+        hour: int,
+        minute: int,
+        from_recipe: List[str],
+        from_day: List[str],
+    ):
+        preparation_task = pd.DataFrame(
+            {
+                "task": [task],
+                "weekday": [weekday],
+                "hour": [hour],
+                "minute": [minute],
+                "from_recipe": [from_recipe],
+                "from_day": [from_day],
+            }
+        )
+        if self.queue_preparation is None:
+            self.queue_preparation = preparation_task
+        else:
+            self.queue_preparation = pd.concat(
+                [self.queue_preparation, preparation_task]
+            )
+
     def _add_referenced_recipe_to_queue(
         self, menu_recipe: MenuRecipe, recipe_list: List[Recipe]
     ):
+        def _check_yes_no(text: str) -> str:
+            response = None
+            while response not in ["Y", "N"]:
+                response = input(f"\n{text} [Y/N] ").upper()
+            return response
+
+        def _get_schedule_day_hour_minute():
+            day = None
+            while day not in Weekday.name_list("capitalize"):
+                day = input("\nWeekday: ").capitalize()
+
+            meal_time = None
+            meal_times = MealTime.name_list("lower")
+            while meal_time not in meal_times:
+                meal_time = input(f"\nMealtime {meal_times}: ").lower()
+            meal_time = MealTime[meal_time].value
+            return day, meal_time["hour"], meal_time["minute"]
+
+        def _give_referenced_recipe_details():
+            total_factor = menu_recipe.eat_factor + menu_recipe.freeze_factor
+            print("\n#### REFERENCED RECIPE CHECK ####")
+            print(f"- from recipe: {menu_recipe.recipe.title}")
+            print(f"-- total_factor: {total_factor}")
+            print(f"-- from day: {menu_recipe.from_day}")
+            print(f"- referenced recipe: {recipe.title}")
+            print(f"-- amount needed: {recipe.amount}")
+            print(f"-- total time: {recipe.total_cook_time}")
+
         for recipe in recipe_list:
-            menu_recipe = MenuRecipe(
-                from_recipe=f"{recipe.title}_{menu_recipe.recipe.title}",
+            from_recipe = f"{recipe.title}_{menu_recipe.recipe.title}"
+            menu_sub_recipe = MenuRecipe(
+                from_recipe=from_recipe,
                 from_day=menu_recipe.from_day,
                 eat_factor=menu_recipe.eat_factor * recipe.factor,
                 freeze_factor=menu_recipe.freeze_factor * recipe.factor,
                 recipe=recipe,
             )
-            self._add_menu_recipe_to_queue([menu_recipe])
+
+            # TODO make more robust to other methods
+            if self.config.run_mode.with_todoist:
+                _give_referenced_recipe_details()
+                if _check_yes_no(f"Need to make '{recipe.title}'?") == "Y":
+                    self._add_menu_recipe_to_queue([menu_sub_recipe])
+
+                    if (
+                        recipe.total_cook_time is None
+                        or recipe.total_cook_time > timedelta(minutes=15)
+                    ):
+                        if (
+                            _check_yes_no(
+                                f"Separately schedule '{recipe.title}'?"
+                            )
+                            == "Y"
+                        ):
+                            (
+                                weekday,
+                                hour,
+                                minute,
+                            ) = _get_schedule_day_hour_minute()
+                            self._add_preparation_task_to_queue(
+                                f"Prepare {recipe.amount}",
+                                weekday=weekday,
+                                hour=hour,
+                                minute=minute,
+                                from_recipe=[from_recipe],
+                                from_day=[menu_sub_recipe.from_day],
+                            )
 
     def _aggregate_grocery_list(self):
         # do not drop nas, as some items are dimensionless (None)
@@ -266,16 +352,17 @@ class GroceryList:
             agg = agg.apply(self._override_can_to_dried_bean, axis=1)
         return agg
 
-    def _format_bean_prep_task_str(self, item: dict) -> str:
-        ingredient_str = self._format_ingredient_str(item["group"])
-
-        freeze_quantity = item["number_can_to_freeze"]
+    def _format_bean_prep_task_str(
+        self, row: pd.Series, freeze_quantity: int
+    ) -> str:
+        ingredient_str = self._format_ingredient_str(row)
         unit_str = self.unit_formatter.get_unit_str(
             freeze_quantity, unit_registry.can
         )
-        freeze_str = f"{freeze_quantity} {unit_str}"
-
-        return f"BEAN PREP: {ingredient_str} (freeze: {freeze_str})"
+        return (
+            f"BEAN PREP: {ingredient_str} "
+            f"(freeze: {freeze_quantity} {unit_str})"
+        )
 
     def _format_ingredient_str(self, ingredient: pd.Series) -> str:
         item = ingredient["item"]
@@ -321,6 +408,7 @@ class GroceryList:
         return from_day_gt_secondary_shopping_day and food_group_is_secondary
 
     def _override_can_to_dried_bean(self, row: pd.Series) -> pd.Series:
+        config_bean_prep = self.config.bean_prep
         config_bean = self.config.ingredient_replacement.can_to_dried_bean
         # TODO better in ingredient formatter with prep-tag? similar cases?
         if row["item"] not in config_bean.bean_list:
@@ -336,13 +424,15 @@ class GroceryList:
         row["pint_unit"] = unit_registry.gram
         row["quantity"] = cans * config_bean.g_per_can
 
-        if self.queue_bean_preparation is None:
-            self.queue_bean_preparation = []
-        self.queue_bean_preparation.append(
-            {
-                "group": row,
-                "number_can_to_freeze": config_bean.number_can_to_freeze,
-            }
+        self._add_preparation_task_to_queue(
+            task=self._format_bean_prep_task_str(
+                row, config_bean.number_can_to_freeze
+            ),
+            weekday=config_bean_prep.prep_day,
+            hour=config_bean_prep.prep_hour,
+            minute=0,
+            from_recipe=row.from_recipe,
+            from_day=row.from_day,
         )
         return row
 

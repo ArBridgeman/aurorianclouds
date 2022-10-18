@@ -1,8 +1,8 @@
 import re
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import timedelta
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Optional
 
 import pandas as pd
 from sous_chef.abstract.search_dataframe import (
@@ -39,9 +39,10 @@ class SelectRandomRecipeError(DirectSearchError):
 class Recipe:
     title: str
     rating: float
-    total_cook_time: datetime
+    total_cook_time: timedelta
     ingredient_field: str
     factor: float = 1.0
+    amount: Optional[str] = None
 
 
 @dataclass

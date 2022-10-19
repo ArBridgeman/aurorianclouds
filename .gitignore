@@ -143,3 +143,6 @@ client_key.json
 
 # Sous Chef
 menu-tmp.csv
+
+# Analysis
+*.html

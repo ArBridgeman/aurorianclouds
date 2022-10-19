@@ -1,10 +1,4 @@
-import pytest
-from sous_chef.nutrition.provide_nutritional_info import Nutritionist, Product
-
-
-@pytest.fixture
-def nutritionist():
-    return Nutritionist()
+from sous_chef.nutrition.provide_nutritional_info import Product
 
 
 class TestNutritionist:

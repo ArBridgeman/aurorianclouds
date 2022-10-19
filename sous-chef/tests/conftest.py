@@ -11,6 +11,7 @@ from sous_chef.formatter.ingredient.format_ingredient_field import (
     IngredientFieldFormatter,
 )
 from sous_chef.grocery_list.generate_grocery_list import GroceryList
+from sous_chef.nutrition.provide_nutritional_info import Nutritionist
 
 FROZEN_DATE = "2022-01-14"
 
@@ -82,6 +83,14 @@ def mock_ingredient_field_formatter():
     with initialize(version_base=None, config_path="../config/formatter"):
         config = compose(config_name="format_ingredient_field")
         return Mock(IngredientFieldFormatter(config, None, None))
+
+
+@pytest.fixture
+def nutritionist():
+    with initialize(version_base=None, config_path="../config/"):
+        config = compose(config_name="nutrition").nutrition
+        config.sheet_name = "nutrition-test"
+        return Nutritionist(config=config)
 
 
 @pytest.fixture

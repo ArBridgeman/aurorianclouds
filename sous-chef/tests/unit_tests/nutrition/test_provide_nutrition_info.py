@@ -4,9 +4,14 @@ from sous_chef.nutrition.provide_nutritional_info import Product
 class TestNutritionist:
     @staticmethod
     def test__extract_per_product(nutritionist):
-        product = nutritionist._extract_per_product("4311501619810")
+        product = nutritionist._extract_per_product(
+            "4311501619810", group="Dairy force", pantry_ingredient="ricotta"
+        )
         assert product == Product(
             brands="Edeka",
+            barcode="'4311501619810",
+            group="Dairy force",
+            pantry_ingredient="ricotta",
             completeness=0.7875,
             nutriscore_grade="c",
             product_name="Ricotta 45% Fett i.Tr.",

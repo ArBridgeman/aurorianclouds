@@ -131,8 +131,10 @@ class RecipeBook(DataframeSearchable):
                 )
 
             result_df = self.dataframe[mask_selection]
-            weighting = result_df.rating.copy(deep=True).replace(
-                0, config_random.default_rating
+            weighting = (
+                result_df.rating.copy(deep=True)
+                .fillna(0)
+                .replace(0, config_random.default_rating)
             )
             result = result_df.sample(n=1, weights=weighting).iloc[0]
             return Recipe(

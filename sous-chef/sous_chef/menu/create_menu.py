@@ -235,6 +235,11 @@ class Menu:
             self._get_cook_day_as_weekday
         )
 
+        combined_menu["eat_factor"] = combined_menu["eat_factor"].astype(float)
+        combined_menu["freeze_factor"] = combined_menu["freeze_factor"].astype(
+            float
+        )
+
         # TODO create test for
         mask_skip_none = combined_menu["weekday"].isna()
         FILE_LOGGER.warning(

@@ -50,7 +50,7 @@ class TestTodoistHelper:
         ],
     )
     def test_add_task_to_project(self, todoist_helper, log, task_kwarg):
-        task_kwarg["task"] = "add task with" + "".join(task_kwarg.keys())
+        task_kwarg["task"] = "add task with " + "".join(task_kwarg.keys())
         task = todoist_helper.add_task_to_project(
             **task_kwarg,
             project="Pytest-area",

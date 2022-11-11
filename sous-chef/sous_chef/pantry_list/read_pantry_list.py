@@ -114,7 +114,9 @@ class PantryList(DataframeSearchable):
 
     def _retrieve_basic_pantry_list(self) -> DataFrame:
         dataframe = self.gsheets_helper.get_worksheet(
-            self.config.workbook_name, self.config.ingredient_sheet_name
+            self.config.workbook_name,
+            self.config.ingredient_sheet_name,
+            numerize=False,
         )
         dataframe["item_plural"] = dataframe.apply(
             lambda x: self._get_pluralized_form(x.plural_ending, x.ingredient),
@@ -124,7 +126,7 @@ class PantryList(DataframeSearchable):
 
     def _retrieve_bad_pantry_list(self) -> DataFrame:
         bad_list = self.gsheets_helper.get_worksheet(
-            self.config.workbook_name, self.config.bad_sheet_name
+            self.config.workbook_name, self.config.bad_sheet_name, numerize=True
         )[["ingredient"]]
         bad_list["plural_ending"] = ""
         bad_list["label"] = "bad_ingredient"
@@ -132,7 +134,9 @@ class PantryList(DataframeSearchable):
 
     def _retrieve_misspelled_pantry_list(self) -> DataFrame:
         misspelled_list = self.gsheets_helper.get_worksheet(
-            self.config.workbook_name, self.config.misspelling_sheet_name
+            self.config.workbook_name,
+            self.config.misspelling_sheet_name,
+            numerize=False,
         )
 
         mask_and_replaced = misspelled_list.replacement_ingredient != ""
@@ -192,7 +196,9 @@ class PantryList(DataframeSearchable):
 
     def _retrieve_replacement_pantry_list(self) -> DataFrame:
         dataframe = self.gsheets_helper.get_worksheet(
-            self.config.workbook_name, self.config.replacement_sheet_name
+            self.config.workbook_name,
+            self.config.replacement_sheet_name,
+            numerize=True,
         )
         dataframe["item_plural"] = dataframe.apply(
             lambda x: self._get_pluralized_form(

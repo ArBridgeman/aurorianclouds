@@ -59,7 +59,7 @@ class TestTodoistHelper:
 
         assert task.id == task.id
         assert task.is_completed is False
-        assert task.content == task_kwarg["task"]
+        assert task.content == task_kwarg["task"].strip()
         assert task.description == task_kwarg.get("description", "")
         assert task.project_id == todoist_helper.get_project_id("Pytest-area")
         assert task.labels == ["app"] + task_kwarg.get("label_list", [])

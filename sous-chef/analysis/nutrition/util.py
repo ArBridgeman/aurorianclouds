@@ -21,13 +21,15 @@ def get_nutrition_data():
     nutri_df = nutritionist.get_pantry_nutrition_from_gsheets(
         gsheets_helper=gsheets_helper
     )
-    # TODO better to have handled in nutrtionist
+    # TODO better to have handled in nutritionist
     return nutri_df.astype(
         {
             "per_100g_carbohydrates": "float64",
+            "per_100g_sugars": "float64",
             "per_100g_energy_kcal": "float64",
             "per_100g_fat": "float64",
+            "per_100g_saturated_fat": "float64",
             "per_100g_fiber": "float64",
             "per_100g_proteins": "float64",
         }
-    )
+    ).fillna(0)

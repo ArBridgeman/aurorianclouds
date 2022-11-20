@@ -1,3 +1,4 @@
+import pandas as pd
 from hydra import compose, initialize
 from sous_chef.messaging.gsheets_api import GsheetsHelper
 from sous_chef.nutrition.provide_nutritional_info import Nutritionist
@@ -20,6 +21,12 @@ def get_nutrition_data():
     gsheets_helper = get_gsheets_helper()
     nutri_df = nutritionist.get_pantry_nutrition_from_gsheets(
         gsheets_helper=gsheets_helper
+    )
+    nutri_manual_df = gsheets_helper.get_worksheet(
+        workbook_name="nutrition", worksheet_name="nutrition-manual"
+    )
+    nutri_df = pd.concat(
+        [nutri_df, nutri_manual_df], ignore_index=True, copy=False
     )
     # TODO better to have handled in nutritionist
     return nutri_df.astype(

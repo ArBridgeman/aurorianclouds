@@ -118,6 +118,7 @@ class PantryList(DataframeSearchable):
             self.config.ingredient_sheet_name,
             numerize=False,
         )
+        dataframe["ingredient"] = dataframe.ingredient.str.strip()
         dataframe["item_plural"] = dataframe.apply(
             lambda x: self._get_pluralized_form(x.plural_ending, x.ingredient),
             axis=1,

@@ -1,4 +1,5 @@
 import datetime
+import logging
 import re
 from dataclasses import dataclass, field
 from datetime import date
@@ -114,7 +115,7 @@ class TodoistHelper:
     @tenacity.retry(
         stop=tenacity.stop_after_attempt(5),
         wait=tenacity.wait_exponential(multiplier=1, min=1, max=20),
-        after=tenacity.after_log(FILE_LOGGER, FILE_LOGGER.warning),
+        after=tenacity.after_log(FILE_LOGGER, logging.DEBUG),
     )
     def _add_task(self, **kwargs):
         return self.connection.add_task(**kwargs)
@@ -122,7 +123,7 @@ class TodoistHelper:
     @tenacity.retry(
         stop=tenacity.stop_after_attempt(5),
         wait=tenacity.wait_exponential(multiplier=1, min=1, max=20),
-        after=tenacity.after_log(FILE_LOGGER, FILE_LOGGER.warning),
+        after=tenacity.after_log(FILE_LOGGER, logging.DEBUG),
     )
     def _get_task(self, task_id):
         return self.connection.get_task(task_id=task_id)
@@ -130,7 +131,7 @@ class TodoistHelper:
     @tenacity.retry(
         stop=tenacity.stop_after_attempt(5),
         wait=tenacity.wait_exponential(multiplier=1, min=1, max=20),
-        after=tenacity.after_log(FILE_LOGGER, FILE_LOGGER.warning),
+        after=tenacity.after_log(FILE_LOGGER, logging.DEBUG),
     )
     def _delete_task(self, task_id):
         return self.connection.delete_task(task_id=task_id)

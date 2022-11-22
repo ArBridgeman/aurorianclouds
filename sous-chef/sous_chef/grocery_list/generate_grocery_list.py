@@ -127,7 +127,7 @@ class GroceryList:
                     due_date=self.date_formatter.get_due_datetime_with_time(
                         weekday=row.weekday, hour=row.hour, minute=row.minute
                     ),
-                    priority=4,
+                    priority=self.config.preparation.task_priority,
                 )
 
     def _add_to_grocery_list_raw(

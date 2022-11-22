@@ -139,7 +139,7 @@ class Menu:
                 project=project_name,
                 project_id=project_id,
                 due_date=due_date,
-                priority=4,
+                priority=self.config.todoist.task_priority,
             )
 
     def load_local_menu(self):

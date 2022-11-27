@@ -48,9 +48,9 @@ class MenuSchema(pa.SchemaModel):
     type: Series[str] = pa.Field(
         isin=["category", "ingredient", "recipe", "tag"]
     )
-    eat_factor: Series[float] = pa.Field(gt=0, nullable=False)
+    eat_factor: Series[float] = pa.Field(gt=0, nullable=False, coerce=True)
     eat_unit: Series[str] = pa.Field(nullable=True)
-    freeze_factor: Series[float] = pa.Field(ge=0, nullable=False)
+    freeze_factor: Series[float] = pa.Field(ge=0, nullable=False, coerce=True)
     item: Series[str]
 
 
@@ -58,12 +58,13 @@ class FinalizedMenuSchema(MenuSchema):
     type: Series[str] = pa.Field(isin=["ingredient", "recipe"])
     total_cook_time: Series[pd.Timedelta] = pa.Field(nullable=True)
     # manual ingredients are not rated
-    rating: Series[float] = pa.Field(nullable=True)
+    rating: Series[float] = pa.Field(nullable=True, coerce=True)
 
 
 @dataclass
 class Menu:
     config: DictConfig
+    gsheets_helper: GsheetsHelper
     ingredient_formatter: IngredientFormatter
     recipe_book: RecipeBook
     dataframe: pd.DataFrame = None
@@ -74,8 +75,8 @@ class Menu:
         self.due_date_formatter = DueDatetimeFormatter(self.config.anchor_day)
         self.cook_days = self.config.fixed.cook_days
 
-    def finalize_fixed_menu(self, gsheets_helper: GsheetsHelper):
-        self.dataframe = self._load_fixed_menu(gsheets_helper).reset_index(
+    def finalize_fixed_menu(self):
+        self.dataframe = self._load_fixed_menu(self.gsheets_helper).reset_index(
             drop=True
         )
         self._validate_menu_schema()
@@ -85,7 +86,7 @@ class Menu:
     def get_menu_for_grocery_list(
         self,
     ) -> (list[MenuIngredient], list[MenuRecipe]):
-        self.load_local_menu()
+        self.load_final_menu()
 
         entry_funcs = {
             "ingredient": self._retrieve_manual_menu_ingredient,
@@ -132,23 +133,27 @@ class Menu:
             ]
 
         project_id = todoist_helper.get_project_id(project_name)
+        menu_priority = self.config.todoist.task_priority
         for _, row in self.dataframe.iterrows():
             task, due_date = self._format_task_and_due_date_list(row)
+
             todoist_helper.add_task_to_project(
                 task=task,
                 project=project_name,
                 project_id=project_id,
                 due_date=due_date,
-                priority=self.config.todoist.task_priority,
+                priority=menu_priority,
             )
 
-    def load_local_menu(self):
-        file_path = Path(ABS_FILE_PATH, self.config.local.file_path)
-        df = pd.read_csv(file_path, sep=";")
-        df.total_cook_time = pd.to_timedelta(df.total_cook_time)
-        # fillna("") to keep consistent with gsheets implementation
-        df.eat_unit = df.eat_unit.fillna("").astype(str)
-        self.dataframe = df
+    def load_final_menu(self):
+        workbook = self.config.final_menu.workbook
+        worksheet = self.config.final_menu.worksheet
+        self.dataframe = self.gsheets_helper.get_worksheet(
+            workbook_name=workbook, worksheet_name=worksheet
+        )
+        self.dataframe.total_cook_time = pd.to_timedelta(
+            self.dataframe.total_cook_time
+        )
         self._validate_finalized_menu_schema()
 
     @staticmethod
@@ -298,10 +303,15 @@ class Menu:
         return row
 
     def _save_menu(self):
-        tmp_menu_file = Path(ABS_FILE_PATH, self.config.local.file_path)
-        FILE_LOGGER.info("[save menu]", tmp_menu_file=tmp_menu_file)
+        workbook = self.config.final_menu.workbook
+        worksheet = self.config.final_menu.worksheet
+        FILE_LOGGER.info("[save menu]", workbook=workbook, worksheet=worksheet)
         self._validate_finalized_menu_schema()
-        self.dataframe.to_csv(tmp_menu_file, index=False, header=True, sep=";")
+        self.gsheets_helper.write_worksheet(
+            df=self.dataframe,
+            workbook_name=workbook,
+            worksheet_name=worksheet,
+        )
 
     def _validate_menu_schema(self):
         # if fails, tosses SchemaError

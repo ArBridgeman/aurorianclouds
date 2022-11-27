@@ -44,7 +44,8 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 markers = [
-    "gmail: marks gmail tests which requires frequent user validation for oauth",
+    "dropbox: marks tests using dropbox",
+    "gmail: marks tests using gmail, which requires frequent user validation for oauth",
     "gsheets: marks tests using gsheets",
-    "todoist: marks todoist tests which requires periodically updating API key"
+    "todoist: marks tests using todoist, which requires periodically updating API key"
 ]

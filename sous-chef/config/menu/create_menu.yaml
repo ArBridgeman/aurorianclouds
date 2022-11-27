@@ -1,6 +1,6 @@
 create_menu:
   input_method:
-  output_method: local
+  output_method: temp
   anchor_day: Sunday
   todoist:
     project_name: Menu
@@ -15,7 +15,8 @@ create_menu:
       work_day_3: Wednesday
     file_prefix: menu-
     menu_number:
-  local:
-    file_path: ../menu/menu-tmp.csv
+  final_menu:
+    workbook: menu-tmp
+    worksheet: menu-tmp
   run_mode:
     with_inspect_unrated_recipe: true

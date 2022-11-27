@@ -1,6 +1,5 @@
 import datetime
 from dataclasses import dataclass
-from pathlib import Path
 from unittest.mock import Mock, patch
 
 import numpy as np
@@ -8,10 +7,7 @@ import pandas as pd
 import pytest
 from freezegun import freeze_time
 from hydra import compose, initialize
-from sous_chef.formatter.ingredient.format_ingredient import (
-    Ingredient,
-    IngredientFormatter,
-)
+from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.menu.create_menu import (
     FinalizedMenuSchema,
     Menu,
@@ -21,7 +17,7 @@ from sous_chef.menu.create_menu import (
 from sous_chef.messaging.gsheets_api import GsheetsHelper
 from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
-from tests.util import assert_equal_dataframe_backup, assert_equal_series
+from tests.util import assert_equal_series
 
 
 @dataclass
@@ -122,31 +118,24 @@ def mock_gsheets():
 
 
 @pytest.fixture
-def mock_ingredient_formatter():
-    with initialize(version_base=None, config_path="../../../config/formatter"):
-        config = compose(config_name="format_ingredient")
-        return Mock(IngredientFormatter(config, None, None))
-
-
-@pytest.fixture
-def menu_config(tmp_path):
+def menu_config():
     with initialize(version_base=None, config_path="../../../config/menu"):
-        config = compose(config_name="create_menu").create_menu
-        config.local.file_path = str(tmp_path / "menu-tmp.csv")
-        return config
+        return compose(config_name="create_menu").create_menu
 
 
 @pytest.fixture
 @freeze_time(FROZEN_DATE)
 def menu(
     menu_config,
+    mock_gsheets,
     mock_ingredient_formatter,
     mock_recipe_book,
     frozen_due_datetime_formatter,
 ):
     menu = Menu(
-        ingredient_formatter=mock_ingredient_formatter,
         config=menu_config,
+        gsheets_helper=mock_gsheets,
+        ingredient_formatter=mock_ingredient_formatter,
         recipe_book=mock_recipe_book,
     )
     menu.due_date_formatter = frozen_due_datetime_formatter
@@ -154,26 +143,6 @@ def menu(
 
 
 class TestMenu:
-    @staticmethod
-    def test_finalize_fixed_menu(
-        menu, menu_config, menu_builder, mock_gsheets, mock_recipe_book
-    ):
-        menu_config.fixed.menu_number = 1
-        mock_recipe_book.get_recipe_by_title.return_value = create_recipe()
-        mock_gsheets.get_worksheet.return_value = menu_builder.create_menu_row(
-            loaded_fixed_menu=False
-        )
-        menu.finalize_fixed_menu(mock_gsheets)
-        assert Path(menu_config.local.file_path).exists()
-
-    @staticmethod
-    def test_load_local_menu(menu, menu_builder):
-        fake_menu = menu_builder.create_menu_row(post_process_recipe=True)
-        menu.dataframe = fake_menu
-        menu._save_menu()
-        menu.load_local_menu()
-        assert_equal_dataframe_backup(menu.dataframe, fake_menu)
-
     @staticmethod
     @pytest.mark.parametrize("menu_number", [1, 12])
     def test__check_fixed_menu_number(menu, menu_number):
@@ -491,12 +460,6 @@ class TestMenu:
             from_day=row["weekday"],
             from_recipe=row["item"],
         )
-
-    @staticmethod
-    def test__save_menu(menu, menu_builder, menu_config):
-        menu.dataframe = menu_builder.create_menu_row(post_process_recipe=True)
-        menu._save_menu()
-        assert Path(menu_config.local.file_path).exists()
 
     @staticmethod
     def test__validate_menu_schema(menu, menu_builder):

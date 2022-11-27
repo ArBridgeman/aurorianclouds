@@ -24,7 +24,7 @@ class TestGroceryList:
                 "hour": [hour],
                 "minute": [minute],
                 "from_recipe": [["test recipe"]],
-                "from_day": [["Tuesday"]],
+                "for_day_str": [["Tuesday"]],
             }
         )
         grocery_list.queue_preparation = prep_task_df

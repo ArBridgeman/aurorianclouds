@@ -2,8 +2,8 @@ create_menu:
   input_method:
   output_method: temp
   anchor_day: Sunday
+  prep_meal_time: dinner
   todoist:
-    prep_meal_time: dinner
     project_name: Menu
     remove_existing_task: False
     task_priority: 3

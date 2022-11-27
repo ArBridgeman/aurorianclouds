@@ -71,6 +71,7 @@ def frozen_due_datetime_formatter():
 
 
 @pytest.fixture
+@freeze_time(FROZEN_DATE)
 def grocery_list(
     config_grocery_list,
     unit_formatter,

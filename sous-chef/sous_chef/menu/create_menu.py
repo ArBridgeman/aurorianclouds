@@ -32,7 +32,7 @@ FILE_LOGGER = get_logger(__name__)
 @dataclass
 class MenuIngredient:
     ingredient: Ingredient
-    from_day: str
+    for_day: datetime.datetime
     from_recipe: str
 
 
@@ -41,14 +41,17 @@ class MenuRecipe:
     recipe: Recipe
     eat_factor: float
     freeze_factor: float
-    from_day: str
+    for_day: datetime.datetime
     from_recipe: str
 
 
 class MenuSchema(pa.SchemaModel):
     weekday: Series[str] = pa.Field(isin=Weekday.name_list("capitalize"))
-    prep_day_before: Series[int] = pa.Field(
-        ge=0, lt=7, nullable=False, coerce=True
+    eat_day: Series[pd.DatetimeTZDtype] = pa.Field(
+        dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
+    )
+    make_day: Series[pd.DatetimeTZDtype] = pa.Field(
+        dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
     )
     meal_time: Series[str] = pa.Field(isin=MealTime.name_list("lower"))
     type: Series[str] = pa.Field(
@@ -93,18 +96,38 @@ class Menu:
         self.cook_days = self.config.fixed.cook_days
 
     def finalize_fixed_menu(self):
+        def _get_make_day(row):
+            if row.prep_day_before == 0:
+                return row.eat_day
+            return self.due_date_formatter.replace_time_with_meal_time(
+                due_date=row.eat_day - timedelta(days=row.prep_day_before),
+                meal_time=self.config.prep_meal_time,
+            )
+
         self.dataframe = self._load_fixed_menu(self.gsheets_helper).reset_index(
             drop=True
         )
         self.dataframe.prep_day_before = self.dataframe.prep_day_before.replace(
             "", "0"
-        )
+        ).astype(int)
         self.dataframe.freeze_factor = self.dataframe.freeze_factor.replace(
             "", "0"
         )
         self.dataframe.defrost = self.dataframe.defrost.replace(
             "", "N"
         ).str.upper()
+
+        self.dataframe["eat_day"] = self.dataframe.apply(
+            lambda row: self.due_date_formatter.get_due_datetime_with_meal_time(
+                weekday=row.weekday, meal_time=row.meal_time
+            ),
+            axis=1,
+        )
+        self.dataframe["make_day"] = self.dataframe.apply(
+            lambda row: _get_make_day(row), axis=1
+        )
+
+        self.dataframe.drop(columns=["prep_day_before"], inplace=True)
         self._validate_menu_schema()
         self.dataframe = self.dataframe.apply(self._process_menu, axis=1)
         self._save_menu()
@@ -162,9 +185,8 @@ class Menu:
                 for _ in range(3)
             ]
 
-        project_id = todoist_helper.get_project_id(project_name)
-        menu_prep_time = self.config.todoist.prep_meal_time
         tasks = []
+        project_id = todoist_helper.get_project_id(project_name)
 
         def _add_task(task_name: str, task_due_date: datetime.datetime):
             task_object = todoist_helper.add_task_to_project(
@@ -176,26 +198,17 @@ class Menu:
             )
             tasks.append(task_object)
 
-        def _get_before_due_date(days_before: int) -> datetime.datetime:
-            return self.due_date_formatter.replace_time_with_meal_time(
-                due_date=due_date - timedelta(days=days_before),
-                meal_time=menu_prep_time,
-            )
-
         for _, row in self.dataframe.iterrows():
             task, due_date = self._format_task_and_due_date_list(row)
             _add_task(task_name=task, task_due_date=due_date)
-            if row.prep_day_before:
+            if row.eat_day != row.make_day:
                 _add_task(
-                    task_name=f"[PREP] {task}",
-                    task_due_date=_get_before_due_date(
-                        days_before=row.prep_day_before
-                    ),
+                    task_name=f"[PREP] {task}", task_due_date=row.make_day
                 )
             if row.defrost == "Y":
                 _add_task(
                     task_name=f"[DEFROST] {task}",
-                    task_due_date=_get_before_due_date(days_before=1),
+                    task_due_date=row.eat_day - timedelta(days=1),
                 )
         return tasks
 
@@ -244,11 +257,11 @@ class Menu:
             factor_str += f", x freeze: {row.freeze_factor}"
         task_str = f"{row['item']} ({factor_str}) [{cooking_time_min} min]"
 
-        due_date = self.due_date_formatter.get_due_datetime_with_meal_time(
-            weekday=row.weekday, meal_time=row.meal_time
-        )
-        due_date -= timedelta(minutes=cooking_time_min)
-        return task_str, due_date
+        make_time = row.eat_day
+        if row.make_day == row.eat_day:
+            make_time -= timedelta(minutes=cooking_time_min)
+
+        return task_str, make_time
 
     @staticmethod
     def _get_cooking_time_min(
@@ -294,11 +307,6 @@ class Menu:
             self._get_cook_day_as_weekday
         )
 
-        combined_menu["eat_factor"] = combined_menu["eat_factor"].astype(float)
-        combined_menu["freeze_factor"] = combined_menu["freeze_factor"].astype(
-            float
-        )
-
         # TODO create test for
         mask_skip_none = combined_menu["weekday"].isna()
         FILE_LOGGER.warning(
@@ -337,7 +345,7 @@ class Menu:
         return MenuIngredient(
             ingredient=self._check_manual_ingredient(row),
             from_recipe="manual",
-            from_day=row["weekday"],
+            for_day=row["make_day"],
         )
 
     def _retrieve_menu_recipe(self, row: pd.Series) -> MenuRecipe:
@@ -346,7 +354,7 @@ class Menu:
             recipe=recipe,
             eat_factor=row["eat_factor"],
             freeze_factor=row["freeze_factor"],
-            from_day=row["weekday"],
+            for_day=row["make_day"],
             from_recipe=row["item"],
         )
 

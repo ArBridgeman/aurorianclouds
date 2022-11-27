@@ -41,7 +41,6 @@ class MenuBuilder:
 
     @staticmethod
     def create_menu_row(
-        weekday: str = "work_day_2",
         prep_day_before: int = 0,
         meal_time: str = "dinner",
         item_type: str = "recipe",
@@ -67,7 +66,7 @@ class MenuBuilder:
                 rating = 0.0
 
         menu = {
-            "weekday": weekday,
+            "weekday": "work_day_2",
             "prep_day_before": prep_day_before,
             "meal_time": meal_time,
             "eat_factor": eat_factor,
@@ -79,7 +78,14 @@ class MenuBuilder:
         }
         if not loaded_fixed_menu:
             return pd.DataFrame(menu, index=[0])
+        menu.pop("prep_day_before")
         menu["weekday"] = "Friday"
+        menu["eat_day"] = pd.Timestamp(
+            year=2022, month=1, day=21, hour=17, minute=45, tz="Europe/Berlin"
+        )
+        menu["make_day"] = menu["eat_day"] - datetime.timedelta(
+            days=prep_day_before
+        )
         if not post_process_recipe:
             return MenuSchema.validate(pd.DataFrame(menu, index=[0]))
         menu["rating"] = rating
@@ -200,13 +206,19 @@ class TestMenu:
         row = menu_builder.create_menu_row(
             post_process_recipe=True,
             item="french onion soup",
-            weekday="Friday",
             meal_time="dinner",
             total_cook_time_str=pd.to_timedelta("40 min"),
         ).squeeze()
         assert menu._format_task_and_due_date_list(row) == (
             f"{row['item']} (x eat: {row.eat_factor}) [40 min]",
-            datetime.datetime(2022, 1, 21, 17, 35),
+            pd.Timestamp(
+                year=2022,
+                month=1,
+                day=21,
+                hour=17,
+                minute=5,
+                tz="Europe/Berlin",
+            ),
         )
 
     @staticmethod
@@ -216,12 +228,18 @@ class TestMenu:
             post_process_recipe=True,
             item="fries",
             item_type="ingredient",
-            weekday="Friday",
             meal_time="dinner",
         ).squeeze()
         assert menu._format_task_and_due_date_list(row) == (
             f"{row['item']} (x eat: {row.eat_factor}) [20 min]",
-            datetime.datetime(2022, 1, 21, 17, 55),
+            pd.Timestamp(
+                year=2022,
+                month=1,
+                day=21,
+                hour=17,
+                minute=25,
+                tz="Europe/Berlin",
+            ),
         )
 
     @staticmethod
@@ -233,13 +251,19 @@ class TestMenu:
         row = menu_builder.create_menu_row(
             post_process_recipe=True,
             item=recipe_title,
-            weekday="Friday",
             meal_time="dinner",
             freeze_factor=0.5,
         ).squeeze()
         assert menu._format_task_and_due_date_list(row) == (
             "french onion soup (x eat: 1.0, x freeze: 0.5) [5 min]",
-            datetime.datetime(2022, 1, 21, 18, 10),
+            pd.Timestamp(
+                year=2022,
+                month=1,
+                day=21,
+                hour=17,
+                minute=40,
+                tz="Europe/Berlin",
+            ),
         )
 
     @staticmethod
@@ -438,7 +462,7 @@ class TestMenu:
         )
         result = menu._retrieve_manual_menu_ingredient(row)
         assert result == MenuIngredient(
-            ingredient=ingredient, from_recipe="manual", from_day=row["weekday"]
+            ingredient=ingredient, from_recipe="manual", for_day=row["make_day"]
         )
 
     @staticmethod
@@ -466,7 +490,7 @@ class TestMenu:
             recipe=recipe_with_recipe_title,
             eat_factor=row["eat_factor"],
             freeze_factor=0.0,
-            from_day=row["weekday"],
+            for_day=row["make_day"],
             from_recipe=row["item"],
         )
 

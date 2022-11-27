@@ -1,10 +1,12 @@
 import builtins
+import datetime
 from unittest import mock
 
 import numpy as np
 import pandas as pd
 import pytest
 from pint import Unit
+from pytz import timezone
 from sous_chef.formatter.format_unit import UnitFormatter, unit_registry
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.menu.create_menu import MenuRecipe
@@ -23,7 +25,7 @@ def create_grocery_list_row(
     store: str = "grocery store",
     plural_ending: str = "s",
     from_recipe: str = "dummy recipe",
-    from_day: str = "Friday",
+    for_day: str = "Friday",
     aisle_group: str = None,
 ):
     return pd.Series(
@@ -38,7 +40,7 @@ def create_grocery_list_row(
             "store": store,
             "item_plural": item + plural_ending,
             "from_recipe": from_recipe,
-            "from_day": from_day,
+            "for_day": for_day,
             "aisle_group": aisle_group,
         }
     )
@@ -57,7 +59,10 @@ def create_ingredient_and_grocery_entry_raw(
     barcode: str = "4002015511713",
     recipe_factor: float = 1.0,
     from_recipe: str = "dummy recipe",
-    from_day: str = "Friday",
+    for_day: datetime.datetime = datetime.datetime(
+        year=2022, month=1, day=14, tzinfo=timezone("UTC")
+    ),
+    for_day_str: str = "Fri",
     # frozen anchor date is Friday & second group includes vegetables
     get_on_second_shopping_day: bool = True,
 ) -> (Ingredient, pd.DataFrame):
@@ -92,7 +97,8 @@ def create_ingredient_and_grocery_entry_raw(
             "store": store,
             "barcode": barcode,
             "from_recipe": from_recipe,
-            "from_day": from_day,
+            "for_day": for_day,
+            "for_day_str": for_day_str,
             "get_on_second_shopping_day": get_on_second_shopping_day,
         },
         index=[0],
@@ -104,7 +110,9 @@ def create_menu_recipe(
     from_recipe: str = "dummy recipe",
     eat_factor: float = 1.0,
     freeze_factor: float = 0.0,
-    from_day="Friday",
+    for_day=datetime.datetime(
+        year=2022, month=1, day=14, tzinfo=timezone("UTC")
+    ),
     recipe=None,
 ):
     this_recipe = create_recipe(title=from_recipe)
@@ -114,7 +122,7 @@ def create_menu_recipe(
         recipe=this_recipe,
         eat_factor=eat_factor,
         freeze_factor=freeze_factor,
-        from_day=from_day,
+        for_day=for_day,
         from_recipe=from_recipe,
     )
 
@@ -133,7 +141,7 @@ class TestGroceryList:
         added_recipe = MenuRecipe(
             from_recipe=f"{menu_recipe_ref.title}_"
             f"{menu_recipe_base.recipe.title}",
-            from_day=menu_recipe_base.from_day,
+            for_day=menu_recipe_base.for_day,
             eat_factor=menu_recipe_base.eat_factor * menu_recipe_ref.factor,
             freeze_factor=menu_recipe_base.freeze_factor
             * menu_recipe_ref.factor,
@@ -227,20 +235,40 @@ class TestGroceryList:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "from_day, food_group, expected_result",
+        "for_day, food_group, expected_result",
         [
-            ("Monday", "vegetables", False),
-            ("Friday", "vegetables", True),
-            ("Saturday", "Vegetables", True),
-            ("Saturday", "Fruits", False),
+            (
+                datetime.datetime(year=2022, month=1, day=17),
+                "vegetables",
+                False,
+            ),  # Monday
+            (
+                datetime.datetime(year=2022, month=1, day=21),
+                "vegetables",
+                True,
+            ),  # Friday
+            (
+                datetime.datetime(year=2022, month=1, day=22),
+                "Vegetables",
+                True,
+            ),  # Saturday
+            (
+                datetime.datetime(year=2022, month=1, day=22),
+                "Fruits",
+                False,
+            ),  # Saturday
         ],
     )
     def test__get_on_second_shopping_day(
-        grocery_list, from_day, food_group, expected_result
+        grocery_list,
+        for_day,
+        food_group,
+        expected_result,
+        frozen_due_datetime_formatter,
     ):
         # only vegetable entries on Fri., Sat., Sun. should be true
         assert (
-            grocery_list._get_on_second_shopping_day(from_day, food_group)
+            grocery_list._get_on_second_shopping_day(for_day, food_group)
             == expected_result
         )
 

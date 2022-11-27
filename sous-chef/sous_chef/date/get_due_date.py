@@ -1,6 +1,8 @@
 import datetime
 from enum import Enum, IntEnum
 
+from pytz import timezone
+
 
 class ExtendedEnum(Enum):
     @classmethod
@@ -87,7 +89,7 @@ class DueDatetimeFormatter:
             days=max(0, weekday_index - today.weekday())
         )
         return datetime.datetime.combine(
-            anchor_date, datetime.datetime.min.time()
+            anchor_date, datetime.datetime.min.time(), tzinfo=timezone("UTC")
         )
 
     def _get_meal_time_hour_minute(self, meal_time: str) -> (str, str):

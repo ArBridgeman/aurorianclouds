@@ -3,8 +3,10 @@ create_menu:
   output_method: temp
   anchor_day: Sunday
   todoist:
+    prep_meal_time: dinner
     project_name: Menu
     remove_existing_task: False
+    task_priority: 3
   fixed:
     basic: menu-basic
     cook_days:

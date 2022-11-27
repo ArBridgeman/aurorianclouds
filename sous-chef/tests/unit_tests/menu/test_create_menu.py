@@ -1,5 +1,6 @@
 import datetime
 from dataclasses import dataclass
+from typing import Union
 from unittest.mock import Mock, patch
 
 import numpy as np
@@ -7,12 +8,15 @@ import pandas as pd
 import pytest
 from freezegun import freeze_time
 from hydra import compose, initialize
+from pandas import DataFrame
+from pandera.typing.common import DataFrameBase
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.menu.create_menu import (
     FinalizedMenuSchema,
     Menu,
     MenuIngredient,
     MenuRecipe,
+    MenuSchema,
 )
 from sous_chef.messaging.gsheets_api import GsheetsHelper
 from tests.conftest import FROZEN_DATE
@@ -38,12 +42,14 @@ class MenuBuilder:
     @staticmethod
     def create_menu_row(
         weekday: str = "work_day_2",
+        prep_day_before: int = 0,
         meal_time: str = "dinner",
         item_type: str = "recipe",
         eat_factor: float = 1.0,
         # gsheets has "", whereas read_csv defaults to np.nans
         eat_unit: str = "",
         freeze_factor: float = 0.0,
+        defrost: str = "N",
         item: str = "dummy",
         # template matched with cook_days
         loaded_fixed_menu: bool = True,
@@ -51,7 +57,9 @@ class MenuBuilder:
         post_process_recipe: bool = False,
         rating: float = np.nan,
         total_cook_time_str: str = np.nan,
-    ) -> pd.DataFrame:
+    ) -> Union[
+        DataFrame, DataFrameBase[MenuSchema], DataFrameBase[FinalizedMenuSchema]
+    ]:
         if item_type == "recipe":
             if total_cook_time_str is np.nan:
                 total_cook_time_str = "5 min"
@@ -60,10 +68,12 @@ class MenuBuilder:
 
         menu = {
             "weekday": weekday,
+            "prep_day_before": prep_day_before,
             "meal_time": meal_time,
             "eat_factor": eat_factor,
             "eat_unit": eat_unit,
             "freeze_factor": freeze_factor,
+            "defrost": defrost,
             "item": item,
             "type": item_type,
         }
@@ -71,13 +81,12 @@ class MenuBuilder:
             return pd.DataFrame(menu, index=[0])
         menu["weekday"] = "Friday"
         if not post_process_recipe:
-            return pd.DataFrame(menu, index=[0])
+            return MenuSchema.validate(pd.DataFrame(menu, index=[0]))
         menu["rating"] = rating
         menu["total_cook_time"] = total_cook_time_str
         menu_df = pd.DataFrame(menu, index=[0])
         menu_df.total_cook_time = pd.to_timedelta(menu_df.total_cook_time)
-        FinalizedMenuSchema.validate(menu_df)
-        return menu_df
+        return FinalizedMenuSchema.validate(menu_df)
 
     def get_menu(self) -> pd.DataFrame:
         return self.menu

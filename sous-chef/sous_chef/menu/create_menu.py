@@ -3,11 +3,13 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
+from typing import List, Union
 
 import pandas as pd
 import pandera as pa
 from omegaconf import DictConfig
 from pandera.typing import Series
+from pandera.typing.common import DataFrameBase
 from sous_chef.date.get_due_date import DueDatetimeFormatter, MealTime, Weekday
 from sous_chef.formatter.ingredient.format_ingredient import (
     Ingredient,
@@ -18,6 +20,7 @@ from sous_chef.messaging.gsheets_api import GsheetsHelper
 from sous_chef.messaging.todoist_api import TodoistHelper
 from sous_chef.recipe_book.read_recipe_book import Recipe, RecipeBook
 from structlog import get_logger
+from todoist_api_python.models import Task
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
 FILE_LOGGER = get_logger(__name__)
@@ -44,6 +47,9 @@ class MenuRecipe:
 
 class MenuSchema(pa.SchemaModel):
     weekday: Series[str] = pa.Field(isin=Weekday.name_list("capitalize"))
+    prep_day_before: Series[int] = pa.Field(
+        ge=0, lt=7, nullable=False, coerce=True
+    )
     meal_time: Series[str] = pa.Field(isin=MealTime.name_list("lower"))
     type: Series[str] = pa.Field(
         isin=["category", "ingredient", "recipe", "tag"]
@@ -51,7 +57,11 @@ class MenuSchema(pa.SchemaModel):
     eat_factor: Series[float] = pa.Field(gt=0, nullable=False, coerce=True)
     eat_unit: Series[str] = pa.Field(nullable=True)
     freeze_factor: Series[float] = pa.Field(ge=0, nullable=False, coerce=True)
+    defrost: Series[str] = pa.Field(isin=["Y", "N"], nullable=True)
     item: Series[str]
+
+    class Config:
+        strict = True
 
 
 class FinalizedMenuSchema(MenuSchema):
@@ -60,6 +70,9 @@ class FinalizedMenuSchema(MenuSchema):
     # manual ingredients are not rated
     rating: Series[float] = pa.Field(nullable=True, coerce=True)
 
+    class Config:
+        strict = True
+
 
 @dataclass
 class Menu:
@@ -67,7 +80,11 @@ class Menu:
     gsheets_helper: GsheetsHelper
     ingredient_formatter: IngredientFormatter
     recipe_book: RecipeBook
-    dataframe: pd.DataFrame = None
+    dataframe: Union[
+        pd.DataFrame,
+        DataFrameBase[MenuSchema],
+        DataFrameBase[FinalizedMenuSchema],
+    ] = None
     due_date_formatter: DueDatetimeFormatter = field(init=False)
     cook_days: dict = field(init=False)
 
@@ -79,13 +96,22 @@ class Menu:
         self.dataframe = self._load_fixed_menu(self.gsheets_helper).reset_index(
             drop=True
         )
+        self.dataframe.prep_day_before = self.dataframe.prep_day_before.replace(
+            "", "0"
+        )
+        self.dataframe.freeze_factor = self.dataframe.freeze_factor.replace(
+            "", "0"
+        )
+        self.dataframe.defrost = self.dataframe.defrost.replace(
+            "", "N"
+        ).str.upper()
         self._validate_menu_schema()
         self.dataframe = self.dataframe.apply(self._process_menu, axis=1)
         self._save_menu()
 
     def get_menu_for_grocery_list(
         self,
-    ) -> (list[MenuIngredient], list[MenuRecipe]):
+    ) -> (List[MenuIngredient], List[MenuRecipe]):
         self.load_final_menu()
 
         entry_funcs = {
@@ -93,12 +119,14 @@ class Menu:
             "recipe": self._retrieve_menu_recipe,
         }
         result_dict = defaultdict(list)
+        mask_defrost = self.dataframe.defrost != "Y"
         for entry, entry_fct in entry_funcs.items():
             if (mask := self.dataframe["type"] == entry).sum() > 0:
                 result_dict[entry] = (
-                    self.dataframe[mask].apply(entry_fct, axis=1).tolist()
+                    self.dataframe[mask & mask_defrost]
+                    .apply(entry_fct, axis=1)
+                    .tolist()
                 )
-
         return result_dict["ingredient"], result_dict["recipe"]
 
     def send_menu_to_gmail(self, gmail_helper: GmailHelper):
@@ -120,7 +148,9 @@ class Menu:
         subject = f"[sous_chef_menu] week {calendar_week}"
         gmail_helper.send_dataframe_in_email(subject, tmp_df)
 
-    def upload_menu_to_todoist(self, todoist_helper: TodoistHelper):
+    def upload_menu_to_todoist(
+        self, todoist_helper: TodoistHelper
+    ) -> List[Task]:
         project_name = self.config.todoist.project_name
         if self.config.todoist.remove_existing_task:
             anchor_date = self.due_date_formatter.get_anchor_date()
@@ -133,17 +163,41 @@ class Menu:
             ]
 
         project_id = todoist_helper.get_project_id(project_name)
-        menu_priority = self.config.todoist.task_priority
-        for _, row in self.dataframe.iterrows():
-            task, due_date = self._format_task_and_due_date_list(row)
+        menu_prep_time = self.config.todoist.prep_meal_time
+        tasks = []
 
-            todoist_helper.add_task_to_project(
-                task=task,
+        def _add_task(task_name: str, task_due_date: datetime.datetime):
+            task_object = todoist_helper.add_task_to_project(
+                task=task_name,
                 project=project_name,
                 project_id=project_id,
-                due_date=due_date,
-                priority=menu_priority,
+                due_date=task_due_date,
+                priority=self.config.todoist.task_priority,
             )
+            tasks.append(task_object)
+
+        def _get_before_due_date(days_before: int) -> datetime.datetime:
+            return self.due_date_formatter.replace_time_with_meal_time(
+                due_date=due_date - timedelta(days=days_before),
+                meal_time=menu_prep_time,
+            )
+
+        for _, row in self.dataframe.iterrows():
+            task, due_date = self._format_task_and_due_date_list(row)
+            _add_task(task_name=task, task_due_date=due_date)
+            if row.prep_day_before:
+                _add_task(
+                    task_name=f"[PREP] {task}",
+                    task_due_date=_get_before_due_date(
+                        days_before=row.prep_day_before
+                    ),
+                )
+            if row.defrost == "Y":
+                _add_task(
+                    task_name=f"[DEFROST] {task}",
+                    task_due_date=_get_before_due_date(days_before=1),
+                )
+        return tasks
 
     def load_final_menu(self):
         workbook = self.config.final_menu.workbook
@@ -314,9 +368,7 @@ class Menu:
         )
 
     def _validate_menu_schema(self):
-        # if fails, tosses SchemaError
-        # TODO do we want to return their type? do we trust it?
-        MenuSchema.validate(self.dataframe)
+        self.dataframe = MenuSchema.validate(self.dataframe)
 
     def _validate_finalized_menu_schema(self):
-        FinalizedMenuSchema.validate(self.dataframe)
+        self.dataframe = FinalizedMenuSchema.validate(self.dataframe)

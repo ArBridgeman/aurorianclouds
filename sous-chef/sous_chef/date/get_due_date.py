@@ -63,7 +63,7 @@ class DueDatetimeFormatter:
         self, weekday: str, meal_time: str
     ) -> datetime.datetime:
         due_date = self.get_date_relative_to_anchor(weekday=weekday)
-        return self._replace_time_with_meal_time(due_date, meal_time)
+        return self.replace_time_with_meal_time(due_date, meal_time)
 
     def get_due_datetime_with_time(
         self, weekday: str, hour: int, minute: int
@@ -72,6 +72,12 @@ class DueDatetimeFormatter:
         return self._set_specified_time(
             due_date=due_date, hour=hour, minute=minute
         )
+
+    def replace_time_with_meal_time(
+        self, due_date: datetime.datetime, meal_time: str
+    ) -> datetime.datetime:
+        hour, minute = self._get_meal_time_hour_minute(meal_time)
+        return self._set_specified_time(due_date, hour, minute)
 
     @staticmethod
     def _get_anchor_date_at_midnight(weekday: str) -> datetime.datetime:
@@ -87,12 +93,6 @@ class DueDatetimeFormatter:
     def _get_meal_time_hour_minute(self, meal_time: str) -> (str, str):
         meal_time_dict = self.meal_time[meal_time.casefold()].value
         return meal_time_dict["hour"], meal_time_dict["minute"]
-
-    def _replace_time_with_meal_time(
-        self, due_date: datetime.datetime, meal_time: str
-    ) -> datetime.datetime:
-        hour, minute = self._get_meal_time_hour_minute(meal_time)
-        return self._set_specified_time(due_date, hour, minute)
 
     @staticmethod
     def _set_specified_time(

@@ -14,7 +14,6 @@ menu:
     input_method: fixed
     todoist:
       remove_existing_task: true
-      task_priority: 3
   run_mode:
     with_gmail: true
     with_todoist: true

@@ -36,7 +36,7 @@ def are_shared_df_entries_identical(
     )
 
     if diff_df.shape[0] > 0:
-        FILE_LOGGER.warn(
+        FILE_LOGGER.warning(
             "[are_shared_df_entries_identical]",
             number_diff=diff_df.shape[0] / 2,
             diff_df=diff_df,

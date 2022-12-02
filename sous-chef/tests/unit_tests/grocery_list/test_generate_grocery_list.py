@@ -25,7 +25,9 @@ def create_grocery_list_row(
     store: str = "grocery store",
     plural_ending: str = "s",
     from_recipe: str = "dummy recipe",
-    for_day: str = "Friday",
+    for_day: datetime = datetime.datetime(
+        year=2022, month=1, day=20, tzinfo=timezone("UTC")
+    ),
     aisle_group: str = None,
 ):
     return pd.Series(
@@ -60,9 +62,9 @@ def create_ingredient_and_grocery_entry_raw(
     recipe_factor: float = 1.0,
     from_recipe: str = "dummy recipe",
     for_day: datetime.datetime = datetime.datetime(
-        year=2022, month=1, day=14, tzinfo=timezone("UTC")
+        year=2022, month=1, day=20, tzinfo=timezone("UTC")
     ),
-    for_day_str: str = "Fri",
+    for_day_str: str = "Thu",
     # frozen anchor date is Friday & second group includes vegetables
     get_on_second_shopping_day: bool = True,
 ) -> (Ingredient, pd.DataFrame):
@@ -111,7 +113,7 @@ def create_menu_recipe(
     eat_factor: float = 1.0,
     freeze_factor: float = 0.0,
     for_day=datetime.datetime(
-        year=2022, month=1, day=14, tzinfo=timezone("UTC")
+        year=2022, month=1, day=20, tzinfo=timezone("UTC")
     ),
     recipe=None,
 ):
@@ -238,22 +240,30 @@ class TestGroceryList:
         "for_day, food_group, expected_result",
         [
             (
-                datetime.datetime(year=2022, month=1, day=17),
+                datetime.datetime(
+                    year=2022, month=1, day=17, tzinfo=timezone("UTC")
+                ),
                 "vegetables",
                 False,
             ),  # Monday
             (
-                datetime.datetime(year=2022, month=1, day=21),
+                datetime.datetime(
+                    year=2022, month=1, day=21, tzinfo=timezone("UTC")
+                ),
                 "vegetables",
                 True,
             ),  # Friday
             (
-                datetime.datetime(year=2022, month=1, day=22),
+                datetime.datetime(
+                    year=2022, month=1, day=22, tzinfo=timezone("UTC")
+                ),
                 "Vegetables",
                 True,
             ),  # Saturday
             (
-                datetime.datetime(year=2022, month=1, day=22),
+                datetime.datetime(
+                    year=2022, month=1, day=22, tzinfo=timezone("UTC")
+                ),
                 "Fruits",
                 False,
             ),  # Saturday

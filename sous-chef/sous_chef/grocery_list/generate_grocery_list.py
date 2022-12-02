@@ -205,7 +205,7 @@ class GroceryList:
         hour: int,
         minute: int,
         from_recipe: List[str],
-        for_day: List[datetime],
+        for_day_str: List[str],
     ):
         preparation_task = pd.DataFrame(
             {
@@ -214,7 +214,7 @@ class GroceryList:
                 "hour": [hour],
                 "minute": [minute],
                 "from_recipe": [from_recipe],
-                "for_day": [for_day],
+                "for_day_str": [for_day_str],
             }
         )
         if self.queue_preparation is None:
@@ -287,12 +287,14 @@ class GroceryList:
                                 minute,
                             ) = _get_schedule_day_hour_minute()
                             self._add_preparation_task_to_queue(
-                                f"Prepare {recipe.amount}",
+                                f"[PREP] {recipe.amount}",
                                 weekday=weekday,
                                 hour=hour,
                                 minute=minute,
                                 from_recipe=[from_recipe],
-                                for_day=[menu_sub_recipe.for_day],
+                                for_day_str=[
+                                    menu_sub_recipe.for_day.strftime("%a")
+                                ],
                             )
 
     def _aggregate_grocery_list(self):
@@ -422,7 +424,7 @@ class GroceryList:
             hour=config_bean_prep.prep_hour,
             minute=0,
             from_recipe=row.from_recipe,
-            for_day=row.for_day,
+            for_day_str=row.for_day.strftime("%a"),
         )
         return row
 

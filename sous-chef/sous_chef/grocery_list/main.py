@@ -41,7 +41,9 @@ def main(config: DictConfig) -> None:
         gsheets_helper = GsheetsHelper(config.messaging.gsheets)
         unit_formatter = UnitFormatter()
         recipe_book = RecipeBook(config.recipe_book)
-        ingredient_formatter = _get_ingredient_formatter(config, unit_formatter)
+        ingredient_formatter = _get_ingredient_formatter(
+            config, gsheets_helper, unit_formatter
+        )
         ingredient_field_formatter = IngredientFieldFormatter(
             config.formatter.format_ingredient_field,
             ingredient_formatter=ingredient_formatter,

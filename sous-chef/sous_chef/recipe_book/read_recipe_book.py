@@ -154,6 +154,7 @@ def create_timedelta(row_entry):
     from fractions import Fraction
 
     row_entry = row_entry.lower().strip()
+
     if row_entry.isdecimal():
         return pd.to_timedelta(int(row_entry), unit="minutes")
     else:
@@ -164,7 +165,8 @@ def create_timedelta(row_entry):
         row_entry = re.sub("cooking", "", row_entry)
         row_entry = re.sub("minut[eo]s.?", "min", row_entry)
         row_entry = re.sub(r"^[\D]+", "", row_entry)
-        row_entry = re.sub(r"mins\.?$", "min", row_entry)
+        row_entry = re.sub(r"mins\.?", "min", row_entry)
+        row_entry = re.sub(r"hrs\.?", "hour", row_entry)
         if re.match(r"^\d{1,2}:\d{1,2}$", row_entry):
             row_entry = "{}:00".format(row_entry)
 
@@ -180,5 +182,14 @@ def create_timedelta(row_entry):
                 )
                 row_entry = f"{float_conv} {groups.group(2).strip()}"
 
+        if row_entry == "":
+            return pd.NaT
+
         # errors = "ignore", if confident we want to ignore further issues
-        return pd.to_timedelta(row_entry, unit=None, errors="raise")
+        time_converted = pd.to_timedelta(row_entry, unit=None, errors="coerce")
+        if time_converted is pd.NaT:
+            FILE_LOGGER.warning(
+                "[create_timedelta] conversion failed", entry=row_entry
+            )
+
+        return time_converted

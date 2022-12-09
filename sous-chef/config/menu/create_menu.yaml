@@ -1,7 +1,6 @@
 create_menu:
   input_method:
   output_method: temp
-  anchor_day: Sunday
   prep_meal_time: dinner
   todoist:
     project_name: Menu

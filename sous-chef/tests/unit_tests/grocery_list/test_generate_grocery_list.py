@@ -149,8 +149,13 @@ class TestGroceryList:
             * menu_recipe_ref.factor,
             recipe=menu_recipe_ref,
         )
+        result = grocery_list.queue_menu_recipe[0]
 
-        assert grocery_list.queue_menu_recipe == [added_recipe]
+        assert result.eat_factor == added_recipe.eat_factor
+        assert result.for_day == added_recipe.for_day
+        assert result.freeze_factor == added_recipe.freeze_factor
+        assert result.from_recipe == added_recipe.from_recipe
+        assert_equal_series(result.recipe, added_recipe.recipe)
 
     @staticmethod
     @pytest.mark.parametrize(

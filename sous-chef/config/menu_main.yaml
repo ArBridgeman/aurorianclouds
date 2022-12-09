@@ -4,12 +4,15 @@ defaults:
   - rtk
   - formatter/format_ingredient
   - menu/create_menu
+  - menu/record_menu_history
   - messaging/gmail_api
   - messaging/gsheets_api
   - messaging/todoist_api
   - _self_
 
 menu:
+  anchor_day: Sunday
+  menu_history_days: 30
   create_menu:
     input_method: fixed
     todoist:

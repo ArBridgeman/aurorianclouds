@@ -8,7 +8,6 @@ import pandas as pd
 import pytest
 from hydra import compose, initialize
 from sous_chef.recipe_book.read_recipe_book import (
-    Recipe,
     RecipeBook,
     SelectRandomRecipeError,
     create_timedelta,
@@ -50,20 +49,11 @@ class RecipeBookBuilder:
             self.add_recipe(recipe)
         return self
 
-    @staticmethod
-    def convert_recipe_row_to_recipe(row: pd.DataFrame) -> Recipe:
-        row = row.squeeze()
-        return Recipe(
-            title=row.title,
-            rating=row.rating,
-            ingredient_field=row.ingredients,
-            total_cook_time=row.totalTime,
-        )
-
     def create_recipe(
         self,
         title: str = "Roasted corn salsa",
         preparation_time_str: str = "5 min",
+        time_inactive_str: str = "120 min",
         cooking_time_str: str = "15 min",
         ingredients: str = "100 g sweet corn\n0.5 red onion",
         instructions: str = "Heat frying pan on high heat",
@@ -79,11 +69,18 @@ class RecipeBookBuilder:
             post_process_recipe, categories, tags
         )
 
+        total_time = (
+            pd.to_timedelta(preparation_time_str)
+            + pd.to_timedelta(cooking_time_str)
+            + pd.to_timedelta(time_inactive_str)
+        )
+
         recipe = {
             "title": [title],
-            "preparationTime": [preparation_time_str],
-            "cookingTime": [cooking_time_str],
-            "totalTime": [preparation_time_str + cooking_time_str],
+            "time_preparation": [preparation_time_str],
+            "time_inactive": [time_inactive_str],
+            "time_cooking": [cooking_time_str],
+            "time_total": [str(total_time)],
             "ingredients": [ingredients],
             "instructions": [instructions],
             "rating": [rating],
@@ -96,9 +93,10 @@ class RecipeBookBuilder:
         if not post_process_recipe:
             return pd.DataFrame(recipe, index=[0])
 
-        recipe["preparationTime"] = pd.to_timedelta(preparation_time_str)
-        recipe["cookingTime"] = pd.to_timedelta(cooking_time_str)
-        recipe["totalTime"] = recipe["preparationTime"] + recipe["cookingTime"]
+        recipe["time_preparation"] = pd.to_timedelta(preparation_time_str)
+        recipe["time_cooking"] = pd.to_timedelta(cooking_time_str)
+        recipe["time_inactive"] = pd.to_timedelta(time_inactive_str)
+        recipe["time_total"] = total_time
         return pd.DataFrame(recipe, index=[0])
 
     @staticmethod
@@ -140,9 +138,7 @@ class TestRecipeBook:
         ).get_recipe_book()
 
         result = recipe_book.get_recipe_by_title(title.casefold())
-        assert result == recipe_book_builder.convert_recipe_row_to_recipe(
-            recipe
-        )
+        assert_equal_series(result, recipe.squeeze())
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -234,9 +230,7 @@ class TestRecipeBook:
         ).get_recipe_book()
 
         result = getattr(recipe_book, method)(search_term)
-        assert result == recipe_book_builder.convert_recipe_row_to_recipe(
-            recipe
-        )
+        assert_equal_series(result, recipe.squeeze())
         assert log.events == [
             {
                 "event": "[select random recipe]",

@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="[sous_chef] menu dry" type="PythonConfigurationType" factoryName="Python">
+  <configuration default="false" name="[sous_chef] menu dev" type="PythonConfigurationType" factoryName="Python">
     <module name="sous-chef" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
@@ -18,7 +18,7 @@
       <option name="useCurrentConnection" value="false" />
     </EXTENSION>
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/sous-chef/sous_chef/menu/main.py" />
-    <option name="PARAMETERS" value="menu.create_menu.fixed.menu_number=4 menu.run_mode.with_todoist=false menu.run_mode.with_gmail=false" />
+    <option name="PARAMETERS" value="menu.create_menu.fixed.menu_number=2 menu.run_mode.with_todoist=false menu.run_mode.with_gmail=false" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

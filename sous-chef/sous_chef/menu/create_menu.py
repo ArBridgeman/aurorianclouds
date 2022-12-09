@@ -68,10 +68,12 @@ class MenuSchema(pa.SchemaModel):
 
 
 class FinalizedMenuSchema(MenuSchema):
+    # override as should be replaced with one of these
     type: Series[str] = pa.Field(isin=["ingredient", "recipe"])
-    total_cook_time: Series[pd.Timedelta] = pa.Field(nullable=True)
-    # manual ingredients are not rated
+    # manual ingredients lack these
     rating: Series[float] = pa.Field(nullable=True, coerce=True)
+    time_total: Series[pd.Timedelta] = pa.Field(nullable=True)
+    uuid: Series[str] = pa.Field(nullable=True)
 
     class Config:
         strict = True
@@ -80,6 +82,7 @@ class FinalizedMenuSchema(MenuSchema):
 @dataclass
 class Menu:
     config: DictConfig
+    due_date_formatter: DueDatetimeFormatter
     gsheets_helper: GsheetsHelper
     ingredient_formatter: IngredientFormatter
     recipe_book: RecipeBook
@@ -88,11 +91,9 @@ class Menu:
         DataFrameBase[MenuSchema],
         DataFrameBase[FinalizedMenuSchema],
     ] = None
-    due_date_formatter: DueDatetimeFormatter = field(init=False)
     cook_days: dict = field(init=False)
 
     def __post_init__(self):
-        self.due_date_formatter = DueDatetimeFormatter(self.config.anchor_day)
         self.cook_days = self.config.fixed.cook_days
 
     def finalize_fixed_menu(self):
@@ -104,9 +105,7 @@ class Menu:
                 meal_time=self.config.prep_meal_time,
             )
 
-        self.dataframe = self._load_fixed_menu(self.gsheets_helper).reset_index(
-            drop=True
-        )
+        self.dataframe = self._load_fixed_menu().reset_index(drop=True)
         self.dataframe.prep_day_before = self.dataframe.prep_day_before.replace(
             "", "0"
         ).astype(int)
@@ -136,7 +135,9 @@ class Menu:
             columns=["prep_day_before", "inactive"], inplace=True
         )
         self._validate_menu_schema()
-        self.dataframe = self.dataframe.apply(self._process_menu, axis=1)
+        self.dataframe = self.dataframe.apply(
+            self._process_menu, axis=1
+        ).sort_values(by=["eat_day"])
         self._save_menu()
 
     def get_menu_for_grocery_list(
@@ -163,14 +164,14 @@ class Menu:
         mask_recipe = self.dataframe["type"] == "recipe"
         tmp_df = (
             self.dataframe[mask_recipe][
-                ["item", "rating", "weekday", "total_cook_time"]
+                ["item", "rating", "weekday", "time_total"]
             ]
             .copy(deep=True)
             .sort_values(by=["rating"])
             .reset_index(drop=True)
         )
 
-        tmp_df.total_cook_time = tmp_df.total_cook_time.apply(
+        tmp_df.time_total = tmp_df.time_total.apply(
             lambda value: self._get_cooking_time_min(value, default_time=pd.NaT)
         )
 
@@ -219,16 +220,15 @@ class Menu:
                 )
         return tasks
 
-    def load_final_menu(self):
+    def load_final_menu(self) -> pd.DataFrame:
         workbook = self.config.final_menu.workbook
         worksheet = self.config.final_menu.worksheet
         self.dataframe = self.gsheets_helper.get_worksheet(
             workbook_name=workbook, worksheet_name=worksheet
         )
-        self.dataframe.total_cook_time = pd.to_timedelta(
-            self.dataframe.total_cook_time
-        )
+        self.dataframe.time_total = pd.to_timedelta(self.dataframe.time_total)
         self._validate_finalized_menu_schema()
+        return self.dataframe
 
     @staticmethod
     def _check_fixed_menu_number(menu_number: int):
@@ -244,11 +244,12 @@ class Menu:
             item=row["item"],
         )
 
-    def _add_recipe_cook_time_and_rating(self, row: pd.Series) -> pd.Series:
+    def _add_recipe_columns(self, row: pd.Series) -> pd.Series:
         recipe = self.recipe_book.get_recipe_by_title(row["item"])
         row["item"] = recipe.title
         row["rating"] = recipe.rating
-        row["total_cook_time"] = recipe.total_cook_time
+        row["time_total"] = recipe.time_total
+        row["uuid"] = recipe.uuid
         # TODO remove/replace once recipes easily viewable in UI
         self._inspect_unrated_recipe(recipe)
         return row
@@ -257,7 +258,7 @@ class Menu:
         self, row: pd.Series
     ) -> (str, datetime.datetime):
         # TODO move default cook time to config?
-        cooking_time_min = self._get_cooking_time_min(row.total_cook_time)
+        cooking_time_min = self._get_cooking_time_min(row.time_total)
 
         factor_str = f"x eat: {row.eat_factor}"
         if row.freeze_factor > 0:
@@ -271,12 +272,10 @@ class Menu:
         return task_str, make_time
 
     @staticmethod
-    def _get_cooking_time_min(
-        total_cook_time: timedelta, default_time: int = 20
-    ):
-        if not isinstance(total_cook_time, timedelta):
+    def _get_cooking_time_min(time_total: timedelta, default_time: int = 20):
+        if not isinstance(time_total, timedelta):
             return default_time
-        if (cook_time := int(total_cook_time.total_seconds() / 60)) < 0:
+        if (cook_time := int(time_total.total_seconds() / 60)) < 0:
             return default_time
         return cook_time
 
@@ -284,26 +283,26 @@ class Menu:
         if cook_day in self.cook_days:
             return self.cook_days[cook_day]
 
-    def _inspect_unrated_recipe(self, recipe: Recipe):
+    def _inspect_unrated_recipe(self, recipe: pd.Series):
         if self.config.run_mode.with_inspect_unrated_recipe:
             if recipe.rating == 0.0:
                 FILE_LOGGER.warning(
                     "[unrated recipe]",
-                    action="print out ingredient_field",
+                    action="print out ingredients",
                     recipe_title=recipe.title,
                 )
-                print(recipe.ingredient_field)
+                print(recipe.ingredients)
 
-    def _load_fixed_menu(self, gsheets_helper):
+    def _load_fixed_menu(self):
         menu_basic_file = self.config.fixed.basic
-        menu_basic = gsheets_helper.get_worksheet(
+        menu_basic = self.gsheets_helper.get_worksheet(
             menu_basic_file, menu_basic_file
         )
 
         menu_number = self.config.fixed.menu_number
         self._check_fixed_menu_number(menu_number)
         menu_fixed_file = f"{self.config.fixed.file_prefix}{menu_number}"
-        menu_fixed = gsheets_helper.get_worksheet(
+        menu_fixed = self.gsheets_helper.get_worksheet(
             menu_fixed_file, menu_fixed_file
         )
 
@@ -344,7 +343,7 @@ class Menu:
             )
         elif row["type"] == "tag":
             row = self._select_random_recipe(row, "get_random_recipe_by_tag")
-        return self._add_recipe_cook_time_and_rating(row)
+        return self._add_recipe_columns(row)
 
     def _retrieve_manual_menu_ingredient(
         self, row: pd.Series
@@ -372,14 +371,17 @@ class Menu:
         return row
 
     def _save_menu(self):
-        workbook = self.config.final_menu.workbook
-        worksheet = self.config.final_menu.worksheet
-        FILE_LOGGER.info("[save menu]", workbook=workbook, worksheet=worksheet)
+        save_loc = self.config.final_menu
+        FILE_LOGGER.info(
+            "[save menu]",
+            workbook=save_loc.workbook,
+            worksheet=save_loc.worksheet,
+        )
         self._validate_finalized_menu_schema()
         self.gsheets_helper.write_worksheet(
             df=self.dataframe,
-            workbook_name=workbook,
-            worksheet_name=worksheet,
+            workbook_name=save_loc.workbook,
+            worksheet_name=save_loc.worksheet,
         )
 
     def _validate_menu_schema(self):

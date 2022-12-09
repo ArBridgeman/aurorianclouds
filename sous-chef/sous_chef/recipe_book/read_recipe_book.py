@@ -1,10 +1,12 @@
 import re
+from collections import namedtuple
 from dataclasses import dataclass
-from datetime import timedelta
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable
 
 import pandas as pd
+import pandera as pa
+from pandera.typing import Series
 from sous_chef.abstract.search_dataframe import (
     DataframeSearchable,
     DirectSearchError,
@@ -14,39 +16,66 @@ from structlog import get_logger
 HOME_PATH = str(Path.home())
 FILE_LOGGER = get_logger(__name__)
 
-INP_JSON_COLUMNS = {
-    "title": str,
-    "preparationTime": str,
-    "cookingTime": str,
-    "totalTime": str,
-    "ingredients": str,
-    "instructions": str,
-    "rating": float,
-    "favorite": bool,
-    "categories": list,
-    # TODO quantity should be split/standardized...it's bad!!!
-    "quantity": str,
-    "tags": list,
-    "uuid": str,
-}
+MAP_FIELD_TO_COL = namedtuple("Map", ["json_field", "df_column", "dtype"])
+
+MAP_JSON_TO_DF = pd.DataFrame(
+    data=[
+        MAP_FIELD_TO_COL("title", "title", str),
+        MAP_FIELD_TO_COL("preparationTime", "time_preparation", str),
+        MAP_FIELD_TO_COL("inactiveTime", "time_inactive", str),
+        MAP_FIELD_TO_COL("cookingTime", "time_cooking", str),
+        MAP_FIELD_TO_COL("totalTime", "time_total", str),
+        MAP_FIELD_TO_COL("ingredients", "ingredients", str),
+        MAP_FIELD_TO_COL("instructions", "instructions", str),
+        MAP_FIELD_TO_COL("rating", "rating", float),
+        MAP_FIELD_TO_COL("favorite", "favorite", bool),
+        MAP_FIELD_TO_COL("categories", "categories", list),
+        # TODO quantity should be split/standardized...it's bad!!!
+        MAP_FIELD_TO_COL("quantity", "quantity", str),
+        MAP_FIELD_TO_COL("tags", "tags", list),
+        MAP_FIELD_TO_COL("uuid", "uuid", str),
+    ]
+)
+
+
+def get_dict_from_columns(key_col: str, value_col: str):
+    return {
+        key: value for key, value in MAP_JSON_TO_DF[[key_col, value_col]].values
+    }
 
 
 class SelectRandomRecipeError(DirectSearchError):
     message = "[select random recipe failed]"
 
 
-@dataclass
-class Recipe:
-    title: str
-    rating: float
-    total_cook_time: timedelta
-    ingredient_field: str
-    factor: float = 1.0
-    amount: Optional[str] = None
+class Recipe(pa.SchemaModel):
+    title: Series[str] = pa.Field(nullable=False)
+    time_preparation: Series[pd.Timedelta] = pa.Field(
+        nullable=True, coerce=True
+    )
+    time_cooking: Series[pd.Timedelta] = pa.Field(nullable=True, coerce=True)
+    time_inactive: Series[pd.Timedelta] = pa.Field(nullable=True, coerce=True)
+    time_total: Series[pd.Timedelta] = pa.Field(nullable=True, coerce=True)
+    ingredients: Series[str] = pa.Field(nullable=False)
+    instructions: Series[str] = pa.Field(nullable=True)
+    rating: Series[float] = pa.Field(nullable=True, coerce=True)
+    favorite: Series[bool] = pa.Field(nullable=False, coerce=True)
+    categories: Series[object] = pa.Field(nullable=False)
+    quantity: Series[str] = pa.Field(nullable=True)
+    tags: Series[object] = pa.Field(nullable=False)
+    uuid: Series[str] = pa.Field(unique=True)
+    # TODO simplify logic & get rid of
+    factor: Series[float] = pa.Field(nullable=False, coerce=True)
+    amount: Series[str] = pa.Field(nullable=True)
+
+    class Config:
+        strict = True
 
 
 @dataclass
 class RecipeBook(DataframeSearchable):
+    menu_history: pd.DataFrame = None
+
     def __post_init__(self):
         # load basic recipe book to self.dataframe
         self._read_recipe_book()
@@ -65,14 +94,8 @@ class RecipeBook(DataframeSearchable):
             method_match=self._is_value_in_list, field="tags", search_term=tag
         )
 
-    def get_recipe_by_title(self, title) -> Recipe:
-        result = self.retrieve_match(field="title", search_term=title)
-        return Recipe(
-            title=result.title,
-            rating=result.rating,
-            ingredient_field=result.ingredients,
-            total_cook_time=result.totalTime,
-        )
+    def get_recipe_by_title(self, title) -> pd.Series:
+        return self.retrieve_match(field="title", search_term=title)
 
     @staticmethod
     def _flatten_dict_to_list(cell: list[dict]) -> list[str]:
@@ -82,7 +105,12 @@ class RecipeBook(DataframeSearchable):
 
     def _format_recipe_row(self, row: pd.Series) -> pd.Series:
         FILE_LOGGER.info("[format recipe row]", recipe=row.title)
-        for time_col in ["totalTime", "preparationTime", "cookingTime"]:
+        for time_col in [
+            "time_total",
+            "time_preparation",
+            "time_cooking",
+            "time_inactive",
+        ]:
             row[time_col] = create_timedelta(row[time_col])
         for col in ["categories", "tags"]:
             row[col] = self._flatten_dict_to_list(row[col])
@@ -102,15 +130,20 @@ class RecipeBook(DataframeSearchable):
                 )
             ]
         )
+        self.dataframe["factor"] = 1
+        self.dataframe["amount"] = None
+        self.dataframe = Recipe.validate(self.dataframe)
 
-    def _retrieve_format_recipe_df(
-        self, json_file, cols_to_select=INP_JSON_COLUMNS.keys()
-    ):
-        tmp_df = pd.read_json(json_file, dtype=INP_JSON_COLUMNS)
-        for col in cols_to_select:
+    def _retrieve_format_recipe_df(self, json_file):
+        tmp_df = pd.read_json(
+            json_file, dtype=get_dict_from_columns("json_field", "dtype")
+        )
+        for col in MAP_JSON_TO_DF.json_field:
             if col not in tmp_df.columns:
                 tmp_df[col] = None
-        tmp_df = tmp_df[cols_to_select]
+        tmp_df = tmp_df[MAP_JSON_TO_DF.json_field].rename(
+            columns=get_dict_from_columns("json_field", "df_column")
+        )
         return tmp_df.apply(self._format_recipe_row, axis=1)
 
     def _select_random_recipe_weighted_by_rating(
@@ -120,7 +153,10 @@ class RecipeBook(DataframeSearchable):
         mask_selection = self.dataframe[field].apply(
             lambda row: method_match(row, search_term)
         )
-        # TODO CODE-167 need way to remove recent entries per history log
+        if self.menu_history is not None:
+            mask_selection &= ~self.dataframe.uuid.isin(
+                self.menu_history.uuid.values
+            )
         if (count := sum(mask_selection)) > config_random.min_thresh_error:
             if count < config_random.min_thresh_warning:
                 FILE_LOGGER.warning(
@@ -136,13 +172,7 @@ class RecipeBook(DataframeSearchable):
                 .fillna(0)
                 .replace(0, config_random.default_rating)
             )
-            result = result_df.sample(n=1, weights=weighting).iloc[0]
-            return Recipe(
-                title=result.title,
-                rating=result.rating,
-                ingredient_field=result.ingredients,
-                total_cook_time=result.totalTime,
-            )
+            return result_df.sample(n=1, weights=weighting).iloc[0]
         raise SelectRandomRecipeError(field=field, search_term=search_term)
 
     def _select_highest_rated_when_duplicated_name(self):

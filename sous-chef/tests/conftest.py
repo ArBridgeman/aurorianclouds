@@ -80,10 +80,10 @@ def grocery_list(
 ):
     grocery_list = GroceryList(
         config=config_grocery_list,
+        due_date_formatter=frozen_due_datetime_formatter,
         unit_formatter=unit_formatter,
         ingredient_field_formatter=mock_ingredient_field_formatter,
     )
-    grocery_list.date_formatter = frozen_due_datetime_formatter
     grocery_list.second_shopping_day_group = ["vegetables"]
     return grocery_list
 

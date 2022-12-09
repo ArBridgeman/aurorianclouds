@@ -1,5 +1,6 @@
 import hydra
 from omegaconf import DictConfig
+from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
 from sous_chef.formatter.ingredient.format_ingredient_field import (
@@ -50,9 +51,15 @@ def main(config: DictConfig) -> None:
             recipe_book=recipe_book,
         )
 
+        # TODO make anchor day not specific to service but due date formatter...
+        due_date_formatter = DueDatetimeFormatter(
+            config.grocery_list.anchor_day
+        )
+
         # get menu for grocery list
         menu = Menu(
             config=config.menu.create_menu,
+            due_date_formatter=due_date_formatter,
             gsheets_helper=gsheets_helper,
             ingredient_formatter=ingredient_formatter,
             recipe_book=recipe_book,
@@ -65,6 +72,7 @@ def main(config: DictConfig) -> None:
         # get grocery list
         grocery_list = GroceryList(
             config.grocery_list,
+            due_date_formatter=due_date_formatter,
             ingredient_field_formatter=ingredient_field_formatter,
             unit_formatter=unit_formatter,
         )

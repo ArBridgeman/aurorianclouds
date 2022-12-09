@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="[sous_chef] menu prod from local" type="PythonConfigurationType" factoryName="Python">
+  <configuration default="false" name="[sous_chef] menu prod" type="PythonConfigurationType" factoryName="Python">
     <module name="sous-chef" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />

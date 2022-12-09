@@ -11,10 +11,10 @@ from sous_chef.formatter.ingredient.format_ingredient_field import (
     IngredientFieldFormatter,
     raise_or_log_exception,
 )
-from sous_chef.recipe_book.read_recipe_book import Recipe
 from structlog import get_logger
 from tests.unit_tests.formatter.util import create_ingredient_line
 from tests.unit_tests.util import create_recipe
+from tests.util import assert_equal_series
 
 FILE_LOGGER = get_logger(__name__)
 
@@ -63,17 +63,18 @@ def assert_ingredient(
     ]
 
 
-def assert_recipe(result, recipe, factor, amount=None):
-    assert result == [
-        Recipe(
+def assert_recipe(result, recipe, factor: float, amount: str = None):
+    assert_equal_series(
+        result[0],
+        create_recipe(
             title=recipe.title,
             rating=recipe.rating,
-            total_cook_time=recipe.total_cook_time,
-            ingredient_field=recipe.ingredient_field,
+            time_total_str=str(recipe.time_total),
+            ingredients=recipe.ingredients,
             factor=factor,
             amount=amount,
-        )
-    ]
+        ),
+    )
 
 
 def test_raise_or_log_exception_raise_exception():

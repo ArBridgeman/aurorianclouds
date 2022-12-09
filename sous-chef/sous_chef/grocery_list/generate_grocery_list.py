@@ -26,6 +26,7 @@ FILE_LOGGER = get_logger(__name__)
 @dataclass
 class GroceryList:
     config: DictConfig
+    due_date_formatter: DueDatetimeFormatter
     unit_formatter: UnitFormatter
     ingredient_field_formatter: IngredientFieldFormatter
     # TODO do properly? pass everything inside methods? only set final list?
@@ -33,14 +34,12 @@ class GroceryList:
     queue_preparation: pd.DataFrame = None
     grocery_list_raw: pd.DataFrame = None
     grocery_list: pd.DataFrame = None
-    date_formatter: DueDatetimeFormatter = field(init=False)
     second_shopping_date: datetime = field(init=False)
     second_shopping_day_group: List = field(init=False)
 
     def __post_init__(self):
-        self.date_formatter = DueDatetimeFormatter(self.config.anchor_day)
         self.second_shopping_date = (
-            self.date_formatter.get_date_relative_to_anchor(
+            self.due_date_formatter.get_date_relative_to_anchor(
                 self.config.shopping.secondary_day
             )
         )
@@ -117,7 +116,7 @@ class GroceryList:
                         chain.from_iterable([row.from_recipe, row.for_day_str])
                     )
                     + ["prep"],
-                    due_date=self.date_formatter.get_due_datetime_with_time(
+                    due_date=self.due_date_formatter.get_due_datetime_with_time(
                         weekday=row.weekday, hour=row.hour, minute=row.minute
                     ),
                     priority=self.config.preparation.task_priority,
@@ -253,7 +252,7 @@ class GroceryList:
             print(f"-- for day: {menu_recipe.for_day.strftime('%a')}")
             print(f"- referenced recipe: {recipe.title}")
             print(f"-- amount needed: {recipe.amount}")
-            print(f"-- total time: {recipe.total_cook_time}")
+            print(f"-- total time: {recipe.time_total}")
 
         for recipe in recipe_list:
             from_recipe = f"{recipe.title}_{menu_recipe.recipe.title}"
@@ -272,8 +271,8 @@ class GroceryList:
                     self._add_menu_recipe_to_queue([menu_sub_recipe])
 
                     if (
-                        recipe.total_cook_time is None
-                        or recipe.total_cook_time > timedelta(minutes=15)
+                        recipe.time_total is None
+                        or recipe.time_total > timedelta(minutes=15)
                     ):
                         if (
                             _check_yes_no(
@@ -451,7 +450,7 @@ class GroceryList:
             recipe_list,
             ingredient_list,
         ) = self.ingredient_field_formatter.parse_ingredient_field(
-            menu_recipe.recipe.ingredient_field
+            menu_recipe.recipe.ingredients
         )
         self._add_referenced_recipe_to_queue(menu_recipe, recipe_list)
         self._process_ingredient_list(menu_recipe, ingredient_list)

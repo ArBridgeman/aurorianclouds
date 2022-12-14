@@ -63,7 +63,7 @@ class UnitFormatter:
                 warn="unit not in allowed_unit_list",
                 unit=pint_unit,
             )
-        except UndefinedUnitError:
+        except (AttributeError, UndefinedUnitError):
             pass
         raise UnitExtractionError(text=text_unit)
 

@@ -3,9 +3,7 @@ from omegaconf import DictConfig
 from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
-from sous_chef.formatter.ingredient.format_ingredient_field import (
-    IngredientFieldFormatter,
-)
+from sous_chef.formatter.ingredient.get_ingredient_field import IngredientField
 from sous_chef.grocery_list.generate_grocery_list import GroceryList
 from sous_chef.menu.create_menu import Menu
 from sous_chef.messaging.gsheets_api import GsheetsHelper
@@ -45,8 +43,8 @@ def main(config: DictConfig) -> None:
         ingredient_formatter = _get_ingredient_formatter(
             config, gsheets_helper, unit_formatter
         )
-        ingredient_field_formatter = IngredientFieldFormatter(
-            config.formatter.format_ingredient_field,
+        ingredient_field = IngredientField(
+            config.formatter.get_ingredient_field,
             ingredient_formatter=ingredient_formatter,
             recipe_book=recipe_book,
         )
@@ -73,7 +71,7 @@ def main(config: DictConfig) -> None:
         grocery_list = GroceryList(
             config.grocery_list,
             due_date_formatter=due_date_formatter,
-            ingredient_field_formatter=ingredient_field_formatter,
+            ingredient_field=ingredient_field,
             unit_formatter=unit_formatter,
         )
         grocery_list.get_grocery_list_from_menu(

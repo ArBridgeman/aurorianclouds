@@ -360,13 +360,11 @@ class TestGroceryList:
         )
 
     @staticmethod
-    def test__process_recipe_queue(
-        grocery_list, mock_ingredient_field_formatter, log
-    ):
+    def test__process_recipe_queue(grocery_list, mock_ingredient_field, log):
         menu_recipe = create_menu_recipe()
         ingredient, grocery_raw = create_ingredient_and_grocery_entry_raw()
         grocery_list.queue_menu_recipe = [menu_recipe]
-        mock_ingredient_field_formatter.parse_ingredient_field.return_value = (
+        mock_ingredient_field.parse_ingredient_field.return_value = (
             [],
             [ingredient],
         )
@@ -382,13 +380,11 @@ class TestGroceryList:
         assert_equal_dataframe(grocery_list.grocery_list_raw, grocery_raw)
 
     @staticmethod
-    def test__parse_ingredient_from_recipe(
-        grocery_list, mock_ingredient_field_formatter
-    ):
+    def test__parse_ingredient_from_recipe(grocery_list, mock_ingredient_field):
         menu_recipe = create_menu_recipe()
         ingredient, grocery_raw = create_ingredient_and_grocery_entry_raw()
         recipe = create_recipe(title="dummy recipe 2")
-        mock_ingredient_field_formatter.parse_ingredient_field.return_value = (
+        mock_ingredient_field.parse_ingredient_field.return_value = (
             [recipe],
             [ingredient],
         )

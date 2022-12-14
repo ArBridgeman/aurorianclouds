@@ -11,6 +11,7 @@ from sous_chef.abstract.pandas_util import get_dict_from_columns
 from sous_chef.abstract.search_dataframe import (
     DataframeSearchable,
     DirectSearchError,
+    FuzzySearchError,
 )
 from structlog import get_logger
 
@@ -37,6 +38,23 @@ MAP_JSON_TO_DF = pd.DataFrame(
         MAP_FIELD_TO_COL("uuid", "uuid", str),
     ]
 )
+
+
+@dataclass
+class RecipeNotFoundError(Exception):
+    recipe_title: str
+    search_results: str
+    message: str = "[recipe not found]"
+
+    def __post_init__(self):
+        super().__init__(self.message)
+
+    def __str__(self):
+        values = {
+            "recipe_title": self.recipe_title,
+            "search_term": self.search_results,
+        }
+        return f"{self.message}: {values} "
 
 
 class SelectRandomRecipeError(DirectSearchError):
@@ -90,7 +108,10 @@ class RecipeBook(DataframeSearchable):
         )
 
     def get_recipe_by_title(self, title) -> pd.Series:
-        return self.retrieve_match(field="title", search_term=title)
+        try:
+            return self.retrieve_match(field="title", search_term=title)
+        except FuzzySearchError as e:
+            raise RecipeNotFoundError(recipe_title=title, search_results=str(e))
 
     @staticmethod
     def _flatten_dict_to_list(cell: list[dict]) -> list[str]:

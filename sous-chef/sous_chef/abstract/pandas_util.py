@@ -1,4 +1,4 @@
-from typing import Set
+from typing import Dict, Set
 
 import pandas as pd
 from structlog import get_logger
@@ -43,3 +43,9 @@ def are_shared_df_entries_identical(
         )
         return False
     return True
+
+
+def get_dict_from_columns(
+    df: pd.DataFrame, key_col: str, value_col: str
+) -> Dict:
+    return {key: value for key, value in df[[key_col, value_col]].values}

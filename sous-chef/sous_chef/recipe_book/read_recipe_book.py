@@ -7,6 +7,7 @@ from typing import Callable
 import pandas as pd
 import pandera as pa
 from pandera.typing import Series
+from sous_chef.abstract.pandas_util import get_dict_from_columns
 from sous_chef.abstract.search_dataframe import (
     DataframeSearchable,
     DirectSearchError,
@@ -36,12 +37,6 @@ MAP_JSON_TO_DF = pd.DataFrame(
         MAP_FIELD_TO_COL("uuid", "uuid", str),
     ]
 )
-
-
-def get_dict_from_columns(key_col: str, value_col: str):
-    return {
-        key: value for key, value in MAP_JSON_TO_DF[[key_col, value_col]].values
-    }
 
 
 class SelectRandomRecipeError(DirectSearchError):
@@ -136,13 +131,18 @@ class RecipeBook(DataframeSearchable):
 
     def _retrieve_format_recipe_df(self, json_file):
         tmp_df = pd.read_json(
-            json_file, dtype=get_dict_from_columns("json_field", "dtype")
+            json_file,
+            dtype=get_dict_from_columns(
+                df=MAP_JSON_TO_DF, key_col="json_field", value_col="dtype"
+            ),
         )
         for col in MAP_JSON_TO_DF.json_field:
             if col not in tmp_df.columns:
                 tmp_df[col] = None
         tmp_df = tmp_df[MAP_JSON_TO_DF.json_field].rename(
-            columns=get_dict_from_columns("json_field", "df_column")
+            columns=get_dict_from_columns(
+                df=MAP_JSON_TO_DF, key_col="json_field", value_col="df_column"
+            )
         )
         return tmp_df.apply(self._format_recipe_row, axis=1)
 

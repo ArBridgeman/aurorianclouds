@@ -2,9 +2,13 @@ create_menu:
   input_method:
   output_method: temp
   prep_meal_time: dinner
+  errors: # raise, log, or skip
+    recipe_not_found: raise
+    pantry_ingredient_not_known: raise
+    ingredient_marked_as_bad: raise
   todoist:
     project_name: Menu
-    remove_existing_task: False
+    remove_existing_task: false
     task_priority: 3
   fixed:
     basic: menu-basic

@@ -10,6 +10,7 @@ import pandera as pa
 from omegaconf import DictConfig
 from pandera.typing import Series
 from pandera.typing.common import DataFrameBase
+from sous_chef.abstract.handle_exception import BaseWithExceptionHandling
 from sous_chef.date.get_due_date import DueDatetimeFormatter, MealTime, Weekday
 from sous_chef.formatter.ingredient.format_ingredient import (
     Ingredient,
@@ -20,6 +21,7 @@ from sous_chef.messaging.gsheets_api import GsheetsHelper
 from sous_chef.messaging.todoist_api import TodoistHelper
 from sous_chef.recipe_book.read_recipe_book import Recipe, RecipeBook
 from structlog import get_logger
+from termcolor import cprint
 from todoist_api_python.models import Task
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
@@ -27,6 +29,8 @@ FILE_LOGGER = get_logger(__name__)
 
 
 # TODO method to scale recipe to desired servings? maybe in recipe checker?
+class MenuIncompleteError(Exception):
+    pass
 
 
 @dataclass
@@ -82,7 +86,7 @@ class FinalizedMenuSchema(MenuSchema):
 
 
 @dataclass
-class Menu:
+class Menu(BaseWithExceptionHandling):
     config: DictConfig
     due_date_formatter: DueDatetimeFormatter
     gsheets_helper: GsheetsHelper
@@ -97,6 +101,7 @@ class Menu:
 
     def __post_init__(self):
         self.cook_days = self.config.fixed.cook_days
+        self.set_tuple_log_and_skip_exception_from_config(self.config.errors)
 
     def finalize_fixed_menu(self):
         def _get_make_day(row):
@@ -146,6 +151,8 @@ class Menu:
     def get_menu_for_grocery_list(
         self,
     ) -> (List[MenuIngredient], List[MenuRecipe]):
+        self.record_exception = []
+
         self.load_final_menu()
 
         entry_funcs = {
@@ -161,6 +168,11 @@ class Menu:
                     .apply(entry_fct, axis=1)
                     .tolist()
                 )
+        if len(self.record_exception) > 0:
+            cprint("\t" + "\n\t".join(self.record_exception), "green")
+            raise MenuIncompleteError(
+                "[menu had errors] will not send to grocery list until fixed"
+            )
         return result_dict["ingredient"], result_dict["recipe"]
 
     def send_menu_to_gmail(self, gmail_helper: GmailHelper):
@@ -324,8 +336,8 @@ class Menu:
         )
         return combined_menu[~mask_skip_none]
 
+    # @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _process_menu(self, row: pd.Series):
-        # due to schema validation row["type"], may only be 1 of these 4 types
         FILE_LOGGER.info(
             "[process menu]",
             action="processing",
@@ -348,6 +360,7 @@ class Menu:
             row = self._select_random_recipe(row, "get_random_recipe_by_tag")
         return self._add_recipe_columns(row)
 
+    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _retrieve_manual_menu_ingredient(
         self, row: pd.Series
     ) -> MenuIngredient:
@@ -357,6 +370,7 @@ class Menu:
             for_day=row["make_day"],
         )
 
+    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _retrieve_menu_recipe(self, row: pd.Series) -> MenuRecipe:
         recipe = self.recipe_book.get_recipe_by_title(row["item"])
         return MenuRecipe(

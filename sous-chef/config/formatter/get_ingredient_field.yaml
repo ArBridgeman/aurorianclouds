@@ -1,7 +1,8 @@
 get_ingredient_field:
+  # raise, log, or skip
   errors:
-    recipe_not_found: log
-    ingredient_line_parsing_error: log
-    no_ingredient_found_in_line: log
-    pantry_ingredient_not_known: log
-    ingredient_marked_as_bad: log
+    recipe_not_found: raise
+    ingredient_line_parsing_error: raise
+    no_ingredient_found_in_line: raise
+    pantry_ingredient_not_known: raise
+    ingredient_marked_as_bad: raise

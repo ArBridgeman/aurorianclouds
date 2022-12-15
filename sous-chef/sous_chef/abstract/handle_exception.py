@@ -23,9 +23,9 @@ class MapErrorToException(ExtendedEnum):
 @dataclass
 class BaseWithExceptionHandling(object):
     # needed since dataclass predetermines the kwarg order
-    record_exception: List = field(default=False, init=False)
-    tuple_log_exception: Tuple = field(default=False, init=False)
-    tuple_skip_exception: Tuple = field(default=False, init=False)
+    record_exception: List = field(default=None, init=False)
+    tuple_log_exception: Tuple = field(default=None, init=False)
+    tuple_skip_exception: Tuple = field(default=None, init=False)
 
     def set_tuple_log_and_skip_exception_from_config(
         self, config_errors: DictConfig

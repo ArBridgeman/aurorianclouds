@@ -10,9 +10,22 @@ defaults:
   - messaging/todoist_api
   - _self_
 
+formatter:
+  get_ingredient_field:
+    errors:
+      recipe_not_found: log
+      ingredient_line_parsing_error: log
+      no_ingredient_found_in_line: log
+      pantry_ingredient_not_known: log
+      ingredient_marked_as_bad: log
+
 menu:
   create_menu:
     input_method: local
+    errors:
+      recipe_not_found: log
+      pantry_ingredient_not_known: log
+      ingredient_marked_as_bad: log
 
 grocery_list:
   shopping:

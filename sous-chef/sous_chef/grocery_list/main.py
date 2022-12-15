@@ -49,9 +49,8 @@ def main(config: DictConfig) -> None:
             recipe_book=recipe_book,
         )
 
-        # TODO make anchor day not specific to service but due date formatter...
         due_date_formatter = DueDatetimeFormatter(
-            config.grocery_list.anchor_day
+            anchor_day=config.date.due_date.anchor_day
         )
 
         # get menu for grocery list

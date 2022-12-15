@@ -2,6 +2,7 @@ defaults:
   - pantry_list
   - recipe_book
   - rtk
+  - date/get_due_date
   - formatter/format_ingredient
   - menu/create_menu
   - menu/record_menu_history
@@ -11,7 +12,6 @@ defaults:
   - _self_
 
 menu:
-  anchor_day: Sunday
   menu_history_days: 30
   create_menu:
     input_method: fixed

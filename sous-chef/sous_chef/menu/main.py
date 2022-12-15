@@ -24,7 +24,9 @@ def main(config: DictConfig):
     gsheets_helper = GsheetsHelper(config.messaging.gsheets)
     ingredient_formatter = _get_ingredient_formatter(config, gsheets_helper)
 
-    due_date_formatter = DueDatetimeFormatter(config.menu.anchor_day)
+    due_date_formatter = DueDatetimeFormatter(
+        anchor_day=config.date.due_date.anchor_day
+    )
 
     menu_history = MenuHistorian(
         config=config.menu.record_menu_history,

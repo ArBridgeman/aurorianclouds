@@ -3,6 +3,7 @@ defaults:
   - pantry_list
   - recipe_book
   - rtk
+  - date/get_due_date
   - formatter/format_ingredient
   - formatter/get_ingredient_field
   - messaging/gsheets_api
@@ -14,7 +15,6 @@ menu:
     input_method: local
 
 grocery_list:
-  anchor_day: Sunday
   shopping:
     secondary_day: Thursday
     secondary_group: [fish, fresh herbs, fruits, meats, vegetables, Lidl]

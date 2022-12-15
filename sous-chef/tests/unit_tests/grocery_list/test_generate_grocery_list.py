@@ -367,6 +367,7 @@ class TestGroceryList:
         mock_ingredient_field.parse_ingredient_field.return_value = (
             [],
             [ingredient],
+            [],
         )
 
         grocery_list._process_recipe_queue()
@@ -387,6 +388,7 @@ class TestGroceryList:
         mock_ingredient_field.parse_ingredient_field.return_value = (
             [recipe],
             [ingredient],
+            [],
         )
 
         with mock.patch.object(builtins, "input", lambda _: "Y"):

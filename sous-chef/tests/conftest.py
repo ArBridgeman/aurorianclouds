@@ -90,7 +90,7 @@ def grocery_list(
 def mock_ingredient_field():
     with initialize(version_base=None, config_path="../config/formatter"):
         config = compose(config_name="get_ingredient_field")
-        return Mock(IngredientField(config, None, None))
+        return Mock(IngredientField(config.get_ingredient_field, None, None))
 
 
 @pytest.fixture

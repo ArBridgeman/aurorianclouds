@@ -2,15 +2,8 @@ import pytest
 from hydra import compose, initialize
 from omegaconf import OmegaConf
 from sous_chef.formatter.format_unit import unit_registry
-from sous_chef.formatter.ingredient.format_ingredient import (
-    EmptyIngredientError,
-    Ingredient,
-    PantrySearchError,
-)
-from sous_chef.formatter.ingredient.get_ingredient_field import (
-    IngredientField,
-    raise_or_log_exception,
-)
+from sous_chef.formatter.ingredient.format_ingredient import Ingredient
+from sous_chef.formatter.ingredient.get_ingredient_field import IngredientField
 from structlog import get_logger
 from tests.unit_tests.formatter.util import create_ingredient_line
 from tests.unit_tests.util import create_recipe
@@ -27,7 +20,7 @@ def ingredient_field(ingredient_formatter, mock_recipe_book):
         config = compose(config_name="get_ingredient_field")
         return IngredientField(
             ingredient_formatter=ingredient_formatter,
-            config=config,
+            config=config.get_ingredient_field,
             recipe_book=mock_recipe_book,
         )
 
@@ -77,16 +70,6 @@ def assert_recipe(result, recipe, factor: float, amount: str = None):
     )
 
 
-def test_raise_or_log_exception_raise_exception():
-    with pytest.raises(Exception):
-        raise_or_log_exception(raise_exception=True, exception=Exception())
-
-
-def test_raise_or_log_exception_log_exception(log):
-    raise_or_log_exception(raise_exception=False, exception=Exception())
-    assert log.events == [{"event": "", "level": "error"}]
-
-
 class TestIngredientFieldFormatter:
     @staticmethod
     @pytest.mark.parametrize(
@@ -107,9 +90,8 @@ class TestIngredientFieldFormatter:
         recipe_str = "# " + create_ingredient_line(
             quantity=factor, item=recipe_title
         )
-        recipe_with_recipe_title = create_recipe(title=recipe_title)
         ingredient_str = create_ingredient_line(item, quantity, unit)
-        ingredient_field = f"{recipe_str}\n{ingredient_str}"
+        recipe_with_recipe_title = create_recipe(title=recipe_title)
         mock_pantry_list.retrieve_match.return_value = pantry_entry
         mock_recipe_book.get_recipe_by_title.return_value = (
             recipe_with_recipe_title
@@ -118,7 +100,10 @@ class TestIngredientFieldFormatter:
         (
             recipe_list,
             ingredient_list,
-        ) = ingredient_field.parse_ingredient_field(ingredient_field)
+            error_list,
+        ) = ingredient_field.parse_ingredient_field(
+            ingredient_field=f"{recipe_str}\n{ingredient_str}"
+        )
         assert_recipe(recipe_list, recipe_with_recipe_title, factor, recipe_str)
         assert_ingredient(
             ingredient_list,
@@ -139,14 +124,15 @@ class TestIngredientFieldFormatter:
         unit,
         item,
     ):
-        ingredient_str = create_ingredient_line(item, quantity, unit)
-        ingredient_field = f"[garnish]\n{ingredient_str}"
         mock_pantry_list.retrieve_match.return_value = pantry_entry
 
         (
             recipe_list,
             ingredient_list,
-        ) = ingredient_field.parse_ingredient_field(ingredient_field)
+            error_list,
+        ) = ingredient_field.parse_ingredient_field(
+            f"[garnish]\n{create_ingredient_line(item, quantity, unit)}"
+        )
 
         assert recipe_list == []
         assert_ingredient(
@@ -214,73 +200,3 @@ class TestIngredientFieldFormatter:
             is_in_optional_group,
             factor=1.0,
         )
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "error",
-        [EmptyIngredientError, PantrySearchError],
-    )
-    def test__handle_ingredient_exception_raise_error(ingredient_field, error):
-        config = create_error_config(
-            raise_error_for=True, still_add_ingredient=False
-        )
-        ingredient = Ingredient(quantity=1, item="dummy ingredient")
-        raised_error = error(ingredient)
-        ingredient_field.ingredient_list = []
-
-        with pytest.raises(error):
-            ingredient_field._handle_ingredient_exception(config, raised_error)
-
-        assert ingredient_field.ingredient_list == []
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "error",
-        [EmptyIngredientError, PantrySearchError],
-    )
-    def test__handle_ingredient_exception_as_warning_ignore_ingredient(
-        ingredient_field, log, error
-    ):
-        config = create_error_config(
-            raise_error_for=False, still_add_ingredient=False
-        )
-        ingredient = Ingredient(quantity=1, item="dummy ingredient")
-        raised_error = error(ingredient)
-        ingredient_field.ingredient_list = []
-
-        ingredient_field._handle_ingredient_exception(config, raised_error)
-        assert log.events == [
-            {
-                "event": f"{raised_error.message} ingredient={ingredient.item}",
-                "level": "error",
-            }
-        ]
-        assert ingredient_field.ingredient_list == []
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "error",
-        [EmptyIngredientError, PantrySearchError],
-    )
-    def test__handle_ingredient_exception_as_warning_still_add_to_list(
-        ingredient_field, log, error
-    ):
-        config = create_error_config(
-            raise_error_for=False, still_add_ingredient=True
-        )
-        ingredient = Ingredient(quantity=1, item="dummy ingredient")
-        raised_error = error(ingredient)
-        ingredient_field.ingredient_list = []
-
-        ingredient_field._handle_ingredient_exception(config, raised_error)
-        assert log.events[0] == {
-            "event": f"{raised_error.message} ingredient={ingredient.item}",
-            "level": "error",
-        }
-        assert log.events[1] == {
-            "event": "[ignore error]",
-            "action": "still add to list",
-            "ingredient": ingredient.item,
-            "level": "warning",
-        }
-        assert ingredient_field.ingredient_list == [ingredient]

@@ -60,7 +60,9 @@ class MenuSchema(pa.SchemaModel):
     eat_factor: Series[float] = pa.Field(gt=0, nullable=False, coerce=True)
     eat_unit: Series[str] = pa.Field(nullable=True)
     freeze_factor: Series[float] = pa.Field(ge=0, nullable=False, coerce=True)
-    defrost: Series[str] = pa.Field(isin=["Y", "N"], nullable=False)
+    defrost: Series[str] = pa.Field(
+        isin=["Y", "N"], nullable=False, coerce=True
+    )
     item: Series[str]
 
     class Config:
@@ -106,21 +108,23 @@ class Menu:
             )
 
         self.dataframe = self._load_fixed_menu().reset_index(drop=True)
-        self.dataframe.prep_day_before = self.dataframe.prep_day_before.replace(
-            "", "0"
-        ).astype(int)
-        self.dataframe.freeze_factor = self.dataframe.freeze_factor.replace(
-            "", "0"
+
+        # remove menu entries that are inactive and drop column
+        mask_inactive = self.dataframe.inactive.str.upper() == "Y"
+        self.dataframe = self.dataframe.loc[~mask_inactive].drop(
+            columns=["inactive"]
         )
+
+        # applied schema model coerces int already
+        self.dataframe.freeze_factor.replace("", "0", inplace=True)
         self.dataframe.defrost = self.dataframe.defrost.replace(
             "", "N"
         ).str.upper()
-        self.dataframe.inactive = self.dataframe.inactive.replace(
-            "", "N"
-        ).str.upper()
-        mask_inactive = self.dataframe.inactive == "Y"
-        self.dataframe = self.dataframe.loc[~mask_inactive]
 
+        # add eat_day and make_day, drop prep_day
+        self.dataframe.prep_day_before = self.dataframe.prep_day_before.replace(
+            "", "0"
+        ).astype(int)
         self.dataframe["eat_day"] = self.dataframe.apply(
             lambda row: self.due_date_formatter.get_due_datetime_with_meal_time(
                 weekday=row.weekday, meal_time=row.meal_time
@@ -130,10 +134,9 @@ class Menu:
         self.dataframe["make_day"] = self.dataframe.apply(
             lambda row: _get_make_day(row), axis=1
         )
+        self.dataframe.drop(columns=["prep_day_before"], inplace=True)
 
-        self.dataframe.drop(
-            columns=["prep_day_before", "inactive"], inplace=True
-        )
+        # validate schema & process menu
         self._validate_menu_schema()
         self.dataframe = self.dataframe.apply(
             self._process_menu, axis=1

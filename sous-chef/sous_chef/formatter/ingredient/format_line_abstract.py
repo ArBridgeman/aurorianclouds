@@ -31,6 +31,8 @@ class LineFormatter:
     item: str = None
 
     def __post_init__(self):
+        # replace BOM character
+        self.line = self.line.replace("\ufeff", "").strip()
         self._extract_field_list_from_line()
 
     def _set_quantity_float(self):

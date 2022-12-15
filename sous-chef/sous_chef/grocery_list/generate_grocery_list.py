@@ -15,10 +15,15 @@ from sous_chef.menu.create_menu import MenuIngredient, MenuRecipe
 from sous_chef.messaging.todoist_api import TodoistHelper
 from sous_chef.recipe_book.read_recipe_book import Recipe
 from structlog import get_logger
+from termcolor import cprint
 
 # TODO method to mark ingredients that can only be bought the day before
 
 FILE_LOGGER = get_logger(__name__)
+
+
+class GroceryListIncompleteError(Exception):
+    pass
 
 
 @dataclass
@@ -34,6 +39,7 @@ class GroceryList:
     grocery_list: pd.DataFrame = None
     second_shopping_date: datetime = field(init=False)
     second_shopping_day_group: List = field(init=False)
+    has_errors: bool = False
 
     def __post_init__(self):
         self.second_shopping_date = (
@@ -54,6 +60,11 @@ class GroceryList:
         self._aggregate_grocery_list()
 
     def upload_grocery_list_to_todoist(self, todoist_helper: TodoistHelper):
+        if self.has_errors:
+            raise GroceryListIncompleteError(
+                "[grocery list had errors] will not send to ToDoist until fixed"
+            )
+
         # TODO what should be in todoist (e.g. dry mode & messages?)
         project_name = self.config.todoist.project_name
 
@@ -447,11 +458,16 @@ class GroceryList:
         (
             recipe_list,
             ingredient_list,
+            error_list,
         ) = self.ingredient_field.parse_ingredient_field(
-            menu_recipe.recipe.ingredients
+            ingredient_field=menu_recipe.recipe.ingredients
         )
         self._add_referenced_recipe_to_queue(menu_recipe, recipe_list)
         self._process_ingredient_list(menu_recipe, ingredient_list)
+        # TO DO somehow get back to a google drive doc
+        if error_list:
+            self.has_errors = True
+            cprint("\t" + "\n\t".join(error_list), "green")
 
     def _process_ingredient_list(
         self, menu_recipe: MenuRecipe, ingredient_list: List[Ingredient]

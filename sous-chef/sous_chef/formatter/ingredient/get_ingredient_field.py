@@ -43,7 +43,11 @@ class IngredientField(BaseWithExceptionHandling):
             else:
                 self._format_ingredient(stripped_line, is_in_optional_group)
 
-        return self.referenced_recipe_list, self.ingredient_list
+        return (
+            self.referenced_recipe_list,
+            self.ingredient_list,
+            self.record_exception,
+        )
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _format_referenced_recipe(self, line: str):

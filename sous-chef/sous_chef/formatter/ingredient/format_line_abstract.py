@@ -60,7 +60,7 @@ class LineFormatter:
     def _split_item_and_unit(self):
         # TODO replace with NER/NLP or make more general
         text_split = self.item.split(" ")
-        if len(text_split) > 1:
+        if len(text_split) >= 1:
             try:
                 text_unit = text_split[0]
                 unit, pint_unit = self.unit_formatter.extract_unit_from_text(

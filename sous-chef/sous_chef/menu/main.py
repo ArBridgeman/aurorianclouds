@@ -34,6 +34,7 @@ def main(config: DictConfig):
         + timedelta(days=1),
         gsheets_helper=gsheets_helper,
     )
+
     recipe_book = RecipeBook(
         config.recipe_book,
         menu_history=menu_history.get_history_from(

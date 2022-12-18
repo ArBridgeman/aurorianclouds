@@ -13,6 +13,7 @@ from sous_chef.abstract.search_dataframe import (
     DirectSearchError,
     FuzzySearchError,
 )
+from sous_chef.menu.record_menu_history import MenuHistoryError
 from structlog import get_logger
 
 HOME_PATH = str(Path.home())
@@ -109,7 +110,14 @@ class RecipeBook(DataframeSearchable):
 
     def get_recipe_by_title(self, title) -> pd.Series:
         try:
-            return self.retrieve_match(field="title", search_term=title)
+            recipe = self.retrieve_match(field="title", search_term=title)
+            if (self.menu_history is not None) and (
+                recipe.uuid in self.menu_history.uuid.values
+            ):
+                raise MenuHistoryError(
+                    f"[recipe in recent history] recipe={recipe.title}"
+                )
+            return recipe
         except FuzzySearchError as e:
             raise RecipeNotFoundError(recipe_title=title, search_results=str(e))
 

@@ -104,6 +104,8 @@ class Menu(BaseWithExceptionHandling):
         self.set_tuple_log_and_skip_exception_from_config(self.config.errors)
 
     def finalize_fixed_menu(self):
+        self.record_exception = []
+
         def _get_make_day(row):
             if row.prep_day_before == 0:
                 return row.eat_day
@@ -146,6 +148,12 @@ class Menu(BaseWithExceptionHandling):
         self.dataframe = self.dataframe.apply(
             self._process_menu, axis=1
         ).sort_values(by=["eat_day"])
+
+        if len(self.record_exception) > 0:
+            cprint("\t" + "\n\t".join(self.record_exception), "green")
+            raise MenuIncompleteError(
+                "[menu had errors] will not send to finalize until fixed"
+            )
         self._save_menu()
 
     def get_menu_for_grocery_list(
@@ -336,7 +344,7 @@ class Menu(BaseWithExceptionHandling):
         )
         return combined_menu[~mask_skip_none]
 
-    # @BaseWithExceptionHandling.ExceptionHandler.handle_exception
+    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _process_menu(self, row: pd.Series):
         FILE_LOGGER.info(
             "[process menu]",

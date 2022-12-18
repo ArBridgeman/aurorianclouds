@@ -21,7 +21,7 @@ formatter:
 
 menu:
   create_menu:
-    input_method: local
+    input_method: final
     errors:
       recipe_not_found: log
       pantry_ingredient_not_known: log

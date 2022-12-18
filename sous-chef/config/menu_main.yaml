@@ -15,6 +15,11 @@ menu:
   menu_history_days: 30
   create_menu:
     input_method: fixed
+    errors:
+      recipe_not_found: log
+      recipe_in_recent_menu_history: log
+      pantry_ingredient_not_known: log
+      ingredient_marked_as_bad: log
     todoist:
       remove_existing_task: true
   run_mode:

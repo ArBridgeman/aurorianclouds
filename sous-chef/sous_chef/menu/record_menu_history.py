@@ -6,11 +6,16 @@ import pandas as pd
 import pandera as pa
 from omegaconf import DictConfig
 from pandera.typing import DataFrame, Series
-from sous_chef.menu.create_menu import FinalizedMenuSchema
+
+# from sous_chef.menu.create_menu import FinalizedMenuSchema
 from sous_chef.messaging.gsheets_api import GsheetsHelper
 from structlog import get_logger
 
 FILE_LOGGER = get_logger(__name__)
+
+
+class MenuHistoryError(Exception):
+    pass
 
 
 class MenuHistory(pa.SchemaModel):
@@ -49,9 +54,7 @@ class MenuHistorian:
         mask_not_future = menu_history.eat_day < self.current_menu_start_date
         self.dataframe = menu_history[mask_not_future]
 
-    def add_current_menu_to_history(
-        self, current_menu: DataFrame[FinalizedMenuSchema]
-    ):
+    def add_current_menu_to_history(self, current_menu: DataFrame):
         menu_recipes = current_menu[current_menu["type"] == "recipe"][
             self.columns
         ]

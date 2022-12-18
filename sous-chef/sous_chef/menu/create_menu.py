@@ -338,10 +338,11 @@ class Menu(BaseWithExceptionHandling):
 
         # TODO create test for
         mask_skip_none = combined_menu["weekday"].isna()
-        FILE_LOGGER.warning(
-            "Menu entries ignored",
-            skipped_entries=combined_menu[mask_skip_none],
-        )
+        if sum(mask_skip_none) > 0:
+            FILE_LOGGER.warning(
+                "Menu entries ignored",
+                skipped_entries=combined_menu[mask_skip_none],
+            )
         return combined_menu[~mask_skip_none]
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception

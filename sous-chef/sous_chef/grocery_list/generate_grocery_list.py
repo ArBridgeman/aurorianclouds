@@ -69,12 +69,7 @@ class GroceryList:
         project_name = self.config.todoist.project_name
 
         if self.config.todoist.remove_existing_task:
-            # TODO move repeat delete, etc. into todoist option
-            # TODO add timeout option?
-            [
-                todoist_helper.delete_all_items_in_project(project_name)
-                for _ in range(3)
-            ]
+            todoist_helper.delete_all_items_in_project(project_name)
 
         for section, group in self.grocery_list.groupby("aisle_group"):
             if section in self.config.todoist.skip_group:
@@ -111,10 +106,7 @@ class GroceryList:
         # TODO separate service? need freezer check for defrosts
         project_name = self.config.preparation.project_name
         if self.config.todoist.remove_existing_prep_task:
-            [
-                todoist_helper.delete_all_items_in_project(project_name)
-                for _ in range(3)
-            ]
+            todoist_helper.delete_all_items_in_project(project_name)
 
         if self.queue_preparation is not None:
             for _, row in self.queue_preparation.iterrows():

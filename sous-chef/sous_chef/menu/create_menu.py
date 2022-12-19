@@ -208,13 +208,10 @@ class Menu(BaseWithExceptionHandling):
         project_name = self.config.todoist.project_name
         if self.config.todoist.remove_existing_task:
             anchor_date = self.due_date_formatter.get_anchor_date()
-            [
-                todoist_helper.delete_all_items_in_project(
-                    project_name,
-                    only_delete_after_date=anchor_date,
-                )
-                for _ in range(3)
-            ]
+            todoist_helper.delete_all_items_in_project(
+                project_name,
+                only_delete_after_date=anchor_date,
+            )
 
         tasks = []
         project_id = todoist_helper.get_project_id(project_name)

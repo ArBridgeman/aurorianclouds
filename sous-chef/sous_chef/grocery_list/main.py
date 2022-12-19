@@ -13,25 +13,21 @@ from sous_chef.recipe_book.read_recipe_book import RecipeBook
 from sous_chef.rtk.read_write_rtk import RtkService
 from structlog import get_logger
 
-LOG = get_logger()
+LOGGER = get_logger(__name__)
 
 
 @hydra.main(config_path="../../config", config_name="grocery_list")
 def main(config: DictConfig) -> None:
     if config.grocery_list.run_mode.only_clean_todoist_mode:
-        # TODO all should be contained in todoist helper method & executed here
         todoist_helper = TodoistHelper(config.messaging.todoist)
-        print(
+        LOGGER.info(
             "Deleting previous tasks in project {}".format(
                 config.grocery_list.todoist.project_name
             )
         )
-        [
-            todoist_helper.delete_all_items_in_project(
-                config.grocery_list.todoist.project_name
-            )
-            for _ in range(3)
-        ]
+        todoist_helper.delete_all_items_in_project(
+            config.grocery_list.todoist.project_name
+        )
     else:
         # unzip latest recipe versions
         rtk_service = RtkService(config.rtk)

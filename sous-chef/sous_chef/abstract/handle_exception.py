@@ -10,12 +10,16 @@ from sous_chef.formatter.ingredient.format_ingredient import (
 )
 from sous_chef.formatter.ingredient.format_line_abstract import LineParsingError
 from sous_chef.menu.record_menu_history import MenuHistoryError
-from sous_chef.recipe_book.read_recipe_book import RecipeNotFoundError
+from sous_chef.recipe_book.read_recipe_book import (
+    RecipeNotFoundError,
+    RecipeTotalTimeUndefinedError,
+)
 
 
 class MapErrorToException(ExtendedEnum):
     recipe_not_found = RecipeNotFoundError
     recipe_in_recent_menu_history = MenuHistoryError
+    recipe_total_time_undefined = RecipeTotalTimeUndefinedError
     ingredient_line_parsing_error = LineParsingError
     no_ingredient_found_in_line = EmptyIngredientError
     pantry_ingredient_not_known = PantrySearchError

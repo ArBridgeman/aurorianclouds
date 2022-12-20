@@ -29,8 +29,16 @@ FILE_LOGGER = get_logger(__name__)
 
 
 # TODO method to scale recipe to desired servings? maybe in recipe checker?
+@dataclass
 class MenuIncompleteError(Exception):
-    pass
+    custom_message: str
+    message: str = "[menu had errors]"
+
+    def __post_init__(self):
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f"{self.message} {self.custom_message}"
 
 
 @dataclass
@@ -145,15 +153,14 @@ class Menu(BaseWithExceptionHandling):
 
         # validate schema & process menu
         self._validate_menu_schema()
-        self.dataframe = self.dataframe.apply(
-            self._process_menu, axis=1
-        ).sort_values(by=["eat_day"])
+        self.dataframe = self.dataframe.apply(self._process_menu, axis=1)
 
         if len(self.record_exception) > 0:
             cprint("\t" + "\n\t".join(self.record_exception), "green")
             raise MenuIncompleteError(
-                "[menu had errors] will not send to finalize until fixed"
+                custom_message="will not send to finalize until fixed"
             )
+
         self._save_menu()
 
     def get_menu_for_grocery_list(
@@ -179,7 +186,7 @@ class Menu(BaseWithExceptionHandling):
         if len(self.record_exception) > 0:
             cprint("\t" + "\n\t".join(self.record_exception), "green")
             raise MenuIncompleteError(
-                "[menu had errors] will not send to grocery list until fixed"
+                custom_message="will not send to grocery list until fixed"
             )
         return result_dict["ingredient"], result_dict["recipe"]
 
@@ -257,6 +264,7 @@ class Menu(BaseWithExceptionHandling):
         if not isinstance(menu_number, int):
             raise ValueError(f"fixed menu number ({menu_number}) not an int")
 
+    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _check_manual_ingredient(self, row: pd.Series):
         return self.ingredient_formatter.format_manual_ingredient(
             quantity=float(row["eat_factor"]),
@@ -264,8 +272,10 @@ class Menu(BaseWithExceptionHandling):
             item=row["item"],
         )
 
-    def _add_recipe_columns(self, row: pd.Series) -> pd.Series:
-        recipe = self.recipe_book.get_recipe_by_title(row["item"])
+    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
+    def _add_recipe_columns(
+        self, row: pd.Series, recipe: pd.Series
+    ) -> pd.Series:
         row["item"] = recipe.title
         row["rating"] = recipe.rating
         row["time_total"] = recipe.time_total
@@ -342,7 +352,6 @@ class Menu(BaseWithExceptionHandling):
             )
         return combined_menu[~mask_skip_none]
 
-    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _process_menu(self, row: pd.Series):
         FILE_LOGGER.info(
             "[process menu]",
@@ -359,12 +368,12 @@ class Menu(BaseWithExceptionHandling):
 
     def _process_menu_recipe(self, row: pd.Series):
         if row["type"] == "category":
-            row = self._select_random_recipe(
+            return self._select_random_recipe(
                 row, "get_random_recipe_by_category"
             )
         elif row["type"] == "tag":
-            row = self._select_random_recipe(row, "get_random_recipe_by_tag")
-        return self._add_recipe_columns(row)
+            return self._select_random_recipe(row, "get_random_recipe_by_tag")
+        return self._retrieve_recipe(row)
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _retrieve_manual_menu_ingredient(
@@ -377,6 +386,11 @@ class Menu(BaseWithExceptionHandling):
         )
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
+    def _retrieve_recipe(self, row: pd.Series):
+        recipe = self.recipe_book.get_recipe_by_title(row["item"])
+        return self._add_recipe_columns(row=row, recipe=recipe)
+
+    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _retrieve_menu_recipe(self, row: pd.Series) -> MenuRecipe:
         recipe = self.recipe_book.get_recipe_by_title(row["item"])
         return MenuRecipe(
@@ -387,11 +401,12 @@ class Menu(BaseWithExceptionHandling):
             from_recipe=row["item"],
         )
 
+    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _select_random_recipe(self, row: pd.Series, method: str):
         recipe = getattr(self.recipe_book, method)(row["item"])
         row["item"] = recipe.title
         row["type"] = "recipe"
-        return row
+        return self._add_recipe_columns(row=row, recipe=recipe)
 
     def _save_menu(self):
         save_loc = self.config.final_menu
@@ -402,7 +417,7 @@ class Menu(BaseWithExceptionHandling):
         )
         self._validate_finalized_menu_schema()
         self.gsheets_helper.write_worksheet(
-            df=self.dataframe,
+            df=self.dataframe.sort_values(by=["eat_day"]),
             workbook_name=save_loc.workbook,
             worksheet_name=save_loc.worksheet,
         )

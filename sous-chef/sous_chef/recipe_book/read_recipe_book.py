@@ -51,11 +51,23 @@ class RecipeNotFoundError(Exception):
         super().__init__(self.message)
 
     def __str__(self):
-        values = {
-            "recipe_title": self.recipe_title,
-            "search_term": self.search_results,
-        }
-        return f"{self.message}: {values} "
+        return (
+            f"{self.message} recipe={self.recipe_title} "
+            f"search_results=[{self.search_results}]"
+        )
+
+
+# TODO once recipes better parsed, remove & make total_time not null
+@dataclass
+class RecipeTotalTimeUndefinedError(Exception):
+    recipe_title: str
+    message: str = "[recipe total time undefined]"
+
+    def __post_init__(self):
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f"{self.message}: recipe={self.recipe_title}"
 
 
 class SelectRandomRecipeError(DirectSearchError):
@@ -111,6 +123,7 @@ class RecipeBook(DataframeSearchable):
     def get_recipe_by_title(self, title) -> pd.Series:
         try:
             recipe = self.retrieve_match(field="title", search_term=title)
+            self._check_total_time(recipe)
             if (self.menu_history is not None) and (
                 recipe.uuid in self.menu_history.uuid.values
             ):
@@ -120,6 +133,11 @@ class RecipeBook(DataframeSearchable):
             return recipe
         except FuzzySearchError as e:
             raise RecipeNotFoundError(recipe_title=title, search_results=str(e))
+
+    @staticmethod
+    def _check_total_time(recipe: pd.Series):
+        if recipe.time_total is pd.NaT:
+            raise RecipeTotalTimeUndefinedError(recipe_title=recipe.title)
 
     @staticmethod
     def _flatten_dict_to_list(cell: list[dict]) -> list[str]:
@@ -201,7 +219,9 @@ class RecipeBook(DataframeSearchable):
                 .fillna(0)
                 .replace(0, config_random.default_rating)
             )
-            return result_df.sample(n=1, weights=weighting).iloc[0]
+            random_recipe = result_df.sample(n=1, weights=weighting).iloc[0]
+            self._check_total_time(random_recipe)
+            return random_recipe
         raise SelectRandomRecipeError(field=field, search_term=search_term)
 
     def _select_highest_rated_when_duplicated_name(self):

@@ -4,7 +4,7 @@ from sous_chef.recipe_book.read_recipe_book import Recipe
 
 def create_recipe(
     title: str = "dummy_title",
-    rating: float = 0.0,
+    rating: float = 3.0,
     time_total_str: str = "5 minutes",
     ingredients: str = "1 dummy ingredient",
     factor: float = 1.0,

@@ -315,7 +315,7 @@ class Menu(BaseWithExceptionHandling):
 
     def _inspect_unrated_recipe(self, recipe: pd.Series):
         if self.config.run_mode.with_inspect_unrated_recipe:
-            if recipe.rating == 0.0:
+            if pd.isna(recipe.rating):
                 FILE_LOGGER.warning(
                     "[unrated recipe]",
                     action="print out ingredients",

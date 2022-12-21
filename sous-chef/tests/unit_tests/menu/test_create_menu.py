@@ -54,7 +54,7 @@ class MenuBuilder:
         loaded_fixed_menu: bool = True,
         # after recipe/ingredient matched
         post_process_recipe: bool = False,
-        rating: float = np.nan,
+        rating: float = 3.0,  # np.nan, if unrated
         time_total_str: str = np.nan,
     ) -> Union[
         DataFrame, DataFrameBase[MenuSchema], DataFrameBase[FinalizedMenuSchema]
@@ -62,8 +62,6 @@ class MenuBuilder:
         if item_type == "recipe":
             if time_total_str is np.nan:
                 time_total_str = "5 min"
-            if rating is np.nan:
-                rating = 0.0
 
         menu = {
             "weekday": "work_day_2",
@@ -297,7 +295,7 @@ class TestMenu:
         assert menu._get_cook_day_as_weekday(cook_day) == expected_week_day
 
     @staticmethod
-    @pytest.mark.parametrize("rating", [0.0])
+    @pytest.mark.parametrize("rating", [np.nan])
     def test__inspect_unrated_recipe(
         capsys,
         log,
@@ -322,7 +320,7 @@ class TestMenu:
         assert err == ""
 
     @staticmethod
-    @pytest.mark.parametrize("rating", [0.0])
+    @pytest.mark.parametrize("rating", [np.nan])
     def test__inspect_unrated_recipe_turned_off(
         capsys,
         log,
@@ -434,12 +432,6 @@ class TestMenu:
                 "day": "Friday",
                 "item": f"dummy_{item_type}",
                 "type": item_type,
-            },
-            {
-                "event": "[unrated recipe]",
-                "level": "warning",
-                "action": "print out ingredients",
-                "recipe_title": "dummy_recipe",
             },
         ]
 

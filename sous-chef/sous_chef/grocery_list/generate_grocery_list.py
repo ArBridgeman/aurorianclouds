@@ -117,9 +117,7 @@ class GroceryList:
                         chain.from_iterable([row.from_recipe, row.for_day_str])
                     )
                     + ["prep"],
-                    due_date=self.due_date_formatter.get_due_datetime_with_time(
-                        weekday=row.weekday, hour=row.hour, minute=row.minute
-                    ),
+                    due_date=row.due_date,
                     priority=self.config.preparation.task_priority,
                 )
 
@@ -201,18 +199,14 @@ class GroceryList:
     def _add_preparation_task_to_queue(
         self,
         task: str,
-        weekday: str,
-        hour: int,
-        minute: int,
+        due_date: datetime,
         from_recipe: List[str],
         for_day_str: List[str],
     ):
         preparation_task = pd.DataFrame(
             {
                 "task": [task],
-                "weekday": [weekday],
-                "hour": [hour],
-                "minute": [minute],
+                "due_date": [due_date],
                 "from_recipe": [from_recipe],
                 "for_day_str": [for_day_str],
             }
@@ -233,7 +227,7 @@ class GroceryList:
                 response = input(f"\n{text} [Y/N] ").upper()
             return response
 
-        def _get_schedule_day_hour_minute():
+        def _get_schedule_day_hour_minute() -> datetime:
             day = None
             while day not in Weekday.name_list("capitalize"):
                 day = input("\nWeekday: ").capitalize()
@@ -243,7 +237,9 @@ class GroceryList:
             while meal_time not in meal_times:
                 meal_time = input(f"\nMealtime {meal_times}: ").lower()
             meal_time = MealTime[meal_time].value
-            return day, meal_time["hour"], meal_time["minute"]
+            return self.due_date_formatter.get_due_datetime_with_time(
+                weekday=day, hour=meal_time["hour"], minute=meal_time["minute"]
+            )
 
         def _give_referenced_recipe_details():
             total_factor = menu_recipe.eat_factor + menu_recipe.freeze_factor
@@ -281,16 +277,9 @@ class GroceryList:
                             )
                             == "Y"
                         ):
-                            (
-                                weekday,
-                                hour,
-                                minute,
-                            ) = _get_schedule_day_hour_minute()
                             self._add_preparation_task_to_queue(
                                 f"[PREP] {recipe.amount}",
-                                weekday=weekday,
-                                hour=hour,
-                                minute=minute,
+                                due_date=_get_schedule_day_hour_minute(),
                                 from_recipe=[from_recipe],
                                 for_day_str=[
                                     menu_sub_recipe.for_day.strftime("%a")
@@ -420,9 +409,11 @@ class GroceryList:
             task=self._format_bean_prep_task_str(
                 row, config_bean.number_can_to_freeze
             ),
-            weekday=config_bean_prep.prep_day,
-            hour=config_bean_prep.prep_hour,
-            minute=0,
+            due_date=self.due_date_formatter.replace_time_with_meal_time(
+                due_date=row.for_day
+                - timedelta(days=config_bean_prep.prep_day_before),
+                meal_time=config_bean_prep.prep_meal,
+            ),
             from_recipe=row.from_recipe,
             for_day_str=row.for_day.strftime("%a"),
         )

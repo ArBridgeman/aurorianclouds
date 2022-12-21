@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from itertools import chain
 from typing import List
 
@@ -37,7 +37,7 @@ class GroceryList:
     queue_preparation: pd.DataFrame = None
     grocery_list_raw: pd.DataFrame = None
     grocery_list: pd.DataFrame = None
-    second_shopping_date: datetime = field(init=False)
+    second_shopping_date: date = field(init=False)
     second_shopping_day_group: List = field(init=False)
     has_errors: bool = False
 
@@ -45,7 +45,7 @@ class GroceryList:
         self.second_shopping_date = (
             self.due_date_formatter.get_date_relative_to_anchor(
                 self.config.shopping.secondary_day
-            )
+            ).date()
         )
         self.second_shopping_day_group = self.config.shopping.secondary_group
 
@@ -395,7 +395,7 @@ class GroceryList:
     def _get_on_second_shopping_day(
         self, for_day: datetime, food_group: str
     ) -> bool:
-        return (for_day >= self.second_shopping_date) and (
+        return (for_day.date() >= self.second_shopping_date) and (
             food_group.casefold() in self.second_shopping_day_group
         )
 

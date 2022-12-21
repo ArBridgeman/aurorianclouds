@@ -223,19 +223,36 @@ class Menu(BaseWithExceptionHandling):
         tasks = []
         project_id = todoist_helper.get_project_id(project_name)
 
-        def _add_task(task_name: str, task_due_date: datetime.datetime):
+        def _add_task(
+            task_name: str,
+            task_due_date: Union[datetime.date, datetime.datetime] = None,
+            parent_id: str = None,
+        ):
             task_object = todoist_helper.add_task_to_project(
                 task=task_name,
                 project=project_name,
                 project_id=project_id,
                 due_date=task_due_date,
                 priority=self.config.todoist.task_priority,
+                parent_id=parent_id,
             )
             tasks.append(task_object)
+            return task_object
+
+        calendar_week = self.due_date_formatter.get_calendar_week()
+        edit_task = _add_task(
+            task_name=f"edit recipes from week #{calendar_week}",
+            task_due_date=self.due_date_formatter.get_anchor_date()
+            + timedelta(days=7),
+        )
 
         for _, row in self.dataframe.iterrows():
             task, due_date = self._format_task_and_due_date_list(row)
             _add_task(task_name=task, task_due_date=due_date)
+
+            if row["type"] == "recipe":
+                _add_task(task_name=row["item"], parent_id=edit_task.id)
+
             if row.eat_day != row.make_day:
                 _add_task(
                     task_name=f"[PREP] {task}", task_due_date=row.make_day

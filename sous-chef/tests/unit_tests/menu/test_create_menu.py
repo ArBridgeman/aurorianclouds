@@ -194,7 +194,9 @@ class TestMenu:
             recipe_without_time_total
         )
 
-        result = menu._add_recipe_columns(row.copy(deep=True))
+        result = menu._add_recipe_columns(
+            row.copy(deep=True), recipe_without_time_total
+        )
 
         assert result["item"] == recipe_without_time_total.title
         # assert_equal_series(result["time_total"] is pd.NaT

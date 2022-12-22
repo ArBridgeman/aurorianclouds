@@ -267,28 +267,6 @@ class TestMenu:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "time_total,expected_result",
-        [
-            ("", 20),
-            (None, 20),
-            ("nan", 20),
-            (np.Inf, 20),
-            (np.nan, 20),
-            # expected type from recipe book
-            (pd.NaT, 20),
-            (datetime.timedelta(seconds=25), 0),
-            (datetime.timedelta(minutes=-25), 20),
-            (datetime.timedelta(minutes=25), 25),
-            (datetime.timedelta(hours=1, minutes=25), 85),
-        ],
-    )
-    def test__get_cooking_time_min_default_time(
-        menu, time_total, expected_result
-    ):
-        assert menu._get_cooking_time_min(time_total) == expected_result
-
-    @staticmethod
-    @pytest.mark.parametrize(
         "cook_day,expected_week_day", [("weekend_1", "Saturday")]
     )
     def test__get_cook_day_as_weekday(menu, cook_day, expected_week_day):
@@ -340,7 +318,7 @@ class TestMenu:
     @staticmethod
     @pytest.mark.parametrize(
         "recipe_title,time_total_str",
-        [("garlic aioli", "5 minutes"), ("banana souffle", "1 hour 4 minutes")],
+        [("garlic aioli", "5 minutes"), ("banana souffle", "30 minutes")],
     )
     def test__process_menu_recipe(
         menu, menu_builder, mock_recipe_book, recipe_title, time_total_str

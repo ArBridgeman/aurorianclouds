@@ -239,10 +239,6 @@ class Menu(BaseWithExceptionHandling):
             .reset_index(drop=True)
         )
 
-        tmp_df.time_total = tmp_df.time_total.apply(
-            lambda value: self._get_cooking_time_min(value, default_time=pd.NaT)
-        )
-
         calendar_week = self.due_date_formatter.get_calendar_week()
         subject = f"[sous_chef_menu] week {calendar_week}"
         gmail_helper.send_dataframe_in_email(subject, tmp_df)
@@ -395,30 +391,24 @@ class Menu(BaseWithExceptionHandling):
                 recipe_title=recipe.title, error_text=error_text
             )
 
+    @staticmethod
     def _format_task_and_due_date_list(
-        self, row: pd.Series
+        row: pd.Series,
     ) -> (str, datetime.datetime):
-        # TODO move default cook time to config?
-        cooking_time_min = self._get_cooking_time_min(row.time_total)
+        time_total = 20  # default for ingredients
+        if row["type"] == "recipe":
+            time_total = int(row.time_total.total_seconds() / 60)
 
         factor_str = f"x eat: {row.eat_factor}"
         if row.freeze_factor > 0:
             factor_str += f", x freeze: {row.freeze_factor}"
-        task_str = f"{row['item']} ({factor_str}) [{cooking_time_min} min]"
+        task_str = f"{row['item']} ({factor_str}) [{time_total} min]"
 
         make_time = row.eat_day
         if row.make_day == row.eat_day:
-            make_time -= timedelta(minutes=cooking_time_min)
+            make_time -= timedelta(minutes=time_total)
 
         return task_str, make_time
-
-    @staticmethod
-    def _get_cooking_time_min(time_total: timedelta, default_time: int = 20):
-        if not isinstance(time_total, timedelta):
-            return default_time
-        if (cook_time := int(time_total.total_seconds() / 60)) < 0:
-            return default_time
-        return cook_time
 
     def _get_cook_day_as_weekday(self, cook_day: str):
         if cook_day in self.cook_days:

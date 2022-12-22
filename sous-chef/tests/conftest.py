@@ -3,9 +3,10 @@ from unittest.mock import Mock, patch
 
 import pandas as pd
 import pytest
+from abstract.extended_enum import ExtendedEnum
 from freezegun import freeze_time
 from hydra import compose, initialize
-from sous_chef.date.get_due_date import DueDatetimeFormatter, ExtendedEnum
+from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
 from sous_chef.formatter.ingredient.get_ingredient_field import IngredientField

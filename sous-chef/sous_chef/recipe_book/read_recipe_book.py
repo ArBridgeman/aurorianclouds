@@ -6,6 +6,7 @@ from typing import Callable
 
 import pandas as pd
 import pandera as pa
+from abstract.extended_enum import ExtendedEnum, extend_enum
 from pandera.typing import Series
 from sous_chef.abstract.pandas_util import get_dict_from_columns
 from sous_chef.abstract.search_dataframe import (
@@ -13,7 +14,10 @@ from sous_chef.abstract.search_dataframe import (
     DirectSearchError,
     FuzzySearchError,
 )
-from sous_chef.menu.record_menu_history import MenuHistoryError
+from sous_chef.menu.record_menu_history import (
+    MapMenuHistoryErrorToException,
+    MenuHistoryError,
+)
 from structlog import get_logger
 
 HOME_PATH = str(Path.home())
@@ -74,6 +78,12 @@ class SelectRandomRecipeError(DirectSearchError):
     message = "[select random recipe failed]"
 
 
+@extend_enum([MapMenuHistoryErrorToException])
+class MapRecipeErrorToException(ExtendedEnum):
+    recipe_not_found = RecipeNotFoundError
+    recipe_total_time_undefined = RecipeTotalTimeUndefinedError
+
+
 class Recipe(pa.SchemaModel):
     title: Series[str] = pa.Field(nullable=False)
     time_preparation: Series[pd.Timedelta] = pa.Field(
@@ -127,9 +137,7 @@ class RecipeBook(DataframeSearchable):
             if (self.menu_history is not None) and (
                 recipe.uuid in self.menu_history.uuid.values
             ):
-                raise MenuHistoryError(
-                    f"[recipe in recent history] recipe={recipe.title}"
-                )
+                raise MenuHistoryError(recipe_title=recipe.title)
             return recipe
         except FuzzySearchError as e:
             raise RecipeNotFoundError(recipe_title=title, search_results=str(e))

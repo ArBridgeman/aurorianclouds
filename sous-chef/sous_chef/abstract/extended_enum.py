@@ -1,4 +1,18 @@
 from enum import Enum, IntEnum
+from typing import List
+
+
+def extend_enum(inherited_enums: List):
+    def wrapper(added_enum):
+        joined = {}
+        for inherited_enum in inherited_enums:
+            for item in inherited_enum:
+                joined[item.name] = item.value
+            for item in added_enum:
+                joined[item.name] = item.value
+        return Enum(added_enum.__name__, joined)
+
+    return wrapper
 
 
 class ExtendedEnum(Enum):

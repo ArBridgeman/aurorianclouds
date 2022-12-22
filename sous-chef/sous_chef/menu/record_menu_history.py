@@ -4,18 +4,31 @@ from typing import List
 
 import pandas as pd
 import pandera as pa
-from omegaconf import DictConfig
-from pandera.typing import DataFrame, Series
 
 # from sous_chef.menu.create_menu import FinalizedMenuSchema
+from abstract.extended_enum import ExtendedEnum
+from omegaconf import DictConfig
+from pandera.typing import DataFrame, Series
 from sous_chef.messaging.gsheets_api import GsheetsHelper
 from structlog import get_logger
 
 FILE_LOGGER = get_logger(__name__)
 
 
+@dataclass
 class MenuHistoryError(Exception):
-    pass
+    recipe_title: str
+    message: str = "[in recent menu history]"
+
+    def __post_init__(self):
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f"{self.message} recipe={self.recipe_title}"
+
+
+class MapMenuHistoryErrorToException(ExtendedEnum):
+    recipe_in_recent_menu_history = MenuHistoryError
 
 
 class MenuHistory(pa.SchemaModel):

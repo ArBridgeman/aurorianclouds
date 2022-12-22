@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from fractions import Fraction
 
 import regex
+from abstract.extended_enum import ExtendedEnum
 from pint import Unit
 from sous_chef.formatter.format_unit import UnitExtractionError, UnitFormatter
 
@@ -15,7 +16,11 @@ class LineParsingError(Exception):
         super().__init__(self.message)
 
     def __str__(self):
-        return f"{self.message}: text={self.line}"
+        return f"{self.message} text={self.line}"
+
+
+class MapLineErrorToException(ExtendedEnum):
+    ingredient_line_parsing_error = LineParsingError
 
 
 @dataclass

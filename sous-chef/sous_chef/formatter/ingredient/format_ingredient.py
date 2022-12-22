@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 import regex
+from abstract.extended_enum import ExtendedEnum
 from omegaconf import DictConfig
 from pint import Unit
 from sous_chef.abstract.search_dataframe import FuzzySearchError
@@ -98,6 +99,12 @@ class PantrySearchError(IngredientError):
 @dataclass
 class BadIngredientError(IngredientError):
     message: str = "[bad ingredient]"
+
+
+class MapIngredientErrorToException(ExtendedEnum):
+    no_ingredient_found_in_line = EmptyIngredientError
+    pantry_ingredient_not_known = PantrySearchError
+    ingredient_marked_as_bad = BadIngredientError
 
 
 @dataclass

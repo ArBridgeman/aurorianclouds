@@ -1,13 +1,34 @@
 from dataclasses import dataclass
 from typing import List
 
+from abstract.extended_enum import ExtendedEnum, extend_enum
 from omegaconf import DictConfig
 from sous_chef.abstract.handle_exception import BaseWithExceptionHandling
-from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
-from sous_chef.recipe_book.read_recipe_book import RecipeBook
+from sous_chef.formatter.ingredient.format_ingredient import (
+    IngredientFormatter,
+    MapIngredientErrorToException,
+)
+from sous_chef.formatter.ingredient.format_line_abstract import (
+    MapLineErrorToException,
+)
+from sous_chef.recipe_book.read_recipe_book import (
+    MapRecipeErrorToException,
+    RecipeBook,
+)
 from structlog import get_logger
 
 FILE_LOGGER = get_logger(__name__)
+
+
+@extend_enum(
+    [
+        MapIngredientErrorToException,
+        MapLineErrorToException,
+        MapRecipeErrorToException,
+    ]
+)
+class MapIngredientFieldErrorToException(ExtendedEnum):
+    pass
 
 
 @dataclass
@@ -19,7 +40,10 @@ class IngredientField(BaseWithExceptionHandling):
     referenced_recipe_list: List = None
 
     def __post_init__(self):
-        self.set_tuple_log_and_skip_exception_from_config(self.config.errors)
+        self.set_tuple_log_and_skip_exception_from_config(
+            config_errors=self.config.errors,
+            exception_mapper=MapIngredientFieldErrorToException,
+        )
 
     def parse_ingredient_field(self, ingredient_field):
         self.ingredient_list = []

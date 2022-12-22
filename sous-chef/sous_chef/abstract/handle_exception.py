@@ -3,27 +3,6 @@ from typing import Callable, List, Tuple
 
 from abstract.extended_enum import ExtendedEnum
 from omegaconf import DictConfig
-from sous_chef.formatter.ingredient.format_ingredient import (
-    BadIngredientError,
-    EmptyIngredientError,
-    PantrySearchError,
-)
-from sous_chef.formatter.ingredient.format_line_abstract import LineParsingError
-from sous_chef.menu.record_menu_history import MenuHistoryError
-from sous_chef.recipe_book.read_recipe_book import (
-    RecipeNotFoundError,
-    RecipeTotalTimeUndefinedError,
-)
-
-
-class MapErrorToException(ExtendedEnum):
-    recipe_not_found = RecipeNotFoundError
-    recipe_in_recent_menu_history = MenuHistoryError
-    recipe_total_time_undefined = RecipeTotalTimeUndefinedError
-    ingredient_line_parsing_error = LineParsingError
-    no_ingredient_found_in_line = EmptyIngredientError
-    pantry_ingredient_not_known = PantrySearchError
-    ingredient_marked_as_bad = BadIngredientError
 
 
 @dataclass
@@ -34,14 +13,14 @@ class BaseWithExceptionHandling(object):
     tuple_skip_exception: Tuple = field(default=None, init=False)
 
     def set_tuple_log_and_skip_exception_from_config(
-        self, config_errors: DictConfig
+        self, config_errors: DictConfig, exception_mapper: ExtendedEnum
     ):
         tuple_log_exception = []
         tuple_skip_exception = []
         for error, what_to_do in config_errors.items():
             if what_to_do == "raise":
                 continue
-            exception = MapErrorToException[error].value
+            exception = exception_mapper[error].value
             if what_to_do == "log":
                 tuple_log_exception.append(exception)
             elif what_to_do == "skip":

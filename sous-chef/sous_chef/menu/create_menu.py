@@ -7,6 +7,7 @@ from typing import List, Union
 
 import pandas as pd
 import pandera as pa
+from abstract.extended_enum import ExtendedEnum, extend_enum
 from omegaconf import DictConfig
 from pandera.typing import Series
 from pandera.typing.common import DataFrameBase
@@ -15,11 +16,19 @@ from sous_chef.date.get_due_date import DueDatetimeFormatter, MealTime, Weekday
 from sous_chef.formatter.ingredient.format_ingredient import (
     Ingredient,
     IngredientFormatter,
+    MapIngredientErrorToException,
+)
+from sous_chef.formatter.ingredient.format_line_abstract import (
+    MapLineErrorToException,
 )
 from sous_chef.messaging.gmail_api import GmailHelper
 from sous_chef.messaging.gsheets_api import GsheetsHelper
 from sous_chef.messaging.todoist_api import TodoistHelper
-from sous_chef.recipe_book.read_recipe_book import Recipe, RecipeBook
+from sous_chef.recipe_book.read_recipe_book import (
+    MapRecipeErrorToException,
+    Recipe,
+    RecipeBook,
+)
 from structlog import get_logger
 from termcolor import cprint
 from todoist_api_python.models import Task
@@ -39,6 +48,17 @@ class MenuIncompleteError(Exception):
 
     def __str__(self):
         return f"{self.message} {self.custom_message}"
+
+
+@extend_enum(
+    [
+        MapIngredientErrorToException,
+        MapLineErrorToException,
+        MapRecipeErrorToException,
+    ]
+)
+class MapMenuErrorToException(ExtendedEnum):
+    pass
 
 
 @dataclass
@@ -109,7 +129,10 @@ class Menu(BaseWithExceptionHandling):
 
     def __post_init__(self):
         self.cook_days = self.config.fixed.cook_days
-        self.set_tuple_log_and_skip_exception_from_config(self.config.errors)
+        self.set_tuple_log_and_skip_exception_from_config(
+            config_errors=self.config.errors,
+            exception_mapper=MapMenuErrorToException,
+        )
 
     def finalize_fixed_menu(self):
         self.record_exception = []

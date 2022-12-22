@@ -2,12 +2,18 @@ create_menu:
   input_method:
   output_method: temp
   prep_meal_time: dinner
+  quality_check:
+    recipe_rating_min: 3.0
+    workday:
+      recipe_unrated_allowed: true
+      cook_active_minutes_max: 30
   errors: # raise, log, or skip
     recipe_not_found: raise
     recipe_total_time_undefined: raise
     recipe_in_recent_menu_history: raise
     pantry_ingredient_not_known: raise
     ingredient_marked_as_bad: raise
+    menu_quality_check: raise
   todoist:
     project_name: Menu
     remove_existing_task: false

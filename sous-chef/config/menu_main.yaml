@@ -21,6 +21,7 @@ menu:
       recipe_in_recent_menu_history: log
       pantry_ingredient_not_known: log
       ingredient_marked_as_bad: log
+      menu_quality_check: log
     todoist:
       remove_existing_task: true
   run_mode:

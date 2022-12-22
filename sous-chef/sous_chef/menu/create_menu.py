@@ -50,6 +50,21 @@ class MenuIncompleteError(Exception):
         return f"{self.message} {self.custom_message}"
 
 
+@dataclass
+class MenuQualityError(Exception):
+    error_text: str
+    recipe_title: str
+    message: str = "[menu quality]"
+
+    def __post_init__(self):
+        super().__init__(self.message)
+
+    def __str__(self):
+        return (
+            f"{self.message} recipe={self.recipe_title} error={self.error_text}"
+        )
+
+
 @extend_enum(
     [
         MapIngredientErrorToException,
@@ -58,7 +73,7 @@ class MenuIncompleteError(Exception):
     ]
 )
 class MapMenuErrorToException(ExtendedEnum):
-    pass
+    menu_quality_check = MenuQualityError
 
 
 @dataclass
@@ -312,10 +327,11 @@ class Menu(BaseWithExceptionHandling):
             item=row["item"],
         )
 
-    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _add_recipe_columns(
         self, row: pd.Series, recipe: pd.Series
     ) -> pd.Series:
+        self._check_menu_quality(weekday=row.make_day.weekday(), recipe=recipe)
+
         row["item"] = recipe.title
         row["rating"] = recipe.rating
         row["time_total"] = recipe.time_total
@@ -323,6 +339,61 @@ class Menu(BaseWithExceptionHandling):
         # TODO remove/replace once recipes easily viewable in UI
         self._inspect_unrated_recipe(recipe)
         return row
+
+    def _check_menu_quality(self, weekday: int, recipe: pd.Series):
+        quality_check_config = self.config.quality_check
+
+        self._ensure_rating_exceed_min(
+            recipe=recipe,
+            recipe_rating_min=float(quality_check_config.recipe_rating_min),
+        )
+
+        # workday = weekday
+        if weekday < 5:
+            if not quality_check_config.workday.recipe_unrated_allowed:
+                self._ensure_workday_not_unrated_recipe()
+            self._ensure_workday_not_exceed_active_cook_time(
+                recipe=recipe,
+                cook_active_minutes_max=float(
+                    quality_check_config.workday.cook_active_minutes_max
+                ),
+            )
+
+    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
+    def _ensure_rating_exceed_min(
+        self, recipe: pd.Series, recipe_rating_min: float
+    ):
+        if not pd.isna(recipe.rating) and (recipe.rating < recipe_rating_min):
+            raise MenuQualityError(
+                recipe_title=recipe.title,
+                error_text=f"rating={recipe.rating} < {recipe_rating_min}",
+            )
+
+    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
+    def _ensure_workday_not_unrated_recipe(self, recipe: pd.Series):
+        if pd.isna(recipe.rating):
+            raise MenuQualityError(
+                recipe_title=recipe.title,
+                error_text="(on workday) unrated recipe",
+            )
+
+    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
+    def _ensure_workday_not_exceed_active_cook_time(
+        self, recipe: pd.Series, cook_active_minutes_max: float
+    ):
+        time_total = recipe.time_total
+        if recipe.time_inactive is not pd.NaT:
+            time_total -= recipe.time_inactive
+        cook_active_minutes = time_total.total_seconds() / 60
+        if cook_active_minutes > cook_active_minutes_max:
+            error_text = (
+                "(on workday) "
+                f"cook_active_minutes={cook_active_minutes} > "
+                f"{cook_active_minutes_max}"
+            )
+            raise MenuQualityError(
+                recipe_title=recipe.title, error_text=error_text
+            )
 
     def _format_task_and_due_date_list(
         self, row: pd.Series

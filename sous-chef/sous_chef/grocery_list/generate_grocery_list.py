@@ -330,6 +330,7 @@ class GroceryList:
             store=("store", "first"),
             barcode=("barcode", "first"),
             from_recipe=("from_recipe", lambda x: list(set(x))),
+            for_day=("for_day", "min"),
             for_day_str=("for_day_str", lambda x: list(set(x))),
             get_on_second_shopping_day=("get_on_second_shopping_day", "first"),
         )

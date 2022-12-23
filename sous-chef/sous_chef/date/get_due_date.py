@@ -73,8 +73,11 @@ class DueDatetimeFormatter:
     def _get_anchor_date_at_midnight(weekday: str) -> datetime.datetime:
         weekday_index = get_weekday_index(weekday)
         today = datetime.date.today()
+        today_index = today.weekday()
+        if today_index > weekday_index:
+            weekday_index += 6
         anchor_date = today + datetime.timedelta(
-            days=max(0, weekday_index - today.weekday())
+            days=weekday_index - today_index
         )
         return datetime.datetime.combine(
             anchor_date, datetime.datetime.min.time(), tzinfo=timezone("UTC")

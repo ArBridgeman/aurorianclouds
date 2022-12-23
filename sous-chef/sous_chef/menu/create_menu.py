@@ -3,7 +3,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
-from typing import List, Union
+from typing import List, Optional, Union
 
 import pandas as pd
 import pandera as pa
@@ -110,6 +110,9 @@ class MenuSchema(pa.SchemaModel):
     defrost: Series[str] = pa.Field(
         isin=["Y", "N"], nullable=False, coerce=True
     )
+    override_check: Optional[Series[str]] = pa.Field(
+        isin=["Y", "N"], nullable=False, coerce=True
+    )
     item: Series[str]
 
     class Config:
@@ -173,6 +176,12 @@ class Menu(BaseWithExceptionHandling):
         self.dataframe.defrost = self.dataframe.defrost.replace(
             "", "N"
         ).str.upper()
+        if "override_check" in self.dataframe.columns:
+            self.dataframe.override_check = (
+                self.dataframe.override_check.fillna("")
+                .replace("", "N")
+                .str.upper()
+            )
 
         # add eat_day and make_day, drop prep_day
         self.dataframe.prep_day_before = self.dataframe.prep_day_before.replace(
@@ -199,6 +208,7 @@ class Menu(BaseWithExceptionHandling):
                 custom_message="will not send to finalize until fixed"
             )
 
+        self.dataframe.drop(columns=["override_check"], inplace=True)
         self._save_menu()
 
     def get_menu_for_grocery_list(
@@ -326,7 +336,10 @@ class Menu(BaseWithExceptionHandling):
     def _add_recipe_columns(
         self, row: pd.Series, recipe: pd.Series
     ) -> pd.Series:
-        self._check_menu_quality(weekday=row.make_day.weekday(), recipe=recipe)
+        if "override_check" in row.keys() and row.override_check == "N":
+            self._check_menu_quality(
+                weekday=row.make_day.weekday(), recipe=recipe
+            )
 
         row["item"] = recipe.title
         row["rating"] = recipe.rating

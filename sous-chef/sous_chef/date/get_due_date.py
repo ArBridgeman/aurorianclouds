@@ -74,10 +74,10 @@ class DueDatetimeFormatter:
         weekday_index = get_weekday_index(weekday)
         today = datetime.date.today()
         today_index = today.weekday()
-        if today_index > weekday_index:
-            weekday_index += 6
+        if today_index >= weekday_index:
+            weekday_index += 7
         anchor_date = today + datetime.timedelta(
-            days=weekday_index - today_index
+            days=weekday_index - today_index - 1
         )
         return datetime.datetime.combine(
             anchor_date, datetime.datetime.min.time(), tzinfo=timezone("UTC")

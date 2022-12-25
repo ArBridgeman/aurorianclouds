@@ -62,7 +62,7 @@ def create_ingredient_and_grocery_entry_raw(
     recipe_factor: float = 1.0,
     from_recipe: str = "dummy recipe",
     for_day: datetime.datetime = datetime.datetime(
-        year=2022, month=1, day=20, tzinfo=timezone("UTC")
+        year=2022, month=1, day=27, tzinfo=timezone("UTC")
     ),
     for_day_str: str = "Thu",
     # frozen anchor date is Friday & second group includes vegetables
@@ -113,7 +113,7 @@ def create_menu_recipe(
     eat_factor: float = 1.0,
     freeze_factor: float = 0.0,
     for_day=datetime.datetime(
-        year=2022, month=1, day=20, tzinfo=timezone("UTC")
+        year=2022, month=1, day=27, tzinfo=timezone("UTC")
     ),
     recipe=None,
 ):
@@ -246,7 +246,7 @@ class TestGroceryList:
         [
             (
                 datetime.datetime(
-                    year=2022, month=1, day=17, tzinfo=timezone("UTC")
+                    year=2022, month=1, day=24, tzinfo=timezone("UTC")
                 ),
                 "vegetables",
                 False,
@@ -256,22 +256,22 @@ class TestGroceryList:
                     year=2022, month=1, day=21, tzinfo=timezone("UTC")
                 ),
                 "vegetables",
-                True,
+                False,
             ),  # Friday
             (
                 datetime.datetime(
-                    year=2022, month=1, day=22, tzinfo=timezone("UTC")
+                    year=2022, month=1, day=27, tzinfo=timezone("UTC")
                 ),
                 "Vegetables",
                 True,
-            ),  # Saturday
+            ),  # Thursday
             (
                 datetime.datetime(
-                    year=2022, month=1, day=22, tzinfo=timezone("UTC")
+                    year=2022, month=1, day=27, tzinfo=timezone("UTC")
                 ),
                 "Fruits",
                 False,
-            ),  # Saturday
+            ),  # Thursday
         ],
     )
     def test__get_on_second_shopping_day(
@@ -283,6 +283,7 @@ class TestGroceryList:
     ):
         # only vegetable entries on Fri., Sat., Sun. should be true
         assert (
+            # 2022-01-27
             grocery_list._get_on_second_shopping_day(for_day, food_group)
             == expected_result
         )

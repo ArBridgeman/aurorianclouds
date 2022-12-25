@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from fractions import Fraction
 
 import regex
-from abstract.extended_enum import ExtendedEnum
 from pint import Unit
+from sous_chef.abstract.extended_enum import ExtendedEnum
 from sous_chef.formatter.format_unit import UnitExtractionError, UnitFormatter
 
 

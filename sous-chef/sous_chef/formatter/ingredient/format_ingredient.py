@@ -2,9 +2,9 @@ from dataclasses import dataclass
 
 import pandas as pd
 import regex
-from abstract.extended_enum import ExtendedEnum
 from omegaconf import DictConfig
 from pint import Unit
+from sous_chef.abstract.extended_enum import ExtendedEnum
 from sous_chef.abstract.search_dataframe import FuzzySearchError
 from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_line_abstract import LineFormatter

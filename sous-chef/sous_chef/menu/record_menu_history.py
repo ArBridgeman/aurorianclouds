@@ -4,11 +4,11 @@ from typing import List
 
 import pandas as pd
 import pandera as pa
-
-# from sous_chef.menu.create_menu import FinalizedMenuSchema
-from abstract.extended_enum import ExtendedEnum
 from omegaconf import DictConfig
 from pandera.typing import DataFrame, Series
+
+# from sous_chef.menu.create_menu import FinalizedMenuSchema
+from sous_chef.abstract.extended_enum import ExtendedEnum
 from sous_chef.messaging.gsheets_api import GsheetsHelper
 from structlog import get_logger
 

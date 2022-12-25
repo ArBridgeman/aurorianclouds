@@ -7,10 +7,10 @@ from typing import List, Optional, Union
 
 import pandas as pd
 import pandera as pa
-from abstract.extended_enum import ExtendedEnum, extend_enum
 from omegaconf import DictConfig
 from pandera.typing import Series
 from pandera.typing.common import DataFrameBase
+from sous_chef.abstract.extended_enum import ExtendedEnum, extend_enum
 from sous_chef.abstract.handle_exception import BaseWithExceptionHandling
 from sous_chef.date.get_due_date import DueDatetimeFormatter, MealTime, Weekday
 from sous_chef.formatter.ingredient.format_ingredient import (

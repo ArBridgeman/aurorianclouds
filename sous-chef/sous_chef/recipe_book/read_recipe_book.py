@@ -6,8 +6,8 @@ from typing import Callable
 
 import pandas as pd
 import pandera as pa
-from abstract.extended_enum import ExtendedEnum, extend_enum
 from pandera.typing import Series
+from sous_chef.abstract.extended_enum import ExtendedEnum, extend_enum
 from sous_chef.abstract.pandas_util import get_dict_from_columns
 from sous_chef.abstract.search_dataframe import (
     DataframeSearchable,

@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Callable, List, Tuple
 
-from abstract.extended_enum import ExtendedEnum
 from omegaconf import DictConfig
+from sous_chef.abstract.extended_enum import ExtendedEnum
 
 
 @dataclass

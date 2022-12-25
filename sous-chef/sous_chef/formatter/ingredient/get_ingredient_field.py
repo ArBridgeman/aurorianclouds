@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import List
 
-from abstract.extended_enum import ExtendedEnum, extend_enum
 from omegaconf import DictConfig
+from sous_chef.abstract.extended_enum import ExtendedEnum, extend_enum
 from sous_chef.abstract.handle_exception import BaseWithExceptionHandling
 from sous_chef.formatter.ingredient.format_ingredient import (
     IngredientFormatter,

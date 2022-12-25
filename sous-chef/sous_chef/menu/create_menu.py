@@ -122,15 +122,15 @@ class MenuSchema(pa.SchemaModel):
 class FinalizedMenuSchema(MenuSchema):
     # override as should be replaced with one of these
     type: Series[str] = pa.Field(isin=["ingredient", "recipe"])
+    time_total: Series[pd.Timedelta] = pa.Field(nullable=False)
     cook_datetime: Series[pd.DatetimeTZDtype] = pa.Field(
-        dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
+        dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True, nullable=False
     )
     prep_datetime: Series[pd.DatetimeTZDtype] = pa.Field(
-        dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
+        dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True, nullable=False
     )
     # manual ingredients lack these
     rating: Series[float] = pa.Field(nullable=True, coerce=True)
-    time_total: Series[pd.Timedelta] = pa.Field(nullable=True)
     uuid: Series[str] = pa.Field(nullable=True)
 
     class Config:
@@ -434,14 +434,11 @@ class Menu(BaseWithExceptionHandling):
     def _format_task_name(
         row: pd.Series,
     ) -> (str, datetime.datetime):
-        time_total = 20  # default for ingredients
-        if row["type"] == "recipe":
-            time_total = int(row.time_total.total_seconds() / 60)
-
         factor_str = f"x eat: {row.eat_factor}"
         if row.freeze_factor > 0:
             factor_str += f", x freeze: {row.freeze_factor}"
 
+        time_total = int(row.time_total.total_seconds() / 60)
         return f"{row['item']} ({factor_str}) [{time_total} min]"
 
     def _get_cook_day_as_weekday(self, cook_day: str):
@@ -502,9 +499,12 @@ class Menu(BaseWithExceptionHandling):
     def _process_ingredient(self, row: pd.Series):
         # do NOT need returned, as just ensuring exists
         self._check_manual_ingredient(row=row)
-        cook_datetime = row["eat_datetime"] - timedelta(
+
+        row["time_total"] = timedelta(
             minutes=int(self.config.ingredient.default_cook_minutes)
         )
+
+        cook_datetime = row["eat_datetime"] - row["time_total"]
         row["cook_datetime"] = cook_datetime
         row["prep_datetime"] = cook_datetime
         return row

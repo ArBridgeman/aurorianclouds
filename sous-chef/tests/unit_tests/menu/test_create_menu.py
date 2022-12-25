@@ -62,6 +62,12 @@ class MenuBuilder:
         if item_type == "recipe":
             if time_total_str is np.nan:
                 time_total_str = "5 min"
+        elif item_type == "ingredient":
+            if time_total_str is np.nan:
+                time_total_str = "20 min"
+
+        if (time_total := pd.to_timedelta(time_total_str)) is pd.NaT:
+            time_total = None
 
         menu = {
             "weekday": "work_day_2",
@@ -76,19 +82,23 @@ class MenuBuilder:
         }
         if not loaded_fixed_menu:
             return pd.DataFrame(menu, index=[0])
-        menu.pop("prep_day_before")
         menu["weekday"] = "Friday"
-        menu["eat_day"] = pd.Timestamp(
+        menu["eat_datetime"] = pd.Timestamp(
             year=2022, month=1, day=21, hour=17, minute=45, tz="Europe/Berlin"
-        )
-        menu["make_day"] = menu["eat_day"] - datetime.timedelta(
-            days=prep_day_before
         )
         if not post_process_recipe:
             return MenuSchema.validate(pd.DataFrame(menu, index=[0]))
         menu["rating"] = rating
-        menu["time_total"] = time_total_str
+        menu["time_total"] = time_total
         menu["uuid"] = "1666465773100"
+        if prep_day_before != 0:
+            menu["cook_datetime"] = menu["eat_datetime"]
+            menu["prep_datetime"] = menu["eat_datetime"] - datetime.timedelta(
+                days=prep_day_before
+            )
+        else:
+            menu["cook_datetime"] = menu["eat_datetime"] - time_total
+            menu["prep_datetime"] = menu["eat_datetime"] - time_total
         menu_df = pd.DataFrame(menu, index=[0])
         menu_df.time_total = pd.to_timedelta(menu_df.time_total)
         return FinalizedMenuSchema.validate(menu_df)
@@ -201,7 +211,7 @@ class TestMenu:
 
     @staticmethod
     @freeze_time(FROZEN_DATE)
-    def test__format_task_and_due_date_list(menu, menu_builder):
+    def test__format_task_name(menu, menu_builder):
         row = menu_builder.create_menu_row(
             post_process_recipe=True,
             item="french onion soup",
@@ -209,20 +219,12 @@ class TestMenu:
             time_total_str=pd.to_timedelta("40 min"),
         ).squeeze()
         assert menu._format_task_name(row) == (
-            f"{row['item']} (x eat: {row.eat_factor}) [40 min]",
-            pd.Timestamp(
-                year=2022,
-                month=1,
-                day=21,
-                hour=17,
-                minute=5,
-                tz="Europe/Berlin",
-            ),
+            f"{row['item']} (x eat: {row.eat_factor}) [40 min]"
         )
 
     @staticmethod
     @freeze_time(FROZEN_DATE)
-    def test__format_task_and_due_date_list_ingredient(menu, menu_builder):
+    def test__format_task_name_ingredient(menu, menu_builder):
         row = menu_builder.create_menu_row(
             post_process_recipe=True,
             item="fries",
@@ -230,22 +232,12 @@ class TestMenu:
             meal_time="dinner",
         ).squeeze()
         assert menu._format_task_name(row) == (
-            f"{row['item']} (x eat: {row.eat_factor}) [20 min]",
-            pd.Timestamp(
-                year=2022,
-                month=1,
-                day=21,
-                hour=17,
-                minute=25,
-                tz="Europe/Berlin",
-            ),
+            f"{row['item']} (x eat: {row.eat_factor}) [20 min]"
         )
 
     @staticmethod
     @freeze_time(FROZEN_DATE)
-    def test__format_task_and_due_date_list_with_freeze_factor(
-        menu, menu_builder
-    ):
+    def test__format_task_name_with_freeze_factor(menu, menu_builder):
         recipe_title = "french onion soup"
         row = menu_builder.create_menu_row(
             post_process_recipe=True,
@@ -254,15 +246,7 @@ class TestMenu:
             freeze_factor=0.5,
         ).squeeze()
         assert menu._format_task_name(row) == (
-            "french onion soup (x eat: 1.0, x freeze: 0.5) [5 min]",
-            pd.Timestamp(
-                year=2022,
-                month=1,
-                day=21,
-                hour=17,
-                minute=40,
-                tz="Europe/Berlin",
-            ),
+            "french onion soup (x eat: 1.0, x freeze: 0.5) [5 min]"
         )
 
     @staticmethod
@@ -359,6 +343,7 @@ class TestMenu:
             item=item,
             item_type="ingredient",
             loaded_fixed_menu=True,
+            post_process_recipe=True,
         ).squeeze()
 
         ingredient = Ingredient(quantity=quantity, unit=unit, item=item)
@@ -425,6 +410,7 @@ class TestMenu:
             eat_unit=unit,
             item=item,
             item_type="ingredient",
+            post_process_recipe=True,
         ).squeeze()
 
         ingredient = Ingredient(quantity=quantity, unit=unit, item=item)
@@ -433,7 +419,9 @@ class TestMenu:
         )
         result = menu._retrieve_manual_menu_ingredient(row)
         assert result == MenuIngredient(
-            ingredient=ingredient, from_recipe="manual", for_day=row["make_day"]
+            ingredient=ingredient,
+            from_recipe="manual",
+            for_day=row["prep_datetime"],
         )
 
     @staticmethod
@@ -448,7 +436,7 @@ class TestMenu:
         recipe_title,
     ):
         row = menu_builder.create_menu_row(
-            item=recipe_title, item_type="recipe"
+            item=recipe_title, item_type="recipe", post_process_recipe=True
         ).squeeze()
         recipe_with_recipe_title = create_recipe(title=recipe_title)
         mock_recipe_book.get_recipe_by_title.return_value = (
@@ -461,7 +449,7 @@ class TestMenu:
             recipe=recipe_with_recipe_title,
             eat_factor=row["eat_factor"],
             freeze_factor=0.0,
-            for_day=row["make_day"],
+            for_day=row["prep_datetime"],
             from_recipe=row["item"],
         )
 

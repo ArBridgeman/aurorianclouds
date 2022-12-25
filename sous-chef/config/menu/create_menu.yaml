@@ -1,7 +1,11 @@
 create_menu:
   input_method:
   output_method: temp
-  prep_meal_time: dinner
+  ingredient:
+    default_cook_minutes: 20
+  prep_separate:
+    default_time: dinner
+    min_inactive_minutes: 20
   quality_check:
     recipe_rating_min: 3.0
     workday:

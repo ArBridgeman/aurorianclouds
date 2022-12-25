@@ -208,7 +208,7 @@ class TestMenu:
             meal_time="dinner",
             time_total_str=pd.to_timedelta("40 min"),
         ).squeeze()
-        assert menu._format_task_and_due_date_list(row) == (
+        assert menu._format_task_name(row) == (
             f"{row['item']} (x eat: {row.eat_factor}) [40 min]",
             pd.Timestamp(
                 year=2022,
@@ -229,7 +229,7 @@ class TestMenu:
             item_type="ingredient",
             meal_time="dinner",
         ).squeeze()
-        assert menu._format_task_and_due_date_list(row) == (
+        assert menu._format_task_name(row) == (
             f"{row['item']} (x eat: {row.eat_factor}) [20 min]",
             pd.Timestamp(
                 year=2022,
@@ -253,7 +253,7 @@ class TestMenu:
             meal_time="dinner",
             freeze_factor=0.5,
         ).squeeze()
-        assert menu._format_task_and_due_date_list(row) == (
+        assert menu._format_task_name(row) == (
             "french onion soup (x eat: 1.0, x freeze: 0.5) [5 min]",
             pd.Timestamp(
                 year=2022,

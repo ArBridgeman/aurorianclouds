@@ -94,10 +94,10 @@ class MenuRecipe:
 
 class MenuSchema(pa.SchemaModel):
     weekday: Series[str] = pa.Field(isin=Weekday.name_list("capitalize"))
-    eat_day: Series[pd.DatetimeTZDtype] = pa.Field(
-        dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
+    prep_day_before: Optional[Series[float]] = pa.Field(
+        ge=0, lt=7, nullable=False, coerce=True
     )
-    make_day: Series[pd.DatetimeTZDtype] = pa.Field(
+    eat_datetime: Optional[Series[pd.DatetimeTZDtype]] = pa.Field(
         dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
     )
     meal_time: Series[str] = pa.Field(isin=MealTime.name_list("lower"))
@@ -122,6 +122,12 @@ class MenuSchema(pa.SchemaModel):
 class FinalizedMenuSchema(MenuSchema):
     # override as should be replaced with one of these
     type: Series[str] = pa.Field(isin=["ingredient", "recipe"])
+    cook_datetime: Series[pd.DatetimeTZDtype] = pa.Field(
+        dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
+    )
+    prep_datetime: Series[pd.DatetimeTZDtype] = pa.Field(
+        dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
+    )
     # manual ingredients lack these
     rating: Series[float] = pa.Field(nullable=True, coerce=True)
     time_total: Series[pd.Timedelta] = pa.Field(nullable=True)
@@ -155,14 +161,6 @@ class Menu(BaseWithExceptionHandling):
     def finalize_fixed_menu(self):
         self.record_exception = []
 
-        def _get_make_day(row):
-            if row.prep_day_before == 0:
-                return row.eat_day
-            return self.due_date_formatter.replace_time_with_meal_time(
-                due_date=row.eat_day - timedelta(days=row.prep_day_before),
-                meal_time=self.config.prep_meal_time,
-            )
-
         self.dataframe = self._load_fixed_menu().reset_index(drop=True)
 
         # remove menu entries that are inactive and drop column
@@ -173,6 +171,7 @@ class Menu(BaseWithExceptionHandling):
 
         # applied schema model coerces int already
         self.dataframe.freeze_factor.replace("", "0", inplace=True)
+        self.dataframe.prep_day_before.replace("", "0", inplace=True)
         self.dataframe.defrost = self.dataframe.defrost.replace(
             "", "N"
         ).str.upper()
@@ -183,20 +182,12 @@ class Menu(BaseWithExceptionHandling):
                 .str.upper()
             )
 
-        # add eat_day and make_day, drop prep_day
-        self.dataframe.prep_day_before = self.dataframe.prep_day_before.replace(
-            "", "0"
-        ).astype(int)
-        self.dataframe["eat_day"] = self.dataframe.apply(
+        self.dataframe["eat_datetime"] = self.dataframe.apply(
             lambda row: self.due_date_formatter.get_due_datetime_with_meal_time(
                 weekday=row.weekday, meal_time=row.meal_time
             ),
             axis=1,
         )
-        self.dataframe["make_day"] = self.dataframe.apply(
-            lambda row: _get_make_day(row), axis=1
-        )
-        self.dataframe.drop(columns=["prep_day_before"], inplace=True)
 
         # validate schema & process menu
         self._validate_menu_schema()
@@ -208,7 +199,10 @@ class Menu(BaseWithExceptionHandling):
                 custom_message="will not send to finalize until fixed"
             )
 
-        self.dataframe.drop(columns=["override_check"], inplace=True)
+        columns_to_drop = ["eat_datetime", "prep_day_before"]
+        if "override_check" in self.dataframe.columns:
+            columns_to_drop += ["override_check"]
+        self.dataframe.drop(columns=columns_to_drop, inplace=True)
         self._save_menu()
 
     def get_menu_for_grocery_list(
@@ -291,20 +285,23 @@ class Menu(BaseWithExceptionHandling):
         )
 
         for _, row in self.dataframe.iterrows():
-            task, due_date = self._format_task_and_due_date_list(row)
-            _add_task(task_name=task, task_due_date=due_date)
+            task = self._format_task_name(row)
+            # task for when to cook
+            _add_task(task_name=task, task_due_date=row.cook_datetime)
 
+            # task reminder to edit recipes
             if row["type"] == "recipe":
                 _add_task(task_name=row["item"], parent_id=edit_task.id)
 
-            if row.eat_day != row.make_day:
+            # task for separate preparation
+            if row.cook_datetime != row.prep_datetime:
                 _add_task(
-                    task_name=f"[PREP] {task}", task_due_date=row.make_day
+                    task_name=f"[PREP] {task}", task_due_date=row.prep_datetime
                 )
             if row.defrost == "Y":
                 _add_task(
                     task_name=f"[DEFROST] {task}",
-                    task_due_date=row.eat_day - timedelta(days=1),
+                    task_due_date=row.cook_datetime - timedelta(days=1),
                 )
         return tasks
 
@@ -336,15 +333,44 @@ class Menu(BaseWithExceptionHandling):
     def _add_recipe_columns(
         self, row: pd.Series, recipe: pd.Series
     ) -> pd.Series:
+        prep_config = self.config.prep_separate
+
+        def _eat_prep_datetime() -> (datetime.timedelta, datetime.timedelta):
+            default_cook_datetime = row.eat_datetime - recipe.time_total
+            default_prep_datetime = default_cook_datetime
+
+            if (
+                recipe.time_inactive is not pd.NaT
+                and recipe.time_inactive
+                >= timedelta(minutes=int(prep_config.min_inactive_minutes))
+            ):
+                # inactive too great, so separately schedule prep
+                default_cook_datetime += recipe.time_inactive
+
+            if row.prep_day_before == 0:
+                return default_cook_datetime, default_prep_datetime
+            # prep_day_before was set, so use prep_config default time; unsure
+            # how cook time altered, but assume large inactive times handled
+            return (
+                default_cook_datetime,
+                self.due_date_formatter.replace_time_with_meal_time(
+                    due_date=row.eat_datetime
+                    - timedelta(days=row.prep_day_before),
+                    meal_time=prep_config.default_time,
+                ),
+            )
+
         if "override_check" in row.keys() and row.override_check == "N":
             self._check_menu_quality(
-                weekday=row.make_day.weekday(), recipe=recipe
+                weekday=row.prep_datetime.weekday(), recipe=recipe
             )
 
         row["item"] = recipe.title
         row["rating"] = recipe.rating
         row["time_total"] = recipe.time_total
         row["uuid"] = recipe.uuid
+        row["cook_datetime"], row["prep_datetime"] = _eat_prep_datetime()
+
         # TODO remove/replace once recipes easily viewable in UI
         self._inspect_unrated_recipe(recipe)
         return row
@@ -405,7 +431,7 @@ class Menu(BaseWithExceptionHandling):
             )
 
     @staticmethod
-    def _format_task_and_due_date_list(
+    def _format_task_name(
         row: pd.Series,
     ) -> (str, datetime.datetime):
         time_total = 20  # default for ingredients
@@ -415,13 +441,8 @@ class Menu(BaseWithExceptionHandling):
         factor_str = f"x eat: {row.eat_factor}"
         if row.freeze_factor > 0:
             factor_str += f", x freeze: {row.freeze_factor}"
-        task_str = f"{row['item']} ({factor_str}) [{time_total} min]"
 
-        make_time = row.eat_day
-        if row.make_day == row.eat_day:
-            make_time -= timedelta(minutes=time_total)
-
-        return task_str, make_time
+        return f"{row['item']} ({factor_str}) [{time_total} min]"
 
     def _get_cook_day_as_weekday(self, cook_day: str):
         if cook_day in self.cook_days:
@@ -475,10 +496,18 @@ class Menu(BaseWithExceptionHandling):
             type=row["type"],
         )
         if row["type"] == "ingredient":
-            # do NOT need returned as found as is
-            self._check_manual_ingredient(row)
-            return row
+            return self._process_ingredient(row)
         return self._process_menu_recipe(row)
+
+    def _process_ingredient(self, row: pd.Series):
+        # do NOT need returned, as just ensuring exists
+        self._check_manual_ingredient(row=row)
+        cook_datetime = row["eat_datetime"] - timedelta(
+            minutes=int(self.config.ingredient.default_cook_minutes)
+        )
+        row["cook_datetime"] = cook_datetime
+        row["prep_datetime"] = cook_datetime
+        return row
 
     def _process_menu_recipe(self, row: pd.Series):
         if row["type"] == "category":
@@ -496,7 +525,7 @@ class Menu(BaseWithExceptionHandling):
         return MenuIngredient(
             ingredient=self._check_manual_ingredient(row),
             from_recipe="manual",
-            for_day=row["make_day"],
+            for_day=row["prep_datetime"],
         )
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
@@ -511,7 +540,7 @@ class Menu(BaseWithExceptionHandling):
             recipe=recipe,
             eat_factor=row["eat_factor"],
             freeze_factor=row["freeze_factor"],
-            for_day=row["make_day"],
+            for_day=row["prep_datetime"],
             from_recipe=row["item"],
         )
 
@@ -531,7 +560,7 @@ class Menu(BaseWithExceptionHandling):
         )
         self._validate_finalized_menu_schema()
         self.gsheets_helper.write_worksheet(
-            df=self.dataframe.sort_values(by=["eat_day"]),
+            df=self.dataframe.sort_values(by=["cook_datetime"]),
             workbook_name=save_loc.workbook,
             worksheet_name=save_loc.worksheet,
         )

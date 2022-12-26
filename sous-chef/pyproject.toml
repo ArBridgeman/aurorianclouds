@@ -48,5 +48,6 @@ markers = [
     "dropbox: marks tests using dropbox",
     "gmail: marks tests using gmail, which requires frequent user validation for oauth",
     "gsheets: marks tests using gsheets",
+    "openfoodfacts: marks tests using OpenFoodFacts API",
     "todoist: marks tests using todoist, which requires periodically updating API key"
 ]

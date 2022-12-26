@@ -346,7 +346,7 @@ class GroceryList:
             freeze_quantity, unit_registry.can
         )
         return (
-            f"BEAN PREP: {ingredient_str} "
+            f"[BEAN PREP] {ingredient_str} "
             f"(freeze: {freeze_quantity} {unit_str})"
         )
 

@@ -175,7 +175,7 @@ class TestGroceryList:
         )
         assert (
             grocery_list._format_bean_prep_task_str(row, number_can_to_freeze)
-            == f"BEAN PREP: black beans, 210 g (freeze: {freeze_text})"
+            == f"[BEAN PREP] black beans, 210 g (freeze: {freeze_text})"
         )
 
     @staticmethod

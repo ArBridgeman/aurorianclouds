@@ -38,9 +38,12 @@ def main(config: DictConfig) -> None:
         rtk_service = RtkService(config.rtk)
         rtk_service.unzip()
 
+        gsheets_helper = GsheetsHelper(config.messaging.gsheets)
         unit_formatter = UnitFormatter()
         recipe_book = RecipeBook(config.recipe_book)
-        ingredient_formatter = _get_ingredient_formatter(config, unit_formatter)
+        ingredient_formatter = _get_ingredient_formatter(
+            config, gsheets_helper, unit_formatter
+        )
         ingredient_field_formatter = IngredientFieldFormatter(
             config.formatter.format_ingredient_field,
             ingredient_formatter=ingredient_formatter,
@@ -49,7 +52,8 @@ def main(config: DictConfig) -> None:
 
         # get menu for grocery list
         menu = Menu(
-            config.menu.create_menu,
+            config=config.menu.create_menu,
+            gsheets_helper=gsheets_helper,
             ingredient_formatter=ingredient_formatter,
             recipe_book=recipe_book,
         )
@@ -77,9 +81,10 @@ def main(config: DictConfig) -> None:
 
 
 def _get_ingredient_formatter(
-    config: DictConfig, unit_formatter: UnitFormatter
+    config: DictConfig,
+    gsheets_helper: GsheetsHelper,
+    unit_formatter: UnitFormatter,
 ):
-    gsheets_helper = GsheetsHelper(config.messaging.gsheets)
     pantry_list = PantryList(config.pantry_list, gsheets_helper=gsheets_helper)
     return IngredientFormatter(
         config.formatter.format_ingredient,

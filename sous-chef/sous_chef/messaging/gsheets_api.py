@@ -28,7 +28,7 @@ class GsheetsHelper:
         )
 
     def get_worksheet(
-        self, workbook_name: str, worksheet_name: str
+        self, workbook_name: str, worksheet_name: str, numerize: bool = False
     ) -> pd.DataFrame:
         FILE_LOGGER.info(
             "[get_worksheet]",
@@ -38,7 +38,7 @@ class GsheetsHelper:
         # TODO catch & raise specific exception here when resource not found
         workbook = self.connection.open(workbook_name)
         worksheet = workbook.worksheet_by_title(worksheet_name)
-        return worksheet.get_as_df()
+        return worksheet.get_as_df(numerize=numerize)
 
     def write_worksheet(
         self,

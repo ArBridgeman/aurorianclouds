@@ -3,11 +3,13 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
+from typing import List, Union
 
 import pandas as pd
 import pandera as pa
 from omegaconf import DictConfig
 from pandera.typing import Series
+from pandera.typing.common import DataFrameBase
 from sous_chef.date.get_due_date import DueDatetimeFormatter, MealTime, Weekday
 from sous_chef.formatter.ingredient.format_ingredient import (
     Ingredient,
@@ -18,6 +20,7 @@ from sous_chef.messaging.gsheets_api import GsheetsHelper
 from sous_chef.messaging.todoist_api import TodoistHelper
 from sous_chef.recipe_book.read_recipe_book import Recipe, RecipeBook
 from structlog import get_logger
+from todoist_api_python.models import Task
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
 FILE_LOGGER = get_logger(__name__)
@@ -29,7 +32,7 @@ FILE_LOGGER = get_logger(__name__)
 @dataclass
 class MenuIngredient:
     ingredient: Ingredient
-    from_day: str
+    for_day: datetime.datetime
     from_recipe: str
 
 
@@ -38,35 +41,53 @@ class MenuRecipe:
     recipe: Recipe
     eat_factor: float
     freeze_factor: float
-    from_day: str
+    for_day: datetime.datetime
     from_recipe: str
 
 
 class MenuSchema(pa.SchemaModel):
     weekday: Series[str] = pa.Field(isin=Weekday.name_list("capitalize"))
+    eat_day: Series[pd.DatetimeTZDtype] = pa.Field(
+        dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
+    )
+    make_day: Series[pd.DatetimeTZDtype] = pa.Field(
+        dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
+    )
     meal_time: Series[str] = pa.Field(isin=MealTime.name_list("lower"))
     type: Series[str] = pa.Field(
         isin=["category", "ingredient", "recipe", "tag"]
     )
-    eat_factor: Series[float] = pa.Field(gt=0, nullable=False)
+    eat_factor: Series[float] = pa.Field(gt=0, nullable=False, coerce=True)
     eat_unit: Series[str] = pa.Field(nullable=True)
-    freeze_factor: Series[float] = pa.Field(ge=0, nullable=False)
+    freeze_factor: Series[float] = pa.Field(ge=0, nullable=False, coerce=True)
+    defrost: Series[str] = pa.Field(isin=["Y", "N"], nullable=False)
     item: Series[str]
+
+    class Config:
+        strict = True
 
 
 class FinalizedMenuSchema(MenuSchema):
     type: Series[str] = pa.Field(isin=["ingredient", "recipe"])
     total_cook_time: Series[pd.Timedelta] = pa.Field(nullable=True)
     # manual ingredients are not rated
-    rating: Series[float] = pa.Field(nullable=True)
+    rating: Series[float] = pa.Field(nullable=True, coerce=True)
+
+    class Config:
+        strict = True
 
 
 @dataclass
 class Menu:
     config: DictConfig
+    gsheets_helper: GsheetsHelper
     ingredient_formatter: IngredientFormatter
     recipe_book: RecipeBook
-    dataframe: pd.DataFrame = None
+    dataframe: Union[
+        pd.DataFrame,
+        DataFrameBase[MenuSchema],
+        DataFrameBase[FinalizedMenuSchema],
+    ] = None
     due_date_formatter: DueDatetimeFormatter = field(init=False)
     cook_days: dict = field(init=False)
 
@@ -74,9 +95,45 @@ class Menu:
         self.due_date_formatter = DueDatetimeFormatter(self.config.anchor_day)
         self.cook_days = self.config.fixed.cook_days
 
-    def finalize_fixed_menu(self, gsheets_helper: GsheetsHelper):
-        self.dataframe = self._load_fixed_menu(gsheets_helper).reset_index(
+    def finalize_fixed_menu(self):
+        def _get_make_day(row):
+            if row.prep_day_before == 0:
+                return row.eat_day
+            return self.due_date_formatter.replace_time_with_meal_time(
+                due_date=row.eat_day - timedelta(days=row.prep_day_before),
+                meal_time=self.config.prep_meal_time,
+            )
+
+        self.dataframe = self._load_fixed_menu(self.gsheets_helper).reset_index(
             drop=True
+        )
+        self.dataframe.prep_day_before = self.dataframe.prep_day_before.replace(
+            "", "0"
+        ).astype(int)
+        self.dataframe.freeze_factor = self.dataframe.freeze_factor.replace(
+            "", "0"
+        )
+        self.dataframe.defrost = self.dataframe.defrost.replace(
+            "", "N"
+        ).str.upper()
+        self.dataframe.inactive = self.dataframe.inactive.replace(
+            "", "N"
+        ).str.upper()
+        mask_inactive = self.dataframe.inactive == "Y"
+        self.dataframe = self.dataframe.loc[~mask_inactive]
+
+        self.dataframe["eat_day"] = self.dataframe.apply(
+            lambda row: self.due_date_formatter.get_due_datetime_with_meal_time(
+                weekday=row.weekday, meal_time=row.meal_time
+            ),
+            axis=1,
+        )
+        self.dataframe["make_day"] = self.dataframe.apply(
+            lambda row: _get_make_day(row), axis=1
+        )
+
+        self.dataframe.drop(
+            columns=["prep_day_before", "inactive"], inplace=True
         )
         self._validate_menu_schema()
         self.dataframe = self.dataframe.apply(self._process_menu, axis=1)
@@ -84,20 +141,22 @@ class Menu:
 
     def get_menu_for_grocery_list(
         self,
-    ) -> (list[MenuIngredient], list[MenuRecipe]):
-        self.load_local_menu()
+    ) -> (List[MenuIngredient], List[MenuRecipe]):
+        self.load_final_menu()
 
         entry_funcs = {
             "ingredient": self._retrieve_manual_menu_ingredient,
             "recipe": self._retrieve_menu_recipe,
         }
         result_dict = defaultdict(list)
+        mask_defrost = self.dataframe.defrost != "Y"
         for entry, entry_fct in entry_funcs.items():
             if (mask := self.dataframe["type"] == entry).sum() > 0:
                 result_dict[entry] = (
-                    self.dataframe[mask].apply(entry_fct, axis=1).tolist()
+                    self.dataframe[mask & mask_defrost]
+                    .apply(entry_fct, axis=1)
+                    .tolist()
                 )
-
         return result_dict["ingredient"], result_dict["recipe"]
 
     def send_menu_to_gmail(self, gmail_helper: GmailHelper):
@@ -119,7 +178,9 @@ class Menu:
         subject = f"[sous_chef_menu] week {calendar_week}"
         gmail_helper.send_dataframe_in_email(subject, tmp_df)
 
-    def upload_menu_to_todoist(self, todoist_helper: TodoistHelper):
+    def upload_menu_to_todoist(
+        self, todoist_helper: TodoistHelper
+    ) -> List[Task]:
         project_name = self.config.todoist.project_name
         if self.config.todoist.remove_existing_task:
             anchor_date = self.due_date_formatter.get_anchor_date()
@@ -131,24 +192,42 @@ class Menu:
                 for _ in range(3)
             ]
 
+        tasks = []
         project_id = todoist_helper.get_project_id(project_name)
-        for _, row in self.dataframe.iterrows():
-            task, due_date = self._format_task_and_due_date_list(row)
-            todoist_helper.add_task_to_project(
-                task=task,
+
+        def _add_task(task_name: str, task_due_date: datetime.datetime):
+            task_object = todoist_helper.add_task_to_project(
+                task=task_name,
                 project=project_name,
                 project_id=project_id,
-                due_date=due_date,
-                priority=4,
+                due_date=task_due_date,
+                priority=self.config.todoist.task_priority,
             )
+            tasks.append(task_object)
 
-    def load_local_menu(self):
-        file_path = Path(ABS_FILE_PATH, self.config.local.file_path)
-        df = pd.read_csv(file_path, sep=";")
-        df.total_cook_time = pd.to_timedelta(df.total_cook_time)
-        # fillna("") to keep consistent with gsheets implementation
-        df.eat_unit = df.eat_unit.fillna("").astype(str)
-        self.dataframe = df
+        for _, row in self.dataframe.iterrows():
+            task, due_date = self._format_task_and_due_date_list(row)
+            _add_task(task_name=task, task_due_date=due_date)
+            if row.eat_day != row.make_day:
+                _add_task(
+                    task_name=f"[PREP] {task}", task_due_date=row.make_day
+                )
+            if row.defrost == "Y":
+                _add_task(
+                    task_name=f"[DEFROST] {task}",
+                    task_due_date=row.eat_day - timedelta(days=1),
+                )
+        return tasks
+
+    def load_final_menu(self):
+        workbook = self.config.final_menu.workbook
+        worksheet = self.config.final_menu.worksheet
+        self.dataframe = self.gsheets_helper.get_worksheet(
+            workbook_name=workbook, worksheet_name=worksheet
+        )
+        self.dataframe.total_cook_time = pd.to_timedelta(
+            self.dataframe.total_cook_time
+        )
         self._validate_finalized_menu_schema()
 
     @staticmethod
@@ -185,11 +264,11 @@ class Menu:
             factor_str += f", x freeze: {row.freeze_factor}"
         task_str = f"{row['item']} ({factor_str}) [{cooking_time_min} min]"
 
-        due_date = self.due_date_formatter.get_due_datetime_with_meal_time(
-            weekday=row.weekday, meal_time=row.meal_time
-        )
-        due_date -= timedelta(minutes=cooking_time_min)
-        return task_str, due_date
+        make_time = row.eat_day
+        if row.make_day == row.eat_day:
+            make_time -= timedelta(minutes=cooking_time_min)
+
+        return task_str, make_time
 
     @staticmethod
     def _get_cooking_time_min(
@@ -273,7 +352,7 @@ class Menu:
         return MenuIngredient(
             ingredient=self._check_manual_ingredient(row),
             from_recipe="manual",
-            from_day=row["weekday"],
+            for_day=row["make_day"],
         )
 
     def _retrieve_menu_recipe(self, row: pd.Series) -> MenuRecipe:
@@ -282,7 +361,7 @@ class Menu:
             recipe=recipe,
             eat_factor=row["eat_factor"],
             freeze_factor=row["freeze_factor"],
-            from_day=row["weekday"],
+            for_day=row["make_day"],
             from_recipe=row["item"],
         )
 
@@ -293,15 +372,18 @@ class Menu:
         return row
 
     def _save_menu(self):
-        tmp_menu_file = Path(ABS_FILE_PATH, self.config.local.file_path)
-        FILE_LOGGER.info("[save menu]", tmp_menu_file=tmp_menu_file)
+        workbook = self.config.final_menu.workbook
+        worksheet = self.config.final_menu.worksheet
+        FILE_LOGGER.info("[save menu]", workbook=workbook, worksheet=worksheet)
         self._validate_finalized_menu_schema()
-        self.dataframe.to_csv(tmp_menu_file, index=False, header=True, sep=";")
+        self.gsheets_helper.write_worksheet(
+            df=self.dataframe,
+            workbook_name=workbook,
+            worksheet_name=worksheet,
+        )
 
     def _validate_menu_schema(self):
-        # if fails, tosses SchemaError
-        # TODO do we want to return their type? do we trust it?
-        MenuSchema.validate(self.dataframe)
+        self.dataframe = MenuSchema.validate(self.dataframe)
 
     def _validate_finalized_menu_schema(self):
-        FinalizedMenuSchema.validate(self.dataframe)
+        self.dataframe = FinalizedMenuSchema.validate(self.dataframe)

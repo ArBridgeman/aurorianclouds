@@ -1,21 +1,25 @@
 create_menu:
   input_method:
-  output_method: local
+  output_method: temp
   anchor_day: Sunday
+  prep_meal_time: dinner
   todoist:
     project_name: Menu
     remove_existing_task: False
+    task_priority: 3
   fixed:
     basic: menu-basic
     cook_days:
       weekend_1: Saturday
       weekend_2: Sunday
+      work_day_0: Monday
       work_day_1: Tuesday
       work_day_2: Friday
       work_day_3: Wednesday
     file_prefix: menu-
     menu_number:
-  local:
-    file_path: ../menu/menu-tmp.csv
+  final_menu:
+    workbook: menu-tmp
+    worksheet: menu-tmp
   run_mode:
     with_inspect_unrated_recipe: true

@@ -2,6 +2,7 @@ import datetime
 
 import pytest
 from freezegun import freeze_time
+from pytz import timezone
 from sous_chef.date.get_due_date import (
     DueDatetimeFormatter,
     MealTime,
@@ -17,9 +18,16 @@ def create_datetime(
     hour: int = 0,
     minute: int = 0,
     second: int = 0,
+    tzinfo=timezone("UTC"),
 ):
     return datetime.datetime(
-        year=year, month=month, day=day, hour=hour, minute=minute, second=second
+        year=year,
+        month=month,
+        day=day,
+        hour=hour,
+        minute=minute,
+        second=second,
+        tzinfo=tzinfo,
     )
 
 

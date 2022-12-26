@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pandas as pd
 import pytest
@@ -7,12 +7,22 @@ from freezegun import freeze_time
 from hydra import compose, initialize
 from sous_chef.date.get_due_date import DueDatetimeFormatter, ExtendedEnum
 from sous_chef.formatter.format_unit import UnitFormatter
+from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
 from sous_chef.formatter.ingredient.format_ingredient_field import (
     IngredientFieldFormatter,
 )
 from sous_chef.grocery_list.generate_grocery_list import GroceryList
+from sous_chef.nutrition.provide_nutritional_info import Nutritionist
+from sous_chef.recipe_book.read_recipe_book import RecipeBook
 
 FROZEN_DATE = "2022-01-14"
+
+
+@pytest.fixture
+def config_recipe_book():
+    with initialize(version_base=None, config_path="../config"):
+        config = compose(config_name="recipe_book")
+        return config.recipe_book
 
 
 class MockMealTime(ExtendedEnum):
@@ -61,6 +71,7 @@ def frozen_due_datetime_formatter():
 
 
 @pytest.fixture
+@freeze_time(FROZEN_DATE)
 def grocery_list(
     config_grocery_list,
     unit_formatter,
@@ -82,6 +93,29 @@ def mock_ingredient_field_formatter():
     with initialize(version_base=None, config_path="../config/formatter"):
         config = compose(config_name="format_ingredient_field")
         return Mock(IngredientFieldFormatter(config, None, None))
+
+
+@pytest.fixture
+def mock_ingredient_formatter():
+    with initialize(version_base=None, config_path="../config/formatter"):
+        config = compose(config_name="format_ingredient")
+        return Mock(IngredientFormatter(config, None, None))
+
+
+@pytest.fixture
+def mock_recipe_book():
+    with initialize(version_base=None, config_path="../config"):
+        config = compose(config_name="recipe_book")
+        with patch.object(RecipeBook, "__post_init__", lambda x: None):
+            return Mock(RecipeBook(config, None))
+
+
+@pytest.fixture
+def nutritionist():
+    with initialize(version_base=None, config_path="../config/"):
+        config = compose(config_name="nutrition").nutrition
+        config.sheet_name = "nutrition-test"
+        return Nutritionist(config=config)
 
 
 @pytest.fixture

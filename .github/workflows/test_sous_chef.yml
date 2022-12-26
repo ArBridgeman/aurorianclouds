@@ -5,8 +5,8 @@ jobs:
     strategy:
       matrix:
         python-version: [3.9]
-        poetry-version: [1.1.12]
-        os: [ubuntu-latest, macos-latest]
+        poetry-version: [1.2.2]
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Check out our repo branch
@@ -25,4 +25,4 @@ jobs:
         working-directory: ./sous-chef
         run: |
           poetry run pytest ./tests/integration_tests \
-          -k "not todoist and not gmail"
+          -k "not todoist and not gmail and not dropbox"

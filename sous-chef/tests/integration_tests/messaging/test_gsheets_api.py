@@ -8,15 +8,16 @@ from tests.util import assert_equal_dataframe
 
 def random_string(length: int):
     pool = string.ascii_lowercase + string.digits
-    return "".join(choice(pool) for i in range(length))
+    return "".join(choice(pool) for _ in range(length))
 
 
+@pytest.mark.gsheets
 class TestGSheetsHelper:
     @staticmethod
     def test_write_and_read_worksheet(gsheets_helper):
         workbook_name = random_string(12)
         worksheet_name = "test"
-        fake_df = pd.DataFrame({"Vars": ["a", "b"], "Vals": [1.1, 2.4]})
+        fake_df = pd.DataFrame({"Vars": ["a", "b"], "Vals": ["1.1", "2.4"]})
 
         gsheets_helper.write_worksheet(fake_df, workbook_name, worksheet_name)
         worksheet = gsheets_helper.get_worksheet(workbook_name, worksheet_name)

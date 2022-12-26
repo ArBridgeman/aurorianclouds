@@ -23,14 +23,15 @@ def main(config: DictConfig):
 
     # TODO move manual method here
     menu = Menu(
-        config.menu.create_menu,
+        config=config.menu.create_menu,
+        gsheets_helper=gsheets_helper,
         ingredient_formatter=ingredient_formatter,
         recipe_book=recipe_book,
     )
     if config.menu.create_menu.input_method == "fixed":
-        menu.finalize_fixed_menu(gsheets_helper)
-    elif config.menu.create_menu.input_method == "local":
-        menu.load_local_menu()
+        menu.finalize_fixed_menu()
+    elif config.menu.create_menu.input_method == "final":
+        menu.load_final_menu()
 
     if config.menu.run_mode.with_todoist:
         todoist_helper = TodoistHelper(config.messaging.todoist)

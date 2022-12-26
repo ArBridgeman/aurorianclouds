@@ -5,7 +5,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.9]
-        poetry-version: [1.1.12]
+        poetry-version: [1.2.2]
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -22,7 +22,7 @@ jobs:
         working-directory: ./sous-chef
         run: |
           poetry run coverage run  --rcfile .coveragerc. -m pytest \
-           -k "not todoist and not gmail" \
+           -k "not todoist and not gmail and not dropbox" \
           ./tests/unit_tests ./tests/integration_tests
       - name: Create coverage XML
         working-directory: ./sous-chef

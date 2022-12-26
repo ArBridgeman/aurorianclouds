@@ -1,4 +1,5 @@
 import datetime
+import logging
 import re
 from dataclasses import dataclass, field
 from datetime import date
@@ -6,6 +7,7 @@ from pathlib import Path
 from typing import Dict, Union
 
 import pandas as pd
+import tenacity
 from omegaconf import DictConfig
 from structlog import get_logger
 from todoist_api_python.api import TodoistAPI
@@ -98,7 +100,7 @@ class TodoistHelper:
             label_list = [self._clean_label(label) for label in label_list]
             label_list += ["app"]
 
-        new_task = self.connection.add_task(
+        new_task = self._add_task(
             content=task,
             due_string=due_date_str,
             description=description,
@@ -108,9 +110,31 @@ class TodoistHelper:
             priority=priority,
         )
 
-        # verify that new task found; if not fails
-        # TODO if fails often, then add tenacity around add/check
-        return self.connection.get_task(task_id=new_task.id)
+        return self._get_task(task_id=new_task.id)
+
+    @tenacity.retry(
+        stop=tenacity.stop_after_attempt(5),
+        wait=tenacity.wait_exponential(multiplier=1, min=1, max=20),
+        after=tenacity.after_log(FILE_LOGGER, logging.DEBUG),
+    )
+    def _add_task(self, **kwargs):
+        return self.connection.add_task(**kwargs)
+
+    @tenacity.retry(
+        stop=tenacity.stop_after_attempt(5),
+        wait=tenacity.wait_exponential(multiplier=1, min=1, max=20),
+        after=tenacity.after_log(FILE_LOGGER, logging.DEBUG),
+    )
+    def _get_task(self, task_id):
+        return self.connection.get_task(task_id=task_id)
+
+    @tenacity.retry(
+        stop=tenacity.stop_after_attempt(5),
+        wait=tenacity.wait_exponential(multiplier=1, min=1, max=20),
+        after=tenacity.after_log(FILE_LOGGER, logging.DEBUG),
+    )
+    def _delete_task(self, task_id):
+        return self.connection.delete_task(task_id=task_id)
 
     def delete_all_items_in_project(
         self,
@@ -143,7 +167,7 @@ class TodoistHelper:
             if only_app_generated and "app" not in task.labels:
                 continue
 
-            self.connection.delete_task(task_id=task.id)
+            self._delete_task(task_id=task.id)
             tasks_deleted += 1
 
         FILE_LOGGER.info(

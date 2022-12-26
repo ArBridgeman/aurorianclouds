@@ -32,7 +32,7 @@ class MapMenuHistoryErrorToException(ExtendedEnum):
 
 
 class MenuHistory(pa.SchemaModel):
-    eat_day: Series[pd.DatetimeTZDtype] = pa.Field(
+    cook_datetime: Series[pd.DatetimeTZDtype] = pa.Field(
         dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
     )
     eat_factor: Series[float] = pa.Field(gt=0, nullable=False, coerce=True)
@@ -64,7 +64,9 @@ class MenuHistorian:
 
         menu_history = MenuHistory.validate(menu_history)
         # exclude future so can re-run current menu with ease
-        mask_not_future = menu_history.eat_day < self.current_menu_start_date
+        mask_not_future = (
+            menu_history.cook_datetime < self.current_menu_start_date
+        )
         self.dataframe = menu_history[mask_not_future]
 
     def add_current_menu_to_history(self, current_menu: DataFrame):
@@ -84,7 +86,7 @@ class MenuHistorian:
 
     def get_history_from(self, days_ago: int):
         mask_max_past = (
-            self.dataframe.eat_day
+            self.dataframe.cook_datetime
             >= self.current_menu_start_date - timedelta(days=days_ago)
         )
         return self.dataframe.loc[mask_max_past]

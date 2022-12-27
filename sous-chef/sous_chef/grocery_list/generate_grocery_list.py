@@ -139,7 +139,7 @@ class GroceryList:
         if self.grocery_list_raw is None:
             self.grocery_list_raw = pd.DataFrame()
 
-        self.grocery_list_raw = self.grocery_list_raw.append(
+        new_entry = pd.DataFrame(
             {
                 "quantity": quantity,
                 # TODO do we need unit?
@@ -163,7 +163,11 @@ class GroceryList:
                     for_day=for_day, food_group=food_group
                 ),
             },
-            ignore_index=True,
+            index=[0],
+        )
+
+        self.grocery_list_raw = pd.concat(
+            [self.grocery_list_raw, new_entry], ignore_index=True
         )
 
     def _add_bulk_manual_ingredient_to_grocery_list(
@@ -302,7 +306,9 @@ class GroceryList:
             if group.pint_unit.nunique() > 1:
                 group = self._get_group_in_same_pint_unit(group)
             agg_group = self._aggregate_group_to_grocery_list(group)
-            self.grocery_list = self.grocery_list.append(agg_group)
+            self.grocery_list = pd.concat(
+                [self.grocery_list, agg_group], ignore_index=True
+            )
 
         # get aisle/store
         self.grocery_list["aisle_group"] = self.grocery_list.food_group.apply(

@@ -23,6 +23,8 @@ def menu_config():
     with initialize(version_base=None, config_path="../../../config/menu"):
         config = compose(config_name="create_menu").create_menu
         config.final_menu.worksheet = "test-tmp-menu"
+        config.fixed.basic = "test-menu-basic"
+        config.fixed.file_prefix = "test-menu-"
         config.todoist.project_name = "Pytest-area"
         return config
 
@@ -70,7 +72,7 @@ class TestMenu:
     @staticmethod
     @pytest.mark.dropbox
     def test_finalize_fixed_menu(menu_with_recipe_book, menu_config):
-        menu_config.fixed.menu_number = 1
+        menu_config.fixed.menu_number = 0
         menu_with_recipe_book.finalize_fixed_menu()
 
     @staticmethod

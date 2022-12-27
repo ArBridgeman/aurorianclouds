@@ -9,8 +9,8 @@ from sous_chef.abstract.extended_enum import ExtendedEnum
 class BaseWithExceptionHandling(object):
     # needed since dataclass predetermines the kwarg order
     record_exception: List = field(default=None, init=False)
-    tuple_log_exception: Tuple = field(default=None, init=False)
-    tuple_skip_exception: Tuple = field(default=None, init=False)
+    tuple_log_exception: Tuple = field(default=(), init=False)
+    tuple_skip_exception: Tuple = field(default=(), init=False)
 
     def set_tuple_log_and_skip_exception_from_config(
         self, config_errors: DictConfig, exception_mapper: ExtendedEnum
@@ -24,7 +24,9 @@ class BaseWithExceptionHandling(object):
             if what_to_do == "log":
                 tuple_log_exception.append(exception)
             elif what_to_do == "skip":
-                tuple_skip_exception.append(error)
+                tuple_skip_exception.append(exception)
+            else:
+                raise ValueError(f"{what_to_do} not defined")
 
         self.tuple_log_exception = tuple(tuple_log_exception)
         self.tuple_skip_exception = tuple(tuple_skip_exception)

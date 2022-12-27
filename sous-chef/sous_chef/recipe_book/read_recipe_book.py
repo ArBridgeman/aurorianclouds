@@ -183,6 +183,12 @@ class RecipeBook(DataframeSearchable):
         self.dataframe["factor"] = 1
         self.dataframe["amount"] = None
         self.dataframe = Recipe.validate(self.dataframe)
+        num_rated = sum(~self.dataframe.rating.isnull())
+        FILE_LOGGER.info(
+            "Recipe book stats",
+            num_rated=num_rated,
+            num_total=self.dataframe.shape[0],
+        )
 
     def _retrieve_format_recipe_df(self, json_file):
         tmp_df = pd.read_json(

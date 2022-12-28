@@ -338,6 +338,9 @@ class Menu(BaseWithExceptionHandling):
         prep_config = self.config.prep_separate
 
         def _eat_prep_datetime() -> (datetime.timedelta, datetime.timedelta):
+            if row.defrost == "Y":
+                return row.eat_datetime, row.eat_datetime
+
             default_cook_datetime = row.eat_datetime - recipe.time_total
             default_prep_datetime = default_cook_datetime
 
@@ -436,6 +439,9 @@ class Menu(BaseWithExceptionHandling):
     def _format_task_name(
         row: pd.Series,
     ) -> (str, datetime.datetime):
+        if row.defrost == "Y":
+            return row["item"]
+
         factor_str = f"x eat: {row.eat_factor}"
         if row.freeze_factor > 0:
             factor_str += f", x freeze: {row.freeze_factor}"

@@ -1,11 +1,17 @@
+import pandas as pd
 import pytest
 from freezegun import freeze_time
 from hydra import compose, initialize
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
-from sous_chef.menu.create_menu import Menu, MenuIncompleteError
+from sous_chef.menu.create_menu import (
+    FinalizedMenuSchema,
+    Menu,
+    MenuIncompleteError,
+)
 from sous_chef.recipe_book.read_recipe_book import RecipeNotFoundError
 from tests.conftest import FROZEN_DATE
-from tests.integration_tests.util import clean_up_add_todoist_task
+from tests.integration_tests.util import clean_up_add_todoist_task, get_location
+from tests.util import assert_equal_dataframe
 
 
 @pytest.fixture
@@ -71,7 +77,6 @@ def menu(
 @pytest.mark.gsheets
 class TestMenu:
     @staticmethod
-    @pytest.mark.dropbox
     def test_finalize_fixed_menu(menu_with_recipe_book, menu_config):
         menu_config.fixed.menu_number = 0
         menu_with_recipe_book.finalize_fixed_menu()
@@ -99,7 +104,6 @@ class TestMenu:
         }
 
     @staticmethod
-    @pytest.mark.dropbox
     def test_get_menu_for_grocery_list(menu_with_recipe_book):
         menu_with_recipe_book.get_menu_for_grocery_list()
 
@@ -125,7 +129,13 @@ class TestMenu:
 
     @staticmethod
     def test_load_final_menu(menu):
-        menu.load_final_menu()
+        csv = get_location() / "data/tmp-menu.csv"
+        expected_result = FinalizedMenuSchema.validate(
+            pd.read_csv(csv, dtype={"uuid": "str"})
+        )
+        expected_result.eat_unit.fillna("", inplace=True)
+        expected_result.uuid.fillna("NaN", inplace=True)
+        assert_equal_dataframe(menu.load_final_menu(), expected_result)
 
     @staticmethod
     @pytest.mark.todoist

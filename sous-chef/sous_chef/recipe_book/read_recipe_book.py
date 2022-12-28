@@ -111,8 +111,10 @@ class Recipe(pa.SchemaModel):
 @dataclass
 class RecipeBook(DataframeSearchable):
     menu_history: pd.DataFrame = None
+    recipe_book_path: Path = None
 
     def __post_init__(self):
+        self.recipe_book_path = Path(HOME_PATH, self.config.path)
         # load basic recipe book to self.dataframe
         self._read_recipe_book()
         if self.config.deduplicate:
@@ -171,11 +173,10 @@ class RecipeBook(DataframeSearchable):
         return search_term.casefold() in row
 
     def _read_recipe_book(self):
-        recipe_book_path = Path(HOME_PATH, self.config.path)
         self.dataframe = pd.concat(
             [
                 self._retrieve_format_recipe_df(recipe_file)
-                for recipe_file in recipe_book_path.glob(
+                for recipe_file in self.recipe_book_path.glob(
                     self.config.file_pattern
                 )
             ]
@@ -246,6 +247,9 @@ class RecipeBook(DataframeSearchable):
 def create_timedelta(row_entry):
     from fractions import Fraction
 
+    if row_entry == "" or row_entry is None:
+        return ""
+
     row_entry = row_entry.lower().strip()
 
     if row_entry.isdecimal():
@@ -274,9 +278,6 @@ def create_timedelta(row_entry):
                     sum(Fraction(s) for s in groups.group(1).split())
                 )
                 row_entry = f"{float_conv} {groups.group(2).strip()}"
-
-        if row_entry == "":
-            return pd.NaT
 
         # errors = "ignore", if confident we want to ignore further issues
         time_converted = pd.to_timedelta(row_entry, unit=None, errors="coerce")

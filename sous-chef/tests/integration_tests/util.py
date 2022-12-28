@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from requests.exceptions import HTTPError
 
@@ -13,3 +15,7 @@ def clean_up_add_todoist_task(todoist_helper, task_id: str):
         "404 Client Error: Not Found for url: "
         f"https://api.todoist.com/rest/v2/tasks/{task_id}"
     )
+
+
+def get_location():
+    return Path(__file__).parent.absolute()

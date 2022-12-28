@@ -20,8 +20,7 @@ FROZEN_DATE = "2022-01-14"
 @pytest.fixture
 def config_recipe_book():
     with initialize(version_base=None, config_path="../config"):
-        config = compose(config_name="recipe_book")
-        return config.recipe_book
+        return compose(config_name="recipe_book").recipe_book
 
 
 class MockMealTime(ExtendedEnum):

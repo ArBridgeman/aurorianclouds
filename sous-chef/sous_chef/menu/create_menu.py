@@ -122,7 +122,7 @@ class MenuSchema(pa.SchemaModel):
 class FinalizedMenuSchema(MenuSchema):
     # override as should be replaced with one of these
     type: Series[str] = pa.Field(isin=["ingredient", "recipe"])
-    time_total: Series[pd.Timedelta] = pa.Field(nullable=False)
+    time_total: Series[pd.Timedelta] = pa.Field(nullable=False, coerce=True)
     cook_datetime: Series[pd.DatetimeTZDtype] = pa.Field(
         dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True, nullable=False
     )

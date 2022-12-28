@@ -22,8 +22,16 @@ from termcolor import cprint
 FILE_LOGGER = get_logger(__name__)
 
 
+@dataclass
 class GroceryListIncompleteError(Exception):
-    pass
+    custom_message: str
+    message: str = "[grocery list had errors]"
+
+    def __post_init__(self):
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f"{self.message} {self.custom_message}"
 
 
 @dataclass
@@ -62,7 +70,7 @@ class GroceryList:
     def upload_grocery_list_to_todoist(self, todoist_helper: TodoistHelper):
         if self.has_errors:
             raise GroceryListIncompleteError(
-                "[grocery list had errors] will not send to ToDoist until fixed"
+                "will not send to ToDoist until fixed"
             )
 
         # TODO what should be in todoist (e.g. dry mode & messages?)

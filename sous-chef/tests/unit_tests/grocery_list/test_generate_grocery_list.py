@@ -9,6 +9,9 @@ from pint import Unit
 from pytz import timezone
 from sous_chef.formatter.format_unit import UnitFormatter, unit_registry
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
+from sous_chef.grocery_list.generate_grocery_list import (
+    GroceryListIncompleteError,
+)
 from sous_chef.menu.create_menu import MenuRecipe
 from tests.unit_tests.util import create_recipe
 from tests.util import assert_equal_dataframe, assert_equal_series
@@ -130,6 +133,18 @@ def create_menu_recipe(
 
 
 class TestGroceryList:
+    @staticmethod
+    def test_upload_grocery_list_to_todoist(grocery_list, mock_todoist_helper):
+        grocery_list.has_errors = ["[Dummy Error] Something happened"]
+        with pytest.raises(GroceryListIncompleteError) as error:
+            grocery_list.upload_grocery_list_to_todoist(
+                todoist_helper=mock_todoist_helper
+            )
+        assert (
+            str(error.value)
+            == "[grocery list had errors] will not send to ToDoist until fixed"
+        )
+
     @staticmethod
     def test__add_referenced_recipe_to_queue(grocery_list):
         menu_recipe_base = create_menu_recipe()

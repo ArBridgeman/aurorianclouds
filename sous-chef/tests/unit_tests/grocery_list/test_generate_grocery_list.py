@@ -146,9 +146,10 @@ class TestGroceryList:
         )
 
     @staticmethod
-    def test__add_referenced_recipe_to_queue(grocery_list):
+    def test__add_referenced_recipe_to_queue(grocery_list, config_grocery_list):
         menu_recipe_base = create_menu_recipe()
         menu_recipe_ref = create_recipe(title="referenced", factor=1.0)
+        config_grocery_list.run_mode.with_todoist = True
 
         with mock.patch.object(builtins, "input", lambda _: "Y"):
             grocery_list._add_referenced_recipe_to_queue(
@@ -397,7 +398,9 @@ class TestGroceryList:
         assert_equal_dataframe(grocery_list.grocery_list_raw, grocery_raw)
 
     @staticmethod
-    def test__parse_ingredient_from_recipe(grocery_list, mock_ingredient_field):
+    def test__parse_ingredient_from_recipe(
+        grocery_list, config_grocery_list, mock_ingredient_field
+    ):
         menu_recipe = create_menu_recipe()
         ingredient, grocery_raw = create_ingredient_and_grocery_entry_raw()
         recipe = create_recipe(title="dummy recipe 2")
@@ -406,6 +409,7 @@ class TestGroceryList:
             [ingredient],
             [],
         )
+        config_grocery_list.run_mode.with_todoist = True
 
         with mock.patch.object(builtins, "input", lambda _: "Y"):
             grocery_list._parse_ingredient_from_recipe(menu_recipe)

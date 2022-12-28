@@ -1,4 +1,5 @@
 import hydra
+import pandas as pd
 from omegaconf import DictConfig
 from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.formatter.format_unit import UnitFormatter
@@ -16,8 +17,7 @@ from structlog import get_logger
 LOGGER = get_logger(__name__)
 
 
-@hydra.main(config_path="../../config", config_name="grocery_list")
-def main(config: DictConfig) -> None:
+def run_grocery_list(config: DictConfig) -> pd.DataFrame:
     if config.grocery_list.run_mode.only_clean_todoist_mode:
         todoist_helper = TodoistHelper(config.messaging.todoist)
         LOGGER.info(
@@ -69,7 +69,7 @@ def main(config: DictConfig) -> None:
             ingredient_field=ingredient_field,
             unit_formatter=unit_formatter,
         )
-        grocery_list.get_grocery_list_from_menu(
+        final_grocery_list = grocery_list.get_grocery_list_from_menu(
             menu_ingredient_list, menu_recipe_list
         )
 
@@ -79,6 +79,12 @@ def main(config: DictConfig) -> None:
             todoist_helper = TodoistHelper(config.messaging.todoist)
             grocery_list.upload_grocery_list_to_todoist(todoist_helper)
             grocery_list.send_preparation_to_todoist(todoist_helper)
+        return final_grocery_list
+
+
+@hydra.main(config_path="../../config", config_name="grocery_list")
+def main(config: DictConfig) -> None:
+    run_grocery_list(config=config)
 
 
 def _get_ingredient_formatter(

@@ -61,11 +61,12 @@ class GroceryList:
         self,
         menu_ingredient_list: List[MenuIngredient],
         menu_recipe_list: List[MenuRecipe],
-    ):
+    ) -> pd.DataFrame:
         self._add_bulk_manual_ingredient_to_grocery_list(menu_ingredient_list)
         self._add_menu_recipe_to_queue(menu_recipe_list)
         self._process_recipe_queue()
         self._aggregate_grocery_list()
+        return self.grocery_list
 
     def upload_grocery_list_to_todoist(self, todoist_helper: TodoistHelper):
         if self.has_errors:
@@ -336,17 +337,24 @@ class GroceryList:
     ) -> pd.DataFrame:
         groupby_columns = ["unit", "pint_unit", "item", "is_optional"]
         # set dropna to false, as item may not have unit
-        agg = group.groupby(groupby_columns, as_index=False, dropna=False).agg(
-            quantity=("quantity", "sum"),
-            is_staple=("is_staple", "first"),
-            food_group=("food_group", "first"),
-            item_plural=("item_plural", "first"),
-            store=("store", "first"),
-            barcode=("barcode", "first"),
-            from_recipe=("from_recipe", lambda x: list(set(x))),
-            for_day=("for_day", "min"),
-            for_day_str=("for_day_str", lambda x: list(set(x))),
-            get_on_second_shopping_day=("get_on_second_shopping_day", "first"),
+        agg = (
+            group.groupby(groupby_columns, as_index=False, dropna=False)
+            .agg(
+                quantity=("quantity", "sum"),
+                is_staple=("is_staple", "first"),
+                food_group=("food_group", "first"),
+                item_plural=("item_plural", "first"),
+                store=("store", "first"),
+                barcode=("barcode", "first"),
+                from_recipe=("from_recipe", lambda x: sorted(list(set(x)))),
+                for_day=("for_day", "min"),
+                for_day_str=("for_day_str", lambda x: sorted(list(set(x)))),
+                get_on_second_shopping_day=(
+                    "get_on_second_shopping_day",
+                    "first",
+                ),
+            )
+            .astype({"is_staple": bool, "barcode": str})
         )
         if self.config.ingredient_replacement.can_to_dried_bean.is_active:
             agg = agg.apply(self._override_can_to_dried_bean, axis=1)

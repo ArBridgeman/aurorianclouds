@@ -219,8 +219,10 @@ class TestMenu:
         menu._check_menu_quality(
             weekday=weekday, recipe=create_recipe(rating=np.nan)
         )
+        menu_config.quality_check.workday.recipe_unrated_allowed = False
         menu._check_menu_quality(
-            weekday=weekday, recipe=create_recipe(rating=3.0)
+            weekday=weekday,
+            recipe=create_recipe(rating=3.0, time_inactive_str="1 min"),
         )
 
     @staticmethod

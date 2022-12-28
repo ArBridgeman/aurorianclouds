@@ -138,7 +138,7 @@ class RecipeBook(DataframeSearchable):
                 recipe.uuid in self.menu_history.uuid.values
             ):
                 raise MenuHistoryError(recipe_title=recipe.title)
-            return recipe
+            return recipe.copy(deep=True)
         except FuzzySearchError as e:
             raise RecipeNotFoundError(recipe_title=title, search_results=str(e))
 

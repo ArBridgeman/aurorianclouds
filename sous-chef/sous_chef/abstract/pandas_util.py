@@ -15,7 +15,7 @@ def find_column_intersection(
 def are_shared_df_entries_identical(
     orig_df: pd.DataFrame, new_df: pd.DataFrame, shared_column: str
 ):
-    shared_columns = set(orig_df.columns).intersection(new_df.columns)
+    shared_columns = list(set(orig_df.columns).intersection(new_df.columns))
     shared_values = find_column_intersection(orig_df, new_df, shared_column)
 
     def _select_shared_columns(df: pd.DataFrame) -> pd.DataFrame:

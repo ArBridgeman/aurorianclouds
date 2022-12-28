@@ -181,6 +181,8 @@ class Menu(BaseWithExceptionHandling):
                 .replace("", "N")
                 .str.upper()
             )
+        else:
+            self.dataframe["override_check"] = "N"
 
         self.dataframe["eat_datetime"] = self.dataframe.apply(
             lambda row: self.due_date_formatter.get_due_datetime_with_meal_time(
@@ -199,10 +201,10 @@ class Menu(BaseWithExceptionHandling):
                 custom_message="will not send to finalize until fixed"
             )
 
-        columns_to_drop = ["eat_datetime", "prep_day_before"]
-        if "override_check" in self.dataframe.columns:
-            columns_to_drop += ["override_check"]
-        self.dataframe.drop(columns=columns_to_drop, inplace=True)
+        self.dataframe.drop(
+            columns=["eat_datetime", "override_check", "prep_day_before"],
+            inplace=True,
+        )
         self._save_menu()
 
     def get_menu_for_grocery_list(
@@ -360,16 +362,16 @@ class Menu(BaseWithExceptionHandling):
                 ),
             )
 
-        if "override_check" in row.keys() and row.override_check == "N":
-            self._check_menu_quality(
-                weekday=row.prep_datetime.weekday(), recipe=recipe
-            )
-
         row["item"] = recipe.title
         row["rating"] = recipe.rating
         row["time_total"] = recipe.time_total
         row["uuid"] = recipe.uuid
         row["cook_datetime"], row["prep_datetime"] = _eat_prep_datetime()
+
+        if row.override_check == "N":
+            self._check_menu_quality(
+                weekday=row.prep_datetime.weekday(), recipe=recipe
+            )
 
         # TODO remove/replace once recipes easily viewable in UI
         self._inspect_unrated_recipe(recipe)

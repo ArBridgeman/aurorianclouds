@@ -87,6 +87,7 @@ class MenuBuilder:
         menu["eat_datetime"] = pd.Timestamp(
             year=2022, month=1, day=21, hour=17, minute=45, tz="Europe/Berlin"
         )
+        menu["override_check"] = "N"
         if not post_process_recipe:
             return MenuSchema.validate(pd.DataFrame(menu, index=[0]))
         menu["rating"] = rating
@@ -211,11 +212,26 @@ class TestMenu:
         assert result["time_total"] is pd.NaT
 
     @staticmethod
-    def test__check_menu_quality_ensure_rating_exceed_min(menu, menu_config):
+    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4, 5, 6])
+    def test__check_menu_quality(menu, menu_config, weekday):
+        menu_config.quality_check.recipe_rating_min = 3.0
+        menu_config.quality_check.workday.recipe_unrated_allowed = True
+        menu._check_menu_quality(
+            weekday=weekday, recipe=create_recipe(rating=np.nan)
+        )
+        menu._check_menu_quality(
+            weekday=weekday, recipe=create_recipe(rating=3.0)
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4, 5, 6])
+    def test__check_menu_quality_ensure_rating_exceed_min(
+        menu, menu_config, weekday
+    ):
         menu_config.quality_check.recipe_rating_min = 3.0
         with pytest.raises(MenuQualityError) as error:
             menu._check_menu_quality(
-                weekday=0, recipe=create_recipe(rating=2.5)
+                weekday=weekday, recipe=create_recipe(rating=2.5)
             )
         assert (
             str(error.value)

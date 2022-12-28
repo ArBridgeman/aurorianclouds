@@ -284,6 +284,18 @@ class TestMenu:
 
     @staticmethod
     @freeze_time(FROZEN_DATE)
+    def test__format_task_name_defrost(menu, menu_builder):
+        row = menu_builder.create_menu_row(
+            post_process_recipe=True,
+            item="french onion soup",
+            meal_time="dinner",
+            time_total_str=pd.to_timedelta("40 min"),
+            defrost="Y",
+        ).squeeze()
+        assert menu._format_task_name(row) == row["item"]
+
+    @staticmethod
+    @freeze_time(FROZEN_DATE)
     def test__format_task_name_ingredient(menu, menu_builder):
         row = menu_builder.create_menu_row(
             post_process_recipe=True,

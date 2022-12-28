@@ -2,7 +2,8 @@ import pytest
 from freezegun import freeze_time
 from hydra import compose, initialize
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
-from sous_chef.menu.create_menu import Menu
+from sous_chef.menu.create_menu import Menu, MenuIncompleteError
+from sous_chef.recipe_book.read_recipe_book import RecipeNotFoundError
 from tests.conftest import FROZEN_DATE
 from tests.integration_tests.util import clean_up_add_todoist_task
 
@@ -76,9 +77,51 @@ class TestMenu:
         menu_with_recipe_book.finalize_fixed_menu()
 
     @staticmethod
+    def test_finalize_fixed_menu_fails_for_record_exception(
+        menu, menu_config, mock_recipe_book
+    ):
+        menu_config.fixed.menu_number = 0
+        menu.tuple_log_exception = (RecipeNotFoundError,)
+
+        mock_recipe_book.get_recipe_by_title.side_effect = RecipeNotFoundError(
+            recipe_title="dummy", search_results="dummy"
+        )
+
+        with pytest.raises(MenuIncompleteError) as error:
+            menu.finalize_fixed_menu()()
+
+        assert (
+            str(error.value)
+            == "[menu had errors] will not send to finalize until fixed"
+        )
+        assert set(menu.record_exception) == {
+            "[recipe not found] recipe=dummy search_results=[dummy]"
+        }
+
+    @staticmethod
     @pytest.mark.dropbox
     def test_get_menu_for_grocery_list(menu_with_recipe_book):
         menu_with_recipe_book.get_menu_for_grocery_list()
+
+    @staticmethod
+    def test_get_menu_for_grocery_list_fails_for_record_exception(
+        menu, mock_recipe_book
+    ):
+        menu.tuple_log_exception = (RecipeNotFoundError,)
+        mock_recipe_book.get_recipe_by_title.side_effect = RecipeNotFoundError(
+            recipe_title="dummy", search_results="dummy"
+        )
+
+        with pytest.raises(MenuIncompleteError) as error:
+            menu.get_menu_for_grocery_list()
+
+        assert (
+            str(error.value)
+            == "[menu had errors] will not send to grocery list until fixed"
+        )
+        assert set(menu.record_exception) == {
+            "[recipe not found] recipe=dummy search_results=[dummy]"
+        }
 
     @staticmethod
     def test_load_final_menu(menu):

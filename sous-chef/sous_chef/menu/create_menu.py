@@ -51,6 +51,18 @@ class MenuIncompleteError(Exception):
 
 
 @dataclass
+class MenuConfigError(Exception):
+    custom_message: str
+    message: str = "[menu config error]"
+
+    def __post_init__(self):
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f"{self.message} {self.custom_message}"
+
+
+@dataclass
 class MenuQualityError(Exception):
     error_text: str
     recipe_title: str
@@ -452,6 +464,7 @@ class Menu(BaseWithExceptionHandling):
     def _get_cook_day_as_weekday(self, cook_day: str):
         if cook_day in self.cook_days:
             return self.cook_days[cook_day]
+        raise MenuConfigError(f"{cook_day} not defined in yaml")
 
     def _inspect_unrated_recipe(self, recipe: pd.Series):
         if self.config.run_mode.with_inspect_unrated_recipe:

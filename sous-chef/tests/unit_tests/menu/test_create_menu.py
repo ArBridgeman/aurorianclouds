@@ -15,6 +15,7 @@ from sous_chef.menu.create_menu import (
     FinalizedMenuSchema,
     Menu,
     MenuIngredient,
+    MenuQualityError,
     MenuRecipe,
     MenuSchema,
 )
@@ -207,7 +208,50 @@ class TestMenu:
         )
 
         assert result["item"] == recipe_without_time_total.title
-        # assert_equal_series(result["time_total"] is pd.NaT
+        assert result["time_total"] is pd.NaT
+
+    @staticmethod
+    def test__check_menu_quality_ensure_rating_exceed_min(menu, menu_config):
+        menu_config.quality_check.recipe_rating_min = 3.0
+        with pytest.raises(MenuQualityError) as error:
+            menu._check_menu_quality(
+                weekday=0, recipe=create_recipe(rating=2.5)
+            )
+        assert (
+            str(error.value)
+            == "[menu quality] recipe=dummy_title error=rating=2.5 < 3.0"
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4])
+    def test__check_menu_quality_ensure_workday_not_unrated_recipe(
+        menu, menu_config, weekday
+    ):
+        menu_config.quality_check.workday.recipe_unrated_allowed = False
+        with pytest.raises(MenuQualityError) as error:
+            menu._check_menu_quality(
+                weekday=0, recipe=create_recipe(rating=np.nan)
+            )
+        assert str(error.value) == (
+            "[menu quality] recipe=dummy_title "
+            "error=(on workday) unrated recipe"
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4])
+    def test__check_menu_quality_ensure_workday_not_exceed_active_cook_time(
+        menu, menu_config, weekday
+    ):
+        menu_config.quality_check.workday.cook_active_minutes_max = 10
+        with pytest.raises(MenuQualityError) as error:
+            menu._check_menu_quality(
+                weekday=weekday,
+                recipe=create_recipe(time_total_str="15 minutes"),
+            )
+        assert str(error.value) == (
+            "[menu quality] recipe=dummy_title "
+            "error=(on workday) cook_active_minutes=15.0 > 10.0"
+        )
 
     @staticmethod
     @freeze_time(FROZEN_DATE)

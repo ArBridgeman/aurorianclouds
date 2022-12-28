@@ -386,7 +386,7 @@ class Menu(BaseWithExceptionHandling):
         # workday = weekday
         if weekday < 5:
             if not quality_check_config.workday.recipe_unrated_allowed:
-                self._ensure_workday_not_unrated_recipe()
+                self._ensure_workday_not_unrated_recipe(recipe=recipe)
             self._ensure_workday_not_exceed_active_cook_time(
                 recipe=recipe,
                 cook_active_minutes_max=float(

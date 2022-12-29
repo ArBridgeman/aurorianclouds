@@ -1,3 +1,4 @@
+import datetime
 import uuid
 from dataclasses import dataclass
 from typing import Union
@@ -7,11 +8,14 @@ import numpy as np
 import pandas as pd
 import pytest
 from hydra import compose, initialize
+from sous_chef.menu.record_menu_history import MenuHistoryError
 from sous_chef.recipe_book.read_recipe_book import (
     RecipeBook,
+    RecipeTotalTimeUndefinedError,
     SelectRandomRecipeError,
     create_timedelta,
 )
+from tests.conftest import FROZEN_DATE
 from tests.util import assert_equal_dataframe, assert_equal_series
 
 
@@ -31,6 +35,26 @@ def config_recipe_book():
 def recipe_book(config_recipe_book):
     with patch.object(RecipeBook, "__post_init__"):
         return RecipeBook(config_recipe_book)
+
+
+@pytest.fixture
+def mock_menu_history(recipe_title, recipe_uuid):
+    return pd.DataFrame(
+        {
+            "cook_datetime": [
+                datetime.datetime.strptime(FROZEN_DATE, "%Y-%m-%d")
+            ],
+            "eat_factor": [1],
+            "item": [recipe_title],
+            "uuid": [recipe_uuid],
+        }
+    )
+
+
+@pytest.fixture
+def recipe_book_with_menu_history(config_recipe_book, mock_menu_history):
+    with patch.object(RecipeBook, "__post_init__"):
+        return RecipeBook(config_recipe_book, menu_history=mock_menu_history)
 
 
 @dataclass
@@ -142,6 +166,47 @@ class TestRecipeBook:
 
     @staticmethod
     @pytest.mark.parametrize(
+        "recipe_title,recipe_uuid", [["Recently eaten", str(uuid.uuid1())]]
+    )
+    def test_get_recipe_by_title_raises_error_when_in_menu_history(
+        recipe_book_with_menu_history,
+        recipe_book_builder,
+        mock_menu_history,
+        recipe_title,
+        recipe_uuid,
+    ):
+        recipe = recipe_book_builder.create_recipe(
+            title=recipe_title, uuid_value=recipe_uuid
+        )
+        recipe_book_with_menu_history.dataframe = (
+            recipe_book_builder.add_recipe_list(
+                [recipe_book_builder.create_recipe(), recipe]
+            ).get_recipe_book()
+        )
+
+        with pytest.raises(MenuHistoryError) as error:
+            recipe_book_with_menu_history.get_recipe_by_title(
+                recipe_title.casefold()
+            )
+        assert (
+            str(error.value) == "[in recent menu history] recipe=Recently eaten"
+        )
+
+    @staticmethod
+    def test__check_total_time_raises_error_when_nat(
+        recipe_book, recipe_book_builder
+    ):
+        recipe = recipe_book_builder.create_recipe().squeeze()
+        recipe.time_total = pd.NaT
+        with pytest.raises(RecipeTotalTimeUndefinedError) as error:
+            recipe_book._check_total_time(recipe=recipe)
+        assert (
+            str(error.value)
+            == "[recipe total time undefined] recipe=Roasted corn salsa"
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize(
         "cell,expected_result",
         [
             (np.nan, []),
@@ -240,6 +305,64 @@ class TestRecipeBook:
                 "warning": "only 3 entries available",
             }
         ]
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "method,item_type",
+        [
+            ("get_random_recipe_by_category", "categories"),
+            (
+                "get_random_recipe_by_tag",
+                "tags",
+            ),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "recipe_title,recipe_uuid",
+        [["Exclude by menu history", str(uuid.uuid1())]],
+    )
+    def test__select_random_recipe_weighted_by_rating_removes_menu_history(
+        config_recipe_book,
+        recipe_book_with_menu_history,
+        random_seed,
+        recipe_book_builder,
+        mock_menu_history,
+        recipe_title,
+        recipe_uuid,
+        log,
+        method,
+        item_type,
+    ):
+        config_recipe_book.random_select.min_thresh_warning = 5
+
+        search_term = "search_term"
+        search_dict = {item_type: [search_term]}
+        recipe = recipe_book_builder.create_recipe(
+            title="chosen one", rating=4.5, **search_dict
+        )
+        recipe_book = recipe_book_builder.add_recipe_list(
+            [
+                recipe_book_builder.create_recipe(
+                    title="not chosen", rating=0.5, **search_dict
+                ),
+                recipe_book_builder.create_recipe(
+                    title="not chosen2", rating=0.5, **search_dict
+                ),
+                # made sure would be selected before excluding
+                recipe_book_builder.create_recipe(
+                    title=recipe_title,
+                    rating=5.0,
+                    uuid_value=recipe_uuid,
+                    **search_dict,
+                ),
+                recipe,
+            ]
+        ).get_recipe_book()
+
+        recipe_book_with_menu_history.dataframe = recipe_book
+
+        result = getattr(recipe_book_with_menu_history, method)(search_term)
+        assert_equal_series(result, recipe.squeeze())
 
     @staticmethod
     def test__select_random_recipe_weighted_by_rating_raise_error(

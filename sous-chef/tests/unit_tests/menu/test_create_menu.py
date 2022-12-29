@@ -1,7 +1,6 @@
 import datetime
 from dataclasses import dataclass
 from typing import Union
-from unittest.mock import Mock, patch
 
 import numpy as np
 import pandas as pd
@@ -19,7 +18,6 @@ from sous_chef.menu.create_menu import (
     MenuRecipe,
     MenuSchema,
 )
-from sous_chef.messaging.gsheets_api import GsheetsHelper
 from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
 from tests.util import assert_equal_series
@@ -133,14 +131,6 @@ def menu_default(menu_builder):
         ]
     )
     return menu_builder.get_menu()
-
-
-@pytest.fixture
-def mock_gsheets():
-    with initialize(version_base=None, config_path="../../../config/messaging"):
-        config = compose(config_name="gsheets_api")
-        with patch.object(GsheetsHelper, "__post_init__"):
-            return Mock(GsheetsHelper(config))
 
 
 @pytest.fixture

@@ -1,4 +1,5 @@
 import datetime
+from dataclasses import dataclass
 
 from pytz import timezone
 from sous_chef.abstract.extended_enum import ExtendedEnum, ExtendedIntEnum
@@ -27,10 +28,16 @@ class MealTime(ExtendedEnum):
     dinner = {"hour": 17, "minute": 45}
 
 
+@dataclass
 class DueDatetimeFormatter:
-    def __init__(self, anchor_day: str):
-        self.anchor_datetime = self._get_anchor_date_at_midnight(anchor_day)
-        self.meal_time = MealTime
+    anchor_day: str
+    meal_time: MealTime = MealTime
+    anchor_datetime: datetime.datetime = None
+
+    def __post_init__(self):
+        self.anchor_datetime = self._get_anchor_date_at_midnight(
+            self.anchor_day
+        )
 
     def get_anchor_date(self) -> datetime.date:
         return self.anchor_datetime.date()

@@ -15,8 +15,7 @@ from sous_chef.recipe_book.read_recipe_book import RecipeBook
 from sous_chef.rtk.read_write_rtk import RtkService
 
 
-@hydra.main(config_path="../../config/", config_name="menu_main")
-def main(config: DictConfig):
+def run_menu(config: DictConfig):
     # unzip latest recipe versions
     rtk_service = RtkService(config.rtk)
     rtk_service.unzip()
@@ -56,13 +55,20 @@ def main(config: DictConfig):
         final_menu = menu.load_final_menu()
         menu_history.add_current_menu_to_history(final_menu)
 
-    if config.menu.run_mode.with_todoist:
-        todoist_helper = TodoistHelper(config.messaging.todoist)
-        menu.upload_menu_to_todoist(todoist_helper)
+        if config.menu.run_mode.with_todoist:
+            todoist_helper = TodoistHelper(config.messaging.todoist)
+            menu.upload_menu_to_todoist(todoist_helper)
 
-    if config.menu.run_mode.with_gmail:
-        gmail_helper = GmailHelper(config.messaging.gmail)
-        menu.send_menu_to_gmail(gmail_helper)
+        if config.menu.run_mode.with_gmail:
+            gmail_helper = GmailHelper(config.messaging.gmail)
+            menu.send_menu_to_gmail(gmail_helper)
+
+        return final_menu
+
+
+@hydra.main(config_path="../../config/", config_name="menu_main")
+def main(config: DictConfig):
+    run_menu(config)
 
 
 def _get_ingredient_formatter(

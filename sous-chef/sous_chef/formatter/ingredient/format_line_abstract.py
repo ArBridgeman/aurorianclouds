@@ -3,6 +3,7 @@ from fractions import Fraction
 
 import regex
 from pint import Unit
+from sous_chef.abstract.extended_enum import ExtendedEnum
 from sous_chef.formatter.format_unit import UnitExtractionError, UnitFormatter
 
 
@@ -15,7 +16,11 @@ class LineParsingError(Exception):
         super().__init__(self.message)
 
     def __str__(self):
-        return f"{self.message}: text={self.line}"
+        return f"{self.message} text={self.line}"
+
+
+class MapLineErrorToException(ExtendedEnum):
+    ingredient_line_parsing_error = LineParsingError
 
 
 @dataclass
@@ -31,6 +36,8 @@ class LineFormatter:
     item: str = None
 
     def __post_init__(self):
+        # replace BOM character
+        self.line = self.line.replace("\ufeff", "").strip()
         self._extract_field_list_from_line()
 
     def _set_quantity_float(self):
@@ -58,7 +65,7 @@ class LineFormatter:
     def _split_item_and_unit(self):
         # TODO replace with NER/NLP or make more general
         text_split = self.item.split(" ")
-        if len(text_split) > 1:
+        if len(text_split) >= 1:
             try:
                 text_unit = text_split[0]
                 unit, pint_unit = self.unit_formatter.extract_unit_from_text(

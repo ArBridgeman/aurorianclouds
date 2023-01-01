@@ -62,7 +62,7 @@ class TestIngredientLine:
     ):
         with pytest.raises(LineParsingError) as error:
             ingredient_line("????")
-        assert str(error.value) == "[line parsing failed]: text=????"
+        assert str(error.value) == "[line parsing failed] text=????"
 
     @staticmethod
     @pytest.mark.parametrize(

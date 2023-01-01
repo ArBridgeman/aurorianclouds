@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="[sous_chef] grocery list dry" type="PythonConfigurationType" factoryName="Python">
+  <configuration default="false" name="[sous_chef] grocery list dev" type="PythonConfigurationType" factoryName="Python">
     <module name="sous-chef" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
@@ -20,7 +20,7 @@
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/sous-chef/sous_chef/grocery_list/main.py" />
     <option name="PARAMETERS" value="grocery_list.run_mode.with_todoist=false" />
     <option name="SHOW_COMMAND_LINE" value="false" />
-    <option name="EMULATE_TERMINAL" value="false" />
+    <option name="EMULATE_TERMINAL" value="true" />
     <option name="MODULE_MODE" value="false" />
     <option name="REDIRECT_INPUT" value="false" />
     <option name="INPUT_FILE" value="" />

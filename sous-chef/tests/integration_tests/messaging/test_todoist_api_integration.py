@@ -17,6 +17,7 @@ class TestTodoistHelper:
         priority: int = 1,
         label_list: Optional[List] = None,
         description: Optional[str] = None,
+        parent_id: Optional[str] = None,
     ):
         return {
             "level": "info",
@@ -28,6 +29,7 @@ class TestTodoistHelper:
             "priority": priority,
             "labels": label_list,
             "description": description,
+            "parent_id": parent_id,
         }
 
     @staticmethod

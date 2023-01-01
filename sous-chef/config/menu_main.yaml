@@ -2,16 +2,26 @@ defaults:
   - pantry_list
   - recipe_book
   - rtk
+  - date/get_due_date
   - formatter/format_ingredient
   - menu/create_menu
+  - menu/record_menu_history
   - messaging/gmail_api
   - messaging/gsheets_api
   - messaging/todoist_api
   - _self_
 
 menu:
+  menu_history_days: 30
   create_menu:
     input_method: fixed
+    errors:
+      recipe_not_found: log
+      recipe_total_time_undefined: log
+      recipe_in_recent_menu_history: log
+      pantry_ingredient_not_known: log
+      ingredient_marked_as_bad: log
+      menu_quality_check: log
     todoist:
       remove_existing_task: true
   run_mode:

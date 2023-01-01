@@ -1,4 +1,4 @@
-from typing import Set
+from typing import Dict, Set
 
 import pandas as pd
 from structlog import get_logger
@@ -15,7 +15,7 @@ def find_column_intersection(
 def are_shared_df_entries_identical(
     orig_df: pd.DataFrame, new_df: pd.DataFrame, shared_column: str
 ):
-    shared_columns = set(orig_df.columns).intersection(new_df.columns)
+    shared_columns = list(set(orig_df.columns).intersection(new_df.columns))
     shared_values = find_column_intersection(orig_df, new_df, shared_column)
 
     def _select_shared_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -43,3 +43,9 @@ def are_shared_df_entries_identical(
         )
         return False
     return True
+
+
+def get_dict_from_columns(
+    df: pd.DataFrame, key_col: str, value_col: str
+) -> Dict:
+    return {key: value for key, value in df[[key_col, value_col]].values}

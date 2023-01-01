@@ -1,0 +1,5 @@
+record_menu_history:
+  max_keep_days: 365
+  save_loc:
+    workbook: menu-history
+    worksheet: menu-history

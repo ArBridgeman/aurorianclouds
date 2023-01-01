@@ -1,10 +1,10 @@
 import hydra
+import pandas as pd
 from omegaconf import DictConfig
+from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
-from sous_chef.formatter.ingredient.format_ingredient_field import (
-    IngredientFieldFormatter,
-)
+from sous_chef.formatter.ingredient.get_ingredient_field import IngredientField
 from sous_chef.grocery_list.generate_grocery_list import GroceryList
 from sous_chef.menu.create_menu import Menu
 from sous_chef.messaging.gsheets_api import GsheetsHelper
@@ -14,25 +14,20 @@ from sous_chef.recipe_book.read_recipe_book import RecipeBook
 from sous_chef.rtk.read_write_rtk import RtkService
 from structlog import get_logger
 
-LOG = get_logger()
+LOGGER = get_logger(__name__)
 
 
-@hydra.main(config_path="../../config", config_name="grocery_list")
-def main(config: DictConfig) -> None:
+def run_grocery_list(config: DictConfig) -> pd.DataFrame:
     if config.grocery_list.run_mode.only_clean_todoist_mode:
-        # TODO all should be contained in todoist helper method & executed here
         todoist_helper = TodoistHelper(config.messaging.todoist)
-        print(
+        LOGGER.info(
             "Deleting previous tasks in project {}".format(
                 config.grocery_list.todoist.project_name
             )
         )
-        [
-            todoist_helper.delete_all_items_in_project(
-                config.grocery_list.todoist.project_name
-            )
-            for _ in range(3)
-        ]
+        todoist_helper.delete_all_items_in_project(
+            config.grocery_list.todoist.project_name
+        )
     else:
         # unzip latest recipe versions
         rtk_service = RtkService(config.rtk)
@@ -44,15 +39,20 @@ def main(config: DictConfig) -> None:
         ingredient_formatter = _get_ingredient_formatter(
             config, gsheets_helper, unit_formatter
         )
-        ingredient_field_formatter = IngredientFieldFormatter(
-            config.formatter.format_ingredient_field,
+        ingredient_field = IngredientField(
+            config.formatter.get_ingredient_field,
             ingredient_formatter=ingredient_formatter,
             recipe_book=recipe_book,
+        )
+
+        due_date_formatter = DueDatetimeFormatter(
+            anchor_day=config.date.due_date.anchor_day
         )
 
         # get menu for grocery list
         menu = Menu(
             config=config.menu.create_menu,
+            due_date_formatter=due_date_formatter,
             gsheets_helper=gsheets_helper,
             ingredient_formatter=ingredient_formatter,
             recipe_book=recipe_book,
@@ -65,10 +65,11 @@ def main(config: DictConfig) -> None:
         # get grocery list
         grocery_list = GroceryList(
             config.grocery_list,
-            ingredient_field_formatter=ingredient_field_formatter,
+            due_date_formatter=due_date_formatter,
+            ingredient_field=ingredient_field,
             unit_formatter=unit_formatter,
         )
-        grocery_list.get_grocery_list_from_menu(
+        final_grocery_list = grocery_list.get_grocery_list_from_menu(
             menu_ingredient_list, menu_recipe_list
         )
 
@@ -78,6 +79,12 @@ def main(config: DictConfig) -> None:
             todoist_helper = TodoistHelper(config.messaging.todoist)
             grocery_list.upload_grocery_list_to_todoist(todoist_helper)
             grocery_list.send_preparation_to_todoist(todoist_helper)
+        return final_grocery_list
+
+
+@hydra.main(config_path="../../config", config_name="grocery_list")
+def main(config: DictConfig) -> None:
+    run_grocery_list(config=config)
 
 
 def _get_ingredient_formatter(

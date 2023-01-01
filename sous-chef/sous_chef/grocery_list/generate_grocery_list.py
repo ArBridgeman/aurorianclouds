@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from itertools import chain
 from typing import List
 
@@ -10,13 +10,12 @@ from sous_chef.date.get_due_date import DueDatetimeFormatter, MealTime, Weekday
 from sous_chef.formatter.format_str import convert_number_to_str
 from sous_chef.formatter.format_unit import UnitFormatter, unit_registry
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
-from sous_chef.formatter.ingredient.format_ingredient_field import (
-    IngredientFieldFormatter,
-)
+from sous_chef.formatter.ingredient.get_ingredient_field import IngredientField
 from sous_chef.menu.create_menu import MenuIngredient, MenuRecipe
 from sous_chef.messaging.todoist_api import TodoistHelper
 from sous_chef.recipe_book.read_recipe_book import Recipe
 from structlog import get_logger
+from termcolor import cprint
 
 # TODO method to mark ingredients that can only be bought the day before
 
@@ -24,25 +23,37 @@ FILE_LOGGER = get_logger(__name__)
 
 
 @dataclass
+class GroceryListIncompleteError(Exception):
+    custom_message: str
+    message: str = "[grocery list had errors]"
+
+    def __post_init__(self):
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f"{self.message} {self.custom_message}"
+
+
+@dataclass
 class GroceryList:
     config: DictConfig
+    due_date_formatter: DueDatetimeFormatter
     unit_formatter: UnitFormatter
-    ingredient_field_formatter: IngredientFieldFormatter
+    ingredient_field: IngredientField
     # TODO do properly? pass everything inside methods? only set final list?
     queue_menu_recipe: List[MenuRecipe] = None
     queue_preparation: pd.DataFrame = None
     grocery_list_raw: pd.DataFrame = None
     grocery_list: pd.DataFrame = None
-    date_formatter: DueDatetimeFormatter = field(init=False)
-    second_shopping_date: datetime = field(init=False)
+    second_shopping_date: date = field(init=False)
     second_shopping_day_group: List = field(init=False)
+    has_errors: bool = False
 
     def __post_init__(self):
-        self.date_formatter = DueDatetimeFormatter(self.config.anchor_day)
         self.second_shopping_date = (
-            self.date_formatter.get_date_relative_to_anchor(
+            self.due_date_formatter.get_date_relative_to_anchor(
                 self.config.shopping.secondary_day
-            )
+            ).date()
         )
         self.second_shopping_day_group = self.config.shopping.secondary_group
 
@@ -50,23 +61,24 @@ class GroceryList:
         self,
         menu_ingredient_list: List[MenuIngredient],
         menu_recipe_list: List[MenuRecipe],
-    ):
+    ) -> pd.DataFrame:
         self._add_bulk_manual_ingredient_to_grocery_list(menu_ingredient_list)
         self._add_menu_recipe_to_queue(menu_recipe_list)
         self._process_recipe_queue()
         self._aggregate_grocery_list()
+        return self.grocery_list
 
     def upload_grocery_list_to_todoist(self, todoist_helper: TodoistHelper):
+        if self.has_errors:
+            raise GroceryListIncompleteError(
+                "will not send to ToDoist until fixed"
+            )
+
         # TODO what should be in todoist (e.g. dry mode & messages?)
         project_name = self.config.todoist.project_name
 
         if self.config.todoist.remove_existing_task:
-            # TODO move repeat delete, etc. into todoist option
-            # TODO add timeout option?
-            [
-                todoist_helper.delete_all_items_in_project(project_name)
-                for _ in range(3)
-            ]
+            todoist_helper.delete_all_items_in_project(project_name)
 
         for section, group in self.grocery_list.groupby("aisle_group"):
             if section in self.config.todoist.skip_group:
@@ -103,10 +115,7 @@ class GroceryList:
         # TODO separate service? need freezer check for defrosts
         project_name = self.config.preparation.project_name
         if self.config.todoist.remove_existing_prep_task:
-            [
-                todoist_helper.delete_all_items_in_project(project_name)
-                for _ in range(3)
-            ]
+            todoist_helper.delete_all_items_in_project(project_name)
 
         if self.queue_preparation is not None:
             for _, row in self.queue_preparation.iterrows():
@@ -117,9 +126,7 @@ class GroceryList:
                         chain.from_iterable([row.from_recipe, row.for_day_str])
                     )
                     + ["prep"],
-                    due_date=self.date_formatter.get_due_datetime_with_time(
-                        weekday=row.weekday, hour=row.hour, minute=row.minute
-                    ),
+                    due_date=row.due_date,
                     priority=self.config.preparation.task_priority,
                 )
 
@@ -141,7 +148,7 @@ class GroceryList:
         if self.grocery_list_raw is None:
             self.grocery_list_raw = pd.DataFrame()
 
-        self.grocery_list_raw = self.grocery_list_raw.append(
+        new_entry = pd.DataFrame(
             {
                 "quantity": quantity,
                 # TODO do we need unit?
@@ -165,7 +172,11 @@ class GroceryList:
                     for_day=for_day, food_group=food_group
                 ),
             },
-            ignore_index=True,
+            index=[0],
+        )
+
+        self.grocery_list_raw = pd.concat(
+            [self.grocery_list_raw, new_entry], ignore_index=True
         )
 
     def _add_bulk_manual_ingredient_to_grocery_list(
@@ -201,18 +212,14 @@ class GroceryList:
     def _add_preparation_task_to_queue(
         self,
         task: str,
-        weekday: str,
-        hour: int,
-        minute: int,
+        due_date: datetime,
         from_recipe: List[str],
         for_day_str: List[str],
     ):
         preparation_task = pd.DataFrame(
             {
                 "task": [task],
-                "weekday": [weekday],
-                "hour": [hour],
-                "minute": [minute],
+                "due_date": [due_date],
                 "from_recipe": [from_recipe],
                 "for_day_str": [for_day_str],
             }
@@ -233,7 +240,7 @@ class GroceryList:
                 response = input(f"\n{text} [Y/N] ").upper()
             return response
 
-        def _get_schedule_day_hour_minute():
+        def _get_schedule_day_hour_minute() -> datetime:
             day = None
             while day not in Weekday.name_list("capitalize"):
                 day = input("\nWeekday: ").capitalize()
@@ -243,7 +250,9 @@ class GroceryList:
             while meal_time not in meal_times:
                 meal_time = input(f"\nMealtime {meal_times}: ").lower()
             meal_time = MealTime[meal_time].value
-            return day, meal_time["hour"], meal_time["minute"]
+            return self.due_date_formatter.get_due_datetime_with_time(
+                weekday=day, hour=meal_time["hour"], minute=meal_time["minute"]
+            )
 
         def _give_referenced_recipe_details():
             total_factor = menu_recipe.eat_factor + menu_recipe.freeze_factor
@@ -253,7 +262,7 @@ class GroceryList:
             print(f"-- for day: {menu_recipe.for_day.strftime('%a')}")
             print(f"- referenced recipe: {recipe.title}")
             print(f"-- amount needed: {recipe.amount}")
-            print(f"-- total time: {recipe.total_cook_time}")
+            print(f"-- total time: {recipe.time_total}")
 
         for recipe in recipe_list:
             from_recipe = f"{recipe.title}_{menu_recipe.recipe.title}"
@@ -272,8 +281,8 @@ class GroceryList:
                     self._add_menu_recipe_to_queue([menu_sub_recipe])
 
                     if (
-                        recipe.total_cook_time is None
-                        or recipe.total_cook_time > timedelta(minutes=15)
+                        recipe.time_total is None
+                        or recipe.time_total > timedelta(minutes=15)
                     ):
                         if (
                             _check_yes_no(
@@ -281,16 +290,9 @@ class GroceryList:
                             )
                             == "Y"
                         ):
-                            (
-                                weekday,
-                                hour,
-                                minute,
-                            ) = _get_schedule_day_hour_minute()
                             self._add_preparation_task_to_queue(
                                 f"[PREP] {recipe.amount}",
-                                weekday=weekday,
-                                hour=hour,
-                                minute=minute,
+                                due_date=_get_schedule_day_hour_minute(),
                                 from_recipe=[from_recipe],
                                 for_day_str=[
                                     menu_sub_recipe.for_day.strftime("%a")
@@ -313,7 +315,9 @@ class GroceryList:
             if group.pint_unit.nunique() > 1:
                 group = self._get_group_in_same_pint_unit(group)
             agg_group = self._aggregate_group_to_grocery_list(group)
-            self.grocery_list = self.grocery_list.append(agg_group)
+            self.grocery_list = pd.concat(
+                [self.grocery_list, agg_group], ignore_index=True
+            )
 
         # get aisle/store
         self.grocery_list["aisle_group"] = self.grocery_list.food_group.apply(
@@ -333,16 +337,24 @@ class GroceryList:
     ) -> pd.DataFrame:
         groupby_columns = ["unit", "pint_unit", "item", "is_optional"]
         # set dropna to false, as item may not have unit
-        agg = group.groupby(groupby_columns, as_index=False, dropna=False).agg(
-            quantity=("quantity", "sum"),
-            is_staple=("is_staple", "first"),
-            food_group=("food_group", "first"),
-            item_plural=("item_plural", "first"),
-            store=("store", "first"),
-            barcode=("barcode", "first"),
-            from_recipe=("from_recipe", lambda x: list(set(x))),
-            for_day_str=("for_day_str", lambda x: list(set(x))),
-            get_on_second_shopping_day=("get_on_second_shopping_day", "first"),
+        agg = (
+            group.groupby(groupby_columns, as_index=False, dropna=False)
+            .agg(
+                quantity=("quantity", "sum"),
+                is_staple=("is_staple", "first"),
+                food_group=("food_group", "first"),
+                item_plural=("item_plural", "first"),
+                store=("store", "first"),
+                barcode=("barcode", "first"),
+                from_recipe=("from_recipe", lambda x: sorted(list(set(x)))),
+                for_day=("for_day", "min"),
+                for_day_str=("for_day_str", lambda x: sorted(list(set(x)))),
+                get_on_second_shopping_day=(
+                    "get_on_second_shopping_day",
+                    "first",
+                ),
+            )
+            .astype({"is_staple": bool, "barcode": str})
         )
         if self.config.ingredient_replacement.can_to_dried_bean.is_active:
             agg = agg.apply(self._override_can_to_dried_bean, axis=1)
@@ -356,7 +368,7 @@ class GroceryList:
             freeze_quantity, unit_registry.can
         )
         return (
-            f"BEAN PREP: {ingredient_str} "
+            f"[BEAN PREP] {ingredient_str} "
             f"(freeze: {freeze_quantity} {unit_str})"
         )
 
@@ -395,7 +407,7 @@ class GroceryList:
     def _get_on_second_shopping_day(
         self, for_day: datetime, food_group: str
     ) -> bool:
-        return (for_day >= self.second_shopping_date) and (
+        return (for_day.date() >= self.second_shopping_date) and (
             food_group.casefold() in self.second_shopping_day_group
         )
 
@@ -420,9 +432,11 @@ class GroceryList:
             task=self._format_bean_prep_task_str(
                 row, config_bean.number_can_to_freeze
             ),
-            weekday=config_bean_prep.prep_day,
-            hour=config_bean_prep.prep_hour,
-            minute=0,
+            due_date=self.due_date_formatter.replace_time_with_meal_time(
+                due_date=row.for_day
+                - timedelta(days=config_bean_prep.prep_day_before),
+                meal_time=config_bean_prep.prep_meal,
+            ),
             from_recipe=row.from_recipe,
             for_day_str=row.for_day.strftime("%a"),
         )
@@ -450,11 +464,16 @@ class GroceryList:
         (
             recipe_list,
             ingredient_list,
-        ) = self.ingredient_field_formatter.parse_ingredient_field(
-            menu_recipe.recipe.ingredient_field
+            error_list,
+        ) = self.ingredient_field.parse_ingredient_field(
+            ingredient_field=menu_recipe.recipe.ingredients
         )
         self._add_referenced_recipe_to_queue(menu_recipe, recipe_list)
         self._process_ingredient_list(menu_recipe, ingredient_list)
+        # TO DO somehow get back to a google drive doc
+        if error_list:
+            self.has_errors = True
+            cprint("\t" + "\n\t".join(error_list), "green")
 
     def _process_ingredient_list(
         self, menu_recipe: MenuRecipe, ingredient_list: List[Ingredient]

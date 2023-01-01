@@ -8,10 +8,10 @@ authors = ["Aurorian Clouds"]
 python = "^3.9"
 
 [tool.poetry.dev-dependencies]
-autoflake = "^1.6"
+autoflake = "^2.0"
 black = "^22.1"
-coverage = "^6.5"
-flake8 = "^5.0.4"
+coverage = "^7.0"
+flake8 = "^6.0.0"
 isort = "^5.8.0"
 pre-commit = "^2.12.1"
 yamllint = "^1.28"

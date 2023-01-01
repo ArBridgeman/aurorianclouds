@@ -3,18 +3,31 @@ defaults:
   - pantry_list
   - recipe_book
   - rtk
+  - date/get_due_date
   - formatter/format_ingredient
-  - formatter/format_ingredient_field
+  - formatter/get_ingredient_field
   - messaging/gsheets_api
   - messaging/todoist_api
   - _self_
 
+formatter:
+  get_ingredient_field:
+    errors:
+      recipe_not_found: log
+      ingredient_line_parsing_error: log
+      no_ingredient_found_in_line: log
+      pantry_ingredient_not_known: log
+      ingredient_marked_as_bad: log
+
 menu:
   create_menu:
-    input_method: local
+    input_method: final
+    errors:
+      recipe_not_found: log
+      pantry_ingredient_not_known: log
+      ingredient_marked_as_bad: log
 
 grocery_list:
-  anchor_day: Sunday
   shopping:
     secondary_day: Thursday
     secondary_group: [fish, fresh herbs, fruits, meats, vegetables, Lidl]
@@ -22,15 +35,15 @@ grocery_list:
     project_name: Menu
     task_priority: 3
   bean_prep:
-    prep_day: Tuesday
-    prep_hour: 9
+    prep_day_before: 1
+    prep_meal: lunch
   todoist:
     project_name: Groceries
     remove_existing_task: true
     remove_existing_prep_task: false
     skip_group: [garden]
   run_mode:
-    with_todoist: true
+    with_todoist: false
     # remove existing entries in todoist (and nothing else)
     only_clean_todoist_mode: false
   ingredient_replacement:

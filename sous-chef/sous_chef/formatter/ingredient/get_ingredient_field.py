@@ -2,35 +2,52 @@ from dataclasses import dataclass
 from typing import List
 
 from omegaconf import DictConfig
+from sous_chef.abstract.extended_enum import ExtendedEnum, extend_enum
+from sous_chef.abstract.handle_exception import BaseWithExceptionHandling
 from sous_chef.formatter.ingredient.format_ingredient import (
-    EmptyIngredientError,
-    IngredientError,
     IngredientFormatter,
-    PantrySearchError,
+    MapIngredientErrorToException,
 )
-from sous_chef.recipe_book.read_recipe_book import RecipeBook
+from sous_chef.formatter.ingredient.format_line_abstract import (
+    MapLineErrorToException,
+)
+from sous_chef.recipe_book.read_recipe_book import (
+    MapRecipeErrorToException,
+    RecipeBook,
+)
 from structlog import get_logger
 
 FILE_LOGGER = get_logger(__name__)
 
 
-def raise_or_log_exception(raise_exception: bool, exception: Exception):
-    if raise_exception:
-        raise exception
-    else:
-        FILE_LOGGER.error(str(exception))
+@extend_enum(
+    [
+        MapIngredientErrorToException,
+        MapLineErrorToException,
+        MapRecipeErrorToException,
+    ]
+)
+class MapIngredientFieldErrorToException(ExtendedEnum):
+    pass
 
 
 @dataclass
-class IngredientFieldFormatter:
+class IngredientField(BaseWithExceptionHandling):
     config: DictConfig
     ingredient_formatter: IngredientFormatter
     recipe_book: RecipeBook
     ingredient_list: List = None
     referenced_recipe_list: List = None
 
+    def __post_init__(self):
+        self.set_tuple_log_and_skip_exception_from_config(
+            config_errors=self.config.errors,
+            exception_mapper=MapIngredientFieldErrorToException,
+        )
+
     def parse_ingredient_field(self, ingredient_field):
         self.ingredient_list = []
+        self.record_exception = []
         self.referenced_recipe_list = []
         is_in_optional_group = False
         for line in ingredient_field.split("\n"):
@@ -50,8 +67,13 @@ class IngredientFieldFormatter:
             else:
                 self._format_ingredient(stripped_line, is_in_optional_group)
 
-        return self.referenced_recipe_list, self.ingredient_list
+        return (
+            self.referenced_recipe_list,
+            self.ingredient_list,
+            self.record_exception,
+        )
 
+    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _format_referenced_recipe(self, line: str):
         referenced_recipe = self.ingredient_formatter.format_referenced_recipe(
             line
@@ -69,25 +91,7 @@ class IngredientFieldFormatter:
             setattr(ingredient, "is_optional", is_in_optional_group)
         return ingredient
 
+    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _format_ingredient(self, line: str, is_in_optional_group: bool):
-        try:
-            ingredient = self._format_ingredient_line(
-                line, is_in_optional_group
-            )
-            self.ingredient_list.append(ingredient)
-        except EmptyIngredientError as e:
-            self._handle_ingredient_exception(self.config.empty_ingredient, e)
-        except PantrySearchError as e:
-            self._handle_ingredient_exception(self.config.pantry_search, e)
-
-    def _handle_ingredient_exception(
-        self, error_config: DictConfig, error: IngredientError
-    ):
-        raise_or_log_exception(error_config.raise_error_for, error)
-        if error_config.still_add_ingredient:
-            FILE_LOGGER.warning(
-                "[ignore error]",
-                action="still add to list",
-                ingredient=error.ingredient.item,
-            )
-            self.ingredient_list.append(error.ingredient)
+        ingredient = self._format_ingredient_line(line, is_in_optional_group)
+        self.ingredient_list.append(ingredient)

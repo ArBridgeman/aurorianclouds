@@ -1,0 +1,227 @@
+[
+  {
+    "title": "Spanish Deluxe Potatoes",
+    "preparationTime": "10 minutes ",
+    "cookingTime": "25 minutes ",
+    "totalTime": "35",
+    "quantity": "3-4 sides",
+    "ingredients": "500 g potatoes (wedged)\n\n[SPICES]\n3 tbsp olive oil\n0.5 tbsp garlic powder \n0.5 tbsp onion powder\n0.5 tbsp paprika powder \n1 tsp dried oregano\n1 tsp dried parsley\n0.25 tsp pepper\n0.25 tsp salt\n\n[SAUCE]\n2 tbsp mayo\n2 tbsp yogurt\n0.5 tbsp garlic paste \n0.5 tsp lemon juice\n0.5 tbsp oil\n0.1 tsp pepper",
+    "instructions": "Dip potato wedges into SPICES.\n\nPreheat oven to 240°C.\nBake for 25 minutes.\n\nMake SAUCE.",
+    "pictures": [
+      "/data/user/0/fr.recettetek/files/Pictures/d1c91e50-f167-4db1-a3c7-8f04e106063a.png"
+    ],
+    "url": "https://spainonafork.com/spanish-deluxe-potatoes-recipe/",
+    "nutrition": "",
+    "rating": 4.0,
+    "lastModifiedDate": "2022-12-14 06:31:21",
+    "uuid": "1661144648294",
+    "originalPicture": "https://spainonafork.com/wp-content/uploads/2022/05/image8-2022-05-28T185603-11-480x270.png",
+    "categories": [
+      {
+        "title": "Side/carb"
+      }
+    ],
+    "tags": [
+      {
+        "title": "cuisine-region/Latin"
+      },
+      {
+        "title": "cuisine/Spanish"
+      },
+      {
+        "title": "joint-snack/special"
+      },
+      {
+        "title": "side/potatoes-european"
+      }
+    ],
+    "keywords": "cuisine-region/Latin;cuisine/Spanish;joint-snack/special;side/potatoes-european"
+  },
+  {
+    "title": "Lasagna",
+    "description": "",
+    "preparationTime": "20",
+    "cookingTime": "40",
+    "inactiveTime": "",
+    "totalTime": "60",
+    "quantity": "10 Ariel servings",
+    "ingredients": "8 lasagna noodles (until out, then potatoes)\n4 potatoes (sliced & microwaved 1 min)\n\n[TOMATO SAUCE]\r\n500 g ground beef\n3 garlic cloves (minced)\r\n1 onion (diced)\n700 ml passata\n2 can whole tomatoes\n1 tbsp red wine vinegar\n1 tsp pepper\n\n[CHEESE SAUCE]\r\n250 g ricotta\n2 balls mozzarella (shredded)\r\n3 tbsp garlic powder\n2 tbsp Italian seasoning\n1 tbsp onion powder\n1.5 tsp chili powder\n1 tsp pepper\r\n2 eggs\n\n0.5 cup shredded gratin cheese (1 cup)",
+    "instructions": "Preheat oven to 190°C.\r\n\r\nCook noodles according to package instructions then drain them. \r\n\r\n(Brown the ground beef in a skillet over medium-high heat.) \nThen, saute vegetables. Finally add the rest of TOMATO SAUCE. \r\n\r\nMeanwhile, combine the CHEESE SAUCE in a medium bowl.\r\n\r\nTo assemble, alternate between TOMATO SAUCE, noodle, & CHEESE SAUCE.\nTop with shredded cheese.\r\n\r\nPlace in the oven and bake for 30 min.",
+    "pictures": [
+      "/data/user/0/fr.recettetek/files/Pictures/29b604ef-ee79-452c-a29c-3daea666d1dc.png"
+    ],
+    "url": "http://www.thelovebugsblog.com/2015/05/three-layer-lasagna.html",
+    "video": "",
+    "notes": "",
+    "cookware": "",
+    "nutrition": "",
+    "favorite": true,
+    "rating": 4.5,
+    "lastModifiedDate": "2022-12-17 20:21:30",
+    "uuid": "1739761097",
+    "links": null,
+    "originalPicture": "data:image/jpeg;base64,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",
+    "categories": [
+      {
+        "title": "Entree/carb-protein"
+      }
+    ],
+    "tags": [
+      {
+        "title": "cuisine-region/Mediterranean"
+      },
+      {
+        "title": "protein/beef"
+      },
+      {
+        "title": "cuisine/Italian"
+      },
+      {
+        "title": "protein/milk"
+      },
+      {
+        "title": "menu/2"
+      },
+      {
+        "title": "cuisine-region/Middle European"
+      },
+      {
+        "title": "entree/pasta"
+      }
+    ],
+    "keywords": "cuisine-region/Mediterranean;protein/beef;cuisine/Italian;protein/milk;menu/2;cuisine-region/Middle European;entree/pasta"
+  },
+  {
+    "title": "Baked Oatmeal Bars",
+    "description": "",
+    "preparationTime": "5 minutes",
+    "cookingTime": "35 minutes ",
+    "totalTime": "40",
+    "quantity": "3-4 servings",
+    "ingredients": "[DRY]\n0.75 cup rice flakes\n0.5 cup buckwheat flakes\n0.5 cup flour\n0.25 cup protein powder \n0.25 cup ground flaxseeds\n1 tbsp cinnamon powder\n0.5 tsp baking powder \n0.5 tsp salt\n\n[WET]\n3 ripe bananas (mashed)\n6 tbsp milk\n2 tbsp oil\n1 tsp vanilla extract\n\n50 g chocolate (chopped)\n\n[OPTIONAL]\n50 g hazelnuts (chopped)",
+    "instructions": "Preheat oven to 220°C.\n\nLightly grease 8x8\" baking dish.\n\nMix DRY & WET.\nFold in chocolate chunks (& nuts).\n\nBake for 30-35 minutes.",
+    "pictures": [
+      "/data/user/0/fr.recettetek/files/Pictures/1b7d10bc-e399-4962-8a61-4ab436437a08.png"
+    ],
+    "url": "https://chocolatecoveredkatie.com/baked-oatmeal-bars/",
+    "nutrition": "",
+    "rating": 4.0,
+    "lastModifiedDate": "2022-12-09 19:58:18",
+    "uuid": "1666465307206",
+    "originalPicture": "https://chocolatecoveredkatie.com/wp-content/uploads/2021/11/Baked-Oatmeal-Bars-Recipe-480x270.jpg",
+    "categories": [
+      {
+        "title": "Breakfast"
+      }
+    ],
+    "tags": [
+      {
+        "title": "alex/oats"
+      },
+      {
+        "title": "breakfast/baked-oats"
+      }
+    ],
+    "keywords": "alex/oats;breakfast/baked-oats"
+  },
+  {
+    "title": "Italian baked meatballs",
+    "description": "",
+    "preparationTime": "10",
+    "cookingTime": "25",
+    "inactiveTime": "25",
+    "totalTime": "60",
+    "quantity": "6 Ariel servings",
+    "ingredients": "[VEGGIE BASE]\n0.5 onion (diced)\n2 garlic cloves (minced)\n\n# Marinara Sauce \n\n[MEATBALLS]\n400 g ground beef\n(0.5 cup breadcrumbs)\n0.3 cup flour\n0.25 cup quinoa (already cooked)\n1 tbsp garlic powder\n1 tbsp Italian seasoning\n1 egg\n\n[CHEESE TOPPERS]\n2 balls mozzarella (shredded)\n60 g shredded gratin cheese ",
+    "instructions": "Saute VEGGIE BASE. \nPut in bowl to make MEATBALLS.\nMix MEATBALLS & brown them in pan.\n\nMeanwhile, mix # Marinara Sauce (no need to pre-cook) in the baking dish. \nPreheat oven to 200°C.\nPlace browned MEATBALLS in SAUCE. \nDistribute CHEESE TOPPERS; large dollops & grated cheese randomly tossed on.\nBake in oven for 25 minutes. \n\nMeanwhile, cook desired SIDE (rice, pasta, or bread)",
+    "pictures": [
+      "/data/user/0/fr.recettetek/files/Pictures/70695c8f-ac4e-4283-b2bd-ec2769e4a7ee.png"
+    ],
+    "url": "https://www.olivemagazine.com/recipes/meat-and-poultry/italian-baked-meatballs/",
+    "video": "",
+    "notes": "",
+    "cookware": "",
+    "nutrition": "",
+    "rating": 4.5,
+    "lastModifiedDate": "2022-12-27 09:46:17",
+    "uuid": "1201506955",
+    "links": null,
+    "originalPicture": "https://images.immediate.co.uk/production/volatile/sites/2/2015/02/meatballs-203cdf3.jpg?quality=45&resize=960,413",
+    "categories": [
+      {
+        "title": "Entree/protein-veggie"
+      }
+    ],
+    "tags": [
+      {
+        "title": "protein/beef"
+      },
+      {
+        "title": "cuisine/Italian"
+      },
+      {
+        "title": "protein/milk"
+      },
+      {
+        "title": "menu/1"
+      },
+      {
+        "title": "cuisine-region/Middle European"
+      },
+      {
+        "title": "entree/meatballs"
+      }
+    ],
+    "keywords": "protein/beef;cuisine/Italian;protein/milk;menu/1;cuisine-region/Middle European;entree/meatballs"
+  },
+  {
+    "title": "Holiday cheesecake",
+    "description": "pumpkin + caramel swirl & raspberry + chocolate swirl",
+    "preparationTime": "45",
+    "cookingTime": "60",
+    "inactiveTime": "300",
+    "totalTime": "405",
+    "quantity": "12-16 slices",
+    "ingredients": "# 0.5 cup Salted caramel\n# 0.5 cup Smooth raspberry sauce\n# Shortbread cheesecake crust\n\n[CREAM]\n875 g Philadelphia cream cheese (softened)\n0.5 cup sugar\n0.3 cup sour cream (softened)\n1 tsp vanilla extract\n3 eggs\n\n[PUMPKIN CREAM]\n0.75 cup CREAM\n100 g pumpkin puree\n2 tsp ginger powder (and/or cinnamon)\n0.25 tsp nutmeg\n\n[CHOCOLATE]\n80 g chocolate chips",
+    "instructions": "If needed, prepare # Salted caramel & # Smooth raspberry sauce.\n\nAdjust the oven rack to the lower-middle position & preheat oven to 175°C.\nPrepare # Shortbread cheesecake crust.\n\n[CREAM]\nBeat the CREAM mixture (without eggs) on medium speed in a large bowl until creamy. \nAdd the eggs one at a time, beating after each addition until just blended.\n\n[PUMPKIN CREAM]\nMix together.\n\n[CHOCOLATE]\nMelt chocolate chips, be careful not to burn them.\n\n[ASSEMBLE CAKE]\nThe cake is composed of layers of CREAM and flavors. Into the crust:\n   • spread 1 cm layer of CREAM\n   • on half, drop 1 tbsp PUMPKIN CREAM & 0.5 tsp caramel sauce. Do this 3 more times in           \n     different areas. Using a knife  or sharp edge swirl the two layers some.\n    • on the other half, alternate between dropping 1 tsp RASPBERRY SAUCE & CHOCOLATE. \n      Do this for 10-12 drops. Again swirl together layers.\nRepeat the steps above until out of CREAM.\n\n[BAKING]\nIn another baking dish or roasting pan, put 2 cm of water. Put this dish a level below where the cake where sit.\n\nBake it for 55-70 minutes or until the center is almost set (still slightly wobbles). \nLet it sit in the open oven for 1 hour.\nRefrigerate it for at least 4 hours or overnight.\n\nUse a knife to loosen it from the rim of the springform pan, then remove the rim.\nFor neat slices, wipe the knife clean and dip into warm water between each slice.",
+    "pictures": [
+      "/data/user/0/fr.recettetek/files/Pictures/cf48159a-d1ba-4113-a4ce-e5794f330ec4.png",
+      "/data/user/0/fr.recettetek/files/Pictures/bbddf38a-75f5-4c8f-b1fb-7384df5cbf17.png",
+      "/data/user/0/fr.recettetek/files/Pictures/9c03235a-7da4-48c9-9241-4f6a349f859a.png"
+    ],
+    "url": "https://www.food.com/recipe/new-york-style-cheesecake-on-shortbread-crust-14561\nhttps://sallysbakingaddiction.com/pumpkin-cheesecake/\nhttps://letsdishrecipes.com/white-chocolate-raspberry-swirl-cheesecake/",
+    "video": "",
+    "notes": "",
+    "cookware": "",
+    "nutrition": "",
+    "favorite": true,
+    "rating": 4.0,
+    "lastModifiedDate": "2022-10-23 17:34:09",
+    "uuid": "-433156169",
+    "links": null,
+    "originalPicture": "https://cdn.sallysbakingaddiction.com/wp-content/uploads/2018/10/pumpkin-cheesecake-3-225x225.jpg",
+    "categories": [
+      {
+        "title": "Dessert"
+      }
+    ],
+    "tags": [
+      {
+        "title": "favorite/Alex"
+      },
+      {
+        "title": "special/Christmas"
+      },
+      {
+        "title": "dessert/cheesecake"
+      },
+      {
+        "title": "poison/fat-high"
+      },
+      {
+        "title": "protein/cheese"
+      }
+    ],
+    "keywords": "favorite/Alex;special/Christmas;dessert/cheesecake;poison/fat-high;protein/cheese"
+  }
+]

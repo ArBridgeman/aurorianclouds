@@ -75,13 +75,13 @@ class TestDueDatetimeFormatter:
     @pytest.mark.parametrize(
         "anchor_day,expected_day,expected_index",
         [
-            ("Monday", 10, 0),
-            ("Tuesday", 11, 1),
-            ("Wednesday", 12, 2),
-            ("Thursday", 13, 3),
-            ("Friday", 14, 4),
-            ("Saturday", 15, 5),
-            ("Sunday", 16, 6),
+            ("Monday", 16, 6),
+            ("Tuesday", 10, 0),
+            ("Wednesday", 11, 1),
+            ("Thursday", 12, 2),
+            ("Friday", 13, 3),
+            ("Saturday", 14, 4),
+            ("Sunday", 15, 5),
         ],
     )
     def test_get_anchor_date(anchor_day, expected_day, expected_index):
@@ -95,7 +95,7 @@ class TestDueDatetimeFormatter:
 
     @staticmethod
     def test_get_calendar_week(frozen_due_datetime_formatter):
-        assert frozen_due_datetime_formatter.get_calendar_week() == 2
+        assert frozen_due_datetime_formatter.get_calendar_week() == 3
 
     @staticmethod
     def test_get_due_datetime_with_meal_time(
@@ -103,7 +103,7 @@ class TestDueDatetimeFormatter:
     ):
         assert frozen_due_datetime_formatter.get_due_datetime_with_meal_time(
             "monday", "dinner"
-        ) == create_datetime(day=17, hour=18, minute=15)
+        ) == create_datetime(day=24, hour=18, minute=15)
 
     @staticmethod
     def test_get_due_datetime_with_hour_minute(
@@ -111,20 +111,20 @@ class TestDueDatetimeFormatter:
     ):
         assert frozen_due_datetime_formatter.get_due_datetime_with_time(
             "monday", hour=14, minute=15
-        ) == create_datetime(day=17, hour=14, minute=15)
+        ) == create_datetime(day=24, hour=14, minute=15)
 
     @staticmethod
     @freeze_time(FROZEN_DATE)
     @pytest.mark.parametrize(
         "weekday,day",
         [
-            ("friday", 14),
-            ("saturday", 15),
-            ("sunday", 16),
-            ("monday", 14),
-            ("tuesday", 14),
-            ("wednesday", 14),
-            ("thursday", 14),
+            ("friday", 20),
+            ("saturday", 14),
+            ("sunday", 15),
+            ("monday", 16),
+            ("tuesday", 17),
+            ("wednesday", 18),
+            ("thursday", 19),
         ],
     )
     def test__get_anchor_date_at_midnight(
@@ -145,12 +145,10 @@ class TestDueDatetimeFormatter:
             ("saturday", 15),
             ("sunday", 16),
             ("monday", 17),
-            ("tuesday", 18),
+            ("tuesday", 11),
         ],
     )
-    def test_get_date_relative_to_anchor_tuesday(
-        frozen_due_datetime_formatter, weekday, day
-    ):
+    def test_get_date_relative_to_anchor_tuesday(weekday, day):
         assert DueDatetimeFormatter(
             anchor_day="Tuesday"
         ).get_date_relative_to_anchor(weekday) == create_datetime(day=day)
@@ -159,12 +157,12 @@ class TestDueDatetimeFormatter:
     @pytest.mark.parametrize(
         "weekday,day",
         [
-            ("saturday", 15),
-            ("sunday", 16),
-            ("monday", 17),
-            ("tuesday", 18),
-            ("wednesday", 19),
-            ("thursday", 20),
+            ("saturday", 22),
+            ("sunday", 23),
+            ("monday", 24),
+            ("tuesday", 25),
+            ("wednesday", 26),
+            ("thursday", 27),
             ("friday", 21),
         ],
     )

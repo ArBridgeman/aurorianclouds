@@ -9,6 +9,9 @@ from pint import Unit
 from pytz import timezone
 from sous_chef.formatter.format_unit import UnitFormatter, unit_registry
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
+from sous_chef.grocery_list.generate_grocery_list import (
+    GroceryListIncompleteError,
+)
 from sous_chef.menu.create_menu import MenuRecipe
 from tests.unit_tests.util import create_recipe
 from tests.util import assert_equal_dataframe, assert_equal_series
@@ -62,7 +65,7 @@ def create_ingredient_and_grocery_entry_raw(
     recipe_factor: float = 1.0,
     from_recipe: str = "dummy recipe",
     for_day: datetime.datetime = datetime.datetime(
-        year=2022, month=1, day=20, tzinfo=timezone("UTC")
+        year=2022, month=1, day=27, tzinfo=timezone("UTC")
     ),
     for_day_str: str = "Thu",
     # frozen anchor date is Friday & second group includes vegetables
@@ -113,7 +116,7 @@ def create_menu_recipe(
     eat_factor: float = 1.0,
     freeze_factor: float = 0.0,
     for_day=datetime.datetime(
-        year=2022, month=1, day=20, tzinfo=timezone("UTC")
+        year=2022, month=1, day=27, tzinfo=timezone("UTC")
     ),
     recipe=None,
 ):
@@ -131,9 +134,22 @@ def create_menu_recipe(
 
 class TestGroceryList:
     @staticmethod
-    def test__add_referenced_recipe_to_queue(grocery_list):
+    def test_upload_grocery_list_to_todoist(grocery_list, mock_todoist_helper):
+        grocery_list.has_errors = ["[Dummy Error] Something happened"]
+        with pytest.raises(GroceryListIncompleteError) as error:
+            grocery_list.upload_grocery_list_to_todoist(
+                todoist_helper=mock_todoist_helper
+            )
+        assert (
+            str(error.value)
+            == "[grocery list had errors] will not send to ToDoist until fixed"
+        )
+
+    @staticmethod
+    def test__add_referenced_recipe_to_queue(grocery_list, config_grocery_list):
         menu_recipe_base = create_menu_recipe()
         menu_recipe_ref = create_recipe(title="referenced", factor=1.0)
+        config_grocery_list.run_mode.with_todoist = True
 
         with mock.patch.object(builtins, "input", lambda _: "Y"):
             grocery_list._add_referenced_recipe_to_queue(
@@ -149,8 +165,13 @@ class TestGroceryList:
             * menu_recipe_ref.factor,
             recipe=menu_recipe_ref,
         )
+        result = grocery_list.queue_menu_recipe[0]
 
-        assert grocery_list.queue_menu_recipe == [added_recipe]
+        assert result.eat_factor == added_recipe.eat_factor
+        assert result.for_day == added_recipe.for_day
+        assert result.freeze_factor == added_recipe.freeze_factor
+        assert result.from_recipe == added_recipe.from_recipe
+        assert_equal_series(result.recipe, added_recipe.recipe)
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -170,7 +191,7 @@ class TestGroceryList:
         )
         assert (
             grocery_list._format_bean_prep_task_str(row, number_can_to_freeze)
-            == f"BEAN PREP: black beans, 210 g (freeze: {freeze_text})"
+            == f"[BEAN PREP] black beans, 210 g (freeze: {freeze_text})"
         )
 
     @staticmethod
@@ -241,7 +262,7 @@ class TestGroceryList:
         [
             (
                 datetime.datetime(
-                    year=2022, month=1, day=17, tzinfo=timezone("UTC")
+                    year=2022, month=1, day=24, tzinfo=timezone("UTC")
                 ),
                 "vegetables",
                 False,
@@ -251,22 +272,22 @@ class TestGroceryList:
                     year=2022, month=1, day=21, tzinfo=timezone("UTC")
                 ),
                 "vegetables",
-                True,
+                False,
             ),  # Friday
             (
                 datetime.datetime(
-                    year=2022, month=1, day=22, tzinfo=timezone("UTC")
+                    year=2022, month=1, day=27, tzinfo=timezone("UTC")
                 ),
                 "Vegetables",
                 True,
-            ),  # Saturday
+            ),  # Thursday
             (
                 datetime.datetime(
-                    year=2022, month=1, day=22, tzinfo=timezone("UTC")
+                    year=2022, month=1, day=27, tzinfo=timezone("UTC")
                 ),
                 "Fruits",
                 False,
-            ),  # Saturday
+            ),  # Thursday
         ],
     )
     def test__get_on_second_shopping_day(
@@ -278,6 +299,7 @@ class TestGroceryList:
     ):
         # only vegetable entries on Fri., Sat., Sun. should be true
         assert (
+            # 2022-01-27
             grocery_list._get_on_second_shopping_day(for_day, food_group)
             == expected_result
         )
@@ -355,15 +377,14 @@ class TestGroceryList:
         )
 
     @staticmethod
-    def test__process_recipe_queue(
-        grocery_list, mock_ingredient_field_formatter, log
-    ):
+    def test__process_recipe_queue(grocery_list, mock_ingredient_field, log):
         menu_recipe = create_menu_recipe()
         ingredient, grocery_raw = create_ingredient_and_grocery_entry_raw()
         grocery_list.queue_menu_recipe = [menu_recipe]
-        mock_ingredient_field_formatter.parse_ingredient_field.return_value = (
+        mock_ingredient_field.parse_ingredient_field.return_value = (
             [],
             [ingredient],
+            [],
         )
 
         grocery_list._process_recipe_queue()
@@ -378,15 +399,17 @@ class TestGroceryList:
 
     @staticmethod
     def test__parse_ingredient_from_recipe(
-        grocery_list, mock_ingredient_field_formatter
+        grocery_list, config_grocery_list, mock_ingredient_field
     ):
         menu_recipe = create_menu_recipe()
         ingredient, grocery_raw = create_ingredient_and_grocery_entry_raw()
         recipe = create_recipe(title="dummy recipe 2")
-        mock_ingredient_field_formatter.parse_ingredient_field.return_value = (
+        mock_ingredient_field.parse_ingredient_field.return_value = (
             [recipe],
             [ingredient],
+            [],
         )
+        config_grocery_list.run_mode.with_todoist = True
 
         with mock.patch.object(builtins, "input", lambda _: "Y"):
             grocery_list._parse_ingredient_from_recipe(menu_recipe)

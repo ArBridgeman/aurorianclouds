@@ -1,7 +1,6 @@
 import datetime
 from dataclasses import dataclass
 from typing import Union
-from unittest.mock import Mock, patch
 
 import numpy as np
 import pandas as pd
@@ -15,10 +14,10 @@ from sous_chef.menu.create_menu import (
     FinalizedMenuSchema,
     Menu,
     MenuIngredient,
+    MenuQualityError,
     MenuRecipe,
     MenuSchema,
 )
-from sous_chef.messaging.gsheets_api import GsheetsHelper
 from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
 from tests.util import assert_equal_series
@@ -54,16 +53,20 @@ class MenuBuilder:
         loaded_fixed_menu: bool = True,
         # after recipe/ingredient matched
         post_process_recipe: bool = False,
-        rating: float = np.nan,
-        total_cook_time_str: str = np.nan,
+        rating: float = 3.0,  # np.nan, if unrated
+        time_total_str: str = np.nan,
     ) -> Union[
         DataFrame, DataFrameBase[MenuSchema], DataFrameBase[FinalizedMenuSchema]
     ]:
         if item_type == "recipe":
-            if total_cook_time_str is np.nan:
-                total_cook_time_str = "5 min"
-            if rating is np.nan:
-                rating = 0.0
+            if time_total_str is np.nan:
+                time_total_str = "5 min"
+        elif item_type == "ingredient":
+            if time_total_str is np.nan:
+                time_total_str = "20 min"
+
+        if (time_total := pd.to_timedelta(time_total_str)) is pd.NaT:
+            time_total = None
 
         menu = {
             "weekday": "work_day_2",
@@ -78,20 +81,26 @@ class MenuBuilder:
         }
         if not loaded_fixed_menu:
             return pd.DataFrame(menu, index=[0])
-        menu.pop("prep_day_before")
         menu["weekday"] = "Friday"
-        menu["eat_day"] = pd.Timestamp(
+        menu["eat_datetime"] = pd.Timestamp(
             year=2022, month=1, day=21, hour=17, minute=45, tz="Europe/Berlin"
         )
-        menu["make_day"] = menu["eat_day"] - datetime.timedelta(
-            days=prep_day_before
-        )
+        menu["override_check"] = "N"
         if not post_process_recipe:
             return MenuSchema.validate(pd.DataFrame(menu, index=[0]))
         menu["rating"] = rating
-        menu["total_cook_time"] = total_cook_time_str
+        menu["time_total"] = time_total
+        menu["uuid"] = "1666465773100"
+        if prep_day_before != 0:
+            menu["cook_datetime"] = menu["eat_datetime"]
+            menu["prep_datetime"] = menu["eat_datetime"] - datetime.timedelta(
+                days=prep_day_before
+            )
+        else:
+            menu["cook_datetime"] = menu["eat_datetime"] - time_total
+            menu["prep_datetime"] = menu["eat_datetime"] - time_total
         menu_df = pd.DataFrame(menu, index=[0])
-        menu_df.total_cook_time = pd.to_timedelta(menu_df.total_cook_time)
+        menu_df.time_total = pd.to_timedelta(menu_df.time_total)
         return FinalizedMenuSchema.validate(menu_df)
 
     def get_menu(self) -> pd.DataFrame:
@@ -125,14 +134,6 @@ def menu_default(menu_builder):
 
 
 @pytest.fixture
-def mock_gsheets():
-    with initialize(version_base=None, config_path="../../../config/messaging"):
-        config = compose(config_name="gsheets_api")
-        with patch.object(GsheetsHelper, "__post_init__"):
-            return Mock(GsheetsHelper(config))
-
-
-@pytest.fixture
 def menu_config():
     with initialize(version_base=None, config_path="../../../config/menu"):
         return compose(config_name="create_menu").create_menu
@@ -149,11 +150,11 @@ def menu(
 ):
     menu = Menu(
         config=menu_config,
+        due_date_formatter=frozen_due_datetime_formatter,
         gsheets_helper=mock_gsheets,
         ingredient_formatter=mock_ingredient_formatter,
         recipe_book=mock_recipe_book,
     )
-    menu.due_date_formatter = frozen_due_datetime_formatter
     return menu
 
 
@@ -180,73 +181,127 @@ class TestMenu:
         assert str(error.value) == error_message
 
     @staticmethod
-    def test__add_recipe_cook_time_and_rating_nat(
-        menu, menu_builder, mock_recipe_book
-    ):
+    def test__add_recipe_columns_nat(menu, menu_builder, mock_recipe_book):
         recipe_title = "recipe_without_cook_time"
         row = menu_builder.create_menu_row(
             item=recipe_title, item_type="recipe"
         ).squeeze()
 
-        recipe_without_total_cook_time = create_recipe(
-            title=recipe_title, total_cook_time_str=""
+        recipe_without_time_total = create_recipe(
+            title=recipe_title, time_total_str=""
         )
         mock_recipe_book.get_recipe_by_title.return_value = (
-            recipe_without_total_cook_time
+            recipe_without_time_total
         )
 
-        result = menu._add_recipe_cook_time_and_rating(row.copy(deep=True))
+        result = menu._add_recipe_columns(
+            row.copy(deep=True), recipe_without_time_total
+        )
 
-        assert result["item"] == recipe_without_total_cook_time.title
-        assert result["total_cook_time"] is pd.NaT
+        assert result["item"] == recipe_without_time_total.title
+        assert result["time_total"] is pd.NaT
+
+    @staticmethod
+    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4, 5, 6])
+    def test__check_menu_quality(menu, menu_config, weekday):
+        menu_config.quality_check.recipe_rating_min = 3.0
+        menu_config.quality_check.workday.recipe_unrated_allowed = True
+        menu._check_menu_quality(
+            weekday=weekday, recipe=create_recipe(rating=np.nan)
+        )
+        menu_config.quality_check.workday.recipe_unrated_allowed = False
+        menu._check_menu_quality(
+            weekday=weekday,
+            recipe=create_recipe(rating=3.0, time_inactive_str="1 min"),
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4, 5, 6])
+    def test__check_menu_quality_ensure_rating_exceed_min(
+        menu, menu_config, weekday
+    ):
+        menu_config.quality_check.recipe_rating_min = 3.0
+        with pytest.raises(MenuQualityError) as error:
+            menu._check_menu_quality(
+                weekday=weekday, recipe=create_recipe(rating=2.5)
+            )
+        assert (
+            str(error.value)
+            == "[menu quality] recipe=dummy_title error=rating=2.5 < 3.0"
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4])
+    def test__check_menu_quality_ensure_workday_not_unrated_recipe(
+        menu, menu_config, weekday
+    ):
+        menu_config.quality_check.workday.recipe_unrated_allowed = False
+        with pytest.raises(MenuQualityError) as error:
+            menu._check_menu_quality(
+                weekday=0, recipe=create_recipe(rating=np.nan)
+            )
+        assert str(error.value) == (
+            "[menu quality] recipe=dummy_title "
+            "error=(on workday) unrated recipe"
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4])
+    def test__check_menu_quality_ensure_workday_not_exceed_active_cook_time(
+        menu, menu_config, weekday
+    ):
+        menu_config.quality_check.workday.cook_active_minutes_max = 10
+        with pytest.raises(MenuQualityError) as error:
+            menu._check_menu_quality(
+                weekday=weekday,
+                recipe=create_recipe(time_total_str="15 minutes"),
+            )
+        assert str(error.value) == (
+            "[menu quality] recipe=dummy_title "
+            "error=(on workday) cook_active_minutes=15.0 > 10.0"
+        )
 
     @staticmethod
     @freeze_time(FROZEN_DATE)
-    def test__format_task_and_due_date_list(menu, menu_builder):
+    def test__format_task_name(menu, menu_builder):
         row = menu_builder.create_menu_row(
             post_process_recipe=True,
             item="french onion soup",
             meal_time="dinner",
-            total_cook_time_str=pd.to_timedelta("40 min"),
+            time_total_str=pd.to_timedelta("40 min"),
         ).squeeze()
-        assert menu._format_task_and_due_date_list(row) == (
-            f"{row['item']} (x eat: {row.eat_factor}) [40 min]",
-            pd.Timestamp(
-                year=2022,
-                month=1,
-                day=21,
-                hour=17,
-                minute=5,
-                tz="Europe/Berlin",
-            ),
+        assert menu._format_task_name(row) == (
+            f"{row['item']} (x eat: {row.eat_factor}) [40 min]"
         )
 
     @staticmethod
     @freeze_time(FROZEN_DATE)
-    def test__format_task_and_due_date_list_ingredient(menu, menu_builder):
+    def test__format_task_name_defrost(menu, menu_builder):
+        row = menu_builder.create_menu_row(
+            post_process_recipe=True,
+            item="french onion soup",
+            meal_time="dinner",
+            time_total_str=pd.to_timedelta("40 min"),
+            defrost="Y",
+        ).squeeze()
+        assert menu._format_task_name(row) == row["item"]
+
+    @staticmethod
+    @freeze_time(FROZEN_DATE)
+    def test__format_task_name_ingredient(menu, menu_builder):
         row = menu_builder.create_menu_row(
             post_process_recipe=True,
             item="fries",
             item_type="ingredient",
             meal_time="dinner",
         ).squeeze()
-        assert menu._format_task_and_due_date_list(row) == (
-            f"{row['item']} (x eat: {row.eat_factor}) [20 min]",
-            pd.Timestamp(
-                year=2022,
-                month=1,
-                day=21,
-                hour=17,
-                minute=25,
-                tz="Europe/Berlin",
-            ),
+        assert menu._format_task_name(row) == (
+            f"{row['item']} (x eat: {row.eat_factor}) [20 min]"
         )
 
     @staticmethod
     @freeze_time(FROZEN_DATE)
-    def test__format_task_and_due_date_list_with_freeze_factor(
-        menu, menu_builder
-    ):
+    def test__format_task_name_with_freeze_factor(menu, menu_builder):
         recipe_title = "french onion soup"
         row = menu_builder.create_menu_row(
             post_process_recipe=True,
@@ -254,39 +309,9 @@ class TestMenu:
             meal_time="dinner",
             freeze_factor=0.5,
         ).squeeze()
-        assert menu._format_task_and_due_date_list(row) == (
-            "french onion soup (x eat: 1.0, x freeze: 0.5) [5 min]",
-            pd.Timestamp(
-                year=2022,
-                month=1,
-                day=21,
-                hour=17,
-                minute=40,
-                tz="Europe/Berlin",
-            ),
+        assert menu._format_task_name(row) == (
+            "french onion soup (x eat: 1.0, x freeze: 0.5) [5 min]"
         )
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "total_cook_time,expected_result",
-        [
-            ("", 20),
-            (None, 20),
-            ("nan", 20),
-            (np.Inf, 20),
-            (np.nan, 20),
-            # expected type from recipe book
-            (pd.NaT, 20),
-            (datetime.timedelta(seconds=25), 0),
-            (datetime.timedelta(minutes=-25), 20),
-            (datetime.timedelta(minutes=25), 25),
-            (datetime.timedelta(hours=1, minutes=25), 85),
-        ],
-    )
-    def test__get_cooking_time_min_default_time(
-        menu, total_cook_time, expected_result
-    ):
-        assert menu._get_cooking_time_min(total_cook_time) == expected_result
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -296,7 +321,7 @@ class TestMenu:
         assert menu._get_cook_day_as_weekday(cook_day) == expected_week_day
 
     @staticmethod
-    @pytest.mark.parametrize("rating", [0.0])
+    @pytest.mark.parametrize("rating", [np.nan])
     def test__inspect_unrated_recipe(
         capsys,
         log,
@@ -313,15 +338,15 @@ class TestMenu:
             {
                 "event": "[unrated recipe]",
                 "level": "warning",
-                "action": "print out ingredient_field",
+                "action": "print out ingredients",
                 "recipe_title": "dummy_title",
             }
         ]
-        assert out == "1 dummy text\n"
+        assert out == "1 dummy ingredient\n"
         assert err == ""
 
     @staticmethod
-    @pytest.mark.parametrize("rating", [0.0])
+    @pytest.mark.parametrize("rating", [np.nan])
     def test__inspect_unrated_recipe_turned_off(
         capsys,
         log,
@@ -340,21 +365,21 @@ class TestMenu:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "recipe_title,total_cook_time_str",
-        [("garlic aioli", "5 minutes"), ("banana souffle", "1 hour 4 minutes")],
+        "recipe_title,time_total_str",
+        [("garlic aioli", "5 minutes"), ("banana souffle", "30 minutes")],
     )
     def test__process_menu_recipe(
-        menu, menu_builder, mock_recipe_book, recipe_title, total_cook_time_str
+        menu, menu_builder, mock_recipe_book, recipe_title, time_total_str
     ):
         row = menu_builder.create_menu_row(
             item=recipe_title, item_type="recipe", loaded_fixed_menu=True
         ).squeeze()
 
-        recipe_with_total_cook_time = create_recipe(
-            title=recipe_title, total_cook_time_str=total_cook_time_str
+        recipe_with_time_total = create_recipe(
+            title=recipe_title, time_total_str=time_total_str
         )
         mock_recipe_book.get_recipe_by_title.return_value = (
-            recipe_with_total_cook_time
+            recipe_with_time_total
         )
 
         result = menu._process_menu(row.copy(deep=True))
@@ -365,7 +390,7 @@ class TestMenu:
                 post_process_recipe=True,
                 item=recipe_title,
                 item_type="recipe",
-                total_cook_time_str=pd.to_timedelta(total_cook_time_str),
+                time_total_str=pd.to_timedelta(time_total_str),
             ).squeeze(),
         )
 
@@ -382,6 +407,7 @@ class TestMenu:
             item=item,
             item_type="ingredient",
             loaded_fixed_menu=True,
+            post_process_recipe=True,
         ).squeeze()
 
         ingredient = Ingredient(quantity=quantity, unit=unit, item=item)
@@ -421,7 +447,7 @@ class TestMenu:
                 post_process_recipe=True,
                 item=recipe.title,
                 item_type="recipe",
-                total_cook_time_str=recipe.total_cook_time,
+                time_total_str=recipe.time_total,
                 rating=recipe.rating,
             ).squeeze(),
         )
@@ -433,12 +459,6 @@ class TestMenu:
                 "day": "Friday",
                 "item": f"dummy_{item_type}",
                 "type": item_type,
-            },
-            {
-                "event": "[unrated recipe]",
-                "level": "warning",
-                "action": "print out ingredient_field",
-                "recipe_title": "dummy_recipe",
             },
         ]
 
@@ -454,6 +474,7 @@ class TestMenu:
             eat_unit=unit,
             item=item,
             item_type="ingredient",
+            post_process_recipe=True,
         ).squeeze()
 
         ingredient = Ingredient(quantity=quantity, unit=unit, item=item)
@@ -462,7 +483,9 @@ class TestMenu:
         )
         result = menu._retrieve_manual_menu_ingredient(row)
         assert result == MenuIngredient(
-            ingredient=ingredient, from_recipe="manual", for_day=row["make_day"]
+            ingredient=ingredient,
+            from_recipe="manual",
+            for_day=row["prep_datetime"],
         )
 
     @staticmethod
@@ -477,7 +500,7 @@ class TestMenu:
         recipe_title,
     ):
         row = menu_builder.create_menu_row(
-            item=recipe_title, item_type="recipe"
+            item=recipe_title, item_type="recipe", post_process_recipe=True
         ).squeeze()
         recipe_with_recipe_title = create_recipe(title=recipe_title)
         mock_recipe_book.get_recipe_by_title.return_value = (
@@ -490,7 +513,7 @@ class TestMenu:
             recipe=recipe_with_recipe_title,
             eat_factor=row["eat_factor"],
             freeze_factor=0.0,
-            for_day=row["make_day"],
+            for_day=row["prep_datetime"],
             from_recipe=row["item"],
         )
 

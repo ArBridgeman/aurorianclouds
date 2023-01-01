@@ -1,14 +1,21 @@
+from unittest.mock import patch
+
 import pytest
 from hydra import compose, initialize
 from sous_chef.messaging.gsheets_api import GsheetsHelper
 from sous_chef.messaging.todoist_api import TodoistHelper
 from sous_chef.pantry_list.read_pantry_list import PantryList
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
+from tests.integration_tests.util import get_location
 
 
 @pytest.fixture
 def recipe_book(config_recipe_book):
-    return RecipeBook(config_recipe_book)
+    with patch.object(RecipeBook, "__post_init__", lambda x: None):
+        recipe_book = RecipeBook(config_recipe_book)
+        recipe_book.recipe_book_path = get_location() / "data"
+        recipe_book._read_recipe_book()
+    return recipe_book
 
 
 @pytest.fixture(scope="module")

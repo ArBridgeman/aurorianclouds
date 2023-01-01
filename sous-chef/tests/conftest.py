@@ -1,28 +1,29 @@
 from dataclasses import dataclass
+from datetime import datetime
 from unittest.mock import Mock, patch
 
 import pandas as pd
 import pytest
 from freezegun import freeze_time
 from hydra import compose, initialize
-from sous_chef.date.get_due_date import DueDatetimeFormatter, ExtendedEnum
+from pytz import UTC
+from sous_chef.abstract.extended_enum import ExtendedEnum
+from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
-from sous_chef.formatter.ingredient.format_ingredient_field import (
-    IngredientFieldFormatter,
-)
+from sous_chef.formatter.ingredient.get_ingredient_field import IngredientField
 from sous_chef.grocery_list.generate_grocery_list import GroceryList
 from sous_chef.nutrition.provide_nutritional_info import Nutritionist
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
 
 FROZEN_DATE = "2022-01-14"
+FROZEN_DATETIME = datetime.strptime(FROZEN_DATE, "%Y-%m-%d").replace(tzinfo=UTC)
 
 
 @pytest.fixture
 def config_recipe_book():
     with initialize(version_base=None, config_path="../config"):
-        config = compose(config_name="recipe_book")
-        return config.recipe_book
+        return compose(config_name="recipe_book").recipe_book
 
 
 class MockMealTime(ExtendedEnum):
@@ -75,24 +76,24 @@ def frozen_due_datetime_formatter():
 def grocery_list(
     config_grocery_list,
     unit_formatter,
-    mock_ingredient_field_formatter,
+    mock_ingredient_field,
     frozen_due_datetime_formatter,
 ):
     grocery_list = GroceryList(
         config=config_grocery_list,
+        due_date_formatter=frozen_due_datetime_formatter,
         unit_formatter=unit_formatter,
-        ingredient_field_formatter=mock_ingredient_field_formatter,
+        ingredient_field=mock_ingredient_field,
     )
-    grocery_list.date_formatter = frozen_due_datetime_formatter
     grocery_list.second_shopping_day_group = ["vegetables"]
     return grocery_list
 
 
 @pytest.fixture
-def mock_ingredient_field_formatter():
+def mock_ingredient_field():
     with initialize(version_base=None, config_path="../config/formatter"):
-        config = compose(config_name="format_ingredient_field")
-        return Mock(IngredientFieldFormatter(config, None, None))
+        config = compose(config_name="get_ingredient_field")
+        return Mock(IngredientField(config.get_ingredient_field, None, None))
 
 
 @pytest.fixture

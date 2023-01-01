@@ -4,6 +4,7 @@ import pandas as pd
 import regex
 from omegaconf import DictConfig
 from pint import Unit
+from sous_chef.abstract.extended_enum import ExtendedEnum
 from sous_chef.abstract.search_dataframe import FuzzySearchError
 from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_line_abstract import LineFormatter
@@ -98,6 +99,12 @@ class PantrySearchError(IngredientError):
 @dataclass
 class BadIngredientError(IngredientError):
     message: str = "[bad ingredient]"
+
+
+class MapIngredientErrorToException(ExtendedEnum):
+    no_ingredient_found_in_line = EmptyIngredientError
+    pantry_ingredient_not_known = PantrySearchError
+    ingredient_marked_as_bad = BadIngredientError
 
 
 @dataclass

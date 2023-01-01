@@ -49,6 +49,10 @@ class TodoistHelper:
         return re.sub(r"[\s_]+", "_", cleaned).strip()
 
     @staticmethod
+    def _get_due_date_str(due_date: datetime.date) -> str:
+        return due_date.strftime("on %Y-%m-%d")
+
+    @staticmethod
     def _get_due_datetime_str(due_datetime: datetime.datetime) -> str:
         return due_datetime.strftime("on %Y-%m-%d at %H:%M")
 
@@ -64,19 +68,22 @@ class TodoistHelper:
     def add_task_to_project(
         self,
         task: str,
-        due_date: datetime.datetime = None,
+        due_date: Union[datetime.date, datetime.datetime] = None,
         project: str = None,
         project_id: str = None,
         section: str = None,
         section_id: str = None,
         label_list: list = None,
         description: str = None,
+        parent_id: str = None,
         priority: int = 1,
     ) -> Union[None, Task]:
 
         due_date_str = None
-        if due_date:
+        if isinstance(due_date, datetime.datetime):
             due_date_str = self._get_due_datetime_str(due_date)
+        elif isinstance(due_date, datetime.date):
+            due_date_str = self._get_due_date_str(due_date)
 
         FILE_LOGGER.info(
             "[todoist add]",
@@ -87,6 +94,7 @@ class TodoistHelper:
             priority=priority,
             labels=label_list,
             description=description,
+            parent_id=parent_id,
         )
 
         if project_id is None and project is not None:
@@ -108,6 +116,7 @@ class TodoistHelper:
             section_id=section_id,
             labels=label_list,
             priority=priority,
+            parent_id=parent_id,
         )
 
         return self._get_task(task_id=new_task.id)

@@ -1,6 +1,7 @@
 from pathlib import Path
 from unittest.mock import patch
 
+import pandas as pd
 import pytest
 from hydra import compose, initialize
 from omegaconf import DictConfig
@@ -54,3 +55,17 @@ class BaseMain:
         if "with_gmail" in config.run_mode.keys():
             config.run_mode.with_gmail = False
         config.run_mode.with_todoist = False
+
+
+def get_final_menu() -> pd.DataFrame:
+    final_menu = pd.read_csv(
+        get_location() / "data/final_menu.csv",
+        dtype={"uuid": str},
+        header=0,
+    )
+    final_menu.eat_unit.fillna("", inplace=True)
+    final_menu.uuid.fillna("NaN", inplace=True)
+    final_menu.cook_datetime = pd.to_datetime(final_menu.cook_datetime)
+    final_menu.prep_datetime = pd.to_datetime(final_menu.prep_datetime)
+    final_menu.time_total = pd.to_timedelta(final_menu.time_total)
+    return final_menu

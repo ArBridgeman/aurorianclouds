@@ -1,4 +1,3 @@
-import datetime
 import uuid
 from dataclasses import dataclass
 from typing import Union
@@ -15,7 +14,7 @@ from sous_chef.recipe_book.read_recipe_book import (
     SelectRandomRecipeError,
     create_timedelta,
 )
-from tests.conftest import FROZEN_DATE
+from tests.conftest import FROZEN_DATETIME
 from tests.util import assert_equal_dataframe, assert_equal_series
 
 
@@ -41,9 +40,7 @@ def recipe_book(config_recipe_book):
 def mock_menu_history(recipe_title, recipe_uuid):
     return pd.DataFrame(
         {
-            "cook_datetime": [
-                datetime.datetime.strptime(FROZEN_DATE, "%Y-%m-%d")
-            ],
+            "cook_datetime": [FROZEN_DATETIME],
             "eat_factor": [1],
             "item": [recipe_title],
             "uuid": [recipe_uuid],

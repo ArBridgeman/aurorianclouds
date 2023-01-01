@@ -1,16 +1,15 @@
 import uuid
 from collections import namedtuple
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import patch
 
 import pandas as pd
 import pytest
 from hydra import compose, initialize
 from sous_chef.menu.record_menu_history import MenuHistorian
-from tests.conftest import FROZEN_DATE
+from tests.conftest import FROZEN_DATETIME
 from tests.util import assert_equal_series
 
-FROZEN_DATETIME = datetime.strptime(FROZEN_DATE, "%Y-%m-%d")
 HISTORY_ENTRY = namedtuple(
     "Entry", ["cook_datetime", "eat_factor", "item", "uuid"]
 )

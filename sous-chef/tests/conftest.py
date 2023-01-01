@@ -1,10 +1,12 @@
 from dataclasses import dataclass
+from datetime import datetime
 from unittest.mock import Mock, patch
 
 import pandas as pd
 import pytest
 from freezegun import freeze_time
 from hydra import compose, initialize
+from pytz import UTC
 from sous_chef.abstract.extended_enum import ExtendedEnum
 from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.formatter.format_unit import UnitFormatter
@@ -15,6 +17,7 @@ from sous_chef.nutrition.provide_nutritional_info import Nutritionist
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
 
 FROZEN_DATE = "2022-01-14"
+FROZEN_DATETIME = datetime.strptime(FROZEN_DATE, "%Y-%m-%d").replace(tzinfo=UTC)
 
 
 @pytest.fixture

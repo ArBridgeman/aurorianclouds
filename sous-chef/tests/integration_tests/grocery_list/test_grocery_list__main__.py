@@ -1,6 +1,7 @@
 from unittest.mock import PropertyMock, patch
 
 import pandas as pd
+import pytest
 from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.grocery_list.main import run_grocery_list
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
@@ -9,6 +10,7 @@ from tests.integration_tests.util import BaseMain, get_location
 from tests.util import assert_equal_dataframe
 
 
+@pytest.mark.gsheets
 class TestMain(BaseMain):
     # dependent on tmp-menu being run before
     def test_run_grocery_list_without_todoist(

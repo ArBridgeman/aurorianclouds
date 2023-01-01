@@ -53,6 +53,7 @@ class MenuHistorian:
 
     def __post_init__(self):
         self._load_history()
+        self._exclude_future_entries()
 
     def _load_history(self):
         save_loc = self.config.save_loc
@@ -62,12 +63,13 @@ class MenuHistorian:
         if menu_history.shape == (0, 0):
             menu_history = pd.DataFrame(columns=self.columns)
 
-        menu_history = MenuHistory.validate(menu_history)
+        self.dataframe = MenuHistory.validate(menu_history)
+
+    def _exclude_future_entries(self):
         # exclude future so can re-run current menu with ease
-        mask_not_future = (
-            menu_history.cook_datetime < self.current_menu_start_date
-        )
-        self.dataframe = menu_history[mask_not_future]
+        self.dataframe = self.dataframe[
+            self.dataframe.cook_datetime < self.current_menu_start_date
+        ]
 
     def add_current_menu_to_history(self, current_menu: DataFrame):
         menu_recipes = current_menu[current_menu["type"] == "recipe"][

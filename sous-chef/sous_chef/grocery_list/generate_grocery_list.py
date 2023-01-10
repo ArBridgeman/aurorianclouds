@@ -48,6 +48,7 @@ class GroceryList:
     second_shopping_date: date = field(init=False)
     second_shopping_day_group: List = field(init=False)
     has_errors: bool = False
+    app_week_label: str = field(init=False)
 
     def __post_init__(self):
         self.second_shopping_date = (
@@ -56,6 +57,9 @@ class GroceryList:
             ).date()
         )
         self.second_shopping_day_group = self.config.shopping.secondary_group
+
+        calendar_week = self.due_date_formatter.get_calendar_week()
+        self.app_week_label = f"app-week-{calendar_week}"
 
     def get_grocery_list_from_menu(
         self,
@@ -76,9 +80,10 @@ class GroceryList:
 
         # TODO what should be in todoist (e.g. dry mode & messages?)
         project_name = self.config.todoist.project_name
-
         if self.config.todoist.remove_existing_task:
-            todoist_helper.delete_all_items_in_project(project_name)
+            todoist_helper.delete_all_items_in_project(
+                project_name, only_with_label=self.app_week_label
+            )
 
         for section, group in self.grocery_list.groupby("aisle_group"):
             if section in self.config.todoist.skip_group:
@@ -102,7 +107,9 @@ class GroceryList:
                     due_date=self.second_shopping_date
                     if entry["get_on_second_shopping_day"]
                     else None,
-                    label_list=entry["from_recipe"] + entry["for_day_str"],
+                    label_list=entry["from_recipe"]
+                    + entry["for_day_str"]
+                    + [self.app_week_label],
                     description=str(entry["barcode"]),
                     project=project_name,
                     project_id=project_id,
@@ -115,7 +122,9 @@ class GroceryList:
         # TODO separate service? need freezer check for defrosts
         project_name = self.config.preparation.project_name
         if self.config.todoist.remove_existing_prep_task:
-            todoist_helper.delete_all_items_in_project(project_name)
+            todoist_helper.delete_all_items_in_project(
+                project_name, only_with_label=self.app_week_label
+            )
 
         if self.queue_preparation is not None:
             for _, row in self.queue_preparation.iterrows():
@@ -125,7 +134,7 @@ class GroceryList:
                     label_list=list(
                         chain.from_iterable([row.from_recipe, row.for_day_str])
                     )
-                    + ["prep"],
+                    + ["prep", self.app_week_label],
                     due_date=row.due_date,
                     priority=self.config.preparation.task_priority,
                 )

@@ -265,11 +265,13 @@ class Menu(BaseWithExceptionHandling):
         self, todoist_helper: TodoistHelper
     ) -> List[Task]:
         project_name = self.config.todoist.project_name
+        calendar_week = self.due_date_formatter.get_calendar_week()
+        app_week_label = f"app-week-{calendar_week}"
+
         if self.config.todoist.remove_existing_task:
-            anchor_date = self.due_date_formatter.get_anchor_date()
             todoist_helper.delete_all_items_in_project(
                 project_name,
-                only_delete_after_date=anchor_date,
+                only_with_label=app_week_label,
             )
 
         tasks = []
@@ -287,11 +289,11 @@ class Menu(BaseWithExceptionHandling):
                 due_date=task_due_date,
                 priority=self.config.todoist.task_priority,
                 parent_id=parent_id,
+                label_list=[app_week_label],
             )
             tasks.append(task_object)
             return task_object
 
-        calendar_week = self.due_date_formatter.get_calendar_week()
         edit_task = _add_task(
             task_name=f"edit recipes from week #{calendar_week}",
             task_due_date=self.due_date_formatter.get_anchor_date()

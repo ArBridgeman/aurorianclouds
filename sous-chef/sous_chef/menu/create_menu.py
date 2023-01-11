@@ -231,7 +231,7 @@ class Menu(BaseWithExceptionHandling):
         # validate schema & process menu
         self._validate_menu_schema()
 
-        holder_dataframe = None
+        holder_dataframe = pd.DataFrame()
         processed_uuid_list = []
         for _, entry in self.dataframe.iterrows():
             processed_entry = self._process_menu(
@@ -246,10 +246,7 @@ class Menu(BaseWithExceptionHandling):
                 processed_uuid_list.append(processed_entry.uuid)
 
             processed_df = pd.DataFrame([processed_entry])
-            if holder_dataframe is None:
-                holder_dataframe = processed_df
-            else:
-                holder_dataframe = pd.concat([processed_df, holder_dataframe])
+            holder_dataframe = pd.concat([processed_df, holder_dataframe])
         self.dataframe = holder_dataframe
 
         if len(self.record_exception) > 0:

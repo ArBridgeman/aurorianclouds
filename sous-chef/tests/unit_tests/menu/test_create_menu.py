@@ -18,6 +18,7 @@ from sous_chef.menu.create_menu import (
     MenuRecipe,
     MenuSchema,
 )
+from sous_chef.menu.record_menu_history import MenuHistoryError
 from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
 from tests.util import assert_equal_series
@@ -145,6 +146,7 @@ def menu(
     menu_config,
     mock_gsheets,
     mock_ingredient_formatter,
+    mock_menu_history,
     mock_recipe_book,
     frozen_due_datetime_formatter,
 ):
@@ -153,6 +155,7 @@ def menu(
         due_date_formatter=frozen_due_datetime_formatter,
         gsheets_helper=mock_gsheets,
         ingredient_formatter=mock_ingredient_formatter,
+        menu_historian=mock_menu_history,
         recipe_book=mock_recipe_book,
     )
     return menu
@@ -194,9 +197,7 @@ class TestMenu:
             recipe_without_time_total
         )
 
-        result = menu._add_recipe_columns(
-            row.copy(deep=True), recipe_without_time_total
-        )
+        result = menu._add_recipe_columns(row, recipe_without_time_total)
 
         assert result["item"] == recipe_without_time_total.title
         assert result["time_total"] is pd.NaT
@@ -382,7 +383,7 @@ class TestMenu:
             recipe_with_time_total
         )
 
-        result = menu._process_menu(row.copy(deep=True))
+        result = menu._process_menu(row, processed_uuid_list=[])
 
         assert_equal_series(
             result,
@@ -392,6 +393,60 @@ class TestMenu:
                 item_type="recipe",
                 time_total_str=pd.to_timedelta(time_total_str),
             ).squeeze(),
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "recipe_title,time_total_str",
+        [("garlic aioli", "5 minutes")],
+    )
+    def test__process_menu_recipe_error_when_in_processed_uuid_list(
+        menu, menu_builder, mock_recipe_book, recipe_title, time_total_str
+    ):
+        row = menu_builder.create_menu_row(
+            item=recipe_title, item_type="recipe", loaded_fixed_menu=True
+        ).squeeze()
+
+        recipe_with_time_total = create_recipe(
+            title=recipe_title, time_total_str=time_total_str
+        )
+        mock_recipe_book.get_recipe_by_title.return_value = (
+            recipe_with_time_total
+        )
+
+        with pytest.raises(MenuQualityError) as error:
+            menu._process_menu(
+                row, processed_uuid_list=[recipe_with_time_total.uuid]
+            )
+        assert (
+            str(error.value) == "[menu quality] recipe=garlic aioli "
+            "error=recipe already processed in menu"
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "recipe_title,time_total_str",
+        [("garlic aioli", "5 minutes")],
+    )
+    def test__process_menu_recipe_error_when_in_menu_history_uuid_list(
+        menu, menu_builder, mock_recipe_book, recipe_title, time_total_str
+    ):
+        row = menu_builder.create_menu_row(
+            item=recipe_title, item_type="recipe", loaded_fixed_menu=True
+        ).squeeze()
+
+        recipe_with_time_total = create_recipe(
+            title=recipe_title, time_total_str=time_total_str
+        )
+        mock_recipe_book.get_recipe_by_title.return_value = (
+            recipe_with_time_total
+        )
+        menu.menu_history_uuid_list = [recipe_with_time_total.uuid]
+
+        with pytest.raises(MenuHistoryError) as error:
+            menu._process_menu(row, processed_uuid_list=[])
+        assert (
+            str(error.value) == "[in recent menu history] recipe=garlic aioli"
         )
 
     @staticmethod
@@ -415,7 +470,7 @@ class TestMenu:
             ingredient
         )
 
-        result = menu._process_menu(row.copy(deep=True))
+        result = menu._process_menu(row, processed_uuid_list=[])
         assert_equal_series(result, row)
 
     @staticmethod
@@ -439,7 +494,7 @@ class TestMenu:
         getattr(mock_recipe_book, method).return_value = recipe
         mock_recipe_book.get_recipe_by_title.return_value = recipe
 
-        result = menu._process_menu(row.copy(deep=True))
+        result = menu._process_menu(row, processed_uuid_list=[])
 
         assert_equal_series(
             result,

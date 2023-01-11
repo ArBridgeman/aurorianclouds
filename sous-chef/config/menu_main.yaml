@@ -12,7 +12,6 @@ defaults:
   - _self_
 
 menu:
-  menu_history_days: 30
   create_menu:
     input_method: fixed
     errors:

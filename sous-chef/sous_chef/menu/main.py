@@ -27,19 +27,14 @@ def run_menu(config: DictConfig):
         anchor_day=config.date.due_date.anchor_day
     )
 
-    menu_history = MenuHistorian(
+    menu_historian = MenuHistorian(
         config=config.menu.record_menu_history,
         current_menu_start_date=due_date_formatter.anchor_datetime
         + timedelta(days=1),
         gsheets_helper=gsheets_helper,
     )
 
-    recipe_book = RecipeBook(
-        config.recipe_book,
-        menu_history=menu_history.get_history_from(
-            config.menu.menu_history_days
-        ),
-    )
+    recipe_book = RecipeBook(config.recipe_book)
 
     # TODO move manual method here
     menu = Menu(
@@ -47,13 +42,14 @@ def run_menu(config: DictConfig):
         due_date_formatter=due_date_formatter,
         gsheets_helper=gsheets_helper,
         ingredient_formatter=ingredient_formatter,
+        menu_historian=menu_historian,
         recipe_book=recipe_book,
     )
     if config.menu.create_menu.input_method == "fixed":
         menu.finalize_fixed_menu()
     elif config.menu.create_menu.input_method == "final":
         final_menu = menu.load_final_menu()
-        menu_history.add_current_menu_to_history(final_menu)
+        menu.save_with_menu_historian()
 
         if config.menu.run_mode.with_todoist:
             todoist_helper = TodoistHelper(config.messaging.todoist)

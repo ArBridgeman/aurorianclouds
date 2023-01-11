@@ -11,6 +11,7 @@ create_menu:
     workday:
       recipe_unrated_allowed: true
       cook_active_minutes_max: 30
+  menu_history_recent_days: 30
   errors: # raise, log, or skip
     recipe_not_found: raise
     recipe_total_time_undefined: raise

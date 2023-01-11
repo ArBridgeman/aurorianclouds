@@ -2,21 +2,17 @@ import re
 from collections import namedtuple
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
+from typing import Callable, List
 
 import pandas as pd
 import pandera as pa
 from pandera.typing import Series
-from sous_chef.abstract.extended_enum import ExtendedEnum, extend_enum
+from sous_chef.abstract.extended_enum import ExtendedEnum
 from sous_chef.abstract.pandas_util import get_dict_from_columns
 from sous_chef.abstract.search_dataframe import (
     DataframeSearchable,
     DirectSearchError,
     FuzzySearchError,
-)
-from sous_chef.menu.record_menu_history import (
-    MapMenuHistoryErrorToException,
-    MenuHistoryError,
 )
 from structlog import get_logger
 
@@ -78,7 +74,6 @@ class SelectRandomRecipeError(DirectSearchError):
     message = "[select random recipe failed]"
 
 
-@extend_enum([MapMenuHistoryErrorToException])
 class MapRecipeErrorToException(ExtendedEnum):
     recipe_not_found = RecipeNotFoundError
     recipe_total_time_undefined = RecipeTotalTimeUndefinedError
@@ -110,7 +105,6 @@ class Recipe(pa.SchemaModel):
 
 @dataclass
 class RecipeBook(DataframeSearchable):
-    menu_history: pd.DataFrame = None
     recipe_book_path: Path = None
 
     def __post_init__(self):
@@ -120,26 +114,30 @@ class RecipeBook(DataframeSearchable):
         if self.config.deduplicate:
             self._select_highest_rated_when_duplicated_name()
 
-    def get_random_recipe_by_category(self, category: str) -> Recipe:
+    def get_random_recipe_by_category(
+        self, category: str, exclude_uuid_list: List = None
+    ) -> Recipe:
         return self._select_random_recipe_weighted_by_rating(
             method_match=self._is_value_in_list,
             field="categories",
             search_term=category,
+            exclude_uuid_list=exclude_uuid_list,
         )
 
-    def get_random_recipe_by_tag(self, tag: str) -> Recipe:
+    def get_random_recipe_by_tag(
+        self, tag: str, exclude_uuid_list: List = None
+    ) -> Recipe:
         return self._select_random_recipe_weighted_by_rating(
-            method_match=self._is_value_in_list, field="tags", search_term=tag
+            method_match=self._is_value_in_list,
+            field="tags",
+            search_term=tag,
+            exclude_uuid_list=exclude_uuid_list,
         )
 
     def get_recipe_by_title(self, title) -> pd.Series:
         try:
             recipe = self.retrieve_match(field="title", search_term=title)
             self._check_total_time(recipe)
-            if (self.menu_history is not None) and (
-                recipe.uuid in self.menu_history.uuid.values
-            ):
-                raise MenuHistoryError(recipe_title=recipe.title)
             return recipe.copy(deep=True)
         except FuzzySearchError as e:
             raise RecipeNotFoundError(recipe_title=title, search_results=str(e))
@@ -209,16 +207,18 @@ class RecipeBook(DataframeSearchable):
         return tmp_df.apply(self._format_recipe_row, axis=1)
 
     def _select_random_recipe_weighted_by_rating(
-        self, method_match: Callable, field: str, search_term: str
+        self,
+        method_match: Callable,
+        field: str,
+        search_term: str,
+        exclude_uuid_list: List = None,
     ):
         config_random = self.config.random_select
         mask_selection = self.dataframe[field].apply(
             lambda row: method_match(row, search_term)
         )
-        if self.menu_history is not None:
-            mask_selection &= ~self.dataframe.uuid.isin(
-                self.menu_history.uuid.values
-            )
+        if exclude_uuid_list is not None:
+            mask_selection &= ~self.dataframe.uuid.isin(exclude_uuid_list)
         if (count := sum(mask_selection)) > config_random.min_thresh_error:
             if count < config_random.min_thresh_warning:
                 FILE_LOGGER.warning(

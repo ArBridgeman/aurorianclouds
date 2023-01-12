@@ -35,5 +35,7 @@ runs:
         mkdir $TOKEN_DIR
         ADDRESS_TOKEN="${TOKEN_DIR}/address_book.json"
         GSHEETS_TOKEN="${TOKEN_DIR}/google_client_key.json"
+        TODOIST_TOKEN="${TOKEN_DIR}/todoist_token.txt"
         echo ${{ inputs.address-book }} > $ADDRESS_TOKEN
         echo ${{ inputs.gsheets-service-token }} > $GSHEETS_TOKEN
+        echo ${{ inputs.todoist-token }} > $TODOIST_TOKEN

@@ -18,6 +18,7 @@ jobs:
           poetry-version: ${{ matrix.poetry-version }}
           address-book: ${{ secrets.ADDRESS_BOOK }}
           gsheets-service-token: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
+          todoist-token: ${{ secrets.TODOIST_TOKEN }}
       - name: Run unit tests
         working-directory: ./sous-chef
         run: poetry run pytest ./tests/unit_tests
@@ -25,4 +26,4 @@ jobs:
         working-directory: ./sous-chef
         run: |
           poetry run pytest ./tests/integration_tests \
-          -k "not todoist and not gmail and not dropbox"
+          -k "not gmail and not dropbox"

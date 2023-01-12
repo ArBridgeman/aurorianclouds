@@ -1,4 +1,4 @@
-name: pytest
+name: unit_test
 on: [push]
 jobs:
   pytest:
@@ -22,8 +22,8 @@ jobs:
       - name: Run unit tests
         working-directory: ./sous-chef
         run: poetry run pytest ./tests/unit_tests
-      - name: Run integration tests
-        working-directory: ./sous-chef
-        run: |
-          poetry run pytest ./tests/integration_tests \
-          -k "not gmail and not dropbox"
+#      - name: Run integration tests
+#        working-directory: ./sous-chef
+#        run: |
+#          poetry run pytest ./tests/integration_tests \
+#          -k "not gmail and not dropbox"

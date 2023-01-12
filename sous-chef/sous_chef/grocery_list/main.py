@@ -82,7 +82,9 @@ def run_grocery_list(config: DictConfig) -> pd.DataFrame:
         return final_grocery_list
 
 
-@hydra.main(config_path="../../config", config_name="grocery_list")
+@hydra.main(
+    config_path="../../config", config_name="grocery_list", version_base=None
+)
 def main(config: DictConfig) -> None:
     run_grocery_list(config=config)
 

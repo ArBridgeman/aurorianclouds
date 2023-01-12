@@ -57,7 +57,9 @@ def run_menu(config: DictConfig):
         return final_menu
 
 
-@hydra.main(config_path="../../config/", config_name="menu_main")
+@hydra.main(
+    config_path="../../config/", config_name="menu_main", version_base=None
+)
 def main(config: DictConfig):
     run_menu(config)
 

@@ -1,5 +1,6 @@
 unit,pint_unit,item,is_optional,quantity,is_staple,food_group,item_plural,store,barcode,from_recipe,for_day,for_day_str,get_on_second_shopping_day,aisle_group
 cup,cup,15% fat cream,False,0.75,True,Dairy products,15% fat cream,grocery store,4046700003756,[Holiday cheesecake],2022-01-23 11:00:00+00:00,[Sun],False,Dairy force
+,,baguette,False,1.0,True,Prepared,baguettes,Lillehus,,[manual],2022-01-21 17:25:00+00:00,[Fri],False,Lillehus
 tsp,teaspoon,baking soda,False,0.5,True,Baking,baking soda,Amazon,,[Baked Oatmeal Bars],2022-01-23 17:45:00+00:00,[Sun],False,Amazon
 cup,cup,brown rice,False,1.0,True,Grains,brown rice,grocery store,4104420218574,[manual],2022-01-22 17:25:00+00:00,[Sat],False,Bulk
 cup,cup,buckwheat flakes,False,0.5,True,Grains,buckwheat flakes,grocery store,,[Baked Oatmeal Bars],2022-01-23 17:45:00+00:00,[Sun],False,Bulk
@@ -18,7 +19,7 @@ g,gram,ground beef,False,250.0,True,Meats,ground beef,Lidl,20304652,[Lasagna],20
 cup,cup,ground flaxseed,False,0.25,True,Nuts and seeds,ground flaxseed,grocery store,,[Baked Oatmeal Bars],2022-01-23 17:45:00+00:00,[Sun],False,Bulk
 g,gram,hazelnuts,True,50.0,True,Nuts and seeds,hazelnuts,Amazon,5400606999763,[Baked Oatmeal Bars],2022-01-23 17:45:00+00:00,[Sun],False,Amazon
 tbsp,tablespoon,italian seasoning,False,1.0,True,Spices and herbs,italian seasoning,Amazon,,[Lasagna],2022-01-25 16:45:00+00:00,[Tue],False,Amazon
-,,lasagna noodle,False,4.0,True,Pasta,lasagna noodles,grocery store,,[Lasagna],2022-01-25 16:45:00+00:00,[Tue],False,GF park
+,,lasagna noodle,False,4.0,True,Pasta,lasagna noodles,Homemade,,[Lasagna],2022-01-25 16:45:00+00:00,[Tue],False,Homemade
 tsp,teaspoon,lemon juice,False,0.5,True,Juices,lemon juice,grocery store,4311501337745,[Spanish Deluxe Potatoes],2022-01-23 17:45:00+00:00,[Sun],False,Juices and beverages
 tbsp,tablespoon,mayo,False,2.0,True,Fats and oils,mayo,grocery store,4000339457823,[Spanish Deluxe Potatoes],2022-01-23 17:45:00+00:00,[Sun],False,Sauces cans and oils
 tbsp,tablespoon,milk,False,6.0,True,Dairy products,milk,grocery store,4311501688632,[Baked Oatmeal Bars],2022-01-23 17:45:00+00:00,[Sun],False,Dairy force

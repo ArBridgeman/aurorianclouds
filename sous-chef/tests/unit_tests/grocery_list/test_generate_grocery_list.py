@@ -196,14 +196,56 @@ class TestGroceryList:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "quantity,pint_unit,item,is_optional,plural_ending,expected_result",
+        "quantity,pint_unit,item,is_optional,"
+        "plural_ending,aisle_group,expected_result",
         [
-            (1, None, "zucchini", False, "s", "zucchini, 1"),
-            (1, unit_registry.cup, "rice", False, "", "rice, 1 cup"),
-            (1, None, "zucchini", True, "s", "zucchini, 1 (optional)"),
-            (1, unit_registry.cup, "rice", True, "", "rice, 1 cup (optional)"),
-            (2, None, "zucchini", False, "s", "zucchinis, 2"),
-            (2, unit_registry.cup, "rice", False, "", "rice, 2 cups"),
+            (1, None, "zucchini", False, "s", "grocery store", "zucchini, 1"),
+            (
+                1,
+                unit_registry.cup,
+                "rice",
+                False,
+                "",
+                "grocery store",
+                "rice, 1 cup",
+            ),
+            (
+                1,
+                unit_registry.cup,
+                "zucchini",
+                True,
+                "s",
+                "grocery store",
+                "zucchinis, 1 cup (optional)",
+            ),
+            (
+                1,
+                unit_registry.cup,
+                "rice",
+                True,
+                "",
+                "grocery store",
+                "rice, 1 cup (optional)",
+            ),
+            (2, None, "zucchini", False, "s", "grocery store", "zucchinis, 2"),
+            (
+                2,
+                unit_registry.cup,
+                "rice",
+                False,
+                "",
+                "grocery store",
+                "rice, 2 cups",
+            ),
+            (
+                1,
+                None,
+                "baguette",
+                False,
+                "s",
+                "Lillehus",
+                "[Lillehus] baguette, 1",
+            ),
         ],
     )
     def test__format_ingredient_str(
@@ -213,6 +255,7 @@ class TestGroceryList:
         item,
         is_optional,
         plural_ending,
+        aisle_group,
         expected_result,
     ):
         ingredient = pd.Series(
@@ -222,6 +265,7 @@ class TestGroceryList:
                 "item": item,
                 "is_optional": is_optional,
                 "item_plural": item + plural_ending,
+                "aisle_group": aisle_group,
             }
         )
         assert (

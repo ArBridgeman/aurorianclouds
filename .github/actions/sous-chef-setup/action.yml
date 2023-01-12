@@ -27,7 +27,7 @@ runs:
     - name: Install dependencies
       shell: bash
       working-directory: ./sous-chef
-      run: poetry install
+      run: poetry install --without analysis
     - name: Setup token directory
       shell: bash
       run: |

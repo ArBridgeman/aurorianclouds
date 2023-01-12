@@ -7,7 +7,6 @@ from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
 from sous_chef.menu.create_menu.create_menu import Menu
 from sous_chef.menu.record_menu_history import MenuHistorian
-from sous_chef.messaging.gmail_api import GmailHelper
 from sous_chef.messaging.gsheets_api import GsheetsHelper
 from sous_chef.messaging.todoist_api import TodoistHelper
 from sous_chef.pantry_list.read_pantry_list import PantryList
@@ -54,10 +53,6 @@ def run_menu(config: DictConfig):
         if config.menu.run_mode.with_todoist:
             todoist_helper = TodoistHelper(config.messaging.todoist)
             menu.upload_menu_to_todoist(todoist_helper)
-
-        if config.menu.run_mode.with_gmail:
-            gmail_helper = GmailHelper(config.messaging.gmail)
-            menu.send_menu_to_gmail(gmail_helper)
 
         return final_menu
 

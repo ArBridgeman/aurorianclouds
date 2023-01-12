@@ -16,7 +16,6 @@ class TestMain(BaseMain):
         self._set_config_menu(config)
         self._set_config_run_mode(config.menu)
         config.menu.run_mode.with_todoist = False
-        config.menu.run_mode.with_gmail = False
 
         config.menu.record_menu_history.save_loc.worksheet = "tmp-menu-history"
 

@@ -28,7 +28,6 @@ from sous_chef.menu.record_menu_history import (
     MenuHistorian,
     MenuHistoryError,
 )
-from sous_chef.messaging.gmail_api import GmailHelper
 from sous_chef.messaging.gsheets_api import GsheetsHelper
 from sous_chef.recipe_book.read_recipe_book import (
     MapRecipeErrorToException,
@@ -178,21 +177,6 @@ class MenuBasic(BaseWithExceptionHandling):
 
     def save_with_menu_historian(self):
         self.menu_historian.add_current_menu_to_history(self.dataframe)
-
-    def send_menu_to_gmail(self, gmail_helper: GmailHelper):
-        mask_recipe = self.dataframe["type"] == "recipe"
-        tmp_df = (
-            self.dataframe[mask_recipe][
-                ["item", "rating", "weekday", "time_total"]
-            ]
-            .copy(deep=True)
-            .sort_values(by=["rating"])
-            .reset_index(drop=True)
-        )
-
-        calendar_week = self.due_date_formatter.get_calendar_week()
-        subject = f"[sous_chef_menu] week {calendar_week}"
-        gmail_helper.send_dataframe_in_email(subject, tmp_df)
 
     def _add_recipe_columns(
         self, row: pd.Series, recipe: pd.Series

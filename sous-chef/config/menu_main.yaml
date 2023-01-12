@@ -24,5 +24,4 @@ menu:
     todoist:
       remove_existing_task: true
   run_mode:
-    with_gmail: true
     with_todoist: true

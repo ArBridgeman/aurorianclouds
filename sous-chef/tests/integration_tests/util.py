@@ -37,8 +37,6 @@ class BaseMain:
     def _set_config_run_mode(config: DictConfig):
         if "only_clean_todoist" in config.run_mode.keys():
             config.run_mode.only_clean_todoist_mode = False
-        if "with_gmail" in config.run_mode.keys():
-            config.run_mode.with_gmail = False
         config.run_mode.with_todoist = False
 
 

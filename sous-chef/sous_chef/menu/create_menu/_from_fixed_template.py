@@ -68,7 +68,7 @@ class MenuFromFixedTemplate(MenuBasic):
         processed_uuid_list = []
         for _, entry in self.dataframe.iterrows():
             processed_entry = self._process_menu(
-                entry, processed_uuid_list=processed_uuid_list
+                entry.copy(deep=True), processed_uuid_list=processed_uuid_list
             )
 
             # in cases where error is logged

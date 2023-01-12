@@ -10,14 +10,15 @@ from hydra import compose, initialize
 from pandas import DataFrame
 from pandera.typing.common import DataFrameBase
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
-from sous_chef.menu.create_menu import (
-    FinalizedMenuSchema,
-    Menu,
+from sous_chef.menu.create_menu._for_grocery_list import (
     MenuIngredient,
-    MenuQualityError,
     MenuRecipe,
+)
+from sous_chef.menu.create_menu._menu_basic import (
+    FinalizedMenuSchema,
     MenuSchema,
 )
+from sous_chef.menu.create_menu.create_menu import Menu
 from sous_chef.menu.record_menu_history import MenuHistoryError
 from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
@@ -222,7 +223,8 @@ class TestMenu:
         menu, menu_config, weekday
     ):
         menu_config.quality_check.recipe_rating_min = 3.0
-        with pytest.raises(MenuQualityError) as error:
+        # derived exception MenuQualityError
+        with pytest.raises(Exception) as error:
             menu._check_menu_quality(
                 weekday=weekday, recipe=create_recipe(rating=2.5)
             )
@@ -237,7 +239,8 @@ class TestMenu:
         menu, menu_config, weekday
     ):
         menu_config.quality_check.workday.recipe_unrated_allowed = False
-        with pytest.raises(MenuQualityError) as error:
+        # derived exception MenuQualityError
+        with pytest.raises(Exception) as error:
             menu._check_menu_quality(
                 weekday=0, recipe=create_recipe(rating=np.nan)
             )
@@ -252,7 +255,8 @@ class TestMenu:
         menu, menu_config, weekday
     ):
         menu_config.quality_check.workday.cook_active_minutes_max = 10
-        with pytest.raises(MenuQualityError) as error:
+        # derived exception MenuQualityError
+        with pytest.raises(Exception) as error:
             menu._check_menu_quality(
                 weekday=weekday,
                 recipe=create_recipe(time_total_str="15 minutes"),
@@ -320,6 +324,16 @@ class TestMenu:
     )
     def test__get_cook_day_as_weekday(menu, cook_day, expected_week_day):
         assert menu._get_cook_day_as_weekday(cook_day) == expected_week_day
+
+    @staticmethod
+    def test__get_cook_day_as_weekday_unknown(menu):
+        # derived exception MenuConfigError
+        with pytest.raises(Exception) as error:
+            menu._get_cook_day_as_weekday("not-a-day")
+        assert (
+            str(error.value)
+            == "[menu config error] not-a-day not defined in yaml"
+        )
 
     @staticmethod
     @pytest.mark.parametrize("rating", [np.nan])
@@ -414,7 +428,8 @@ class TestMenu:
             recipe_with_time_total
         )
 
-        with pytest.raises(MenuQualityError) as error:
+        # derived exception MenuQualityError
+        with pytest.raises(Exception) as error:
             menu._process_menu(
                 row, processed_uuid_list=[recipe_with_time_total.uuid]
             )
@@ -537,10 +552,13 @@ class TestMenu:
             ingredient
         )
         result = menu._retrieve_manual_menu_ingredient(row)
-        assert result == MenuIngredient(
-            ingredient=ingredient,
-            from_recipe="manual",
-            for_day=row["prep_datetime"],
+        assert (
+            result.__dict__
+            == MenuIngredient(
+                ingredient=ingredient,
+                from_recipe="manual",
+                for_day=row["prep_datetime"],
+            ).__dict__
         )
 
     @staticmethod
@@ -564,12 +582,15 @@ class TestMenu:
 
         result = menu._retrieve_menu_recipe(row)
 
-        assert result == MenuRecipe(
-            recipe=recipe_with_recipe_title,
-            eat_factor=row["eat_factor"],
-            freeze_factor=0.0,
-            for_day=row["prep_datetime"],
-            from_recipe=row["item"],
+        assert (
+            result.__dict__
+            == MenuRecipe(
+                recipe=recipe_with_recipe_title,
+                eat_factor=row["eat_factor"],
+                freeze_factor=0.0,
+                for_day=row["prep_datetime"],
+                from_recipe=row["item"],
+            ).__dict__
         )
 
     @staticmethod

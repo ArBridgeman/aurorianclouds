@@ -1,5 +1,4 @@
 import datetime
-from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
@@ -18,7 +17,6 @@ from sous_chef.abstract.extended_enum import (
 from sous_chef.abstract.handle_exception import BaseWithExceptionHandling
 from sous_chef.date.get_due_date import DueDatetimeFormatter, MealTime, Weekday
 from sous_chef.formatter.ingredient.format_ingredient import (
-    Ingredient,
     IngredientFormatter,
     MapIngredientErrorToException,
 )
@@ -32,15 +30,11 @@ from sous_chef.menu.record_menu_history import (
 )
 from sous_chef.messaging.gmail_api import GmailHelper
 from sous_chef.messaging.gsheets_api import GsheetsHelper
-from sous_chef.messaging.todoist_api import TodoistHelper
 from sous_chef.recipe_book.read_recipe_book import (
     MapRecipeErrorToException,
-    Recipe,
     RecipeBook,
 )
 from structlog import get_logger
-from termcolor import cprint
-from todoist_api_python.models import Task
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
 FILE_LOGGER = get_logger(__name__)
@@ -105,22 +99,6 @@ class MapMenuErrorToException(ExtendedEnum):
     menu_quality_check = MenuQualityError
 
 
-@dataclass
-class MenuIngredient:
-    ingredient: Ingredient
-    for_day: datetime.datetime
-    from_recipe: str
-
-
-@dataclass
-class MenuRecipe:
-    recipe: Recipe
-    eat_factor: float
-    freeze_factor: float
-    for_day: datetime.datetime
-    from_recipe: str
-
-
 class MenuSchema(pa.SchemaModel):
     weekday: Series[str] = pa.Field(isin=Weekday.name_list("capitalize"))
     prep_day_before: Optional[Series[float]] = pa.Field(
@@ -165,7 +143,7 @@ class FinalizedMenuSchema(MenuSchema):
 
 
 @dataclass
-class Menu(BaseWithExceptionHandling):
+class MenuBasic(BaseWithExceptionHandling):
     config: DictConfig
     due_date_formatter: DueDatetimeFormatter
     gsheets_helper: GsheetsHelper
@@ -188,105 +166,18 @@ class Menu(BaseWithExceptionHandling):
         )
         self.menu_history_uuid_list = self._set_menu_history_uuid_list()
 
-    def finalize_fixed_menu(self):
-        self.record_exception = []
-
-        self.dataframe = self._load_fixed_menu().reset_index(drop=True)
-
-        # remove menu entries that are inactive and drop column
-        mask_inactive = self.dataframe.inactive.str.upper() == "Y"
-        self.dataframe = self.dataframe.loc[~mask_inactive].drop(
-            columns=["inactive"]
+    def load_final_menu(self) -> pd.DataFrame:
+        workbook = self.config.final_menu.workbook
+        worksheet = self.config.final_menu.worksheet
+        self.dataframe = self.gsheets_helper.get_worksheet(
+            workbook_name=workbook, worksheet_name=worksheet
         )
+        self.dataframe.time_total = pd.to_timedelta(self.dataframe.time_total)
+        self._validate_finalized_menu_schema()
+        return self.dataframe
 
-        # applied schema model coerces int already
-        self.dataframe.freeze_factor.replace("", "0", inplace=True)
-        self.dataframe.prep_day_before.replace("", "0", inplace=True)
-        self.dataframe.defrost = self.dataframe.defrost.replace(
-            "", "N"
-        ).str.upper()
-        if "override_check" in self.dataframe.columns:
-            self.dataframe.override_check = (
-                self.dataframe.override_check.fillna("")
-                .replace("", "N")
-                .str.upper()
-            )
-        else:
-            self.dataframe["override_check"] = "N"
-
-        self.dataframe["eat_datetime"] = self.dataframe.apply(
-            lambda row: self.due_date_formatter.get_due_datetime_with_meal_time(
-                weekday=row.weekday, meal_time=row.meal_time
-            ),
-            axis=1,
-        )
-
-        # sort by desired order to be processed
-        self.dataframe["process_order"] = self.dataframe["type"].apply(
-            lambda x: TypeProcessOrder[x].value
-        )
-        self.dataframe = self.dataframe.sort_values(
-            by=["process_order"], ascending=True
-        ).drop(columns=["process_order"])
-        # validate schema & process menu
-        self._validate_menu_schema()
-
-        holder_dataframe = pd.DataFrame()
-        processed_uuid_list = []
-        for _, entry in self.dataframe.iterrows():
-            processed_entry = self._process_menu(
-                entry, processed_uuid_list=processed_uuid_list
-            )
-
-            # in cases where error is logged
-            if processed_entry is None:
-                continue
-
-            if processed_entry["type"] == "recipe":
-                processed_uuid_list.append(processed_entry.uuid)
-
-            processed_df = pd.DataFrame([processed_entry])
-            holder_dataframe = pd.concat([processed_df, holder_dataframe])
-        self.dataframe = holder_dataframe
-
-        if len(self.record_exception) > 0:
-            cprint("\t" + "\n\t".join(self.record_exception), "green")
-            raise MenuIncompleteError(
-                custom_message="will not send to finalize until fixed"
-            )
-
-        self.dataframe.drop(
-            columns=["eat_datetime", "override_check", "prep_day_before"],
-            inplace=True,
-        )
-        self._save_menu()
-
-    def get_menu_for_grocery_list(
-        self,
-    ) -> (List[MenuIngredient], List[MenuRecipe]):
-        self.record_exception = []
-
-        self.load_final_menu()
-
-        entry_funcs = {
-            "ingredient": self._retrieve_manual_menu_ingredient,
-            "recipe": self._retrieve_menu_recipe,
-        }
-        result_dict = defaultdict(list)
-        mask_defrost = self.dataframe.defrost != "Y"
-        for entry, entry_fct in entry_funcs.items():
-            if (mask := self.dataframe["type"] == entry).sum() > 0:
-                result_dict[entry] = (
-                    self.dataframe[mask & mask_defrost]
-                    .apply(entry_fct, axis=1)
-                    .tolist()
-                )
-        if len(self.record_exception) > 0:
-            cprint("\t" + "\n\t".join(self.record_exception), "green")
-            raise MenuIncompleteError(
-                custom_message="will not send to grocery list until fixed"
-            )
-        return result_dict["ingredient"], result_dict["recipe"]
+    def save_with_menu_historian(self):
+        self.menu_historian.add_current_menu_to_history(self.dataframe)
 
     def send_menu_to_gmail(self, gmail_helper: GmailHelper):
         mask_recipe = self.dataframe["type"] == "recipe"
@@ -302,94 +193,6 @@ class Menu(BaseWithExceptionHandling):
         calendar_week = self.due_date_formatter.get_calendar_week()
         subject = f"[sous_chef_menu] week {calendar_week}"
         gmail_helper.send_dataframe_in_email(subject, tmp_df)
-
-    def upload_menu_to_todoist(
-        self, todoist_helper: TodoistHelper
-    ) -> List[Task]:
-        project_name = self.config.todoist.project_name
-        calendar_week = self.due_date_formatter.get_calendar_week()
-        app_week_label = f"app-week-{calendar_week}"
-
-        if self.config.todoist.remove_existing_task:
-            todoist_helper.delete_all_items_in_project(
-                project_name,
-                only_with_label=app_week_label,
-            )
-
-        tasks = []
-        project_id = todoist_helper.get_project_id(project_name)
-
-        def _add_task(
-            task_name: str,
-            task_due_date: Union[datetime.date, datetime.datetime] = None,
-            parent_id: str = None,
-        ):
-            task_object = todoist_helper.add_task_to_project(
-                task=task_name,
-                project=project_name,
-                project_id=project_id,
-                due_date=task_due_date,
-                priority=self.config.todoist.task_priority,
-                parent_id=parent_id,
-                label_list=[app_week_label],
-            )
-            tasks.append(task_object)
-            return task_object
-
-        edit_task = _add_task(
-            task_name=f"edit recipes from week #{calendar_week}",
-            task_due_date=self.due_date_formatter.get_anchor_date()
-            + timedelta(days=7),
-        )
-
-        for _, row in self.dataframe.iterrows():
-            task = self._format_task_name(row)
-            # task for when to cook
-            _add_task(task_name=task, task_due_date=row.cook_datetime)
-
-            # task reminder to edit recipes
-            if row["type"] == "recipe":
-                _add_task(task_name=row["item"], parent_id=edit_task.id)
-
-            # task for separate preparation
-            if row.cook_datetime != row.prep_datetime:
-                _add_task(
-                    task_name=f"[PREP] {task}", task_due_date=row.prep_datetime
-                )
-            if row.defrost == "Y":
-                _add_task(
-                    task_name=f"[DEFROST] {task}",
-                    task_due_date=row.cook_datetime - timedelta(days=1),
-                )
-        return tasks
-
-    def load_final_menu(self) -> pd.DataFrame:
-        workbook = self.config.final_menu.workbook
-        worksheet = self.config.final_menu.worksheet
-        self.dataframe = self.gsheets_helper.get_worksheet(
-            workbook_name=workbook, worksheet_name=worksheet
-        )
-        self.dataframe.time_total = pd.to_timedelta(self.dataframe.time_total)
-        self._validate_finalized_menu_schema()
-        return self.dataframe
-
-    def save_with_menu_historian(self):
-        self.menu_historian.add_current_menu_to_history(self.dataframe)
-
-    @staticmethod
-    def _check_fixed_menu_number(menu_number: int):
-        if menu_number is None:
-            raise ValueError("fixed menu number not specified")
-        if not isinstance(menu_number, int):
-            raise ValueError(f"fixed menu number ({menu_number}) not an int")
-
-    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
-    def _check_manual_ingredient(self, row: pd.Series):
-        return self.ingredient_formatter.format_manual_ingredient(
-            quantity=float(row["eat_factor"]),
-            unit=row["eat_unit"],
-            item=row["item"],
-        )
 
     def _add_recipe_columns(
         self, row: pd.Series, recipe: pd.Series
@@ -438,6 +241,14 @@ class Menu(BaseWithExceptionHandling):
         # TODO remove/replace once recipes easily viewable in UI
         self._inspect_unrated_recipe(recipe)
         return row
+
+    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
+    def _check_manual_ingredient(self, row: pd.Series):
+        return self.ingredient_formatter.format_manual_ingredient(
+            quantity=float(row["eat_factor"]),
+            unit=row["eat_unit"],
+            item=row["item"],
+        )
 
     def _check_menu_quality(self, weekday: int, recipe: pd.Series):
         quality_check_config = self.config.quality_check
@@ -494,20 +305,6 @@ class Menu(BaseWithExceptionHandling):
                 recipe_title=recipe.title, error_text=error_text
             )
 
-    @staticmethod
-    def _format_task_name(
-        row: pd.Series,
-    ) -> (str, datetime.datetime):
-        if row.defrost == "Y":
-            return row["item"]
-
-        factor_str = f"x eat: {row.eat_factor}"
-        if row.freeze_factor > 0:
-            factor_str += f", x freeze: {row.freeze_factor}"
-
-        time_total = int(row.time_total.total_seconds() / 60)
-        return f"{row['item']} ({factor_str}) [{time_total} min]"
-
     def _get_cook_day_as_weekday(self, cook_day: str):
         if cook_day in self.cook_days:
             return self.cook_days[cook_day]
@@ -523,111 +320,22 @@ class Menu(BaseWithExceptionHandling):
                 )
                 print(recipe.ingredients)
 
-    def _load_fixed_menu(self):
-        menu_basic_file = self.config.fixed.basic
-        menu_basic = self.gsheets_helper.get_worksheet(
-            menu_basic_file, menu_basic_file
-        )
-
-        menu_number = self.config.fixed.menu_number
-        self._check_fixed_menu_number(menu_number)
-        menu_fixed_file = f"{self.config.fixed.file_prefix}{menu_number}"
-        menu_fixed = self.gsheets_helper.get_worksheet(
-            menu_fixed_file, menu_fixed_file
-        )
-
-        combined_menu = pd.concat([menu_basic, menu_fixed]).sort_values(
-            by=["weekday", "meal_time"]
-        )
-        combined_menu["weekday"] = combined_menu.weekday.apply(
-            self._get_cook_day_as_weekday
-        )
-
-        # TODO create test for
-        mask_skip_none = combined_menu["weekday"].isna()
-        if sum(mask_skip_none) > 0:
-            FILE_LOGGER.warning(
-                "Menu entries ignored",
-                skipped_entries=combined_menu[mask_skip_none],
-            )
-        return combined_menu[~mask_skip_none]
-
-    def _process_menu(self, row: pd.Series, processed_uuid_list: List):
-        FILE_LOGGER.info(
-            "[process menu]",
-            action="processing",
-            day=row["weekday"],
-            item=row["item"],
-            type=row["type"],
-        )
-        if row["type"] == "ingredient":
-            return self._process_ingredient(row)
-        return self._process_menu_recipe(
-            row, processed_uuid_list=processed_uuid_list
-        )
-
-    def _process_ingredient(self, row: pd.Series):
-        # do NOT need returned, as just ensuring exists
-        self._check_manual_ingredient(row=row)
-
-        row["time_total"] = timedelta(
-            minutes=int(self.config.ingredient.default_cook_minutes)
-        )
-
-        cook_datetime = row["eat_datetime"] - row["time_total"]
-        row["cook_datetime"] = cook_datetime
-        row["prep_datetime"] = cook_datetime
-        return row
-
-    def _process_menu_recipe(self, row: pd.Series, processed_uuid_list: List):
-        if row["type"] in ["category", "tag"]:
-            method = "get_random_recipe_by_category"
-            if row["type"] == "tag":
-                method = "get_random_recipe_by_tag"
-            return self._select_random_recipe(
-                row=row, method=method, processed_uuid_list=processed_uuid_list
-            )
-
-        return self._retrieve_recipe(
-            row, processed_uuid_list=processed_uuid_list
-        )
-
-    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
-    def _retrieve_manual_menu_ingredient(
-        self, row: pd.Series
-    ) -> MenuIngredient:
-        return MenuIngredient(
-            ingredient=self._check_manual_ingredient(row),
-            from_recipe="manual",
-            for_day=row["prep_datetime"],
-        )
-
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _retrieve_recipe(self, row: pd.Series, processed_uuid_list: List):
         recipe = self.recipe_book.get_recipe_by_title(row["item"])
-        if row.override_check == "N" and recipe.uuid in processed_uuid_list:
-            raise MenuQualityError(
-                recipe_title=recipe.title,
-                error_text="recipe already processed in menu",
-            )
-        elif recipe.uuid in self.menu_history_uuid_list:
-            raise MenuHistoryError(recipe_title=recipe.title)
+        if row.override_check == "N":
+            if recipe.uuid in processed_uuid_list:
+                raise MenuQualityError(
+                    recipe_title=recipe.title,
+                    error_text="recipe already processed in menu",
+                )
+            elif recipe.uuid in self.menu_history_uuid_list:
+                raise MenuHistoryError(recipe_title=recipe.title)
         return self._add_recipe_columns(row=row, recipe=recipe)
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
-    def _retrieve_menu_recipe(self, row: pd.Series) -> MenuRecipe:
-        recipe = self.recipe_book.get_recipe_by_title(row["item"])
-        return MenuRecipe(
-            recipe=recipe,
-            eat_factor=row["eat_factor"],
-            freeze_factor=row["freeze_factor"],
-            for_day=row["prep_datetime"],
-            from_recipe=row["item"],
-        )
-
-    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _select_random_recipe(
-        self, row: pd.Series, method: str, processed_uuid_list: pd.DataFrame
+        self, row: pd.Series, method: str, processed_uuid_list: List
     ):
         exclude_uuid_list = self.menu_history_uuid_list
         if processed_uuid_list:

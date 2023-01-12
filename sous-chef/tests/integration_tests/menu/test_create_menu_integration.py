@@ -3,11 +3,8 @@ import pytest
 from freezegun import freeze_time
 from hydra import compose, initialize
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
-from sous_chef.menu.create_menu import (
-    FinalizedMenuSchema,
-    Menu,
-    MenuIncompleteError,
-)
+from sous_chef.menu.create_menu._menu_basic import FinalizedMenuSchema
+from sous_chef.menu.create_menu.create_menu import Menu
 from sous_chef.recipe_book.read_recipe_book import RecipeNotFoundError
 from tests.conftest import FROZEN_DATE
 from tests.integration_tests.util import get_location
@@ -94,7 +91,8 @@ class TestMenu:
             recipe_title="dummy", search_results="dummy"
         )
 
-        with pytest.raises(MenuIncompleteError) as error:
+        # derived exception MenuIncompleteError
+        with pytest.raises(Exception) as error:
             menu.finalize_fixed_menu()()
 
         assert (
@@ -118,7 +116,8 @@ class TestMenu:
             recipe_title="dummy", search_results="dummy"
         )
 
-        with pytest.raises(MenuIncompleteError) as error:
+        # derived exception MenuIncompleteError
+        with pytest.raises(Exception) as error:
             menu.get_menu_for_grocery_list()
 
         assert (

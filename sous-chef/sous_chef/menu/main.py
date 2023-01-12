@@ -5,7 +5,7 @@ from omegaconf import DictConfig
 from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
-from sous_chef.menu.create_menu import Menu
+from sous_chef.menu.create_menu.create_menu import Menu
 from sous_chef.menu.record_menu_history import MenuHistorian
 from sous_chef.messaging.gmail_api import GmailHelper
 from sous_chef.messaging.gsheets_api import GsheetsHelper

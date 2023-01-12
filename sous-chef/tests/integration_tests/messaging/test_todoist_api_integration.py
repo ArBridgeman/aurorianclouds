@@ -3,7 +3,6 @@ from typing import Dict, List, Optional
 
 import pytest
 from sous_chef.messaging.todoist_api import TodoistKeyError
-from tests.integration_tests.util import clean_up_add_todoist_task
 from todoist_api_python.api import TodoistAPI
 
 PROJECT = "Pytest-area"
@@ -70,7 +69,7 @@ class TestTodoistHelper:
             **task_kwarg,
             project=PROJECT,
         )
-        clean_up_add_todoist_task(todoist_helper, task.id)
+        todoist_helper.delete_all_items_in_project(project=PROJECT)
 
         assert task.id == task.id
         assert task.is_completed is False
@@ -97,7 +96,20 @@ class TestTodoistHelper:
 
         if task_kwarg.get("section_id"):
             task_kwarg.pop("section_id")
-        assert log.events == [self._log_add_task(**task_kwarg)]
+        assert log.events == [
+            self._log_add_task(**task_kwarg),
+            {
+                "level": "info",
+                "event": "[todoist delete]",
+                "action": "delete items in project",
+                "project": "Pytest-area",
+            },
+            {
+                "level": "info",
+                "event": "[todoist delete]",
+                "action": "Deleted 1 tasks!",
+            },
+        ]
 
     def test_delete_all_items_in_project_skip_recurring(
         self, todoist_helper, pytest_area_project_id

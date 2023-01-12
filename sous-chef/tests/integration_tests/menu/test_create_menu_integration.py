@@ -10,8 +10,10 @@ from sous_chef.menu.create_menu import (
 )
 from sous_chef.recipe_book.read_recipe_book import RecipeNotFoundError
 from tests.conftest import FROZEN_DATE
-from tests.integration_tests.util import clean_up_add_todoist_task, get_location
+from tests.integration_tests.util import get_location
 from tests.util import assert_equal_dataframe
+
+PROJECT = "Pytest-area"
 
 
 @pytest.fixture
@@ -32,7 +34,7 @@ def menu_config():
         config.final_menu.worksheet = "test-tmp-menu"
         config.fixed.basic = "test-menu-basic"
         config.fixed.file_prefix = "test-menu-"
-        config.todoist.project_name = "Pytest-area"
+        config.todoist.project_name = PROJECT
         return config
 
 
@@ -141,7 +143,5 @@ class TestMenu:
     @pytest.mark.todoist
     def test_upload_menu_to_todoist(menu, todoist_helper):
         menu.load_final_menu()
-        tasks = menu.upload_menu_to_todoist(todoist_helper)
-        for task in tasks:
-            if task:
-                clean_up_add_todoist_task(todoist_helper, task.id)
+        menu.upload_menu_to_todoist(todoist_helper)
+        todoist_helper.delete_all_items_in_project(project=PROJECT)

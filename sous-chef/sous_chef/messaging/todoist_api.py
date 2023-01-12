@@ -73,7 +73,7 @@ class TodoistHelper:
         project_id: str = None,
         section: str = None,
         section_id: str = None,
-        label_list: list = None,
+        label_list: list[str] = None,
         description: str = None,
         parent_id: str = None,
         priority: int = 1,
@@ -148,9 +148,9 @@ class TodoistHelper:
     def delete_all_items_in_project(
         self,
         project: str,
-        no_recurring: bool = True,
-        only_app_generated: bool = True,
+        skip_recurring: bool = True,
         only_delete_after_date: date = None,
+        only_with_label: str = None,
     ) -> int:
 
         FILE_LOGGER.info(
@@ -164,8 +164,10 @@ class TodoistHelper:
         for task in self.connection.get_tasks(project_id=project_id):
             if task.is_completed:
                 continue
+            if only_delete_after_date and task.due is None:
+                continue
             if task.due is not None:
-                if no_recurring and task.due.is_recurring and task.due.date:
+                if skip_recurring and task.due.is_recurring and task.due.date:
                     continue
                 if only_delete_after_date and task.due.date:
                     if (
@@ -173,7 +175,7 @@ class TodoistHelper:
                         <= only_delete_after_date
                     ):
                         continue
-            if only_app_generated and "app" not in task.labels:
+            if only_with_label and only_with_label not in task.labels:
                 continue
 
             self._delete_task(task_id=task.id)

@@ -17,7 +17,6 @@ tsp,teaspoon,ginger powder,False,2.0,True,Spices and herbs,ginger powder,Asian s
 g,gram,ground beef,False,250.0,True,Meats,ground beef,Lidl,20304652,[Lasagna],2022-01-25 16:45:00+00:00,[Tue],False,Lidl
 cup,cup,ground flaxseed,False,0.25,True,Nuts and seeds,ground flaxseed,grocery store,,[Baked Oatmeal Bars],2022-01-23 17:45:00+00:00,[Sun],False,Bulk
 g,gram,hazelnuts,True,50.0,True,Nuts and seeds,hazelnuts,Amazon,5400606999763,[Baked Oatmeal Bars],2022-01-23 17:45:00+00:00,[Sun],False,Amazon
-tsp,teaspoon,herbes de Provence,False,1.0,True,Spices and herbs,herbes de Provence,grocery store,,[Spanish Deluxe Potatoes],2022-01-23 17:45:00+00:00,[Sun],False,Spices and herbs
 tbsp,tablespoon,italian seasoning,False,1.0,True,Spices and herbs,italian seasoning,Amazon,,[Lasagna],2022-01-25 16:45:00+00:00,[Tue],False,Amazon
 ,,lasagna noodle,False,4.0,True,Pasta,lasagna noodles,grocery store,,[Lasagna],2022-01-25 16:45:00+00:00,[Tue],False,GF park
 tsp,teaspoon,lemon juice,False,0.5,True,Juices,lemon juice,grocery store,4311501337745,[Spanish Deluxe Potatoes],2022-01-23 17:45:00+00:00,[Sun],False,Juices and beverages
@@ -33,7 +32,7 @@ ml,milliliter,passata,False,350.0,True,Sauces,passata,grocery store,431150165057
 tsp,teaspoon,pepper,False,1.35,True,Spices and herbs,pepper,Asian store,,"[Lasagna, Spanish Deluxe Potatoes]",2022-01-23 17:45:00+00:00,"[Sun, Tue]",False,Asian store
 g,gram,potato,False,500.0,True,Vegetables,potatoes,grocery store,,[Spanish Deluxe Potatoes],2022-01-23 17:45:00+00:00,[Sun],False,Farmland pride
 ,,potato,False,2.0,True,Vegetables,potatoes,grocery store,,[Lasagna],2022-01-25 16:45:00+00:00,[Tue],False,Farmland pride
-g,gram,pumpkin puree,False,100.0,True,Canned,pumpkin puree,DM,4260181088037,[Holiday cheesecake],2022-01-23 11:00:00+00:00,[Sun],False,DM
+g,gram,pumpkin puree,False,100.0,True,Canned,pumpkin puree,grocery store,4260181088037,[Holiday cheesecake],2022-01-23 11:00:00+00:00,[Sun],False,Sauces cans and oils
 tbsp,tablespoon,rapseed oil,False,2.5,True,Fats and oils,rapseed oil,grocery store,,"[Baked Oatmeal Bars, Spanish Deluxe Potatoes]",2022-01-23 17:45:00+00:00,[Sun],False,Sauces cans and oils
 tbsp,tablespoon,red wine vinegar,False,0.5,True,Sauces,red wine vinegar,grocery store,4008100120068,[Lasagna],2022-01-25 16:45:00+00:00,[Tue],False,Sauces cans and oils
 cup,cup,rice flakes,False,0.75,True,Grains,rice flakes,grocery store,,[Baked Oatmeal Bars],2022-01-23 17:45:00+00:00,[Sun],False,Bulk

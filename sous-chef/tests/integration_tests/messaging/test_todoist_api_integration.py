@@ -3,12 +3,22 @@ from typing import Dict, List, Optional
 
 import pytest
 from sous_chef.messaging.todoist_api import TodoistKeyError
-from tests.integration_tests.util import clean_up_add_todoist_task
 from todoist_api_python.api import TodoistAPI
+
+PROJECT = "Pytest-area"
+
+
+@pytest.fixture
+def pytest_area_project_id(todoist_helper):
+    return todoist_helper.get_project_id(PROJECT)
 
 
 @pytest.mark.todoist
 class TestTodoistHelper:
+    @staticmethod
+    def _get_task_count(todoist_helper, project_id):
+        return len(todoist_helper.connection.get_tasks(project_id=project_id))
+
     @staticmethod
     def _log_add_task(
         task: str,
@@ -24,7 +34,7 @@ class TestTodoistHelper:
             "event": "[todoist add]",
             "task": task,
             "due_date": due_date_str,
-            "project": "Pytest-area",
+            "project": PROJECT,
             "section": section,
             "priority": priority,
             "labels": label_list,
@@ -36,7 +46,7 @@ class TestTodoistHelper:
     def test__post_init__(todoist_helper):
         assert isinstance(todoist_helper.connection, TodoistAPI)
         assert isinstance(todoist_helper.projects, Dict)
-        assert {"menu", "groceries", "pytest-area"} <= set(
+        assert {"menu", "groceries", PROJECT.lower()} <= set(
             todoist_helper.projects.keys()
         )
 
@@ -51,19 +61,21 @@ class TestTodoistHelper:
             {"section": "Test-section"},
         ],
     )
-    def test_add_task_to_project(self, todoist_helper, log, task_kwarg):
+    def test_add_task_to_project(
+        self, todoist_helper, pytest_area_project_id, log, task_kwarg
+    ):
         task_kwarg["task"] = "add task with " + "".join(task_kwarg.keys())
         task = todoist_helper.add_task_to_project(
             **task_kwarg,
-            project="Pytest-area",
+            project=PROJECT,
         )
-        clean_up_add_todoist_task(todoist_helper, task.id)
+        todoist_helper.delete_all_items_in_project(project=PROJECT)
 
         assert task.id == task.id
         assert task.is_completed is False
         assert task.content == task_kwarg["task"].strip()
         assert task.description == task_kwarg.get("description", "")
-        assert task.project_id == todoist_helper.get_project_id("Pytest-area")
+        assert task.project_id == pytest_area_project_id
         assert task.labels == ["app"] + task_kwarg.get("label_list", [])
         assert task.priority == task_kwarg.get("priority", 1)
 
@@ -84,107 +96,176 @@ class TestTodoistHelper:
 
         if task_kwarg.get("section_id"):
             task_kwarg.pop("section_id")
-        assert log.events == [self._log_add_task(**task_kwarg)]
+        assert log.events == [
+            self._log_add_task(**task_kwarg),
+            {
+                "level": "info",
+                "event": "[todoist delete]",
+                "action": "delete items in project",
+                "project": "Pytest-area",
+            },
+            {
+                "level": "info",
+                "event": "[todoist delete]",
+                "action": "Deleted 1 tasks!",
+            },
+        ]
 
-    @staticmethod
-    def test_delete_all_items_in_project(todoist_helper, log):
-        project = "Pytest-area"
-        project_id = todoist_helper.get_project_id(project)
+    def test_delete_all_items_in_project_skip_recurring(
+        self, todoist_helper, pytest_area_project_id
+    ):
 
-        initial_delete = todoist_helper.delete_all_items_in_project(
-            project=project, no_recurring=False, only_app_generated=False
+        # initial delete
+        todoist_helper.delete_all_items_in_project(
+            project=PROJECT, skip_recurring=False
         )
 
         todoist_helper.connection.add_task(
-            content="app task", project_id=project_id, labels=["app"]
-        )
-        todoist_helper.connection.add_task(
-            content="due date task",
-            project_id=project_id,
-            due_string="on 2025-01-01",
-        )
-        task_recurring = todoist_helper.connection.add_task(
             content="recurring_task",
-            project_id=project_id,
+            project_id=pytest_area_project_id,
             due_string="every Monday",
         )
 
-        task_all = todoist_helper.connection.get_tasks(project_id=project_id)
-        assert len(task_all) == 3
-
-        todoist_helper.delete_all_items_in_project(project=project)
-        task_all = todoist_helper.connection.get_tasks(project_id=project_id)
-        assert len(task_all) == 2
+        assert (
+            self._get_task_count(
+                todoist_helper=todoist_helper, project_id=pytest_area_project_id
+            )
+            == 1
+        )
 
         todoist_helper.delete_all_items_in_project(
-            project=project,
-            only_app_generated=False,
-            only_delete_after_date=date(year=2024, month=12, day=31),
+            project=PROJECT, skip_recurring=True
         )
-        task_all = todoist_helper.connection.get_tasks(project_id=project_id)
-        assert task_all[0].id == task_recurring.id
+        assert (
+            self._get_task_count(
+                todoist_helper=todoist_helper, project_id=pytest_area_project_id
+            )
+            == 1
+        )
 
         todoist_helper.delete_all_items_in_project(
-            project=project, only_app_generated=False, no_recurring=False
+            project=PROJECT, skip_recurring=False
         )
-        task_all = todoist_helper.connection.get_tasks(project_id=project_id)
-        assert len(task_all) == 0
+        assert (
+            self._get_task_count(
+                todoist_helper=todoist_helper, project_id=pytest_area_project_id
+            )
+            == 0
+        )
 
-        assert log.events == [
-            {
-                "action": "delete items in project",
-                "event": "[todoist delete]",
-                "level": "info",
-                "project": "Pytest-area",
-            },
-            {
-                "action": f"Deleted {initial_delete} tasks!",
-                "event": "[todoist delete]",
-                "level": "info",
-            },
-            {
-                "action": "delete items in project",
-                "event": "[todoist delete]",
-                "level": "info",
-                "project": "Pytest-area",
-            },
-            {
-                "action": "Deleted 1 tasks!",
-                "event": "[todoist delete]",
-                "level": "info",
-            },
-            {
-                "action": "delete items in project",
-                "event": "[todoist delete]",
-                "level": "info",
-                "project": "Pytest-area",
-            },
-            {
-                "action": "Deleted 1 tasks!",
-                "event": "[todoist delete]",
-                "level": "info",
-            },
-            {
-                "action": "delete items in project",
-                "event": "[todoist delete]",
-                "level": "info",
-                "project": "Pytest-area",
-            },
-            {
-                "action": "Deleted 1 tasks!",
-                "event": "[todoist delete]",
-                "level": "info",
-            },
-        ]
+    def test_delete_all_items_in_project_only_delete_after_date(
+        self, todoist_helper, pytest_area_project_id
+    ):
+        # initial delete
+        todoist_helper.delete_all_items_in_project(
+            project=PROJECT, skip_recurring=False
+        )
+
+        todoist_helper.connection.add_task(
+            content="before_delete_date",
+            project_id=pytest_area_project_id,
+            due_string="2021-04-01",
+        )
+        todoist_helper.connection.add_task(
+            content="on_delete_date",
+            project_id=pytest_area_project_id,
+            due_string="2021-04-02",
+        )
+        todoist_helper.connection.add_task(
+            content="after_delete_date",
+            project_id=pytest_area_project_id,
+            due_string="2021-04-03",
+        )
+        todoist_helper.connection.add_task(
+            content="no due date",
+            project_id=pytest_area_project_id,
+        )
+
+        assert (
+            self._get_task_count(
+                todoist_helper=todoist_helper, project_id=pytest_area_project_id
+            )
+            == 4
+        )
+
+        todoist_helper.delete_all_items_in_project(
+            project=PROJECT,
+            only_delete_after_date=date(year=2021, month=4, day=2),
+        )
+        assert (
+            self._get_task_count(
+                todoist_helper=todoist_helper, project_id=pytest_area_project_id
+            )
+            == 3
+        )
+
+        todoist_helper.delete_all_items_in_project(
+            project=PROJECT,
+            only_delete_after_date=date(year=2021, month=3, day=28),
+        )
+        assert (
+            self._get_task_count(
+                todoist_helper=todoist_helper, project_id=pytest_area_project_id
+            )
+            == 1
+        )
+
+        todoist_helper.delete_all_items_in_project(project=PROJECT)
+        assert (
+            self._get_task_count(
+                todoist_helper=todoist_helper, project_id=pytest_area_project_id
+            )
+            == 0
+        )
+
+    def test_delete_all_items_in_project_only_with_label(
+        self, todoist_helper, pytest_area_project_id
+    ):
+        # initial delete
+        todoist_helper.delete_all_items_in_project(
+            project=PROJECT, skip_recurring=False
+        )
+
+        todoist_helper.connection.add_task(
+            content="has_relevant_label",
+            project_id=pytest_area_project_id,
+            labels=["relevant-label"],
+        )
+        todoist_helper.connection.add_task(
+            content="not_relevant_label",
+            project_id=pytest_area_project_id,
+            labels=["not-relevant-label"],
+        )
+
+        assert (
+            self._get_task_count(
+                todoist_helper=todoist_helper, project_id=pytest_area_project_id
+            )
+            == 2
+        )
+
+        todoist_helper.delete_all_items_in_project(
+            project=PROJECT, only_with_label="relevant-label"
+        )
+        assert (
+            self._get_task_count(
+                todoist_helper=todoist_helper, project_id=pytest_area_project_id
+            )
+            == 1
+        )
+
+        todoist_helper.delete_all_items_in_project(project=PROJECT)
+        assert (
+            self._get_task_count(
+                todoist_helper=todoist_helper, project_id=pytest_area_project_id
+            )
+            == 0
+        )
 
     @staticmethod
     @pytest.mark.parametrize(
         "project_name",
-        [
-            "Menu",
-            "Groceries",
-            "Pytest-area",
-        ],
+        ["Menu", "Groceries", PROJECT],
     )
     def test_get_project_id_if_exists(todoist_helper, project_name):
         assert todoist_helper.get_project_id(project_name) is not None

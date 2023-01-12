@@ -7,12 +7,12 @@ inputs:
   poetry-version:
     required: true
     description: "Poetry version to use"
-  address-book:
-    required: true
-    description: "Address book for sending emails via gmail"
   gsheets-service-token:
     required: true
     description: "Token for Gsheets service"
+  todoist-token:
+    required: true
+    description: "Token for Todoist service"
 runs:
   using: "composite"
   steps:
@@ -33,9 +33,7 @@ runs:
       run: |
         TOKEN_DIR=./sous-chef/sous_chef/tokens
         mkdir $TOKEN_DIR
-        ADDRESS_TOKEN="${TOKEN_DIR}/address_book.json"
         GSHEETS_TOKEN="${TOKEN_DIR}/google_client_key.json"
         TODOIST_TOKEN="${TOKEN_DIR}/todoist_token.txt"
-        echo ${{ inputs.address-book }} > $ADDRESS_TOKEN
         echo ${{ inputs.gsheets-service-token }} > $GSHEETS_TOKEN
         echo ${{ inputs.todoist-token }} > $TODOIST_TOKEN

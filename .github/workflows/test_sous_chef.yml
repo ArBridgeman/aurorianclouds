@@ -16,9 +16,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           poetry-version: ${{ matrix.poetry-version }}
-          address-book: ${{ secrets.ADDRESS_BOOK }}
-          gsheets-service-token: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
-          todoist-token: ${{ secrets.TODOIST_TOKEN }}
+#          gsheets-service-token: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
+#          todoist-token: ${{ secrets.TODOIST_TOKEN }}
       - name: Run unit tests
         working-directory: ./sous-chef
         run: poetry run pytest ./tests/unit_tests

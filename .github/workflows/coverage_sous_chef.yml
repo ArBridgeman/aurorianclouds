@@ -16,7 +16,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           poetry-version: ${{ matrix.poetry-version }}
-          address-book: ${{ secrets.ADDRESS_BOOK }}
           gsheets-service-token: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
           todoist-token: ${{ secrets.TODOIST_TOKEN }}
       - name: Get coverage

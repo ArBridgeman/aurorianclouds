@@ -85,19 +85,25 @@ class GroceryList:
                 project_name, only_with_label=self.app_week_label
             )
 
-        for section, group in self.grocery_list.groupby("aisle_group"):
-            if section in self.config.todoist.skip_group:
+        for aisle_group, group in self.grocery_list.groupby(
+            "aisle_group", as_index=False
+        ):
+            section_name = aisle_group
+            if aisle_group in self.config.store_to_specialty_list:
+                section_name = "Specialty"
+            if aisle_group in self.config.todoist.skip_group:
                 FILE_LOGGER.warning(
                     "[skip group]",
                     action="do not add to todoist",
-                    aisle_group=section,
+                    section=section_name,
+                    aisle_group=aisle_group,
                     ingredient_list=group["item"].values,
                 )
                 continue
 
             project_id = todoist_helper.get_project_id(project_name)
             section_id = todoist_helper.get_section_id(
-                project_id=project_id, section_name=section
+                project_id=project_id, section_name=section_name
             )
 
             # TODO CODE-197 add barcode (and later item name in description)
@@ -113,7 +119,7 @@ class GroceryList:
                     description=str(entry["barcode"]),
                     project=project_name,
                     project_id=project_id,
-                    section=section,
+                    section=section_name,
                     section_id=section_id,
                     priority=2 if entry["get_on_second_shopping_day"] else 1,
                 )
@@ -381,22 +387,28 @@ class GroceryList:
             f"(freeze: {freeze_quantity} {unit_str})"
         )
 
-    def _format_ingredient_str(self, ingredient: pd.Series) -> str:
-        item = ingredient["item"]
-        if ingredient["quantity"] > 1 and pd.isnull(ingredient["pint_unit"]):
-            item = ingredient["item_plural"]
+    def _format_ingredient_str(self, entry: pd.Series) -> str:
+        item = entry["item"]
+        if entry["quantity"] > 1 or not pd.isnull(entry["pint_unit"]):
+            item = entry["item_plural"]
+        if (
+            "aisle_group" in entry.keys()
+            and entry["aisle_group"] in self.config.store_to_specialty_list
+        ):
+            item = f"[{entry['aisle_group']}] {item}"
+
         ingredient_str = "{item}, {quantity}".format(
-            item=item, quantity=convert_number_to_str(ingredient.quantity)
+            item=item, quantity=convert_number_to_str(entry.quantity)
         )
 
         # TODO: do we need .unit anymore?
-        if not pd.isnull(ingredient.pint_unit):
+        if not pd.isnull(entry.pint_unit):
             unit_str = self.unit_formatter.get_unit_str(
-                ingredient["quantity"], ingredient["pint_unit"]
+                entry["quantity"], entry["pint_unit"]
             )
             ingredient_str += f" {unit_str}"
 
-        if ingredient.is_optional:
+        if entry.is_optional:
             ingredient_str += " (optional)"
 
         return ingredient_str

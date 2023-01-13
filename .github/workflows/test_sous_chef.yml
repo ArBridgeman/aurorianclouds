@@ -25,4 +25,4 @@ jobs:
 #        working-directory: ./sous-chef
 #        run: |
 #          poetry run pytest ./tests/integration_tests \
-#          -k "not gmail and not dropbox"
+#          -k "not dropbox"

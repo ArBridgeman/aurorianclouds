@@ -182,7 +182,7 @@
     "inactiveTime": "300",
     "totalTime": "405",
     "quantity": "12-16 slices",
-    "ingredients": "# 0.5 cup Salted caramel\n# 0.5 cup Smooth raspberry sauce\n# Shortbread cheesecake crust\n\n[CREAM]\n875 g Philadelphia cream cheese (softened)\n0.5 cup sugar\n0.3 cup sour cream (softened)\n1 tsp vanilla extract\n3 eggs\n\n[PUMPKIN CREAM]\n0.75 cup CREAM\n100 g pumpkin puree\n2 tsp ginger powder (and/or cinnamon)\n0.25 tsp nutmeg\n\n[CHOCOLATE]\n80 g chocolate chips",
+    "ingredients": "# 0.5 cup Salted caramel\n# 0.5 cup Raspberry sauce\n# Shortbread cheesecake crust\n\n[CREAM]\n875 g cream cheese (softened)\n0.5 cup sugar\n0.3 cup sour cream (softened)\n1 tsp vanilla extract\n3 eggs\n\n[PUMPKIN CREAM]\n(0.75 cup CREAM)\n100 g pumpkin puree\n2 tsp ginger powder (and/or cinnamon)\n0.25 tsp nutmeg\n\n[CHOCOLATE]\n80 g chocolate chips",
     "instructions": "If needed, prepare # Salted caramel & # Smooth raspberry sauce.\n\nAdjust the oven rack to the lower-middle position & preheat oven to 175°C.\nPrepare # Shortbread cheesecake crust.\n\n[CREAM]\nBeat the CREAM mixture (without eggs) on medium speed in a large bowl until creamy. \nAdd the eggs one at a time, beating after each addition until just blended.\n\n[PUMPKIN CREAM]\nMix together.\n\n[CHOCOLATE]\nMelt chocolate chips, be careful not to burn them.\n\n[ASSEMBLE CAKE]\nThe cake is composed of layers of CREAM and flavors. Into the crust:\n   • spread 1 cm layer of CREAM\n   • on half, drop 1 tbsp PUMPKIN CREAM & 0.5 tsp caramel sauce. Do this 3 more times in           \n     different areas. Using a knife  or sharp edge swirl the two layers some.\n    • on the other half, alternate between dropping 1 tsp RASPBERRY SAUCE & CHOCOLATE. \n      Do this for 10-12 drops. Again swirl together layers.\nRepeat the steps above until out of CREAM.\n\n[BAKING]\nIn another baking dish or roasting pan, put 2 cm of water. Put this dish a level below where the cake where sit.\n\nBake it for 55-70 minutes or until the center is almost set (still slightly wobbles). \nLet it sit in the open oven for 1 hour.\nRefrigerate it for at least 4 hours or overnight.\n\nUse a knife to loosen it from the rim of the springform pan, then remove the rim.\nFor neat slices, wipe the knife clean and dip into warm water between each slice.",
     "pictures": [
       "/data/user/0/fr.recettetek/files/Pictures/cf48159a-d1ba-4113-a4ce-e5794f330ec4.png",
@@ -223,5 +223,75 @@
       }
     ],
     "keywords": "favorite/Alex;special/Christmas;dessert/cheesecake;poison/fat-high;protein/cheese"
+  },
+  {
+    "title": "Shortbread cheesecake crust",
+    "preparationTime": "10",
+    "cookingTime": "10",
+    "totalTime": "20",
+    "quantity": "1 crust",
+    "ingredients": "1.25 cups flour\n0.75 cup buckwheat flour\n0.5 cup flour\n180 g butter (melted)\n0.25 cup brown sugar\n2 eggs\n",
+    "instructions": "Preheat oven to 175°C.\n\nMix together crust ingredients. \n\nPress firmly into the bottom and two-thirds up the sides of a 25 cm springform pan. \n\nPre-bake for 10 minutes or until lightly golden brown.",
+    "pictures": [
+      "/data/user/0/fr.recettetek/files/Pictures/dfa1a3e9-1397-4986-85af-ff29e50c6e11.png"
+    ],
+    "rating": 4.0,
+    "lastModifiedDate": "2021-12-28 10:26:18",
+    "uuid": "448505653",
+    "categories": [
+      {
+        "title": "Dessert/component"
+      }
+    ]
+  },
+  {
+    "title": "Raspberry sauce",
+    "preparationTime": "5",
+    "cookingTime": "5",
+    "inactiveTime": "10",
+    "totalTime": "20",
+    "quantity": "1 cup",
+    "ingredients": "340 g frozen raspberries\n0.3 cup water\n1 tbsp starch",
+    "instructions": "Add all ingredients. Boil for 5 min.\n\nFor a smooth sauce, strain through a mesh strainer to remove seeds. Use spatula to improve liquid separation by repeatedly brushing over bottom of the strainer.\n\nFor a chunk sauce, mash or blend berries.",
+    "pictures": [
+      "/data/user/0/fr.recettetek/files/Pictures/860eee93-9c2f-481c-93e4-a5b54e96f1fb.png"
+    ],
+    "rating": 4.0,
+    "lastModifiedDate": "2022-06-26 20:04:31",
+    "uuid": "-1100088668",
+    "categories": [
+      {
+        "title": "Dessert/component"
+      }
+    ]
+  },
+  {
+    "title": "Salted caramel",
+    "description": "",
+    "preparationTime": "5",
+    "cookingTime": "15",
+    "inactiveTime": "",
+    "totalTime": "20",
+    "quantity": "1 cup",
+    "ingredients": "0.75 cup sugar\n6 tbsp butter (chunked)\n0.5 cup 30% fat cream\n1 tsp salt",
+    "instructions": "MEASURE all ingredients first! No time during to do. Throughout the recipe, stir constantly, unless it says otherwise.\n\nHeat sugar over medium heat. It eventually melts into an amber-colored liquid.\n\nAdd the butter one chunk at a time. After its all combined, cook for 2 minutes without stirring.\n\nTemporarily remove the pan from heat & add in heavy cream. Return to heat. \nDo not stir & allow to boil for 1 minute. \n\nRemove from heat and stir in the salt. \n\nAllow to cool down before using. It will solidify in the refrigerator. Reheat in the microwave or on the stove to desired consistency.\n\nPut any leftovers in small containers in the freezer.",
+    "pictures": [
+      "/data/user/0/fr.recettetek/files/Pictures/6e1fa0c5-8e8a-4f11-a55f-51961161e26a.png"
+    ],
+    "url": "https://sallysbakingaddiction.com/homemade-salted-caramel-recipe/#tasty-recipes-68127",
+    "video": "",
+    "notes": "",
+    "cookware": "",
+    "nutrition": "",
+    "rating": 4.0,
+    "lastModifiedDate": "2022-10-14 19:27:03",
+    "uuid": "-84257004",
+    "links": null,
+    "originalPicture": "https://cdn.sallysbakingaddiction.com/wp-content/uploads/2013/11/salted-caramel_-225x225.jpg",
+    "categories": [
+      {
+        "title": "Dessert/component"
+      }
+    ]
   }
 ]

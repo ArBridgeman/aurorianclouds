@@ -6,14 +6,14 @@ from sous_chef.messaging.gsheets_api import GsheetsHelper
 from sous_chef.messaging.todoist_api import TodoistHelper
 from sous_chef.pantry_list.read_pantry_list import PantryList
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
-from tests.integration_tests.util import get_location
+from tests.data.util_data import get_local_recipe_book_path
 
 
 @pytest.fixture
-def recipe_book(config_recipe_book):
-    with patch.object(RecipeBook, "__post_init__", lambda x: None):
+def local_recipe_book(config_recipe_book):
+    with patch.object(RecipeBook, "__post_init__", return_value=None):
         recipe_book = RecipeBook(config_recipe_book)
-        recipe_book.recipe_book_path = get_location() / "data"
+        recipe_book.recipe_book_path = get_local_recipe_book_path()
         recipe_book._read_recipe_book()
     return recipe_book
 

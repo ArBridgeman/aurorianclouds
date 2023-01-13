@@ -1,9 +1,8 @@
-import pandas as pd
 import pytest
+from data.util_data import get_final_menu, get_menu_history
 from hydra import compose, initialize
 from sous_chef.menu.record_menu_history import MenuHistorian
 from tests.conftest import FROZEN_DATETIME
-from tests.integration_tests.util import get_final_menu, get_location
 from tests.util import assert_equal_dataframe
 
 
@@ -22,17 +21,6 @@ def menu_history(config_menu_history, gsheets_helper):
         gsheets_helper=gsheets_helper,
         current_menu_start_date=FROZEN_DATETIME,
     )
-
-
-def get_menu_history():
-    menu_history = pd.read_csv(
-        get_location() / "data/menu_history.csv",
-        dtype={"uuid": str},
-        header=0,
-    )
-    menu_history.cook_datetime = pd.to_datetime(menu_history.cook_datetime)
-    menu_history.uuid.fillna("NaN", inplace=True)
-    return menu_history
 
 
 @pytest.mark.gsheets

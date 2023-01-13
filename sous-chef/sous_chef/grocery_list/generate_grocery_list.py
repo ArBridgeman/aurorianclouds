@@ -11,7 +11,10 @@ from sous_chef.formatter.format_str import convert_number_to_str
 from sous_chef.formatter.format_unit import UnitFormatter, unit_registry
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.formatter.ingredient.get_ingredient_field import IngredientField
-from sous_chef.menu.create_menu import MenuIngredient, MenuRecipe
+from sous_chef.menu.create_menu._for_grocery_list import (
+    MenuIngredient,
+    MenuRecipe,
+)
 from sous_chef.messaging.todoist_api import TodoistHelper
 from sous_chef.recipe_book.read_recipe_book import Recipe
 from structlog import get_logger
@@ -290,8 +293,13 @@ class GroceryList:
             )
 
             # TODO make more robust to other methods
-            if self.config.run_mode.with_todoist:
+            if (
+                self.config.run_mode.with_todoist
+                and self.config.run_mode.check_referenced_recipe
+            ):
                 _give_referenced_recipe_details()
+                # TODO would be ideal if could guess to
+                #  make ahead like beans; should just as if we need to make
                 if _check_yes_no(f"Need to make '{recipe.title}'?") == "Y":
                     self._add_menu_recipe_to_queue([menu_sub_recipe])
 

@@ -1,16 +1,11 @@
-import pandas as pd
 import pytest
 from freezegun import freeze_time
 from hydra import compose, initialize
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
-from sous_chef.menu.create_menu import (
-    FinalizedMenuSchema,
-    Menu,
-    MenuIncompleteError,
-)
+from sous_chef.menu.create_menu.create_menu import Menu
 from sous_chef.recipe_book.read_recipe_book import RecipeNotFoundError
 from tests.conftest import FROZEN_DATE
-from tests.integration_tests.util import get_location
+from tests.data.util_data import get_tmp_menu
 from tests.util import assert_equal_dataframe
 
 PROJECT = "Pytest-area"
@@ -44,7 +39,7 @@ def menu_with_recipe_book(
     menu_config,
     gsheets_helper,
     ingredient_formatter,
-    recipe_book,
+    local_recipe_book,
     frozen_due_datetime_formatter,
 ):
     menu = Menu(
@@ -52,7 +47,7 @@ def menu_with_recipe_book(
         due_date_formatter=frozen_due_datetime_formatter,
         gsheets_helper=gsheets_helper,
         ingredient_formatter=ingredient_formatter,
-        recipe_book=recipe_book,
+        recipe_book=local_recipe_book,
     )
     return menu
 
@@ -79,9 +74,14 @@ def menu(
 @pytest.mark.gsheets
 class TestMenu:
     @staticmethod
-    def test_finalize_fixed_menu(menu_with_recipe_book, menu_config):
+    def test_finalize_fixed_menu_and_load_final_menu(
+        menu_with_recipe_book, menu_config
+    ):
         menu_config.fixed.menu_number = 0
         menu_with_recipe_book.finalize_fixed_menu()
+        assert_equal_dataframe(
+            menu_with_recipe_book.load_final_menu(), get_tmp_menu()
+        )
 
     @staticmethod
     def test_finalize_fixed_menu_fails_for_record_exception(
@@ -94,8 +94,9 @@ class TestMenu:
             recipe_title="dummy", search_results="dummy"
         )
 
-        with pytest.raises(MenuIncompleteError) as error:
-            menu.finalize_fixed_menu()()
+        # derived exception MenuIncompleteError
+        with pytest.raises(Exception) as error:
+            menu.finalize_fixed_menu()
 
         assert (
             str(error.value)
@@ -118,7 +119,8 @@ class TestMenu:
             recipe_title="dummy", search_results="dummy"
         )
 
-        with pytest.raises(MenuIncompleteError) as error:
+        # derived exception MenuIncompleteError
+        with pytest.raises(Exception) as error:
             menu.get_menu_for_grocery_list()
 
         assert (
@@ -128,16 +130,6 @@ class TestMenu:
         assert set(menu.record_exception) == {
             "[recipe not found] recipe=dummy search_results=[dummy]"
         }
-
-    @staticmethod
-    def test_load_final_menu(menu):
-        csv = get_location() / "data/tmp-menu.csv"
-        expected_result = FinalizedMenuSchema.validate(
-            pd.read_csv(csv, dtype={"uuid": "str"})
-        )
-        expected_result.eat_unit.fillna("", inplace=True)
-        expected_result.uuid.fillna("NaN", inplace=True)
-        assert_equal_dataframe(menu.load_final_menu(), expected_result)
 
     @staticmethod
     @pytest.mark.todoist

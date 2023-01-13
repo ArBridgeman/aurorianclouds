@@ -10,14 +10,16 @@ from hydra import compose, initialize
 from pandas import DataFrame
 from pandera.typing.common import DataFrameBase
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
-from sous_chef.menu.create_menu import (
-    FinalizedMenuSchema,
-    Menu,
+from sous_chef.menu.create_menu._for_grocery_list import (
     MenuIngredient,
-    MenuQualityError,
     MenuRecipe,
+)
+from sous_chef.menu.create_menu._menu_basic import (
+    FinalizedMenuSchema,
     MenuSchema,
 )
+from sous_chef.menu.create_menu.create_menu import Menu
+from sous_chef.menu.record_menu_history import MenuHistoryError
 from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
 from tests.util import assert_equal_series
@@ -145,6 +147,7 @@ def menu(
     menu_config,
     mock_gsheets,
     mock_ingredient_formatter,
+    mock_menu_history,
     mock_recipe_book,
     frozen_due_datetime_formatter,
 ):
@@ -153,6 +156,7 @@ def menu(
         due_date_formatter=frozen_due_datetime_formatter,
         gsheets_helper=mock_gsheets,
         ingredient_formatter=mock_ingredient_formatter,
+        menu_historian=mock_menu_history,
         recipe_book=mock_recipe_book,
     )
     return menu
@@ -221,7 +225,8 @@ class TestMenu:
         menu, menu_config, weekday
     ):
         menu_config.quality_check.recipe_rating_min = 3.0
-        with pytest.raises(MenuQualityError) as error:
+        # derived exception MenuQualityError
+        with pytest.raises(Exception) as error:
             menu._check_menu_quality(
                 weekday=weekday, recipe=create_recipe(rating=2.5)
             )
@@ -236,7 +241,8 @@ class TestMenu:
         menu, menu_config, weekday
     ):
         menu_config.quality_check.workday.recipe_unrated_allowed = False
-        with pytest.raises(MenuQualityError) as error:
+        # derived exception MenuQualityError
+        with pytest.raises(Exception) as error:
             menu._check_menu_quality(
                 weekday=0, recipe=create_recipe(rating=np.nan)
             )
@@ -251,7 +257,8 @@ class TestMenu:
         menu, menu_config, weekday
     ):
         menu_config.quality_check.workday.cook_active_minutes_max = 10
-        with pytest.raises(MenuQualityError) as error:
+        # derived exception MenuQualityError
+        with pytest.raises(Exception) as error:
             menu._check_menu_quality(
                 weekday=weekday,
                 recipe=create_recipe(time_total_str="15 minutes"),
@@ -321,6 +328,16 @@ class TestMenu:
         assert menu._get_cook_day_as_weekday(cook_day) == expected_week_day
 
     @staticmethod
+    def test__get_cook_day_as_weekday_unknown(menu):
+        # derived exception MenuConfigError
+        with pytest.raises(Exception) as error:
+            menu._get_cook_day_as_weekday("not-a-day")
+        assert (
+            str(error.value)
+            == "[menu config error] not-a-day not defined in yaml"
+        )
+
+    @staticmethod
     @pytest.mark.parametrize("rating", [np.nan])
     def test__inspect_unrated_recipe(
         capsys,
@@ -382,7 +399,7 @@ class TestMenu:
             recipe_with_time_total
         )
 
-        result = menu._process_menu(row.copy(deep=True))
+        result = menu._process_menu(row.copy(deep=True), processed_uuid_list=[])
 
         assert_equal_series(
             result,
@@ -392,6 +409,61 @@ class TestMenu:
                 item_type="recipe",
                 time_total_str=pd.to_timedelta(time_total_str),
             ).squeeze(),
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "recipe_title,time_total_str",
+        [("garlic aioli", "5 minutes")],
+    )
+    def test__process_menu_recipe_error_when_in_processed_uuid_list(
+        menu, menu_builder, mock_recipe_book, recipe_title, time_total_str
+    ):
+        row = menu_builder.create_menu_row(
+            item=recipe_title, item_type="recipe", loaded_fixed_menu=True
+        ).squeeze()
+
+        recipe_with_time_total = create_recipe(
+            title=recipe_title, time_total_str=time_total_str
+        )
+        mock_recipe_book.get_recipe_by_title.return_value = (
+            recipe_with_time_total
+        )
+
+        # derived exception MenuQualityError
+        with pytest.raises(Exception) as error:
+            menu._process_menu(
+                row, processed_uuid_list=[recipe_with_time_total.uuid]
+            )
+        assert (
+            str(error.value) == "[menu quality] recipe=garlic aioli "
+            "error=recipe already processed in menu"
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "recipe_title,time_total_str",
+        [("garlic aioli", "5 minutes")],
+    )
+    def test__process_menu_recipe_error_when_in_menu_history_uuid_list(
+        menu, menu_builder, mock_recipe_book, recipe_title, time_total_str
+    ):
+        row = menu_builder.create_menu_row(
+            item=recipe_title, item_type="recipe", loaded_fixed_menu=True
+        ).squeeze()
+
+        recipe_with_time_total = create_recipe(
+            title=recipe_title, time_total_str=time_total_str
+        )
+        mock_recipe_book.get_recipe_by_title.return_value = (
+            recipe_with_time_total
+        )
+        menu.menu_history_uuid_list = [recipe_with_time_total.uuid]
+
+        with pytest.raises(MenuHistoryError) as error:
+            menu._process_menu(row, processed_uuid_list=[])
+        assert (
+            str(error.value) == "[in recent menu history] recipe=garlic aioli"
         )
 
     @staticmethod
@@ -415,7 +487,7 @@ class TestMenu:
             ingredient
         )
 
-        result = menu._process_menu(row.copy(deep=True))
+        result = menu._process_menu(row.copy(deep=True), processed_uuid_list=[])
         assert_equal_series(result, row)
 
     @staticmethod
@@ -439,7 +511,7 @@ class TestMenu:
         getattr(mock_recipe_book, method).return_value = recipe
         mock_recipe_book.get_recipe_by_title.return_value = recipe
 
-        result = menu._process_menu(row.copy(deep=True))
+        result = menu._process_menu(row, processed_uuid_list=[])
 
         assert_equal_series(
             result,
@@ -482,10 +554,13 @@ class TestMenu:
             ingredient
         )
         result = menu._retrieve_manual_menu_ingredient(row)
-        assert result == MenuIngredient(
-            ingredient=ingredient,
-            from_recipe="manual",
-            for_day=row["prep_datetime"],
+        assert (
+            result.__dict__
+            == MenuIngredient(
+                ingredient=ingredient,
+                from_recipe="manual",
+                for_day=row["prep_datetime"],
+            ).__dict__
         )
 
     @staticmethod
@@ -509,12 +584,15 @@ class TestMenu:
 
         result = menu._retrieve_menu_recipe(row)
 
-        assert result == MenuRecipe(
-            recipe=recipe_with_recipe_title,
-            eat_factor=row["eat_factor"],
-            freeze_factor=0.0,
-            for_day=row["prep_datetime"],
-            from_recipe=row["item"],
+        assert (
+            result.__dict__
+            == MenuRecipe(
+                recipe=recipe_with_recipe_title,
+                eat_factor=row["eat_factor"],
+                freeze_factor=0.0,
+                for_day=row["prep_datetime"],
+                from_recipe=row["item"],
+            ).__dict__
         )
 
     @staticmethod

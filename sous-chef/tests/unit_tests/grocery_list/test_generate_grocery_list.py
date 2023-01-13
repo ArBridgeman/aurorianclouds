@@ -12,7 +12,7 @@ from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.grocery_list.generate_grocery_list import (
     GroceryListIncompleteError,
 )
-from sous_chef.menu.create_menu import MenuRecipe
+from sous_chef.menu.create_menu._for_grocery_list import MenuRecipe
 from tests.unit_tests.util import create_recipe
 from tests.util import assert_equal_dataframe, assert_equal_series
 

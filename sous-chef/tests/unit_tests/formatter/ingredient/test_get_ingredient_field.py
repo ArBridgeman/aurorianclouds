@@ -94,7 +94,7 @@ class TestIngredientFieldFormatter:
         recipe_with_recipe_title = create_recipe(title=recipe_title)
         mock_pantry_list.retrieve_match.return_value = pantry_entry
         mock_recipe_book.get_recipe_by_title.return_value = (
-            recipe_with_recipe_title
+            recipe_with_recipe_title.copy(deep=True)
         )
 
         (
@@ -162,7 +162,7 @@ class TestIngredientFieldFormatter:
 
         ingredient_field.referenced_recipe_list = []
         mock_recipe_book.get_recipe_by_title.return_value = (
-            recipe_with_recipe_title
+            recipe_with_recipe_title.copy(deep=True)
         )
 
         ingredient_field._format_referenced_recipe(line_str)

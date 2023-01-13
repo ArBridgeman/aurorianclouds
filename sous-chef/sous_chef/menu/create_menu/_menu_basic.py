@@ -348,13 +348,13 @@ class MenuBasic(BaseWithExceptionHandling):
             worksheet_name=save_loc.worksheet,
         )
 
-    def _set_menu_history_uuid_list(self):
+    def _set_menu_history_uuid_list(self) -> List:
         if self.menu_historian is not None:
             menu_history_recent_df = self.menu_historian.get_history_from(
                 days_ago=self.config.menu_history_recent_days
             )
             if not menu_history_recent_df.empty:
-                return menu_history_recent_df.uuid.values
+                return list(menu_history_recent_df.uuid.values)
         return []
 
     def _validate_menu_schema(self):

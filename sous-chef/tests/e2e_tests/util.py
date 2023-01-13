@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from hydra import compose, initialize
 from omegaconf import DictConfig
-from recipe_book.read_recipe_book import RecipeBook
+from sous_chef.recipe_book.read_recipe_book import RecipeBook
 from tests.data.util_data import get_local_recipe_book_path
 
 abs_path = Path(__file__).parent.absolute()

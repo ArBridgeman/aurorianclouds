@@ -87,6 +87,8 @@ class MenuBuilder:
         menu["eat_datetime"] = pd.Timestamp(
             year=2022, month=1, day=21, hour=17, minute=45, tz="Europe/Berlin"
         )
+        # needed for schema validation, not "proper" prep_datetime
+        menu["prep_datetime"] = menu["eat_datetime"]
         menu["override_check"] = "N"
         if not post_process_recipe:
             return MenuSchema.validate(pd.DataFrame(menu, index=[0]))

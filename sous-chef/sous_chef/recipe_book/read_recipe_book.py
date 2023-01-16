@@ -1,6 +1,7 @@
 import re
 from collections import namedtuple
 from dataclasses import dataclass
+from datetime import timedelta
 from pathlib import Path
 from typing import Callable, List
 
@@ -77,6 +78,7 @@ class SelectRandomRecipeError(DirectSearchError):
 class MapRecipeErrorToException(ExtendedEnum):
     recipe_not_found = RecipeNotFoundError
     recipe_total_time_undefined = RecipeTotalTimeUndefinedError
+    random_recipe_selection_failed = SelectRandomRecipeError
 
 
 class Recipe(pa.SchemaModel):
@@ -115,23 +117,31 @@ class RecipeBook(DataframeSearchable):
             self._select_highest_rated_when_duplicated_name()
 
     def get_random_recipe_by_category(
-        self, category: str, exclude_uuid_list: List = None
+        self,
+        category: str,
+        exclude_uuid_list: List = None,
+        max_cook_active_minutes: float = None,
     ) -> Recipe:
         return self._select_random_recipe_weighted_by_rating(
             method_match=self._is_value_in_list,
             field="categories",
             search_term=category,
             exclude_uuid_list=exclude_uuid_list,
+            max_cook_active_minutes=max_cook_active_minutes,
         )
 
     def get_random_recipe_by_tag(
-        self, tag: str, exclude_uuid_list: List = None
+        self,
+        tag: str,
+        exclude_uuid_list: List = None,
+        max_cook_active_minutes: float = None,
     ) -> Recipe:
         return self._select_random_recipe_weighted_by_rating(
             method_match=self._is_value_in_list,
             field="tags",
             search_term=tag,
             exclude_uuid_list=exclude_uuid_list,
+            max_cook_active_minutes=max_cook_active_minutes,
         )
 
     def get_recipe_by_title(self, title) -> pd.Series:
@@ -212,13 +222,24 @@ class RecipeBook(DataframeSearchable):
         field: str,
         search_term: str,
         exclude_uuid_list: List = None,
+        max_cook_active_minutes: float = None,
     ):
         config_random = self.config.random_select
         mask_selection = self.dataframe[field].apply(
             lambda row: method_match(row, search_term)
         )
+
         if exclude_uuid_list is not None:
             mask_selection &= ~self.dataframe.uuid.isin(exclude_uuid_list)
+        if max_cook_active_minutes is not None:
+            # ok, as will later raise exception if
+            # selected and total_time is null
+            cook_active_time = self.dataframe.time_total.fillna(
+                timedelta(minutes=0)
+            ) - self.dataframe.time_inactive.fillna(timedelta(minutes=0))
+            cook_active_minutes = cook_active_time.dt.total_seconds() / 60
+            mask_selection &= cook_active_minutes <= max_cook_active_minutes
+
         if (count := sum(mask_selection)) > config_random.min_thresh_error:
             if count < config_random.min_thresh_warning:
                 FILE_LOGGER.warning(

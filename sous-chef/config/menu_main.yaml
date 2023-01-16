@@ -1,5 +1,6 @@
 defaults:
   - pantry_list
+  - random
   - recipe_book
   - rtk
   - date/get_due_date

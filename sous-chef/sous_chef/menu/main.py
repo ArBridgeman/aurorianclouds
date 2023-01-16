@@ -1,6 +1,8 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
+from pathlib import Path
 
 import hydra
+import numpy as np
 from omegaconf import DictConfig
 from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.formatter.format_unit import UnitFormatter
@@ -12,6 +14,10 @@ from sous_chef.messaging.todoist_api import TodoistHelper
 from sous_chef.pantry_list.read_pantry_list import PantryList
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
 from sous_chef.rtk.read_write_rtk import RtkService
+from structlog import get_logger
+
+ABS_FILE_PATH = Path(__file__).absolute().parent
+FILE_LOGGER = get_logger(__name__)
 
 
 def run_menu(config: DictConfig):
@@ -61,7 +67,21 @@ def run_menu(config: DictConfig):
     config_path="../../config/", config_name="menu_main", version_base=None
 )
 def main(config: DictConfig):
-    run_menu(config)
+
+    if config.random.seed is None:
+        config.random.seed = datetime.now().timestamp()
+    config.random.seed = int(config.random.seed)
+    # globally set random seed for numpy based calls
+    np.random.seed(config.random.seed)
+
+    try:
+        run_menu(config)
+    except Exception as e:
+        raise e
+    finally:
+        FILE_LOGGER.info(
+            f"Use random seed {config.random.seed} to reproduce this run!"
+        )
 
 
 def _get_ingredient_formatter(

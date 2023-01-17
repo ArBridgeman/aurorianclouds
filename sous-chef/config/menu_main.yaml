@@ -17,6 +17,7 @@ menu:
     input_method: fixed
     errors:
       recipe_not_found: log
+      random_recipe_selection_failed: log
       recipe_total_time_undefined: log
       recipe_in_recent_menu_history: log
       pantry_ingredient_not_known: log

@@ -22,6 +22,15 @@ class TypeProcessOrder(ExtendedIntEnum):
 
 class MenuFromFixedTemplate(MenuBasic):
     def finalize_fixed_menu(self):
+        default_prep_time = self.config.prep_separate.default_time
+
+        def _get_default_prep_datetime(row: pd.Series):
+            return self.due_date_formatter.replace_time_with_meal_time(
+                due_date=row.eat_datetime
+                - timedelta(days=int(row.prep_day_before)),
+                meal_time=default_prep_time,
+            )
+
         self.record_exception = []
 
         self.dataframe = self._load_fixed_menu().reset_index(drop=True)
@@ -52,6 +61,9 @@ class MenuFromFixedTemplate(MenuBasic):
                 weekday=row.weekday, meal_time=row.meal_time
             ),
             axis=1,
+        )
+        self.dataframe["prep_datetime"] = self.dataframe.apply(
+            _get_default_prep_datetime, axis=1
         )
 
         # sort by desired order to be processed

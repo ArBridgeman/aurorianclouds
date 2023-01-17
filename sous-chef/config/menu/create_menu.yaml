@@ -14,6 +14,7 @@ create_menu:
   menu_history_recent_days: 30
   errors: # raise, log, or skip
     recipe_not_found: raise
+    random_recipe_selection_failed: raise
     recipe_total_time_undefined: raise
     recipe_in_recent_menu_history: raise
     pantry_ingredient_not_known: raise

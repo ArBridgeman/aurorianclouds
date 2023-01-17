@@ -106,6 +106,9 @@ class MenuSchema(pa.SchemaModel):
     eat_datetime: Optional[Series[pd.DatetimeTZDtype]] = pa.Field(
         dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
     )
+    prep_datetime: Series[pd.DatetimeTZDtype] = pa.Field(
+        dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True, nullable=False
+    )
     meal_time: Series[str] = pa.Field(isin=MealTime.name_list("lower"))
     type: Series[str] = pa.Field(isin=TypeProcessOrder.name_list())
     eat_factor: Series[float] = pa.Field(gt=0, nullable=False, coerce=True)
@@ -128,9 +131,6 @@ class FinalizedMenuSchema(MenuSchema):
     type: Series[str] = pa.Field(isin=["ingredient", "recipe"])
     time_total: Series[pd.Timedelta] = pa.Field(nullable=False, coerce=True)
     cook_datetime: Series[pd.DatetimeTZDtype] = pa.Field(
-        dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True, nullable=False
-    )
-    prep_datetime: Series[pd.DatetimeTZDtype] = pa.Field(
         dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True, nullable=False
     )
     # manual ingredients lack these
@@ -183,7 +183,7 @@ class MenuBasic(BaseWithExceptionHandling):
     ) -> pd.Series:
         prep_config = self.config.prep_separate
 
-        def _eat_prep_datetime() -> (datetime.timedelta, datetime.timedelta):
+        def _cook_prep_datetime() -> (datetime.timedelta, datetime.timedelta):
             if row.defrost == "Y":
                 return row.eat_datetime, row.eat_datetime
 
@@ -202,20 +202,13 @@ class MenuBasic(BaseWithExceptionHandling):
                 return default_cook_datetime, default_prep_datetime
             # prep_day_before was set, so use prep_config default time; unsure
             # how cook time altered, but assume large inactive times handled
-            return (
-                default_cook_datetime,
-                self.due_date_formatter.replace_time_with_meal_time(
-                    due_date=row.eat_datetime
-                    - timedelta(days=row.prep_day_before),
-                    meal_time=prep_config.default_time,
-                ),
-            )
+            return (default_cook_datetime, row.prep_datetime)
 
         row["item"] = recipe.title
         row["rating"] = recipe.rating
         row["time_total"] = recipe.time_total
         row["uuid"] = recipe.uuid
-        row["cook_datetime"], row["prep_datetime"] = _eat_prep_datetime()
+        row["cook_datetime"], row["prep_datetime"] = _cook_prep_datetime()
 
         if row.override_check == "N":
             self._check_menu_quality(
@@ -248,7 +241,7 @@ class MenuBasic(BaseWithExceptionHandling):
                 self._ensure_workday_not_unrated_recipe(recipe=recipe)
             self._ensure_workday_not_exceed_active_cook_time(
                 recipe=recipe,
-                cook_active_minutes_max=float(
+                max_cook_active_minutes=float(
                     quality_check_config.workday.cook_active_minutes_max
                 ),
             )
@@ -273,17 +266,17 @@ class MenuBasic(BaseWithExceptionHandling):
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _ensure_workday_not_exceed_active_cook_time(
-        self, recipe: pd.Series, cook_active_minutes_max: float
+        self, recipe: pd.Series, max_cook_active_minutes: float
     ):
         time_total = recipe.time_total
         if recipe.time_inactive is not pd.NaT:
             time_total -= recipe.time_inactive
         cook_active_minutes = time_total.total_seconds() / 60
-        if cook_active_minutes > cook_active_minutes_max:
+        if cook_active_minutes > max_cook_active_minutes:
             error_text = (
                 "(on workday) "
                 f"cook_active_minutes={cook_active_minutes} > "
-                f"{cook_active_minutes_max}"
+                f"{max_cook_active_minutes}"
             )
             raise MenuQualityError(
                 recipe_title=recipe.title, error_text=error_text
@@ -321,12 +314,20 @@ class MenuBasic(BaseWithExceptionHandling):
     def _select_random_recipe(
         self, row: pd.Series, method: str, processed_uuid_list: List
     ):
+        max_cook_active_minutes = None
+        if row.override_check == "N" and row.prep_datetime.weekday() < 5:
+            max_cook_active_minutes = float(
+                self.config.quality_check.workday.cook_active_minutes_max
+            )
+
         exclude_uuid_list = self.menu_history_uuid_list
         if processed_uuid_list:
             exclude_uuid_list += processed_uuid_list
 
         recipe = getattr(self.recipe_book, method)(
-            row["item"], exclude_uuid_list=exclude_uuid_list
+            row["item"],
+            exclude_uuid_list=exclude_uuid_list,
+            max_cook_active_minutes=max_cook_active_minutes,
         )
         row["item"] = recipe.title
         row["type"] = "recipe"

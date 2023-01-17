@@ -314,6 +314,64 @@ class TestRecipeBook:
         assert_equal_series(result, recipe.squeeze())
 
     @staticmethod
+    @pytest.mark.parametrize(
+        "method,item_type",
+        [
+            ("get_random_recipe_by_category", "categories"),
+            (
+                "get_random_recipe_by_tag",
+                "tags",
+            ),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "recipe_title,recipe_cooking_time_min",
+        [
+            ("Excluded by time limit", 35),
+            ("Not excluded by time limit", 20),
+        ],
+    )
+    def test__select_random_recipe_weighted_by_rating_removes_long_cooking_time(
+        config_recipe_book,
+        recipe_book,
+        random_seed,
+        recipe_book_builder,
+        recipe_title,
+        recipe_cooking_time_min,
+        log,
+        method,
+        item_type,
+    ):
+        config_recipe_book.random_select.min_thresh_warning = 5
+        max_cook_time = 30
+
+        search_term = "search_term"
+        search_dict = {item_type: [search_term]}
+        recipe1 = recipe_book_builder.create_recipe(
+            title="default one", rating=2.0, **search_dict
+        )
+        recipe2 = recipe_book_builder.create_recipe(
+            title=recipe_title,
+            rating=5.0,
+            cooking_time_str=f"{recipe_cooking_time_min} min",
+            **search_dict,
+        )
+
+        recipe_book.dataframe = recipe_book_builder.add_recipe_list(
+            [recipe1, recipe2]
+        ).get_recipe_book()
+
+        result = getattr(recipe_book, method)(
+            search_term, max_cook_active_minutes=max_cook_time
+        )
+        assert_equal_series(
+            result,
+            (
+                recipe2 if recipe_cooking_time_min <= max_cook_time else recipe1
+            ).squeeze(),
+        )
+
+    @staticmethod
     def test__select_random_recipe_weighted_by_rating_raise_error(
         recipe_book, recipe_book_builder
     ):

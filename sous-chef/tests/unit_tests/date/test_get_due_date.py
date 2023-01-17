@@ -10,6 +10,8 @@ from sous_chef.date.get_due_date import (
 )
 from tests.conftest import FROZEN_DATE
 
+FROZEN_MONDAY = "2022-01-10"
+
 
 def create_datetime(
     day: int,
@@ -71,22 +73,31 @@ class TestWeekdayIndex:
 
 class TestDueDatetimeFormatter:
     @staticmethod
-    @freeze_time("2022-01-10")
+    @freeze_time(FROZEN_MONDAY)
     @pytest.mark.parametrize(
-        "anchor_day,expected_day,expected_index",
+        "anchor_day,week_offset,expected_day,expected_index",
         [
-            ("Monday", 16, 6),
-            ("Tuesday", 10, 0),
-            ("Wednesday", 11, 1),
-            ("Thursday", 12, 2),
-            ("Friday", 13, 3),
-            ("Saturday", 14, 4),
-            ("Sunday", 15, 5),
+            ("Monday", 0, 10, 0),
+            ("Tuesday", 0, 11, 1),
+            ("Wednesday", 0, 12, 2),
+            ("Thursday", 0, 13, 3),
+            ("Friday", 0, 14, 4),
+            ("Saturday", 0, 15, 5),
+            ("Sunday", 0, 16, 6),
+            ("Monday", 1, 17, 0),
+            ("Tuesday", 1, 18, 1),
+            ("Wednesday", 1, 19, 2),
+            ("Thursday", 1, 20, 3),
+            ("Friday", 1, 21, 4),
+            ("Saturday", 1, 22, 5),
+            ("Sunday", 1, 23, 6),
         ],
     )
-    def test_get_anchor_date(anchor_day, expected_day, expected_index):
+    def test_get_anchor_date(
+        anchor_day, week_offset, expected_day, expected_index
+    ):
         anchor_date = DueDatetimeFormatter(
-            anchor_day=anchor_day
+            anchor_day=anchor_day, week_offset=week_offset
         ).get_anchor_date()
         assert anchor_date == datetime.date(
             year=2022, month=1, day=expected_day
@@ -116,36 +127,46 @@ class TestDueDatetimeFormatter:
     @staticmethod
     @freeze_time(FROZEN_DATE)
     @pytest.mark.parametrize(
-        "weekday,day",
+        "weekday,week_offset,expected_day",
         [
-            ("friday", 20),
-            ("saturday", 14),
-            ("sunday", 15),
-            ("monday", 16),
-            ("tuesday", 17),
-            ("wednesday", 18),
-            ("thursday", 19),
+            ("tuesday", -1, 11),
+            ("wednesday", -1, 12),
+            ("thursday", -1, 13),
+            ("friday", 0, 14),
+            ("saturday", 0, 15),
+            ("sunday", 0, 16),
+            ("monday", 0, 17),
+            ("tuesday", 0, 18),
+            ("wednesday", 0, 19),
+            ("thursday", 0, 20),
+            ("friday", 1, 21),
+            ("saturday", 1, 22),
+            ("sunday", 1, 23),
+            ("monday", 1, 17),
+            ("tuesday", 1, 18),
+            ("wednesday", 1, 19),
+            ("thursday", 1, 20),
         ],
     )
     def test__get_anchor_date_at_midnight(
-        frozen_due_datetime_formatter, weekday, day
+        frozen_due_datetime_formatter, weekday, week_offset, expected_day
     ):
         assert frozen_due_datetime_formatter._get_anchor_date_at_midnight(
-            weekday
-        ) == create_datetime(day)
+            weekday, week_offset=week_offset
+        ) == create_datetime(expected_day)
 
     @staticmethod
-    @freeze_time("2022-01-10")
+    @freeze_time(FROZEN_MONDAY)
     @pytest.mark.parametrize(
         "weekday,day",
         [
-            ("wednesday", 12),
-            ("thursday", 13),
-            ("friday", 14),
-            ("saturday", 15),
-            ("sunday", 16),
-            ("monday", 17),
-            ("tuesday", 11),
+            ("wednesday", 19),
+            ("thursday", 20),
+            ("friday", 21),
+            ("saturday", 22),
+            ("sunday", 23),
+            ("monday", 24),
+            ("tuesday", 18),
         ],
     )
     def test_get_date_relative_to_anchor_tuesday(weekday, day):

@@ -29,7 +29,8 @@ def run_menu(config: DictConfig):
     ingredient_formatter = _get_ingredient_formatter(config, gsheets_helper)
 
     due_date_formatter = DueDatetimeFormatter(
-        anchor_day=config.date.due_date.anchor_day
+        anchor_day=config.date.due_date.anchor_day,
+        week_offset=config.date.due_date.week_offset,
     )
 
     menu_historian = MenuHistorian(

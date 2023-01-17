@@ -31,12 +31,13 @@ class MealTime(ExtendedEnum):
 @dataclass
 class DueDatetimeFormatter:
     anchor_day: str
+    week_offset: int = 1
     meal_time: MealTime = MealTime
     anchor_datetime: datetime.datetime = None
 
     def __post_init__(self):
         self.anchor_datetime = self._get_anchor_date_at_midnight(
-            self.anchor_day
+            self.anchor_day, week_offset=self.week_offset
         )
 
     def get_anchor_date(self) -> datetime.date:
@@ -47,13 +48,13 @@ class DueDatetimeFormatter:
 
     def get_date_relative_to_anchor(self, weekday: str) -> datetime.datetime:
         weekday_index = get_weekday_index(weekday)
-        # TODO could anchor date and logic here be simplified?
+        # relative_date is always positive and in range [1, 13]
+        # modulo 7 causes it to always be the nearest following weekday
+        # the due_date can never be < anchor_date BUT it can be the same day
         relative_date = weekday_index - self.anchor_datetime.weekday() + 7
         due_date = self.anchor_datetime + datetime.timedelta(
             days=relative_date % 7
         )
-        if due_date.date() <= self.anchor_datetime.date():
-            due_date += datetime.timedelta(days=7)
         return due_date
 
     def get_due_datetime_with_meal_time(
@@ -77,14 +78,27 @@ class DueDatetimeFormatter:
         return self._set_specified_time(due_date, hour, minute)
 
     @staticmethod
-    def _get_anchor_date_at_midnight(weekday: str) -> datetime.datetime:
+    def _get_anchor_date_at_midnight(
+        weekday: str, week_offset: int = 1
+    ) -> datetime.datetime:
         weekday_index = get_weekday_index(weekday)
         today = datetime.date.today()
         today_index = today.weekday()
-        if today_index >= weekday_index:
+
+        # by default (week_offset=1) anchor_day will be in the upcoming week,
+        # independent of the current weekday.
+        # week_offset can be set to an arbitrarily higher (or smaller) number.
+        # an anchor day in the same week can be enforced with week_offset=0
+        # unless that day has already passed,
+        # then it will switch to the next week
+        # = same behaviour as with week_offset=1
+        # if a past anchor day is really desired (not an expected use case),
+        # a negative value of week_offset can be specified
+        if (today_index > weekday_index) and week_offset < 1:
             weekday_index += 7
+
         anchor_date = today + datetime.timedelta(
-            days=weekday_index - today_index - 1
+            days=weekday_index - today_index + week_offset * 7
         )
         return datetime.datetime.combine(
             anchor_date, datetime.datetime.min.time(), tzinfo=timezone("UTC")

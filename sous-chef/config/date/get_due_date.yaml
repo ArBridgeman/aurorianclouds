@@ -1,2 +1,3 @@
 due_date:
   anchor_day: Tuesday
+  week_offset: 1

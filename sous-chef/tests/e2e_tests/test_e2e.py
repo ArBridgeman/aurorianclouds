@@ -21,6 +21,17 @@ from tests.util import assert_equal_dataframe
 @pytest.mark.todoist
 class Test(Base):
     @staticmethod
+    @pytest.fixture(autouse=True)
+    def run_before_and_after_tests(todoist_helper):
+        """Fixture to execute asserts before and after a test is run"""
+        todoist_helper.delete_all_items_in_project(project=PROJECT)
+
+        yield  # this is where the testing happens
+
+        # Teardown : fill with any logic you want
+        todoist_helper.delete_all_items_in_project(project=PROJECT)
+
+    @staticmethod
     def _convert_task_list_to_df(todoist_helper):
         project_id = todoist_helper.get_project_id(PROJECT)
         task_list = todoist_helper.connection.get_tasks(project_id=project_id)
@@ -78,6 +89,7 @@ class Test(Base):
             return_value=frozen_due_datetime_formatter.anchor_datetime,
         ):
             with patch.object(RecipeBook, "__post_init__", return_value=None):
+
                 assert_equal_dataframe(self._run_menu(), get_final_menu())
 
                 menu_history._load_history()
@@ -101,5 +113,3 @@ class Test(Base):
                 assert_equal_dataframe(
                     tasks_grocery_list, get_tasks_grocery_list()
                 )
-
-                todoist_helper.delete_all_items_in_project(project=PROJECT)

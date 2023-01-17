@@ -46,7 +46,8 @@ def run_grocery_list(config: DictConfig) -> pd.DataFrame:
         )
 
         due_date_formatter = DueDatetimeFormatter(
-            anchor_day=config.date.due_date.anchor_day
+            anchor_day=config.date.due_date.anchor_day,
+            week_offset=config.date.due_date.week_offset,
         )
 
         # get menu for grocery list

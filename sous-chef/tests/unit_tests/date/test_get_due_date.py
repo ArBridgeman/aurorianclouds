@@ -2,6 +2,7 @@ import datetime
 
 import pytest
 from freezegun import freeze_time
+from omegaconf import DictConfig
 from pytz import timezone
 from sous_chef.date.get_due_date import (
     DueDatetimeFormatter,
@@ -97,7 +98,9 @@ class TestDueDatetimeFormatter:
         anchor_day, week_offset, expected_day, expected_index
     ):
         anchor_date = DueDatetimeFormatter(
-            anchor_day=anchor_day, week_offset=week_offset
+            config=DictConfig(
+                {"anchor_day": anchor_day, "week_offset": week_offset}
+            )
         ).get_anchor_date()
         assert anchor_date == datetime.date(
             year=2022, month=1, day=expected_day
@@ -151,9 +154,12 @@ class TestDueDatetimeFormatter:
     def test__get_anchor_date_at_midnight(
         frozen_due_datetime_formatter, weekday, week_offset, expected_day
     ):
-        assert frozen_due_datetime_formatter._get_anchor_date_at_midnight(
-            weekday, week_offset=week_offset
-        ) == create_datetime(expected_day)
+        frozen_due_datetime_formatter.anchor_day = weekday
+        frozen_due_datetime_formatter.week_offset = week_offset
+        assert (
+            frozen_due_datetime_formatter._get_anchor_date_at_midnight()
+            == create_datetime(expected_day)
+        )
 
     @staticmethod
     @freeze_time(FROZEN_MONDAY)
@@ -171,7 +177,7 @@ class TestDueDatetimeFormatter:
     )
     def test_get_date_relative_to_anchor_tuesday(weekday, day):
         assert DueDatetimeFormatter(
-            anchor_day="Tuesday"
+            config=DictConfig({"anchor_day": "Tuesday", "week_offset": 1})
         ).get_date_relative_to_anchor(weekday) == create_datetime(day=day)
 
     @staticmethod

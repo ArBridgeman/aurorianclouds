@@ -1,6 +1,7 @@
 import datetime
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
+from omegaconf import DictConfig
 from pytz import timezone
 from sous_chef.abstract.extended_enum import ExtendedEnum, ExtendedIntEnum
 
@@ -30,18 +31,22 @@ class MealTime(ExtendedEnum):
 
 @dataclass
 class DueDatetimeFormatter:
-    anchor_day: str
-    week_offset: int = 1
+    config: DictConfig
     meal_time: MealTime = MealTime
+    anchor_day: str = field(init=False)
+    week_offset: int = field(init=False)
     anchor_datetime: datetime.datetime = None
 
     def __post_init__(self):
-        self.anchor_datetime = self._get_anchor_date_at_midnight(
-            self.anchor_day, week_offset=self.week_offset
-        )
+        self.anchor_day = self.config.anchor_day
+        self.week_offset = self.config.week_offset
+        self.anchor_datetime = self._get_anchor_date_at_midnight()
 
     def get_anchor_date(self) -> datetime.date:
         return self.anchor_datetime.date()
+
+    def get_anchor_datetime(self) -> datetime.datetime:
+        return self.anchor_datetime
 
     def get_calendar_week(self) -> int:
         return self.anchor_datetime.isocalendar().week
@@ -77,11 +82,8 @@ class DueDatetimeFormatter:
         hour, minute = self._get_meal_time_hour_minute(meal_time)
         return self._set_specified_time(due_date, hour, minute)
 
-    @staticmethod
-    def _get_anchor_date_at_midnight(
-        weekday: str, week_offset: int = 1
-    ) -> datetime.datetime:
-        weekday_index = get_weekday_index(weekday)
+    def _get_anchor_date_at_midnight(self) -> datetime.datetime:
+        weekday_index = get_weekday_index(self.anchor_day)
         today = datetime.date.today()
         today_index = today.weekday()
 
@@ -94,11 +96,11 @@ class DueDatetimeFormatter:
         # = same behaviour as with week_offset=1
         # if a past anchor day is really desired (not an expected use case),
         # a negative value of week_offset can be specified
-        if (today_index > weekday_index) and week_offset < 1:
+        if (today_index > weekday_index) and self.week_offset < 1:
             weekday_index += 7
 
         anchor_date = today + datetime.timedelta(
-            days=weekday_index - today_index + week_offset * 7
+            days=weekday_index - today_index + self.week_offset * 7
         )
         return datetime.datetime.combine(
             anchor_date, datetime.datetime.min.time(), tzinfo=timezone("UTC")

@@ -18,6 +18,7 @@ from sous_chef.recipe_book.read_recipe_book import RecipeBook
 
 FROZEN_DATE = "2022-01-14"
 FROZEN_DATETIME = datetime.strptime(FROZEN_DATE, "%Y-%m-%d").replace(tzinfo=UTC)
+FROZEN_DAY = pd.to_datetime(FROZEN_DATE).day_name()
 
 
 @pytest.fixture
@@ -64,9 +65,16 @@ def config_grocery_list():
 
 
 @pytest.fixture
+def config_due_date():
+    with initialize(version_base=None, config_path="../config"):
+        return compose(config_name="grocery_list").date.due_date
+
+
+@pytest.fixture
 @freeze_time(FROZEN_DATE)
-def frozen_due_datetime_formatter():
-    due_datetime_formatter = DueDatetimeFormatter(anchor_day="Friday")
+def frozen_due_datetime_formatter(config_due_date):
+    config_due_date.anchor_day = FROZEN_DAY
+    due_datetime_formatter = DueDatetimeFormatter(config=config_due_date)
     due_datetime_formatter.meal_time = MockMealTime
     return due_datetime_formatter
 

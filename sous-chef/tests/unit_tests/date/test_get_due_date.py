@@ -2,7 +2,7 @@ import datetime
 
 import pytest
 from freezegun import freeze_time
-from omegaconf import DictConfig
+from hydra import compose, initialize
 from pytz import timezone
 from sous_chef.date.get_due_date import (
     DueDatetimeFormatter,
@@ -12,6 +12,12 @@ from sous_chef.date.get_due_date import (
 from tests.conftest import FROZEN_DATE
 
 FROZEN_MONDAY = "2022-01-10"
+
+
+@pytest.fixture
+def config_get_due_date():
+    with initialize(version_base=None, config_path="../../../config/date"):
+        return compose(config_name="get_due_date").due_date
 
 
 def create_datetime(
@@ -95,12 +101,16 @@ class TestDueDatetimeFormatter:
         ],
     )
     def test_get_anchor_date(
-        anchor_day, week_offset, expected_day, expected_index
+        config_get_due_date,
+        anchor_day,
+        week_offset,
+        expected_day,
+        expected_index,
     ):
+        config_get_due_date.anchor_day = anchor_day
+        config_get_due_date.week_offset = week_offset
         anchor_date = DueDatetimeFormatter(
-            config=DictConfig(
-                {"anchor_day": anchor_day, "week_offset": week_offset}
-            )
+            config=config_get_due_date
         ).get_anchor_date()
         assert anchor_date == datetime.date(
             year=2022, month=1, day=expected_day
@@ -175,9 +185,13 @@ class TestDueDatetimeFormatter:
             ("tuesday", 18),
         ],
     )
-    def test_get_date_relative_to_anchor_tuesday(weekday, day):
+    def test_get_date_relative_to_anchor_tuesday(
+        config_get_due_date, weekday, day
+    ):
+        config_get_due_date.anchor_day = "Tuesday"
+        config_get_due_date.week_offset = 1
         assert DueDatetimeFormatter(
-            config=DictConfig({"anchor_day": "Tuesday", "week_offset": 1})
+            config=config_get_due_date
         ).get_date_relative_to_anchor(weekday) == create_datetime(day=day)
 
     @staticmethod

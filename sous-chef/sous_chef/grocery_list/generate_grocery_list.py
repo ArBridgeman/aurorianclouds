@@ -325,9 +325,12 @@ class GroceryList:
                             )
                             == "Y"
                         ):
+                            schedule_datetime = _get_schedule_day_hour_minute()
+                            if schedule_datetime > menu_recipe.for_day:
+                                schedule_datetime -= timedelta(days=7)
                             self._add_preparation_task_to_queue(
                                 f"[PREP] {recipe.amount}",
-                                due_date=_get_schedule_day_hour_minute(),
+                                due_date=schedule_datetime,
                                 from_recipe=[from_recipe],
                                 for_day_str=[
                                     menu_sub_recipe.for_day.strftime("%a")
@@ -479,7 +482,7 @@ class GroceryList:
                 meal_time=config_bean_prep.prep_meal,
             ),
             from_recipe=row.from_recipe,
-            for_day_str=row.for_day.strftime("%a"),
+            for_day_str=[row.for_day.strftime("%a")],
         )
         return row
 

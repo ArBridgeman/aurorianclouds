@@ -44,7 +44,7 @@ class MenuForTodoist(MenuBasic):
         edit_task = _add_task(
             task_name=f"edit recipes from week #{calendar_week}",
             task_due_date=self.due_date_formatter.get_anchor_date()
-            + timedelta(days=7),
+            + timedelta(days=6),
         )
 
         for _, row in self.dataframe.iterrows():

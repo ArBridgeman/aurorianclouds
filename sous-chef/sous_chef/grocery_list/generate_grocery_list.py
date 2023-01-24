@@ -48,13 +48,25 @@ class GroceryList:
     queue_preparation: pd.DataFrame = None
     grocery_list_raw: pd.DataFrame = None
     grocery_list: pd.DataFrame = None
-    second_shopping_date: date = field(init=False)
+    primary_shopping_date: date = field(init=False)
+    secondary_shopping_date: date = field(init=False)
     second_shopping_day_group: List = field(init=False)
     has_errors: bool = False
     app_week_label: str = field(init=False)
 
     def __post_init__(self):
-        self.second_shopping_date = (
+        self.primary_shopping_date = (
+            self.due_date_formatter.get_date_relative_to_anchor(
+                self.config.shopping.primary_day
+            )
+        ).date()
+        if (
+            self.primary_shopping_date
+            >= self.due_date_formatter.get_anchor_date()
+        ):
+            self.primary_shopping_date -= timedelta(days=7)
+
+        self.secondary_shopping_date = (
             self.due_date_formatter.get_date_relative_to_anchor(
                 self.config.shopping.secondary_day
             ).date()
@@ -113,9 +125,9 @@ class GroceryList:
             for _, entry in group.iterrows():
                 todoist_helper.add_task_to_project(
                     task=self._format_ingredient_str(entry),
-                    due_date=self.second_shopping_date
+                    due_date=self.secondary_shopping_date
                     if entry["get_on_second_shopping_day"]
-                    else None,
+                    else self.primary_shopping_date,
                     label_list=entry["from_recipe"]
                     + entry["for_day_str"]
                     + [self.app_week_label],
@@ -313,9 +325,12 @@ class GroceryList:
                             )
                             == "Y"
                         ):
+                            schedule_datetime = _get_schedule_day_hour_minute()
+                            if schedule_datetime > menu_recipe.for_day:
+                                schedule_datetime -= timedelta(days=7)
                             self._add_preparation_task_to_queue(
                                 f"[PREP] {recipe.amount}",
-                                due_date=_get_schedule_day_hour_minute(),
+                                due_date=schedule_datetime,
                                 from_recipe=[from_recipe],
                                 for_day_str=[
                                     menu_sub_recipe.for_day.strftime("%a")
@@ -436,7 +451,7 @@ class GroceryList:
     def _get_on_second_shopping_day(
         self, for_day: datetime, food_group: str
     ) -> bool:
-        return (for_day.date() >= self.second_shopping_date) and (
+        return (for_day.date() >= self.secondary_shopping_date) and (
             food_group.casefold() in self.second_shopping_day_group
         )
 
@@ -467,7 +482,7 @@ class GroceryList:
                 meal_time=config_bean_prep.prep_meal,
             ),
             from_recipe=row.from_recipe,
-            for_day_str=row.for_day.strftime("%a"),
+            for_day_str=[row.for_day.strftime("%a")],
         )
         return row
 

@@ -28,13 +28,11 @@ def run_menu(config: DictConfig):
     gsheets_helper = GsheetsHelper(config.messaging.gsheets)
     ingredient_formatter = _get_ingredient_formatter(config, gsheets_helper)
 
-    due_date_formatter = DueDatetimeFormatter(
-        anchor_day=config.date.due_date.anchor_day
-    )
+    due_date_formatter = DueDatetimeFormatter(config=config.date.due_date)
 
     menu_historian = MenuHistorian(
         config=config.menu.record_menu_history,
-        current_menu_start_date=due_date_formatter.anchor_datetime
+        current_menu_start_date=due_date_formatter.get_anchor_datetime()
         + timedelta(days=1),
         gsheets_helper=gsheets_helper,
     )

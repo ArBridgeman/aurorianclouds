@@ -7,6 +7,8 @@ unit_registry.default_format = ".2f"
 unit_registry.define("bag = 1")
 unit_registry.define("ball = 1")
 unit_registry.define("block = 1")
+unit_registry.define("bunch = 1")
+unit_registry.define("@alias bunch = bunches")
 unit_registry.define("can = 1")
 unit_registry.define("cube = 1")
 unit_registry.define("dash = 1")
@@ -15,8 +17,8 @@ unit_registry.define("drop = 1")
 unit_registry.define("head = 1")
 unit_registry.define("jar = 1")
 unit_registry.define("pinch = 1")
-unit_registry.define("sheet = 1")
 unit_registry.define("@alias pinch = pinches")
+unit_registry.define("sheet = 1")
 unit_registry.define("package = 1 =  pkg")
 unit_registry.define("packet = 1 = pkt")
 unit_registry.define("slice = 1")
@@ -26,6 +28,7 @@ custom_list = [
     unit_registry.bag,
     unit_registry.ball,
     unit_registry.block,
+    unit_registry.bunch,
     unit_registry.can,
     unit_registry.cube,
     unit_registry.dash,

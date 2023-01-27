@@ -3,7 +3,7 @@ from collections import namedtuple
 from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
-from typing import Callable, List
+from typing import Callable, List, Tuple
 
 import pandas as pd
 import pandera as pa
@@ -108,9 +108,13 @@ class Recipe(pa.SchemaModel):
 @dataclass
 class RecipeBook(DataframeSearchable):
     recipe_book_path: Path = None
+    category_tuple: Tuple = None
+    tag_tuple: Tuple = None
 
     def __post_init__(self):
         self.recipe_book_path = Path(HOME_PATH, self.config.path)
+        self._read_category_tuple()
+        self._read_tag_tuple()
         # load basic recipe book to self.dataframe
         self._read_recipe_book()
         if self.config.deduplicate:
@@ -180,12 +184,18 @@ class RecipeBook(DataframeSearchable):
     def _is_value_in_list(row: pd.Series, search_term: str):
         return search_term.casefold() in row
 
+    def _read_category_tuple(self):
+        category_df = pd.read_json(
+            self.recipe_book_path / self.config.file_categories
+        )
+        self.category_tuple = tuple(category_df.title.values)
+
     def _read_recipe_book(self):
         self.dataframe = pd.concat(
             [
                 self._retrieve_format_recipe_df(recipe_file)
                 for recipe_file in self.recipe_book_path.glob(
-                    self.config.file_pattern
+                    self.config.file_recipe_pattern
                 )
             ]
         )
@@ -198,6 +208,10 @@ class RecipeBook(DataframeSearchable):
             num_rated=num_rated,
             num_total=self.dataframe.shape[0],
         )
+
+    def _read_tag_tuple(self):
+        tag_df = pd.read_json(self.recipe_book_path / self.config.file_tags)
+        self.tag_tuple = tuple(tag_df.title.values)
 
     def _retrieve_format_recipe_df(self, json_file):
         tmp_df = pd.read_json(

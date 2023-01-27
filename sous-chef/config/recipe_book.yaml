@@ -1,6 +1,8 @@
 recipe_book:
   path: ./Dropbox/SharedApps/RecetteTek
-  file_pattern: recipes*.json
+  file_categories: categories.json
+  file_recipe_pattern: recipes*.json
+  file_tags: tags.json
   # selects recipe with highest rating if name duplicated
   deduplicate: true
   fuzzy_match:

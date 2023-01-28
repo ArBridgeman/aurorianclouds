@@ -38,6 +38,7 @@ MAP_JSON_TO_DF = pd.DataFrame(
         MAP_FIELD_TO_COL("quantity", "quantity", str),
         MAP_FIELD_TO_COL("tags", "tags", list),
         MAP_FIELD_TO_COL("uuid", "uuid", str),
+        MAP_FIELD_TO_COL("url", "url", str),
     ]
 )
 
@@ -89,7 +90,8 @@ class Recipe(pa.SchemaModel):
     time_cooking: Series[pd.Timedelta] = pa.Field(nullable=True, coerce=True)
     time_inactive: Series[pd.Timedelta] = pa.Field(nullable=True, coerce=True)
     time_total: Series[pd.Timedelta] = pa.Field(nullable=True, coerce=True)
-    ingredients: Series[str] = pa.Field(nullable=False)
+    # TODO one day set to False, but sometimes extraction issue
+    ingredients: Series[str] = pa.Field(nullable=True)
     instructions: Series[str] = pa.Field(nullable=True)
     rating: Series[float] = pa.Field(nullable=True, coerce=True)
     favorite: Series[bool] = pa.Field(nullable=False, coerce=True)
@@ -97,6 +99,7 @@ class Recipe(pa.SchemaModel):
     quantity: Series[str] = pa.Field(nullable=True)
     tags: Series[object] = pa.Field(nullable=False)
     uuid: Series[str] = pa.Field(unique=True)
+    url: Series[str] = pa.Field(nullable=True)
     # TODO simplify logic & get rid of
     factor: Series[float] = pa.Field(nullable=False, coerce=True)
     amount: Series[str] = pa.Field(nullable=True)
@@ -133,6 +136,22 @@ class RecipeBook(DataframeSearchable):
             exclude_uuid_list=exclude_uuid_list,
             max_cook_active_minutes=max_cook_active_minutes,
         )
+
+    def get_random_recipe_by_filter(
+        self,
+        category: str,
+        exclude_uuid_list: List = None,
+        max_cook_active_minutes: float = None,
+    ) -> Recipe:
+        # TODO implement
+        pass
+        # return self._select_random_recipe_weighted_by_rating(
+        #     method_match=self._is_value_in_list,
+        #     field="categories",
+        #     search_term=category,
+        #     exclude_uuid_list=exclude_uuid_list,
+        #     max_cook_active_minutes=max_cook_active_minutes,
+        # )
 
     def get_random_recipe_by_tag(
         self,
@@ -188,7 +207,7 @@ class RecipeBook(DataframeSearchable):
         category_df = pd.read_json(
             self.recipe_book_path / self.config.file_categories
         )
-        self.category_tuple = tuple(category_df.title.values)
+        self.category_tuple = tuple(category_df.title.str.lower().values)
 
     def _read_recipe_book(self):
         self.dataframe = pd.concat(
@@ -201,6 +220,7 @@ class RecipeBook(DataframeSearchable):
         )
         self.dataframe["factor"] = 1
         self.dataframe["amount"] = None
+        self.dataframe.replace("nan", pd.NA, inplace=True)
         self.dataframe = Recipe.validate(self.dataframe)
         num_rated = sum(~self.dataframe.rating.isnull())
         FILE_LOGGER.info(
@@ -211,7 +231,7 @@ class RecipeBook(DataframeSearchable):
 
     def _read_tag_tuple(self):
         tag_df = pd.read_json(self.recipe_book_path / self.config.file_tags)
-        self.tag_tuple = tuple(tag_df.title.values)
+        self.tag_tuple = tuple(tag_df.title.str.lower().values)
 
     def _retrieve_format_recipe_df(self, json_file):
         tmp_df = pd.read_json(

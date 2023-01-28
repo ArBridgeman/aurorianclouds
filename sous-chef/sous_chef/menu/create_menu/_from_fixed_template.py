@@ -16,8 +16,9 @@ FILE_LOGGER = get_logger(__name__)
 class TypeProcessOrder(ExtendedIntEnum):
     recipe = 0
     ingredient = 1
-    tag = 2
-    category = 3
+    filter = 2
+    tag = 3
+    category = 4
 
 
 class MenuFromFixedTemplate(MenuBasic):
@@ -170,12 +171,11 @@ class MenuFromFixedTemplate(MenuBasic):
         return row
 
     def _process_menu_recipe(self, row: pd.Series, processed_uuid_list: List):
-        if row["type"] in ["category", "tag"]:
-            method = "get_random_recipe_by_category"
-            if row["type"] == "tag":
-                method = "get_random_recipe_by_tag"
+        if row["type"] in ["category", "tag", "filter"]:
             return self._select_random_recipe(
-                row=row, method=method, processed_uuid_list=processed_uuid_list
+                row=row,
+                entry_type=row["type"],
+                processed_uuid_list=processed_uuid_list,
             )
 
         return self._retrieve_recipe(

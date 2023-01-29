@@ -15,6 +15,8 @@ def local_recipe_book(config_recipe_book):
         recipe_book = RecipeBook(config_recipe_book)
         recipe_book.recipe_book_path = get_local_recipe_book_path()
         recipe_book._read_recipe_book()
+        recipe_book._read_category_tuple()
+        recipe_book._read_tag_tuple()
     return recipe_book
 
 

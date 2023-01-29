@@ -42,8 +42,9 @@ FILE_LOGGER = get_logger(__name__)
 class TypeProcessOrder(ExtendedIntEnum):
     recipe = 0
     ingredient = 1
-    tag = 2
-    category = 3
+    filter = 2
+    tag = 3
+    category = 4
 
 
 # TODO method to scale recipe to desired servings? maybe in recipe checker?

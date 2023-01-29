@@ -3,7 +3,7 @@ from collections import namedtuple
 from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
-from typing import Callable, List, Tuple
+from typing import List, Tuple
 
 import pandas as pd
 import pandera as pa
@@ -41,6 +41,22 @@ MAP_JSON_TO_DF = pd.DataFrame(
         MAP_FIELD_TO_COL("url", "url", str),
     ]
 )
+
+
+@dataclass
+class RecipeLabelNotFoundError(Exception):
+    field: str
+    search_term: str
+    message: str = "[recipe label not found]"
+
+    def __post_init__(self):
+        super().__init__(self.message)
+
+    def __str__(self):
+        return (
+            f"{self.message} field={self.field} "
+            f"search_term={self.search_term}"
+        )
 
 
 @dataclass
@@ -111,8 +127,8 @@ class Recipe(pa.SchemaModel):
 @dataclass
 class RecipeBook(DataframeSearchable):
     recipe_book_path: Path = None
-    category_tuple: Tuple = None
-    tag_tuple: Tuple = None
+    category_tuple: Tuple = tuple()
+    tag_tuple: Tuple = tuple()
 
     def __post_init__(self):
         self.recipe_book_path = Path(HOME_PATH, self.config.path)
@@ -129,8 +145,15 @@ class RecipeBook(DataframeSearchable):
         exclude_uuid_list: List = None,
         max_cook_active_minutes: float = None,
     ) -> Recipe:
+        if category.lower() not in self.category_tuple:
+            raise RecipeLabelNotFoundError(
+                field="category", search_term=category
+            )
+        mask_selection = self.dataframe["categories"].apply(
+            lambda row: self._is_value_in_list(row, category)
+        )
         return self._select_random_recipe_weighted_by_rating(
-            method_match=self._is_value_in_list,
+            mask_selection=mask_selection,
             field="categories",
             search_term=category,
             exclude_uuid_list=exclude_uuid_list,
@@ -139,19 +162,20 @@ class RecipeBook(DataframeSearchable):
 
     def get_random_recipe_by_filter(
         self,
-        category: str,
+        filter_str: str,
         exclude_uuid_list: List = None,
         max_cook_active_minutes: float = None,
     ) -> Recipe:
-        # TODO implement
-        pass
-        # return self._select_random_recipe_weighted_by_rating(
-        #     method_match=self._is_value_in_list,
-        #     field="categories",
-        #     search_term=category,
-        #     exclude_uuid_list=exclude_uuid_list,
-        #     max_cook_active_minutes=max_cook_active_minutes,
-        # )
+        mask_selection = self.dataframe.apply(
+            lambda row: self._construct_filter(row, filter_str), axis=1
+        )
+        return self._select_random_recipe_weighted_by_rating(
+            mask_selection=mask_selection,
+            field="filter",
+            search_term=filter_str,
+            exclude_uuid_list=exclude_uuid_list,
+            max_cook_active_minutes=max_cook_active_minutes,
+        )
 
     def get_random_recipe_by_tag(
         self,
@@ -159,8 +183,14 @@ class RecipeBook(DataframeSearchable):
         exclude_uuid_list: List = None,
         max_cook_active_minutes: float = None,
     ) -> Recipe:
+        if tag.lower() not in self.tag_tuple:
+            raise RecipeLabelNotFoundError(field="tag", search_term=tag)
+
+        mask_selection = self.dataframe["tags"].apply(
+            lambda row: self._is_value_in_list(row, tag)
+        )
         return self._select_random_recipe_weighted_by_rating(
-            method_match=self._is_value_in_list,
+            mask_selection=mask_selection,
             field="tags",
             search_term=tag,
             exclude_uuid_list=exclude_uuid_list,
@@ -179,6 +209,26 @@ class RecipeBook(DataframeSearchable):
     def _check_total_time(recipe: pd.Series):
         if recipe.time_total is pd.NaT:
             raise RecipeTotalTimeUndefinedError(recipe_title=recipe.title)
+
+    def _construct_filter(self, row: pd.Series, filter_str: str):
+        def _replace_category(match_obj: re.Match):
+            if (category := match_obj.group(1)) is not None:
+                if category.lower() not in self.category_tuple:
+                    raise RecipeLabelNotFoundError(
+                        field="category", search_term=category
+                    )
+                return f"('{category.lower()}' in {row.categories})"
+
+        def _replace_tag(match_obj: re.Match):
+            if (tag := match_obj.group(1)) is not None:
+                if tag.lower() not in self.tag_tuple:
+                    raise RecipeLabelNotFoundError(field="tag", search_term=tag)
+                return f"('{tag.lower()}' in {row.tags})"
+
+        # TODO return boolean numpy array from eval & df with iterate over row
+        filter_str = re.sub(r"c\.([\w\-/]+)", _replace_category, filter_str)
+        filter_str = re.sub(r"t\.([\w\-/]+)", _replace_tag, filter_str)
+        return eval(filter_str)
 
     @staticmethod
     def _flatten_dict_to_list(cell: list[dict]) -> list[str]:
@@ -252,16 +302,13 @@ class RecipeBook(DataframeSearchable):
 
     def _select_random_recipe_weighted_by_rating(
         self,
-        method_match: Callable,
+        mask_selection,
         field: str,
         search_term: str,
         exclude_uuid_list: List = None,
         max_cook_active_minutes: float = None,
     ):
         config_random = self.config.random_select
-        mask_selection = self.dataframe[field].apply(
-            lambda row: method_match(row, search_term)
-        )
 
         if exclude_uuid_list is not None:
             mask_selection &= ~self.dataframe.uuid.isin(exclude_uuid_list)

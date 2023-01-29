@@ -19,8 +19,54 @@ def recipe_book():
         return RecipeBook(config)
 
 
-@pytest.mark.dropbox
 class TestRecipeBook:
+    @staticmethod
+    def test__read_category_tuple(local_recipe_book):
+        assert local_recipe_book.category_tuple == (
+            "basic",
+            "breakfast",
+            "breakfast/component",
+            "cleaner",
+            "dessert",
+            "dessert/component",
+            "dough",
+            "drink",
+            "entree/carb-protein",
+            "entree/carb-protein-veggie",
+            "entree/protein",
+            "entree/protein-veggie",
+            "entree/salad",
+            "entree/soup",
+            "pet",
+            "sauce/dip",
+            "sauce/salad-dressing",
+            "sauce/sauce",
+            "side/carb",
+            "side/carb-veggie",
+            "side/salad",
+            "side/soup",
+            "side/veggie",
+            "snack",
+        )
+
+    @staticmethod
+    def test__read_tag_tuple(local_recipe_book):
+        assert local_recipe_book.tag_tuple == (
+            "alex/oats",
+            "alex/snack",
+            "alex/snack/granola",
+            "alex/snack/nut-mix",
+            "alex/snack/vitamin-a",
+            "basic/seasoning",
+            "book/gf-artisan",
+            "book/moribyan",
+            "book/pamela-reif",
+            "breakfast/baked-oats",
+        )
+
+
+@pytest.mark.dropbox
+class TestCurrentRecipeBook:
     @staticmethod
     def _has_no_duplicates(value_list: Union[List, Tuple]):
         return len(set(value_list)) == len(value_list)

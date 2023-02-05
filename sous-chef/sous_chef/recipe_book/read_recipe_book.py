@@ -211,23 +211,30 @@ class RecipeBook(DataframeSearchable):
             raise RecipeTotalTimeUndefinedError(recipe_title=recipe.title)
 
     def _construct_filter(self, row: pd.Series, filter_str: str):
-        def _replace_category(match_obj: re.Match):
-            if (category := match_obj.group(1)) is not None:
-                if category.lower() not in self.category_tuple:
+        def _replace_entity(entity_name: str, match_obj: re.Match) -> str:
+            if (entity := match_obj.group(1)) is not None:
+                if (
+                    entity.lower()
+                    not in {
+                        "tag": self.tag_tuple,
+                        "category": self.category_tuple,
+                    }[entity_name]
+                ):
                     raise RecipeLabelNotFoundError(
-                        field="category", search_term=category
+                        field=entity_name, search_term=entity
                     )
-                return f"('{category.lower()}' in {row.categories})"
-
-        def _replace_tag(match_obj: re.Match):
-            if (tag := match_obj.group(1)) is not None:
-                if tag.lower() not in self.tag_tuple:
-                    raise RecipeLabelNotFoundError(field="tag", search_term=tag)
-                return f"('{tag.lower()}' in {row.tags})"
+                return (
+                    f"('{entity.lower()}' in "
+                    f"{row.tags if entity_name == 'tag' else row.categories})"
+                )
 
         # TODO return boolean numpy array from eval & df with iterate over row
-        filter_str = re.sub(r"c\.([\w\-/]+)", _replace_category, filter_str)
-        filter_str = re.sub(r"t\.([\w\-/]+)", _replace_tag, filter_str)
+        for s, l in zip(["c", "t"], ["category", "tag"]):
+            filter_str = re.sub(
+                rf"{s}\.([\w\-/]+)",
+                lambda x: _replace_entity(l, x),
+                filter_str,
+            )
         return eval(filter_str)
 
     @staticmethod

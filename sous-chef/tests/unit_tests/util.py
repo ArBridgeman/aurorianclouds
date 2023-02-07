@@ -32,6 +32,7 @@ def create_recipe(
                     "uuid": "1666465773100",
                     "factor": factor,
                     "amount": amount,
+                    "url": "nan",
                 }
             ],
             index=[0],

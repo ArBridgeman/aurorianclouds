@@ -42,8 +42,9 @@ FILE_LOGGER = get_logger(__name__)
 class TypeProcessOrder(ExtendedIntEnum):
     recipe = 0
     ingredient = 1
-    tag = 2
-    category = 3
+    filter = 2
+    tag = 3
+    category = 4
 
 
 # TODO method to scale recipe to desired servings? maybe in recipe checker?
@@ -312,7 +313,7 @@ class MenuBasic(BaseWithExceptionHandling):
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _select_random_recipe(
-        self, row: pd.Series, method: str, processed_uuid_list: List
+        self, row: pd.Series, entry_type: str, processed_uuid_list: List
     ):
         max_cook_active_minutes = None
         if row.override_check == "N" and row.prep_datetime.weekday() < 5:
@@ -324,7 +325,9 @@ class MenuBasic(BaseWithExceptionHandling):
         if processed_uuid_list:
             exclude_uuid_list += processed_uuid_list
 
-        recipe = getattr(self.recipe_book, method)(
+        recipe = getattr(
+            self.recipe_book, f"get_random_recipe_by_{entry_type}"
+        )(
             row["item"],
             exclude_uuid_list=exclude_uuid_list,
             max_cook_active_minutes=max_cook_active_minutes,

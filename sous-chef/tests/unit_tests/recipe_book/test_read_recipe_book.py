@@ -1,6 +1,6 @@
 import uuid
 from dataclasses import dataclass
-from typing import Union
+from typing import List, Tuple, Union
 from unittest.mock import patch
 
 import numpy as np
@@ -9,11 +9,16 @@ import pytest
 from hydra import compose, initialize
 from sous_chef.recipe_book.read_recipe_book import (
     RecipeBook,
+    RecipeLabelNotFoundError,
     RecipeTotalTimeUndefinedError,
     SelectRandomRecipeError,
     create_timedelta,
 )
 from tests.util import assert_equal_dataframe, assert_equal_series
+
+
+def get_lowered_tuple(values: List[str]) -> Tuple:
+    return tuple(value.lower() for value in values)
 
 
 @pytest.fixture
@@ -114,8 +119,10 @@ class RecipeBookBuilder:
                 categories = ["side/veggie"]
             if tags is None:
                 tags = ["cuisine/mexican", "ariel/poison"]
-            assert isinstance(categories[0], str)
-            assert isinstance(tags[0], str)
+            if len(categories) > 0:
+                assert isinstance(categories[0], str)
+            if len(tags) > 0:
+                assert isinstance(tags[0], str)
         return categories, tags
 
     def get_recipe_book(self):
@@ -142,6 +149,41 @@ class TestRecipeBook:
         assert_equal_series(result, recipe.squeeze())
 
     @staticmethod
+    @pytest.mark.parametrize(
+        "categories,tags",
+        [
+            (["Entree/protein"], []),
+            ([], ["protein/seafood"]),
+            (["Entree/protein"], ["protein/seafood"]),
+            (
+                ["Entree/protein", "Entree/soup"],
+                ["protein/seafood", "cuisine-region/East-Asian"],
+            ),
+        ],
+    )
+    @pytest.mark.parametrize("symbol", ["&", "|"])
+    def test_get_random_recipe_by_filter(
+        recipe_book, recipe_book_builder, categories, tags, symbol
+    ):
+        filter_str = ""
+        if categories:
+            filter_str += "c." + f"{symbol} c.".join(categories)
+        if tags:
+            if filter_str:
+                filter_str += " & "
+            filter_str += "t." + f"{symbol} t.".join(tags)
+
+        recipe_book.category_tuple = get_lowered_tuple(categories)
+        recipe_book.tag_tuple = get_lowered_tuple(tags)
+
+        recipe_book.dataframe = recipe_book_builder.create_recipe(
+            categories=recipe_book.category_tuple,
+            tags=recipe_book.tag_tuple,
+            post_process_recipe=True,
+        )
+        recipe_book.get_random_recipe_by_filter(filter_str=filter_str)
+
+    @staticmethod
     def test__check_total_time_raises_error_when_nat(
         recipe_book, recipe_book_builder
     ):
@@ -152,6 +194,86 @@ class TestRecipeBook:
         assert (
             str(error.value)
             == "[recipe total time undefined] recipe=Roasted corn salsa"
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "label_type,filter_str",
+        [("category", "c.not-a-valid-category"), ("tag", "t.not-a-valid-tag")],
+    )
+    def test__construct_filter_raises_error(
+        recipe_book, label_type, filter_str
+    ):
+        with pytest.raises(RecipeLabelNotFoundError) as error:
+            recipe_book._construct_filter(pd.Series(), filter_str)
+        assert str(error.value) == (
+            "[recipe label not found] "
+            f"field={label_type} "
+            f"search_term={filter_str[2:]}"
+        )
+
+    @staticmethod
+    def test__construct_filter_handles_and(recipe_book, recipe_book_builder):
+        tag = "cuisine/italian"
+        and_tag = "entree/pasta"
+        filter_str = f"t.{tag} & t.{and_tag}"
+
+        recipe_book.category_tuple = tuple(["entree/protein"])
+        recipe_book.tag_tuple = tuple([and_tag, tag])
+
+        recipe_base = recipe_book_builder.create_recipe(
+            categories=list(recipe_book.category_tuple), tags=[and_tag]
+        ).squeeze()
+        assert not recipe_book._construct_filter(
+            row=recipe_base, filter_str=filter_str
+        )
+
+        recipe_base.tags = [tag, and_tag]
+        assert recipe_book._construct_filter(
+            row=recipe_base, filter_str=filter_str
+        )
+
+    @staticmethod
+    def test__construct_filter_handles_or(recipe_book, recipe_book_builder):
+        tag = "cuisine/italian"
+        or_tag = "entree/pasta"
+        filter_str = f"t.{tag} | t.{or_tag}"
+
+        recipe_book.category_tuple = tuple(["entree/protein"])
+        recipe_book.tag_tuple = tuple([or_tag, tag])
+
+        recipe_base = recipe_book_builder.create_recipe(
+            categories=list(recipe_book.category_tuple), tags=[or_tag]
+        ).squeeze()
+        assert recipe_book._construct_filter(
+            row=recipe_base, filter_str=filter_str
+        )
+
+        recipe_base.tags = [tag]
+        assert recipe_book._construct_filter(
+            row=recipe_base, filter_str=filter_str
+        )
+
+    @staticmethod
+    def test__construct_filter_handles_not(recipe_book, recipe_book_builder):
+        category = "entree/protein"
+        tag = "cuisine/italian"
+        not_tag = "entree/pasta"
+        filter_str = f"c.{category} & t.{tag} & ~t.{not_tag}"
+
+        recipe_book.category_tuple = tuple([category])
+        recipe_book.tag_tuple = tuple([not_tag, tag])
+
+        recipe_base = recipe_book_builder.create_recipe(
+            categories=[category], tags=[tag, not_tag]
+        ).squeeze()
+        assert not recipe_book._construct_filter(
+            row=recipe_base, filter_str=filter_str
+        )
+
+        recipe_base.tags = [tag]
+        assert recipe_book._construct_filter(
+            row=recipe_base, filter_str=filter_str
         )
 
     @staticmethod
@@ -208,11 +330,34 @@ class TestRecipeBook:
     @pytest.mark.parametrize(
         "method,item_type",
         [
+            ("get_random_recipe_by_category", "category"),
+            ("get_random_recipe_by_tag", "tag"),
+        ],
+    )
+    def test__select_random_recipe_fails_as_label_not_found(
+        config_recipe_book,
+        recipe_book,
+        random_seed,
+        recipe_book_builder,
+        log,
+        method,
+        item_type,
+    ):
+        search_term = "search_term"
+        with pytest.raises(RecipeLabelNotFoundError) as error:
+            getattr(recipe_book, method)(search_term)
+        assert str(error.value) == (
+            "[recipe label not found] "
+            f"field={item_type} "
+            f"search_term={search_term}"
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "method,item_type",
+        [
             ("get_random_recipe_by_category", "categories"),
-            (
-                "get_random_recipe_by_tag",
-                "tags",
-            ),
+            ("get_random_recipe_by_tag", "tags"),
         ],
     )
     def test__select_random_recipe_weighted_by_rating(
@@ -242,6 +387,8 @@ class TestRecipeBook:
                 recipe,
             ]
         ).get_recipe_book()
+        recipe_book.category_tuple = tuple([search_term])
+        recipe_book.tag_tuple = tuple([search_term])
 
         result = getattr(recipe_book, method)(search_term)
         assert_equal_series(result, recipe.squeeze())
@@ -307,6 +454,8 @@ class TestRecipeBook:
                 recipe,
             ]
         ).get_recipe_book()
+        recipe_book.category_tuple = tuple([search_term])
+        recipe_book.tag_tuple = tuple([search_term])
 
         result = getattr(recipe_book, method)(
             search_term, exclude_uuid_list=[recipe_uuid]
@@ -318,10 +467,7 @@ class TestRecipeBook:
         "method,item_type",
         [
             ("get_random_recipe_by_category", "categories"),
-            (
-                "get_random_recipe_by_tag",
-                "tags",
-            ),
+            ("get_random_recipe_by_tag", "tags"),
         ],
     )
     @pytest.mark.parametrize(
@@ -360,6 +506,8 @@ class TestRecipeBook:
         recipe_book.dataframe = recipe_book_builder.add_recipe_list(
             [recipe1, recipe2]
         ).get_recipe_book()
+        recipe_book.category_tuple = tuple([search_term])
+        recipe_book.tag_tuple = tuple([search_term])
 
         result = getattr(recipe_book, method)(
             search_term, max_cook_active_minutes=max_cook_time
@@ -380,6 +528,8 @@ class TestRecipeBook:
         recipe_book.dataframe = recipe_book_builder.add_recipe(
             recipe_book_builder.create_recipe(tags=tags)
         ).get_recipe_book()
+        recipe_book.category_tuple = tuple([search_term])
+        recipe_book.tag_tuple = tuple([search_term])
 
         with pytest.raises(SelectRandomRecipeError):
             recipe_book.get_random_recipe_by_tag(search_term)

@@ -3,7 +3,7 @@ from collections import namedtuple
 from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
-from typing import Callable, List
+from typing import List, Tuple
 
 import pandas as pd
 import pandera as pa
@@ -38,8 +38,25 @@ MAP_JSON_TO_DF = pd.DataFrame(
         MAP_FIELD_TO_COL("quantity", "quantity", str),
         MAP_FIELD_TO_COL("tags", "tags", list),
         MAP_FIELD_TO_COL("uuid", "uuid", str),
+        MAP_FIELD_TO_COL("url", "url", str),
     ]
 )
+
+
+@dataclass
+class RecipeLabelNotFoundError(Exception):
+    field: str
+    search_term: str
+    message: str = "[recipe label not found]"
+
+    def __post_init__(self):
+        super().__init__(self.message)
+
+    def __str__(self):
+        return (
+            f"{self.message} field={self.field} "
+            f"search_term={self.search_term}"
+        )
 
 
 @dataclass
@@ -89,7 +106,8 @@ class Recipe(pa.SchemaModel):
     time_cooking: Series[pd.Timedelta] = pa.Field(nullable=True, coerce=True)
     time_inactive: Series[pd.Timedelta] = pa.Field(nullable=True, coerce=True)
     time_total: Series[pd.Timedelta] = pa.Field(nullable=True, coerce=True)
-    ingredients: Series[str] = pa.Field(nullable=False)
+    # TODO one day set to False, but sometimes extraction issue
+    ingredients: Series[str] = pa.Field(nullable=True)
     instructions: Series[str] = pa.Field(nullable=True)
     rating: Series[float] = pa.Field(nullable=True, coerce=True)
     favorite: Series[bool] = pa.Field(nullable=False, coerce=True)
@@ -97,6 +115,7 @@ class Recipe(pa.SchemaModel):
     quantity: Series[str] = pa.Field(nullable=True)
     tags: Series[object] = pa.Field(nullable=False)
     uuid: Series[str] = pa.Field(unique=True)
+    url: Series[str] = pa.Field(nullable=True)
     # TODO simplify logic & get rid of
     factor: Series[float] = pa.Field(nullable=False, coerce=True)
     amount: Series[str] = pa.Field(nullable=True)
@@ -108,9 +127,13 @@ class Recipe(pa.SchemaModel):
 @dataclass
 class RecipeBook(DataframeSearchable):
     recipe_book_path: Path = None
+    category_tuple: Tuple = tuple()
+    tag_tuple: Tuple = tuple()
 
     def __post_init__(self):
         self.recipe_book_path = Path(HOME_PATH, self.config.path)
+        self._read_category_tuple()
+        self._read_tag_tuple()
         # load basic recipe book to self.dataframe
         self._read_recipe_book()
         if self.config.deduplicate:
@@ -122,10 +145,34 @@ class RecipeBook(DataframeSearchable):
         exclude_uuid_list: List = None,
         max_cook_active_minutes: float = None,
     ) -> Recipe:
+        if category.lower() not in self.category_tuple:
+            raise RecipeLabelNotFoundError(
+                field="category", search_term=category
+            )
+        mask_selection = self.dataframe["categories"].apply(
+            lambda row: self._is_value_in_list(row, category)
+        )
         return self._select_random_recipe_weighted_by_rating(
-            method_match=self._is_value_in_list,
+            mask_selection=mask_selection,
             field="categories",
             search_term=category,
+            exclude_uuid_list=exclude_uuid_list,
+            max_cook_active_minutes=max_cook_active_minutes,
+        )
+
+    def get_random_recipe_by_filter(
+        self,
+        filter_str: str,
+        exclude_uuid_list: List = None,
+        max_cook_active_minutes: float = None,
+    ) -> Recipe:
+        mask_selection = self.dataframe.apply(
+            lambda row: self._construct_filter(row, filter_str), axis=1
+        )
+        return self._select_random_recipe_weighted_by_rating(
+            mask_selection=mask_selection,
+            field="filter",
+            search_term=filter_str,
             exclude_uuid_list=exclude_uuid_list,
             max_cook_active_minutes=max_cook_active_minutes,
         )
@@ -136,8 +183,14 @@ class RecipeBook(DataframeSearchable):
         exclude_uuid_list: List = None,
         max_cook_active_minutes: float = None,
     ) -> Recipe:
+        if tag.lower() not in self.tag_tuple:
+            raise RecipeLabelNotFoundError(field="tag", search_term=tag)
+
+        mask_selection = self.dataframe["tags"].apply(
+            lambda row: self._is_value_in_list(row, tag)
+        )
         return self._select_random_recipe_weighted_by_rating(
-            method_match=self._is_value_in_list,
+            mask_selection=mask_selection,
             field="tags",
             search_term=tag,
             exclude_uuid_list=exclude_uuid_list,
@@ -156,6 +209,27 @@ class RecipeBook(DataframeSearchable):
     def _check_total_time(recipe: pd.Series):
         if recipe.time_total is pd.NaT:
             raise RecipeTotalTimeUndefinedError(recipe_title=recipe.title)
+
+    def _construct_filter(self, row: pd.Series, filter_str: str):
+        def _replace_entity(entity_name: str, match_obj: re.Match) -> str:
+            row_name_map = {"tag": "tags", "category": "categories"}
+            if (entity := match_obj.group(1)) is not None:
+                if entity.lower() not in getattr(self, f"{entity_name}_tuple"):
+                    raise RecipeLabelNotFoundError(
+                        field=entity_name, search_term=entity
+                    )
+                return (
+                    f"('{entity.lower()}' in {row[row_name_map[entity_name]]})"
+                )
+
+        # TODO return boolean numpy array from eval & df with iterate over row
+        for entity_i in ["category", "tag"]:
+            filter_str = re.sub(
+                rf"{entity_i[0]}\.([\w\-/]+)",
+                lambda x: _replace_entity(entity_i, x),
+                filter_str,
+            )
+        return eval(filter_str)
 
     @staticmethod
     def _flatten_dict_to_list(cell: list[dict]) -> list[str]:
@@ -180,17 +254,24 @@ class RecipeBook(DataframeSearchable):
     def _is_value_in_list(row: pd.Series, search_term: str):
         return search_term.casefold() in row
 
+    def _read_category_tuple(self):
+        category_df = pd.read_json(
+            self.recipe_book_path / self.config.file_categories
+        )
+        self.category_tuple = tuple(category_df.title.str.lower().values)
+
     def _read_recipe_book(self):
         self.dataframe = pd.concat(
             [
                 self._retrieve_format_recipe_df(recipe_file)
                 for recipe_file in self.recipe_book_path.glob(
-                    self.config.file_pattern
+                    self.config.file_recipe_pattern
                 )
             ]
         )
         self.dataframe["factor"] = 1
         self.dataframe["amount"] = None
+        self.dataframe.replace("nan", pd.NA, inplace=True)
         self.dataframe = Recipe.validate(self.dataframe)
         num_rated = sum(~self.dataframe.rating.isnull())
         FILE_LOGGER.info(
@@ -198,6 +279,10 @@ class RecipeBook(DataframeSearchable):
             num_rated=num_rated,
             num_total=self.dataframe.shape[0],
         )
+
+    def _read_tag_tuple(self):
+        tag_df = pd.read_json(self.recipe_book_path / self.config.file_tags)
+        self.tag_tuple = tuple(tag_df.title.str.lower().values)
 
     def _retrieve_format_recipe_df(self, json_file):
         tmp_df = pd.read_json(
@@ -218,16 +303,13 @@ class RecipeBook(DataframeSearchable):
 
     def _select_random_recipe_weighted_by_rating(
         self,
-        method_match: Callable,
+        mask_selection,
         field: str,
         search_term: str,
         exclude_uuid_list: List = None,
         max_cook_active_minutes: float = None,
     ):
         config_random = self.config.random_select
-        mask_selection = self.dataframe[field].apply(
-            lambda row: method_match(row, search_term)
-        )
 
         if exclude_uuid_list is not None:
             mask_selection &= ~self.dataframe.uuid.isin(exclude_uuid_list)

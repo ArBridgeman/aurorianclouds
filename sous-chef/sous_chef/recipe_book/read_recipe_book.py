@@ -212,27 +212,21 @@ class RecipeBook(DataframeSearchable):
 
     def _construct_filter(self, row: pd.Series, filter_str: str):
         def _replace_entity(entity_name: str, match_obj: re.Match) -> str:
+            row_name_map = {"tag": "tags", "category": "categories"}
             if (entity := match_obj.group(1)) is not None:
-                if (
-                    entity.lower()
-                    not in {
-                        "tag": self.tag_tuple,
-                        "category": self.category_tuple,
-                    }[entity_name]
-                ):
+                if entity.lower() not in getattr(self, f"{entity_name}_tuple"):
                     raise RecipeLabelNotFoundError(
                         field=entity_name, search_term=entity
                     )
                 return (
-                    f"('{entity.lower()}' in "
-                    f"{row.tags if entity_name == 'tag' else row.categories})"
+                    f"('{entity.lower()}' in {row[row_name_map[entity_name]]})"
                 )
 
         # TODO return boolean numpy array from eval & df with iterate over row
-        for s, l in zip(["c", "t"], ["category", "tag"]):
+        for entity_i in ["category", "tag"]:
             filter_str = re.sub(
-                rf"{s}\.([\w\-/]+)",
-                lambda x: _replace_entity(l, x),
+                rf"{entity_i[0]}\.([\w\-/]+)",
+                lambda x: _replace_entity(entity_i, x),
                 filter_str,
             )
         return eval(filter_str)

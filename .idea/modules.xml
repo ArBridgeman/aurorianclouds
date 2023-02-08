@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/ansible/ansible.iml" filepath="$PROJECT_DIR$/ansible/ansible.iml" />
       <module fileurl="file://$PROJECT_DIR$/aurorianclouds.iml" filepath="$PROJECT_DIR$/aurorianclouds.iml" />
       <module fileurl="file://$PROJECT_DIR$/house-keeper/house-keeper.iml" filepath="$PROJECT_DIR$/house-keeper/house-keeper.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jellyfin-helpers/jellyfin-helpers.iml" filepath="$PROJECT_DIR$/jellyfin-helpers/jellyfin-helpers.iml" />
       <module fileurl="file://$PROJECT_DIR$/sous-chef/sous-chef.iml" filepath="$PROJECT_DIR$/sous-chef/sous-chef.iml" />
     </modules>
   </component>

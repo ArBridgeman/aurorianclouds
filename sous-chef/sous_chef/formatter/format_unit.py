@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from pint import UndefinedUnitError, Unit
+from pint import DimensionalityError, UndefinedUnitError, Unit
 from sous_chef.formatter.units import (
     allowed_unit_list,
     not_abbreviated,
@@ -63,7 +63,7 @@ class UnitFormatter:
                 warn="unit not in allowed_unit_list",
                 unit=pint_unit,
             )
-        except (AttributeError, UndefinedUnitError):
+        except (AttributeError, DimensionalityError, UndefinedUnitError):
             pass
         raise UnitExtractionError(text=text_unit)
 

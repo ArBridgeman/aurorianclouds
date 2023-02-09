@@ -520,6 +520,60 @@ class TestRecipeBook:
         )
 
     @staticmethod
+    @pytest.mark.parametrize(
+        "method,item_type",
+        [
+            ("get_random_recipe_by_category", "categories"),
+            ("get_random_recipe_by_tag", "tags"),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "recipe_title,recipe_rating",
+        [
+            ("Excluded by rating", 2),
+            ("Not excluded by rating", 5),
+        ],
+    )
+    def test__select_random_recipe_weighted_by_rating_removes_low_rating(
+        config_recipe_book,
+        recipe_book,
+        random_seed,
+        recipe_book_builder,
+        recipe_title,
+        recipe_rating,
+        log,
+        method,
+        item_type,
+    ):
+        config_recipe_book.random_select.min_thresh_warning = 5
+        min_rating = 2.5
+
+        search_term = "search_term"
+        search_dict = {item_type: [search_term]}
+        recipe1 = recipe_book_builder.create_recipe(
+            title="default one", rating=2.5, **search_dict
+        )
+        recipe2 = recipe_book_builder.create_recipe(
+            title=recipe_title,
+            rating=recipe_rating,
+            **search_dict,
+        )
+
+        recipe_book.dataframe = recipe_book_builder.add_recipe_list(
+            [recipe1, recipe2]
+        ).get_recipe_book()
+        recipe_book.category_tuple = tuple([search_term])
+        recipe_book.tag_tuple = tuple([search_term])
+
+        result = getattr(recipe_book, method)(
+            search_term, min_rating=min_rating
+        )
+        assert_equal_series(
+            result,
+            (recipe2 if recipe_rating >= min_rating else recipe1).squeeze(),
+        )
+
+    @staticmethod
     def test__select_random_recipe_weighted_by_rating_raise_error(
         recipe_book, recipe_book_builder
     ):

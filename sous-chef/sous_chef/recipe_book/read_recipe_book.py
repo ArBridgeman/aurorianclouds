@@ -144,6 +144,7 @@ class RecipeBook(DataframeSearchable):
         category: str,
         exclude_uuid_list: List = None,
         max_cook_active_minutes: float = None,
+        min_rating: float = None,
     ) -> Recipe:
         if category.lower() not in self.category_tuple:
             raise RecipeLabelNotFoundError(
@@ -158,6 +159,7 @@ class RecipeBook(DataframeSearchable):
             search_term=category,
             exclude_uuid_list=exclude_uuid_list,
             max_cook_active_minutes=max_cook_active_minutes,
+            min_rating=min_rating,
         )
 
     def get_random_recipe_by_filter(
@@ -165,6 +167,7 @@ class RecipeBook(DataframeSearchable):
         filter_str: str,
         exclude_uuid_list: List = None,
         max_cook_active_minutes: float = None,
+        min_rating: float = None,
     ) -> Recipe:
         mask_selection = self.dataframe.apply(
             lambda row: self._construct_filter(row, filter_str), axis=1
@@ -175,6 +178,7 @@ class RecipeBook(DataframeSearchable):
             search_term=filter_str,
             exclude_uuid_list=exclude_uuid_list,
             max_cook_active_minutes=max_cook_active_minutes,
+            min_rating=min_rating,
         )
 
     def get_random_recipe_by_tag(
@@ -182,6 +186,7 @@ class RecipeBook(DataframeSearchable):
         tag: str,
         exclude_uuid_list: List = None,
         max_cook_active_minutes: float = None,
+        min_rating: float = None,
     ) -> Recipe:
         if tag.lower() not in self.tag_tuple:
             raise RecipeLabelNotFoundError(field="tag", search_term=tag)
@@ -195,6 +200,7 @@ class RecipeBook(DataframeSearchable):
             search_term=tag,
             exclude_uuid_list=exclude_uuid_list,
             max_cook_active_minutes=max_cook_active_minutes,
+            min_rating=min_rating,
         )
 
     def get_recipe_by_title(self, title) -> pd.Series:
@@ -308,6 +314,7 @@ class RecipeBook(DataframeSearchable):
         search_term: str,
         exclude_uuid_list: List = None,
         max_cook_active_minutes: float = None,
+        min_rating: float = None,
     ):
         config_random = self.config.random_select
 
@@ -321,6 +328,8 @@ class RecipeBook(DataframeSearchable):
             ) - self.dataframe.time_inactive.fillna(timedelta(minutes=0))
             cook_active_minutes = cook_active_time.dt.total_seconds() / 60
             mask_selection &= cook_active_minutes <= max_cook_active_minutes
+        if min_rating is not None:
+            mask_selection &= self.dataframe.rating >= min_rating
 
         if (count := sum(mask_selection)) > config_random.min_thresh_error:
             if count < config_random.min_thresh_warning:

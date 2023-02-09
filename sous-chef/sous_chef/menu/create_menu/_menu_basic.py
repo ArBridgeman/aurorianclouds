@@ -157,6 +157,7 @@ class MenuBasic(BaseWithExceptionHandling):
     ] = None
     cook_days: Dict = field(init=False)
     menu_history_uuid_list: List = field(init=False)
+    number_of_unrated_recipes: int = 0
 
     def __post_init__(self):
         self.cook_days = self.config.fixed.cook_days
@@ -325,15 +326,31 @@ class MenuBasic(BaseWithExceptionHandling):
         if processed_uuid_list:
             exclude_uuid_list += processed_uuid_list
 
+        min_rating = None
+        if (
+            self.number_of_unrated_recipes
+            >= self.config.max_number_of_unrated_recipes
+        ):
+            FILE_LOGGER.warning(
+                "[maximum unrated recipes reached]",
+                action="will limit to rated recipes for further randomization",
+            )
+            min_rating = 0
+
         recipe = getattr(
             self.recipe_book, f"get_random_recipe_by_{entry_type}"
         )(
             row["item"],
             exclude_uuid_list=exclude_uuid_list,
             max_cook_active_minutes=max_cook_active_minutes,
+            min_rating=min_rating,
         )
         row["item"] = recipe.title
         row["type"] = "recipe"
+
+        if not (recipe.rating > 0):
+            self.number_of_unrated_recipes += 1
+
         return self._add_recipe_columns(row=row, recipe=recipe)
 
     def _save_menu(self):

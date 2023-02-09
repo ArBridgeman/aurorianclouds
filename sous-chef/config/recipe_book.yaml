@@ -13,4 +13,4 @@ recipe_book:
   random_select:
     min_thresh_error: 0
     min_thresh_warning: 10
-    default_rating: 3
+    default_rating: 2.5

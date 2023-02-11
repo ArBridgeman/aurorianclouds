@@ -158,6 +158,7 @@ class MenuBasic(BaseWithExceptionHandling):
     cook_days: Dict = field(init=False)
     menu_history_uuid_list: List = field(init=False)
     number_of_unrated_recipes: int = 0
+    min_random_recipe_rating: int = None
 
     def __post_init__(self):
         self.cook_days = self.config.fixed.cook_days
@@ -217,7 +218,6 @@ class MenuBasic(BaseWithExceptionHandling):
                 weekday=row.prep_datetime.weekday(), recipe=recipe
             )
 
-        # TODO remove/replace once recipes easily viewable in UI
         self._inspect_unrated_recipe(recipe)
         return row
 
@@ -290,14 +290,28 @@ class MenuBasic(BaseWithExceptionHandling):
         raise MenuConfigError(f"{cook_day} not defined in yaml")
 
     def _inspect_unrated_recipe(self, recipe: pd.Series):
-        if self.config.run_mode.with_inspect_unrated_recipe:
-            if pd.isna(recipe.rating):
+        if pd.isna(recipe.rating):
+            self.number_of_unrated_recipes += 1
+            # TODO unneeded if in UI
+            if self.config.run_mode.with_inspect_unrated_recipe:
                 FILE_LOGGER.warning(
                     "[unrated recipe]",
                     action="print out ingredients",
                     recipe_title=recipe.title,
                 )
                 print(recipe.ingredients)
+
+        if (
+            self.number_of_unrated_recipes
+            == self.config.max_number_of_unrated_recipes
+        ):
+            FILE_LOGGER.warning(
+                "[max number of unrated recipes reached]",
+                action="will limit to rated recipes for further randomization",
+            )
+            self.min_random_recipe_rating = (
+                self.config.quality_check.recipe_rating_min
+            )
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _retrieve_recipe(self, row: pd.Series, processed_uuid_list: List):
@@ -326,30 +340,16 @@ class MenuBasic(BaseWithExceptionHandling):
         if processed_uuid_list:
             exclude_uuid_list += processed_uuid_list
 
-        min_rating = None
-        if (
-            self.number_of_unrated_recipes
-            >= self.config.max_number_of_unrated_recipes
-        ):
-            FILE_LOGGER.warning(
-                "[max number of unrated recipes reached]",
-                action="will limit to rated recipes for further randomization",
-            )
-            min_rating = self.config.quality_check.recipe_rating_min
-
         recipe = getattr(
             self.recipe_book, f"get_random_recipe_by_{entry_type}"
         )(
             row["item"],
             exclude_uuid_list=exclude_uuid_list,
             max_cook_active_minutes=max_cook_active_minutes,
-            min_rating=min_rating,
+            min_rating=self.min_random_recipe_rating,
         )
         row["item"] = recipe.title
         row["type"] = "recipe"
-
-        if not (recipe.rating > 0):
-            self.number_of_unrated_recipes += 1
 
         return self._add_recipe_columns(row=row, recipe=recipe)
 

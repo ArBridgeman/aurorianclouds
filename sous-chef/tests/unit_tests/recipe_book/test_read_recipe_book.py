@@ -525,12 +525,16 @@ class TestRecipeBook:
         [
             ("get_random_recipe_by_category", "categories"),
             ("get_random_recipe_by_tag", "tags"),
+            ("get_random_recipe_by_filter", "filter"),
         ],
     )
     @pytest.mark.parametrize(
         "recipe_title,recipe_rating",
         [
             ("Excluded by rating", 2),
+            ("Excluded by rating", 0),
+            ("Excluded due to no rating", np.nan),
+            ("Excluded due to no rating", None),
             ("Not excluded by rating", 5),
         ],
     )
@@ -550,6 +554,9 @@ class TestRecipeBook:
 
         search_term = "search_term"
         search_dict = {item_type: [search_term]}
+        if item_type == "filter":
+            search_dict = {"tags": [search_term]}
+
         recipe1 = recipe_book_builder.create_recipe(
             title="default one", rating=2.5, **search_dict
         )
@@ -566,11 +573,16 @@ class TestRecipeBook:
         recipe_book.tag_tuple = tuple([search_term])
 
         result = getattr(recipe_book, method)(
-            search_term, min_rating=min_rating
+            f"t.{search_term}" if item_type == "filter" else search_term,
+            min_rating=min_rating,
         )
         assert_equal_series(
             result,
-            (recipe2 if recipe_rating >= min_rating else recipe1).squeeze(),
+            (
+                recipe2
+                if (recipe_rating is not None and recipe_rating >= min_rating)
+                else recipe1
+            ).squeeze(),
         )
 
     @staticmethod

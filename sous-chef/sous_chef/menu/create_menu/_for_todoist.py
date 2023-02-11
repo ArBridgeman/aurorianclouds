@@ -54,7 +54,10 @@ class MenuForTodoist(MenuBasic):
 
             # task reminder to edit recipes
             if row["type"] == "recipe":
-                _add_task(task_name=row["item"], parent_id=edit_task.id)
+                _add_task(
+                    task_name=f"{row['item']} ({row['rating']})",
+                    parent_id=edit_task.id,
+                )
 
             # task for separate preparation
             if row.cook_datetime != row.prep_datetime:

@@ -332,10 +332,10 @@ class MenuBasic(BaseWithExceptionHandling):
             >= self.config.max_number_of_unrated_recipes
         ):
             FILE_LOGGER.warning(
-                "[maximum unrated recipes reached]",
+                "[max number of unrated recipes reached]",
                 action="will limit to rated recipes for further randomization",
             )
-            min_rating = 0
+            min_rating = self.config.quality_check.recipe_rating_min
 
         recipe = getattr(
             self.recipe_book, f"get_random_recipe_by_{entry_type}"

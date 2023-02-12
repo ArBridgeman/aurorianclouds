@@ -304,6 +304,7 @@ class MenuBasic(BaseWithExceptionHandling):
         if (
             self.number_of_unrated_recipes
             == self.config.max_number_of_unrated_recipes
+            and self.min_random_recipe_rating is None
         ):
             FILE_LOGGER.warning(
                 "[max number of unrated recipes reached]",

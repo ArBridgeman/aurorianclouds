@@ -54,8 +54,11 @@ class MenuForTodoist(MenuBasic):
 
             # task reminder to edit recipes
             if row["type"] == "recipe":
+                rating_label = "(unrated)"
+                if not pd.isnull(row["rating"]):
+                    rating_label = f"({row['rating']})"
                 _add_task(
-                    task_name=f"{row['item']} ({row['rating']})",
+                    task_name=f"{row['item']} {rating_label}",
                     parent_id=edit_task.id,
                 )
 

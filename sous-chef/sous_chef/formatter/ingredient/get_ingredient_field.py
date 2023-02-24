@@ -11,10 +11,8 @@ from sous_chef.formatter.ingredient.format_ingredient import (
 from sous_chef.formatter.ingredient.format_line_abstract import (
     MapLineErrorToException,
 )
-from sous_chef.recipe_book.read_recipe_book import (
-    MapRecipeErrorToException,
-    RecipeBook,
-)
+from sous_chef.recipe_book.read_recipe_book import RecipeBook
+from sous_chef.recipe_book.recipe_util import MapRecipeErrorToException
 from structlog import get_logger
 
 FILE_LOGGER = get_logger(__name__)

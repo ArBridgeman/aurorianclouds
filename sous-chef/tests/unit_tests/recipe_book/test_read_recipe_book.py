@@ -7,12 +7,12 @@ import numpy as np
 import pandas as pd
 import pytest
 from hydra import compose, initialize
-from sous_chef.recipe_book.read_recipe_book import (
-    RecipeBook,
+from sous_chef.recipe_book._recipe_book import create_timedelta
+from sous_chef.recipe_book.read_recipe_book import RecipeBook
+from sous_chef.recipe_book.recipe_util import (
     RecipeLabelNotFoundError,
     RecipeTotalTimeUndefinedError,
     SelectRandomRecipeError,
-    create_timedelta,
 )
 from tests.util import assert_equal_dataframe, assert_equal_series
 

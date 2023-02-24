@@ -29,10 +29,8 @@ from sous_chef.menu.record_menu_history import (
     MenuHistoryError,
 )
 from sous_chef.messaging.gsheets_api import GsheetsHelper
-from sous_chef.recipe_book.read_recipe_book import (
-    MapRecipeErrorToException,
-    RecipeBook,
-)
+from sous_chef.recipe_book.read_recipe_book import RecipeBook
+from sous_chef.recipe_book.recipe_util import MapRecipeErrorToException
 from structlog import get_logger
 
 ABS_FILE_PATH = Path(__file__).absolute().parent

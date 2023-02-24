@@ -3,7 +3,7 @@ from freezegun import freeze_time
 from hydra import compose, initialize
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
 from sous_chef.menu.create_menu.create_menu import Menu
-from sous_chef.recipe_book.read_recipe_book import RecipeNotFoundError
+from sous_chef.recipe_book.recipe_util import RecipeNotFoundError
 from tests.conftest import FROZEN_DATE
 from tests.data.util_data import get_tmp_menu
 from tests.util import assert_equal_dataframe

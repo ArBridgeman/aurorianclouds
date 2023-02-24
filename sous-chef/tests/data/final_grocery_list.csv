@@ -14,7 +14,7 @@ tsp,teaspoon,dried parsley,False,1.0,True,Spices and herbs,dried parsley,grocery
 cup,cup,flour,False,0.5,True,Prepared,flour,Homemade,,[Baked Oatmeal Bars],2022-01-23 17:45:00+00:00,[Sun],False,Homemade
 head,head,frisée,False,1.0,True,Vegetables,frisée,grocery store,,[manual],2022-01-26 17:25:00+00:00,[Wed],False,Farmland pride
 tbsp,tablespoon,garlic paste,False,1.0,True,Sauces,garlic paste,Asian store,0608171040131,"[Lasagna, Spanish Deluxe Potatoes]",2022-01-23 17:45:00+00:00,"[Sun, Tue]",False,Asian store
-tbsp,tablespoon,garlic powder,False,2.0,True,Spices and herbs,garlic powder,Asian store,,"[Lasagna, Spanish Deluxe Potatoes]",2022-01-23 17:45:00+00:00,"[Sun, Tue]",False,Asian store
+tbsp,tablespoon,garlic powder,False,2.0,True,Spices and herbs,garlic powder,Amazon,,"[Lasagna, Spanish Deluxe Potatoes]",2022-01-23 17:45:00+00:00,"[Sun, Tue]",False,Amazon
 tsp,teaspoon,ginger powder,False,2.0,True,Spices and herbs,ginger powder,Asian store,,[Holiday cheesecake],2022-01-23 11:00:00+00:00,[Sun],False,Asian store
 g,gram,ground beef,False,250.0,True,Meats,ground beef,Lidl,20304652,[Lasagna],2022-01-25 16:45:00+00:00,[Tue],False,Lidl
 cup,cup,ground flaxseed,False,0.25,True,Nuts and seeds,ground flaxseed,grocery store,,[Baked Oatmeal Bars],2022-01-23 17:45:00+00:00,[Sun],False,Bulk

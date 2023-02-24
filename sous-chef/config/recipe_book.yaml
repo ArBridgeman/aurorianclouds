@@ -14,3 +14,4 @@ recipe_book:
     min_thresh_error: 0
     min_thresh_warning: 10
     default_rating: 2.5
+    default_total_time_minutes: 20

@@ -108,19 +108,52 @@ class RecipeRandomizer(RecipeBasic):
         min_rating: float = None,
     ):
         mask_selection = mask_label_selection
+        tmp_dataframe = self.dataframe.copy(deep=True)
+        default_timedelta = timedelta(minutes=0)
         if exclude_uuid_list is not None:
             mask_selection &= ~self.dataframe.uuid.isin(exclude_uuid_list)
         if max_cook_active_minutes is not None:
             # ok, as will later raise exception if
             # selected and total_time is null
-            cook_active_time = self.dataframe.time_total.fillna(
-                timedelta(minutes=0)
-            ) - self.dataframe.time_inactive.fillna(timedelta(minutes=0))
-            cook_active_minutes = cook_active_time.dt.total_seconds() / 60
-            mask_selection &= cook_active_minutes <= max_cook_active_minutes
+            cook_active_time = tmp_dataframe.time_total.fillna(
+                default_timedelta
+            ) - tmp_dataframe.time_inactive.fillna(default_timedelta)
+            mask_selection &= (
+                self._get_time_in_minutes(cook_active_time)
+                <= max_cook_active_minutes
+            )
         if min_rating is not None:
             mask_selection &= self.dataframe.rating >= min_rating
         return mask_selection
+
+    def _construct_weighting(self, input_df: pd.DataFrame):
+        def weight_time_minutes(time_minutes: float):
+            # 5 minutes preparation or less would be ideal
+            return min((5 / time_minutes) ** 2, 1)  # max allowed value is 1
+
+        # TODO could normalize, rescale, or something else
+        def clip_weight(weight: float):
+            return min(weight, 5.0)  # max allowed value is 5
+
+        config_random = self.config.random_select
+
+        weight_ratings = input_df.rating.copy(deep=True).fillna(
+            config_random.default_rating
+        )
+
+        total_time = input_df.time_total.fillna(
+            timedelta(minutes=config_random.default_total_time_minutes)
+        )
+        weight_time = self._get_time_in_minutes(total_time).apply(
+            weight_time_minutes
+        )
+        # TODO could penalize if "recently in menu" divide 1 by weeks ago?
+
+        return (weight_ratings + weight_time).apply(clip_weight)
+
+    @staticmethod
+    def _get_time_in_minutes(column: pd.Series):
+        return column.dt.total_seconds() / 60
 
     @staticmethod
     def _is_value_in_list(row: pd.Series, search_term: str):
@@ -157,9 +190,8 @@ class RecipeRandomizer(RecipeBasic):
                 )
 
         result_df = self.dataframe[mask_selection]
-        weighting = result_df.rating.copy(deep=True).fillna(
-            config_random.default_rating
-        )
+        weighting = self._construct_weighting(input_df=result_df)
+
         random_recipe = result_df.sample(n=1, weights=weighting).iloc[0]
         self._check_total_time(random_recipe)
         return random_recipe

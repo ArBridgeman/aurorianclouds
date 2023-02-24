@@ -27,11 +27,11 @@ class RecipeRandomizer(RecipeBasic):
             raise RecipeLabelNotFoundError(
                 field="category", search_term=category
             )
-        mask_selection = self.dataframe["categories"].apply(
+        mask_label_selection = self.dataframe["categories"].apply(
             lambda row: self._is_value_in_list(row, category)
         )
         return self._select_random_recipe_weighted_by_rating(
-            mask_selection=mask_selection,
+            mask_label_selection=mask_label_selection,
             field="categories",
             search_term=category,
             exclude_uuid_list=exclude_uuid_list,
@@ -46,11 +46,11 @@ class RecipeRandomizer(RecipeBasic):
         max_cook_active_minutes: float = None,
         min_rating: float = None,
     ) -> Recipe:
-        mask_selection = self.dataframe.apply(
+        mask_label_selection = self.dataframe.apply(
             lambda row: self._construct_filter(row, filter_str), axis=1
         )
         return self._select_random_recipe_weighted_by_rating(
-            mask_selection=mask_selection,
+            mask_label_selection=mask_label_selection,
             field="filter",
             search_term=filter_str,
             exclude_uuid_list=exclude_uuid_list,
@@ -68,11 +68,11 @@ class RecipeRandomizer(RecipeBasic):
         if tag.lower() not in self.tag_tuple:
             raise RecipeLabelNotFoundError(field="tag", search_term=tag)
 
-        mask_selection = self.dataframe["tags"].apply(
+        mask_label_selection = self.dataframe["tags"].apply(
             lambda row: self._is_value_in_list(row, tag)
         )
         return self._select_random_recipe_weighted_by_rating(
-            mask_selection=mask_selection,
+            mask_label_selection=mask_label_selection,
             field="tags",
             search_term=tag,
             exclude_uuid_list=exclude_uuid_list,
@@ -92,7 +92,6 @@ class RecipeRandomizer(RecipeBasic):
                     f"('{entity.lower()}' in {row[row_name_map[entity_name]]})"
                 )
 
-        # TODO return boolean numpy array from eval & df with iterate over row
         for entity_i in ["category", "tag"]:
             filter_str = re.sub(
                 rf"{entity_i[0]}\.([\w\-/]+)",
@@ -101,21 +100,14 @@ class RecipeRandomizer(RecipeBasic):
             )
         return eval(filter_str)
 
-    @staticmethod
-    def _is_value_in_list(row: pd.Series, search_term: str):
-        return search_term.casefold() in row
-
-    def _select_random_recipe_weighted_by_rating(
+    def _construct_mask(
         self,
-        mask_selection,
-        field: str,
-        search_term: str,
+        mask_label_selection,
         exclude_uuid_list: List = None,
         max_cook_active_minutes: float = None,
         min_rating: float = None,
     ):
-        config_random = self.config.random_select
-
+        mask_selection = mask_label_selection
         if exclude_uuid_list is not None:
             mask_selection &= ~self.dataframe.uuid.isin(exclude_uuid_list)
         if max_cook_active_minutes is not None:
@@ -128,21 +120,46 @@ class RecipeRandomizer(RecipeBasic):
             mask_selection &= cook_active_minutes <= max_cook_active_minutes
         if min_rating is not None:
             mask_selection &= self.dataframe.rating >= min_rating
+        return mask_selection
 
-        if (count := sum(mask_selection)) > config_random.min_thresh_error:
-            if count < config_random.min_thresh_warning:
-                FILE_LOGGER.warning(
-                    "[select random recipe]",
-                    selection=f"{field}={search_term}",
-                    warning=f"only {count} entries available",
-                    thresh=config_random.min_thresh_warning,
+    @staticmethod
+    def _is_value_in_list(row: pd.Series, search_term: str):
+        return search_term.casefold() in row
+
+    def _select_random_recipe_weighted_by_rating(
+        self,
+        mask_label_selection,
+        field: str,
+        search_term: str,
+        exclude_uuid_list: List = None,
+        max_cook_active_minutes: float = None,
+        min_rating: float = None,
+    ):
+        config_random = self.config.random_select
+
+        mask_selection = self._construct_mask(
+            mask_label_selection=mask_label_selection,
+            exclude_uuid_list=exclude_uuid_list,
+            max_cook_active_minutes=max_cook_active_minutes,
+            min_rating=min_rating,
+        )
+
+        if (count := sum(mask_selection)) < config_random.min_thresh_warning:
+            FILE_LOGGER.warning(
+                "[select random recipe]",
+                selection=f"{field}={search_term}",
+                warning=f"only {count} entries available",
+                thresh=config_random.min_thresh_warning,
+            )
+            if count <= config_random.min_thresh_error:
+                raise SelectRandomRecipeError(
+                    field=field, search_term=search_term
                 )
 
-            result_df = self.dataframe[mask_selection]
-            weighting = result_df.rating.copy(deep=True).fillna(
-                config_random.default_rating
-            )
-            random_recipe = result_df.sample(n=1, weights=weighting).iloc[0]
-            self._check_total_time(random_recipe)
-            return random_recipe
-        raise SelectRandomRecipeError(field=field, search_term=search_term)
+        result_df = self.dataframe[mask_selection]
+        weighting = result_df.rating.copy(deep=True).fillna(
+            config_random.default_rating
+        )
+        random_recipe = result_df.sample(n=1, weights=weighting).iloc[0]
+        self._check_total_time(random_recipe)
+        return random_recipe

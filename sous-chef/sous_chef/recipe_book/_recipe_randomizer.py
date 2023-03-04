@@ -141,15 +141,15 @@ class RecipeRandomizer(RecipeBasic):
             config_random.default_rating
         )
 
-        total_time = input_df.time_total.fillna(
+        total_active_time = input_df.time_total.fillna(
             timedelta(minutes=config_random.default_total_time_minutes)
-        )
-        weight_time = self._get_time_in_minutes(total_time).apply(
+        ) - input_df.time_inactive.fillna(timedelta(minutes=0))
+        weight_active_time = self._get_time_in_minutes(total_active_time).apply(
             weight_time_minutes
         )
         # TODO could penalize if "recently in menu" divide 1 by weeks ago?
 
-        return (weight_ratings + weight_time).apply(clip_weight)
+        return (weight_ratings + weight_active_time).apply(clip_weight)
 
     @staticmethod
     def _get_time_in_minutes(column: pd.Series):

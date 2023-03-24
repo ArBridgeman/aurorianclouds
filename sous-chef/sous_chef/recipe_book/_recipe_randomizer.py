@@ -137,8 +137,9 @@ class RecipeRandomizer(RecipeBasic):
 
         config_random = self.config.random_select
 
-        weight_ratings = input_df.rating.copy(deep=True).fillna(
-            config_random.default_rating
+        weight_ratings = (
+            input_df.rating.copy(deep=True).fillna(config_random.default_rating)
+            * 5
         )
 
         total_active_time = input_df.time_total.fillna(

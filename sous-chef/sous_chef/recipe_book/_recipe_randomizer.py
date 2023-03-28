@@ -131,17 +131,15 @@ class RecipeRandomizer(RecipeBasic):
             # 5 minutes preparation or less would be ideal
             return min((5 / time_minutes) ** 2, 1)  # max allowed value is 1
 
-        # TODO could normalize, rescale, or something else
-        def clip_weight(weight: float):
-            return min(weight, 5.0)  # max allowed value is 5
-
         config_random = self.config.random_select
 
+        # TODO move formula to config
         weight_ratings = (
             input_df.rating.copy(deep=True).fillna(config_random.default_rating)
-            * 5
+            * 2
         )
 
+        # TODO move formula to config
         total_active_time = input_df.time_total.fillna(
             timedelta(minutes=config_random.default_total_time_minutes)
         ) - input_df.time_inactive.fillna(timedelta(minutes=0))
@@ -150,7 +148,7 @@ class RecipeRandomizer(RecipeBasic):
         )
         # TODO could penalize if "recently in menu" divide 1 by weeks ago?
 
-        return (weight_ratings + weight_active_time).apply(clip_weight)
+        return weight_ratings + weight_active_time
 
     @staticmethod
     def _get_time_in_minutes(column: pd.Series):

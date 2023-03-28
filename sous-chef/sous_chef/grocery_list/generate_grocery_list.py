@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from itertools import chain
-from typing import List
+from typing import List, Tuple
 
 import pandas as pd
 from omegaconf import DictConfig
@@ -48,9 +48,9 @@ class GroceryList:
     queue_preparation: pd.DataFrame = None
     grocery_list_raw: pd.DataFrame = None
     grocery_list: pd.DataFrame = None
-    primary_shopping_date: date = field(init=False)
-    secondary_shopping_date: date = field(init=False)
-    second_shopping_day_group: List = field(init=False)
+    primary_shopping_date: date = None
+    secondary_shopping_date: date = None
+    second_shopping_day_group: Tuple = ()
     has_errors: bool = False
     app_week_label: str = field(init=False)
 
@@ -66,12 +66,15 @@ class GroceryList:
         ):
             self.primary_shopping_date -= timedelta(days=7)
 
-        self.secondary_shopping_date = (
-            self.due_date_formatter.get_date_relative_to_anchor(
-                self.config.shopping.secondary_day
-            ).date()
-        )
-        self.second_shopping_day_group = self.config.shopping.secondary_group
+        if self.config.shopping.secondary_day:
+            self.secondary_shopping_date = (
+                self.due_date_formatter.get_date_relative_to_anchor(
+                    self.config.shopping.secondary_day
+                ).date()
+            )
+            self.second_shopping_day_group = (
+                self.config.shopping.secondary_group
+            )
 
         calendar_week = self.due_date_formatter.get_calendar_week()
         self.app_week_label = f"app-week-{calendar_week}"
@@ -125,9 +128,7 @@ class GroceryList:
             for _, entry in group.iterrows():
                 todoist_helper.add_task_to_project(
                     task=self._format_ingredient_str(entry),
-                    due_date=self.secondary_shopping_date
-                    if entry["get_on_second_shopping_day"]
-                    else self.primary_shopping_date,
+                    due_date=entry["shopping_date"],
                     label_list=entry["from_recipe"]
                     + entry["for_day_str"]
                     + [self.app_week_label],
@@ -136,7 +137,9 @@ class GroceryList:
                     project_id=project_id,
                     section=section_name,
                     section_id=section_id,
-                    priority=2 if entry["get_on_second_shopping_day"] else 1,
+                    priority=2
+                    if entry["shopping_date"] != self.primary_shopping_date
+                    else 1,
                 )
 
     def send_preparation_to_todoist(self, todoist_helper: TodoistHelper):
@@ -198,7 +201,7 @@ class GroceryList:
                 "from_recipe": from_recipe,
                 "for_day": for_day,
                 "for_day_str": for_day.strftime("%a"),
-                "get_on_second_shopping_day": self._get_on_second_shopping_day(
+                "shopping_date": self._get_shopping_day(
                     for_day=for_day, food_group=food_group
                 ),
             },
@@ -346,7 +349,7 @@ class GroceryList:
 
         # TODO fix pantry list to not do lidl for meats (real group instead)
         grouped = self.grocery_list_raw.groupby(
-            ["item", "dimension", "get_on_second_shopping_day"], dropna=False
+            ["item", "dimension", "shopping_date"], dropna=False
         )
         for name, group in grouped:
             # if more than 1 unit, use largest
@@ -387,10 +390,7 @@ class GroceryList:
                 from_recipe=("from_recipe", lambda x: sorted(list(set(x)))),
                 for_day=("for_day", "min"),
                 for_day_str=("for_day_str", lambda x: sorted(list(set(x)))),
-                get_on_second_shopping_day=(
-                    "get_on_second_shopping_day",
-                    "first",
-                ),
+                shopping_date=("shopping_date", "first"),
             )
             .astype({"is_staple": bool, "barcode": str})
         )
@@ -448,12 +448,14 @@ class GroceryList:
         )
         return group
 
-    def _get_on_second_shopping_day(
-        self, for_day: datetime, food_group: str
-    ) -> bool:
-        return (for_day.date() >= self.secondary_shopping_date) and (
-            food_group.casefold() in self.second_shopping_day_group
-        )
+    def _get_shopping_day(self, for_day: datetime, food_group: str) -> date:
+        if (
+            self.secondary_shopping_date
+            and (for_day.date() >= self.secondary_shopping_date)
+            and (food_group.casefold() in self.second_shopping_day_group)
+        ):
+            return self.secondary_shopping_date
+        return self.primary_shopping_date
 
     def _override_can_to_dried_bean(self, row: pd.Series) -> pd.Series:
         config_bean_prep = self.config.bean_prep

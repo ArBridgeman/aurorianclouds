@@ -69,7 +69,7 @@ def create_ingredient_and_grocery_entry_raw(
     ),
     for_day_str: str = "Thu",
     # frozen anchor date is Friday & second group includes vegetables
-    get_on_second_shopping_day: bool = True,
+    shopping_date: datetime.date = datetime.date(year=2022, month=1, day=17),
 ) -> (Ingredient, pd.DataFrame):
     unit = None
     if pint_unit is not None:
@@ -104,7 +104,7 @@ def create_ingredient_and_grocery_entry_raw(
             "from_recipe": from_recipe,
             "for_day": for_day,
             "for_day_str": for_day_str,
-            "get_on_second_shopping_day": get_on_second_shopping_day,
+            "shopping_date": shopping_date,
         },
         index=[0],
     )
@@ -304,33 +304,33 @@ class TestGroceryList:
     @pytest.mark.parametrize(
         "for_day, food_group, expected_result",
         [
-            (
+            (  # Monday
                 datetime.datetime(
                     year=2022, month=1, day=24, tzinfo=timezone("UTC")
                 ),
                 "vegetables",
-                False,
-            ),  # Monday
+                datetime.date(year=2022, month=1, day=17),
+            ),
             (
                 datetime.datetime(
                     year=2022, month=1, day=21, tzinfo=timezone("UTC")
                 ),
                 "vegetables",
-                False,
+                datetime.date(year=2022, month=1, day=17),
             ),  # Friday
             (
                 datetime.datetime(
                     year=2022, month=1, day=27, tzinfo=timezone("UTC")
                 ),
                 "Vegetables",
-                True,
+                datetime.date(year=2022, month=1, day=27),
             ),  # Thursday
             (
                 datetime.datetime(
                     year=2022, month=1, day=27, tzinfo=timezone("UTC")
                 ),
                 "Fruits",
-                False,
+                datetime.date(year=2022, month=1, day=17),
             ),  # Thursday
         ],
     )
@@ -341,10 +341,13 @@ class TestGroceryList:
         expected_result,
         frozen_due_datetime_formatter,
     ):
+        grocery_list.secondary_shopping_date = datetime.date(
+            year=2022, month=1, day=27
+        )
         # only vegetable entries on Fri., Sat., Sun. should be true
         assert (
             # 2022-01-27
-            grocery_list._get_on_second_shopping_day(for_day, food_group)
+            grocery_list._get_shopping_day(for_day, food_group)
             == expected_result
         )
 

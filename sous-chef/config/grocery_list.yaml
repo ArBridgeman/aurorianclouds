@@ -30,8 +30,8 @@ menu:
 grocery_list:
   shopping:
     primary_day: Monday
-    secondary_day:
-    secondary_group: [fish, fresh herbs, fruits, meats, vegetables, Lidl]
+    secondary_day: Thursday
+    secondary_group: [fresh herbs, fruits, vegetables]
   preparation:
     project_name: Menu
     task_priority: 3

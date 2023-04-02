@@ -4,6 +4,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
+import numpy as np
 import pandas as pd
 import pandera as pa
 from omegaconf import DictConfig
@@ -43,6 +44,11 @@ class TypeProcessOrder(ExtendedIntEnum):
     filter = 2
     tag = 3
     category = 4
+
+
+class RandomSelectType(ExtendedEnum):
+    rated = "rated"
+    unrated = "unrated"
 
 
 # TODO method to scale recipe to desired servings? maybe in recipe checker?
@@ -110,6 +116,12 @@ class MenuSchema(pa.SchemaModel):
     )
     meal_time: Series[str] = pa.Field(isin=MealTime.name_list("lower"))
     type: Series[str] = pa.Field(isin=TypeProcessOrder.name_list())
+    # TODO remove from here as don't need in menu-tmp, right?
+    #  so should add check that only these values elsewhere
+    # TODO add check that # allowed unrated >= explicit unrateds listed in menus
+    selection: Series[str] = pa.Field(
+        isin=RandomSelectType.name_list(), nullable=True
+    )
     eat_factor: Series[float] = pa.Field(gt=0, nullable=False, coerce=True)
     eat_unit: Series[str] = pa.Field(nullable=True)
     freeze_factor: Series[float] = pa.Field(ge=0, nullable=False, coerce=True)
@@ -173,6 +185,7 @@ class MenuBasic(BaseWithExceptionHandling):
             workbook_name=workbook, worksheet_name=worksheet
         )
         self.dataframe.time_total = pd.to_timedelta(self.dataframe.time_total)
+        self.dataframe.selection.replace("NaN", np.NaN, inplace=True)
         self._validate_finalized_menu_schema()
         return self.dataframe
 
@@ -343,6 +356,7 @@ class MenuBasic(BaseWithExceptionHandling):
             self.recipe_book, f"get_random_recipe_by_{entry_type}"
         )(
             row["item"],
+            selection_type=row["selection"],
             exclude_uuid_list=exclude_uuid_list,
             max_cook_active_minutes=max_cook_active_minutes,
             min_rating=self.min_random_recipe_rating,

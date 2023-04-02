@@ -19,6 +19,7 @@ class RecipeRandomizer(RecipeBasic):
     def get_random_recipe_by_category(
         self,
         category: str,
+        selection_type: str,
         exclude_uuid_list: List = None,
         max_cook_active_minutes: float = None,
         min_rating: float = None,
@@ -32,6 +33,7 @@ class RecipeRandomizer(RecipeBasic):
         )
         return self._select_random_recipe_weighted_by_rating(
             mask_label_selection=mask_label_selection,
+            selection_type=selection_type,
             field="categories",
             search_term=category,
             exclude_uuid_list=exclude_uuid_list,
@@ -42,6 +44,7 @@ class RecipeRandomizer(RecipeBasic):
     def get_random_recipe_by_filter(
         self,
         filter_str: str,
+        selection_type: str,
         exclude_uuid_list: List = None,
         max_cook_active_minutes: float = None,
         min_rating: float = None,
@@ -51,6 +54,7 @@ class RecipeRandomizer(RecipeBasic):
         )
         return self._select_random_recipe_weighted_by_rating(
             mask_label_selection=mask_label_selection,
+            selection_type=selection_type,
             field="filter",
             search_term=filter_str,
             exclude_uuid_list=exclude_uuid_list,
@@ -61,6 +65,7 @@ class RecipeRandomizer(RecipeBasic):
     def get_random_recipe_by_tag(
         self,
         tag: str,
+        selection_type: str,
         exclude_uuid_list: List = None,
         max_cook_active_minutes: float = None,
         min_rating: float = None,
@@ -73,6 +78,7 @@ class RecipeRandomizer(RecipeBasic):
         )
         return self._select_random_recipe_weighted_by_rating(
             mask_label_selection=mask_label_selection,
+            selection_type=selection_type,
             field="tags",
             search_term=tag,
             exclude_uuid_list=exclude_uuid_list,
@@ -103,6 +109,7 @@ class RecipeRandomizer(RecipeBasic):
     def _construct_mask(
         self,
         mask_label_selection,
+        selection_type: str,
         exclude_uuid_list: List = None,
         max_cook_active_minutes: float = None,
         min_rating: float = None,
@@ -122,6 +129,11 @@ class RecipeRandomizer(RecipeBasic):
                 self._get_time_in_minutes(cook_active_time)
                 <= max_cook_active_minutes
             )
+        if selection_type == "unrated":
+            mask_selection &= self.dataframe.rating.isna()
+        elif selection_type == "rated":
+            mask_selection &= ~self.dataframe.rating.isna()
+        # TODO double-check in min-rating still needed
         if min_rating is not None:
             mask_selection &= self.dataframe.rating >= min_rating
         return mask_selection
@@ -161,6 +173,7 @@ class RecipeRandomizer(RecipeBasic):
     def _select_random_recipe_weighted_by_rating(
         self,
         mask_label_selection,
+        selection_type: str,
         field: str,
         search_term: str,
         exclude_uuid_list: List = None,
@@ -171,6 +184,7 @@ class RecipeRandomizer(RecipeBasic):
 
         mask_selection = self._construct_mask(
             mask_label_selection=mask_label_selection,
+            selection_type=selection_type,
             exclude_uuid_list=exclude_uuid_list,
             max_cook_active_minutes=max_cook_active_minutes,
             min_rating=min_rating,

@@ -1,6 +1,7 @@
 from datetime import timedelta
 from typing import List
 
+import numpy as np
 import pandas as pd
 from sous_chef.abstract.extended_enum import ExtendedIntEnum
 from sous_chef.menu.create_menu._menu_basic import (
@@ -41,7 +42,7 @@ class MenuFromFixedTemplate(MenuBasic):
         self.dataframe = self.dataframe.loc[~mask_inactive].drop(
             columns=["inactive"]
         )
-
+        self.dataframe.selection.replace("", np.NaN, inplace=True)
         # applied schema model coerces int already
         self.dataframe.freeze_factor.replace("", "0", inplace=True)
         self.dataframe.prep_day_before.replace("", "0", inplace=True)

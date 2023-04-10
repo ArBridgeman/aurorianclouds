@@ -238,27 +238,35 @@ class TestMenu:
         )
 
     @staticmethod
-    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4])
+    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4, 5, 6])
     def test__check_menu_quality_ensure_workday_not_unrated_recipe(
         menu, menu_config, weekday
     ):
-        menu_config.quality_check.workday.recipe_unrated_allowed = False
+        day_type = "workday"
+        if weekday >= 5:
+            day_type = "weekend"
+
+        menu_config.quality_check[day_type].recipe_unrated_allowed = False
         # derived exception MenuQualityError
         with pytest.raises(Exception) as error:
             menu._check_menu_quality(
-                weekday=0, recipe=create_recipe(rating=np.nan)
+                weekday=weekday, recipe=create_recipe(rating=np.nan)
             )
         assert str(error.value) == (
             "[menu quality] recipe=dummy_title "
-            "error=(on workday) unrated recipe"
+            f"error=(on {day_type}) unrated recipe"
         )
 
     @staticmethod
-    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4])
+    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4, 5, 6])
     def test__check_menu_quality_ensure_workday_not_exceed_active_cook_time(
         menu, menu_config, weekday
     ):
-        menu_config.quality_check.workday.cook_active_minutes_max = 10
+        day_type = "workday"
+        if weekday >= 5:
+            day_type = "weekend"
+
+        menu_config.quality_check[day_type].cook_active_minutes_max = 10
         # derived exception MenuQualityError
         with pytest.raises(Exception) as error:
             menu._check_menu_quality(
@@ -267,7 +275,7 @@ class TestMenu:
             )
         assert str(error.value) == (
             "[menu quality] recipe=dummy_title "
-            "error=(on workday) cook_active_minutes=15.0 > 10.0"
+            f"error=(on {day_type}) cook_active_minutes=15.0 > 10.0"
         )
 
     @staticmethod

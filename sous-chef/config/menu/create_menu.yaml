@@ -8,6 +8,9 @@ create_menu:
     min_inactive_minutes: 20
   quality_check:
     recipe_rating_min: 3.0
+    weekend:
+      recipe_unrated_allowed: true
+      cook_active_minutes_max: 40
     workday:
       recipe_unrated_allowed: true
       cook_active_minutes_max: 30

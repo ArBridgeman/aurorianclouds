@@ -248,16 +248,19 @@ class MenuBasic(BaseWithExceptionHandling):
             recipe_rating_min=float(quality_check_config.recipe_rating_min),
         )
 
-        # workday = weekday
-        if weekday < 5:
-            if not quality_check_config.workday.recipe_unrated_allowed:
-                self._ensure_workday_not_unrated_recipe(recipe=recipe)
-            self._ensure_workday_not_exceed_active_cook_time(
-                recipe=recipe,
-                max_cook_active_minutes=float(
-                    quality_check_config.workday.cook_active_minutes_max
-                ),
-            )
+        day_type = "workday"
+        if weekday >= 5:
+            day_type = "weekend"
+
+        if not quality_check_config[day_type].recipe_unrated_allowed:
+            self._ensure_not_unrated_recipe(recipe=recipe, day_type=day_type)
+        self._ensure_does_not_exceed_max_active_cook_time(
+            recipe=recipe,
+            max_cook_active_minutes=float(
+                quality_check_config[day_type].cook_active_minutes_max
+            ),
+            day_type=day_type,
+        )
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _ensure_rating_exceed_min(
@@ -270,16 +273,16 @@ class MenuBasic(BaseWithExceptionHandling):
             )
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
-    def _ensure_workday_not_unrated_recipe(self, recipe: pd.Series):
+    def _ensure_not_unrated_recipe(self, recipe: pd.Series, day_type: str):
         if pd.isna(recipe.rating):
             raise MenuQualityError(
                 recipe_title=recipe.title,
-                error_text="(on workday) unrated recipe",
+                error_text=f"(on {day_type}) unrated recipe",
             )
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
-    def _ensure_workday_not_exceed_active_cook_time(
-        self, recipe: pd.Series, max_cook_active_minutes: float
+    def _ensure_does_not_exceed_max_active_cook_time(
+        self, recipe: pd.Series, max_cook_active_minutes: float, day_type: str
     ):
         time_total = recipe.time_total
         if recipe.time_inactive is not pd.NaT:
@@ -287,7 +290,7 @@ class MenuBasic(BaseWithExceptionHandling):
         cook_active_minutes = time_total.total_seconds() / 60
         if cook_active_minutes > max_cook_active_minutes:
             error_text = (
-                "(on workday) "
+                f"(on {day_type}) "
                 f"cook_active_minutes={cook_active_minutes} > "
                 f"{max_cook_active_minutes}"
             )

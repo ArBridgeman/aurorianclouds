@@ -29,9 +29,9 @@ menu:
 
 grocery_list:
   shopping:
-    primary_day: Monday
-    secondary_day: Thursday
-    secondary_group: [fresh herbs, fruits, vegetables]
+    primary_day: Friday
+    secondary_day: Monday
+    secondary_group: [fresh herbs, lettuce]
   preparation:
     project_name: Menu
     task_priority: 3
@@ -73,6 +73,7 @@ grocery_list:
     grains: Bulk
     juices: Juices and beverages
     legumes: Bulk
+    lettuce: Farmland pride
     meats: Dead animal society
     nuts and seeds: Bulk
     pasta: GF park

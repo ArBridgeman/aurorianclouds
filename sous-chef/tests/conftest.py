@@ -74,6 +74,7 @@ def config_due_date():
 @freeze_time(FROZEN_DATE)
 def frozen_due_datetime_formatter(config_due_date):
     config_due_date.anchor_day = FROZEN_DAY
+    config_due_date.week_offset = 1
     due_datetime_formatter = DueDatetimeFormatter(config=config_due_date)
     due_datetime_formatter.meal_time = MockMealTime
     return due_datetime_formatter

@@ -2,7 +2,7 @@ import datetime
 from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -49,6 +49,7 @@ class TypeProcessOrder(ExtendedIntEnum):
 class RandomSelectType(ExtendedEnum):
     rated = "rated"
     unrated = "unrated"
+    either = "either"
 
 
 # TODO method to scale recipe to desired servings? maybe in recipe checker?
@@ -105,7 +106,7 @@ class MapMenuErrorToException(ExtendedEnum):
 
 class MenuSchema(pa.SchemaModel):
     weekday: Series[str] = pa.Field(isin=Weekday.name_list("capitalize"))
-    prep_day_before: Optional[Series[float]] = pa.Field(
+    prep_day: Optional[Series[float]] = pa.Field(
         ge=0, lt=7, nullable=False, coerce=True
     )
     eat_datetime: Optional[Series[pd.DatetimeTZDtype]] = pa.Field(
@@ -165,13 +166,11 @@ class MenuBasic(BaseWithExceptionHandling):
         DataFrameBase[MenuSchema],
         DataFrameBase[FinalizedMenuSchema],
     ] = None
-    cook_days: Dict = field(init=False)
     menu_history_uuid_list: List = field(init=False)
     number_of_unrated_recipes: int = 0
     min_random_recipe_rating: int = None
 
     def __post_init__(self):
-        self.cook_days = self.config.fixed.cook_days
         self.set_tuple_log_and_skip_exception_from_config(
             config_errors=self.config.errors,
             exception_mapper=MapMenuErrorToException,
@@ -212,9 +211,9 @@ class MenuBasic(BaseWithExceptionHandling):
                 # inactive too great, so separately schedule prep
                 default_cook_datetime += recipe.time_inactive
 
-            if row.prep_day_before == 0:
+            if row.prep_day == 0:
                 return default_cook_datetime, default_prep_datetime
-            # prep_day_before was set, so use prep_config default time; unsure
+            # prep_day was set, so use prep_config default time; unsure
             # how cook time altered, but assume large inactive times handled
             return (default_cook_datetime, row.prep_datetime)
 
@@ -298,10 +297,20 @@ class MenuBasic(BaseWithExceptionHandling):
                 recipe_title=recipe.title, error_text=error_text
             )
 
-    def _get_cook_day_as_weekday(self, cook_day: str):
-        if cook_day in self.cook_days:
-            return self.cook_days[cook_day]
-        raise MenuConfigError(f"{cook_day} not defined in yaml")
+    @staticmethod
+    def _get_weekday_from_short(short_week_day: str):
+        day_mapping = {
+            "mon": "Monday",
+            "tues": "Tuesday",
+            "wed": "Wednesday",
+            "thu": "Thursday",
+            "fri": "Friday",
+            "sat": "Saturday",
+            "sun": "Sunday",
+        }
+        if short_week_day.lower() in day_mapping:
+            return day_mapping[short_week_day.lower()]
+        raise MenuConfigError(f"{short_week_day} unknown!")
 
     def _inspect_unrated_recipe(self, recipe: pd.Series):
         if pd.isna(recipe.rating):

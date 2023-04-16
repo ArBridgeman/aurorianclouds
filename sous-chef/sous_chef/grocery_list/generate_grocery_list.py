@@ -480,7 +480,7 @@ class GroceryList:
             ),
             due_date=self.due_date_formatter.replace_time_with_meal_time(
                 due_date=row.for_day
-                - timedelta(days=config_bean_prep.prep_day_before),
+                - timedelta(days=config_bean_prep.prep_day),
                 meal_time=config_bean_prep.prep_meal,
             ),
             from_recipe=row.from_recipe,

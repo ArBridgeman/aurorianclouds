@@ -29,15 +29,8 @@ create_menu:
     remove_existing_task: false
     task_priority: 3
   fixed:
-    basic: menu-basic
-    cook_days:
-      weekend_1: Saturday
-      weekend_2: Sunday
-      work_day_0: Monday
-      work_day_1: Tuesday
-      work_day_2: Friday
-      work_day_3: Wednesday
-    file_prefix: menu-
+    workbook: fixed_menus
+    basic_number: 0
     menu_number:
   final_menu:
     workbook: menu-tmp

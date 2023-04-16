@@ -42,7 +42,7 @@ class MenuBuilder:
 
     @staticmethod
     def create_menu_row(
-        prep_day_before: int = 0,
+        prep_day: int = 0,
         meal_time: str = "dinner",
         item_type: str = "recipe",
         eat_factor: float = 1.0,
@@ -72,7 +72,7 @@ class MenuBuilder:
 
         menu = {
             "weekday": "work_day_2",
-            "prep_day_before": prep_day_before,
+            "prep_day": prep_day,
             "meal_time": meal_time,
             "eat_factor": eat_factor,
             "eat_unit": eat_unit,
@@ -95,10 +95,10 @@ class MenuBuilder:
         menu["rating"] = rating
         menu["time_total"] = time_total
         menu["uuid"] = "1666465773100"
-        if prep_day_before != 0:
+        if prep_day != 0:
             menu["cook_datetime"] = menu["eat_datetime"]
             menu["prep_datetime"] = menu["eat_datetime"] - datetime.timedelta(
-                days=prep_day_before
+                days=prep_day
             )
         else:
             menu["cook_datetime"] = menu["eat_datetime"] - time_total

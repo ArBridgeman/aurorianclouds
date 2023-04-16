@@ -28,8 +28,7 @@ class MenuFromFixedTemplate(MenuBasic):
 
         def _get_default_prep_datetime(row: pd.Series):
             return self.due_date_formatter.replace_time_with_meal_time(
-                due_date=row.eat_datetime
-                - timedelta(days=int(row.prep_day_before)),
+                due_date=row.eat_datetime - timedelta(days=int(row.prep_day)),
                 meal_time=default_prep_time,
             )
 
@@ -45,7 +44,7 @@ class MenuFromFixedTemplate(MenuBasic):
         self.dataframe.selection.replace("", np.NaN, inplace=True)
         # applied schema model coerces int already
         self.dataframe.freeze_factor.replace("", "0", inplace=True)
-        self.dataframe.prep_day_before.replace("", "0", inplace=True)
+        self.dataframe.prep_day.replace("", "0", inplace=True)
         self.dataframe.defrost = self.dataframe.defrost.replace(
             "", "N"
         ).str.upper()
@@ -72,9 +71,13 @@ class MenuFromFixedTemplate(MenuBasic):
         self.dataframe["process_order"] = self.dataframe["type"].apply(
             lambda x: TypeProcessOrder[x].value
         )
+        self.dataframe["is_unrated"] = (
+            self.dataframe.selection == "unrated"
+        ).astype(int)
+
         self.dataframe = self.dataframe.sort_values(
-            by=["process_order"], ascending=True
-        ).drop(columns=["process_order"])
+            by=["is_unrated", "process_order"], ascending=[False, True]
+        ).drop(columns=["process_order", "is_unrated"])
         # validate schema & process menu
         self._validate_menu_schema()
 
@@ -103,7 +106,7 @@ class MenuFromFixedTemplate(MenuBasic):
             )
 
         self.dataframe.drop(
-            columns=["eat_datetime", "override_check", "prep_day_before"],
+            columns=["eat_datetime", "override_check", "prep_day"],
             inplace=True,
         )
         self._save_menu()
@@ -116,24 +119,41 @@ class MenuFromFixedTemplate(MenuBasic):
             raise ValueError(f"fixed menu number ({menu_number}) not an int")
 
     def _load_fixed_menu(self):
-        menu_basic_file = self.config.fixed.basic
-        menu_basic = self.gsheets_helper.get_worksheet(
-            menu_basic_file, menu_basic_file
-        )
+        menu_file = self.config.fixed.workbook
+
+        sheet_to_mealtime = {
+            "breakfast": "breakfast",
+            "snack": "snack",
+            "dinner": "dinner",
+            "dessert": "dessert",
+        }
+
+        combined_menu = pd.DataFrame()
+        for sheet, meal_time in sheet_to_mealtime.items():
+            sheet_pd = self.gsheets_helper.get_worksheet(
+                menu_file, worksheet_name=sheet
+            )
+            sheet_pd["meal_time"] = meal_time
+            combined_menu = pd.concat([combined_menu, sheet_pd])
+
+        basic_number = self.config.fixed.basic_number
+        # self._check_fixed_menu_number(basic_number)
 
         menu_number = self.config.fixed.menu_number
         self._check_fixed_menu_number(menu_number)
-        menu_fixed_file = f"{self.config.fixed.file_prefix}{menu_number}"
-        menu_fixed = self.gsheets_helper.get_worksheet(
-            menu_fixed_file, menu_fixed_file
+
+        combined_menu = combined_menu[
+            combined_menu.menu.astype(int).isin([basic_number, menu_number])
+        ]
+
+        combined_menu["weekday"] = (
+            combined_menu.day.str.split("_")
+            .str[1]
+            .apply(self._get_weekday_from_short)
         )
 
-        combined_menu = pd.concat([menu_basic, menu_fixed]).sort_values(
-            by=["weekday", "meal_time"]
-        )
-        combined_menu["weekday"] = combined_menu.weekday.apply(
-            self._get_cook_day_as_weekday
-        )
+        combined_menu.drop(columns=["day", "menu", "who"], inplace=True)
+        combined_menu = combined_menu.sort_values(by=["weekday", "meal_time"])
 
         # TODO create test for
         mask_skip_none = combined_menu["weekday"].isna()

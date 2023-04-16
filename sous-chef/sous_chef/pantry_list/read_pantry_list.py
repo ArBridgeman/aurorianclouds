@@ -157,9 +157,16 @@ class PantryList(DataframeSearchable):
         with_replacement = pd.merge(
             self.replacement_pantry_list,
             with_replacement,
-            how="inner",
+            how="outer",
+            indicator=True,
             on=["replacement_ingredient", "true_ingredient"],
         )
+        FILE_LOGGER.warning(
+            with_replacement[with_replacement["_merge"] != "both"]
+        )
+        with_replacement = with_replacement[
+            with_replacement["_merge"] == "both"
+        ]
         self._check_join(
             "with_replacement", shape_before, with_replacement.shape[0]
         )
@@ -183,10 +190,15 @@ class PantryList(DataframeSearchable):
         misspelled_list = pd.merge(
             self.basic_pantry_list,
             misspelled_list,
-            how="inner",
+            how="outer",
+            indicator=True,
             left_on=["ingredient"],
             right_on=["true_ingredient"],
         )
+        FILE_LOGGER.warning(
+            misspelled_list[misspelled_list["_merge"] != "both"]
+        )
+        misspelled_list = misspelled_list[misspelled_list["_merge"] == "both"]
         self._check_join(
             "misspelled_list", shape_before, misspelled_list.shape[0]
         )

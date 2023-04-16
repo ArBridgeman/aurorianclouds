@@ -310,7 +310,7 @@ class MenuBasic(BaseWithExceptionHandling):
         }
         if short_week_day.lower() in day_mapping:
             return day_mapping[short_week_day.lower()]
-        raise MenuConfigError(f"{short_week_day} unknown!")
+        raise MenuConfigError(f"{short_week_day} unknown weekday!")
 
     def _inspect_unrated_recipe(self, recipe: pd.Series):
         if pd.isna(recipe.rating):

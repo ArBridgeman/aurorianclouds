@@ -69,7 +69,7 @@ def create_ingredient_and_grocery_entry_raw(
     ),
     for_day_str: str = "Thu",
     # frozen anchor date is Friday & second group includes vegetables
-    shopping_date: datetime.date = datetime.date(year=2022, month=1, day=17),
+    shopping_date: datetime.date = datetime.date(year=2022, month=1, day=24),
 ) -> (Ingredient, pd.DataFrame):
     unit = None
     if pint_unit is not None:
@@ -309,14 +309,14 @@ class TestGroceryList:
                     year=2022, month=1, day=24, tzinfo=timezone("UTC")
                 ),
                 "vegetables",
-                datetime.date(year=2022, month=1, day=17),
+                datetime.date(year=2022, month=1, day=20),
             ),
             (
                 datetime.datetime(
                     year=2022, month=1, day=21, tzinfo=timezone("UTC")
                 ),
                 "vegetables",
-                datetime.date(year=2022, month=1, day=17),
+                datetime.date(year=2022, month=1, day=20),
             ),  # Friday
             (
                 datetime.datetime(
@@ -330,7 +330,7 @@ class TestGroceryList:
                     year=2022, month=1, day=27, tzinfo=timezone("UTC")
                 ),
                 "Fruits",
-                datetime.date(year=2022, month=1, day=17),
+                datetime.date(year=2022, month=1, day=20),
             ),  # Thursday
         ],
     )
@@ -343,6 +343,9 @@ class TestGroceryList:
     ):
         grocery_list.secondary_shopping_date = datetime.date(
             year=2022, month=1, day=27
+        )
+        grocery_list.primary_shopping_date = datetime.date(
+            year=2022, month=1, day=20
         )
         # only vegetable entries on Fri., Sat., Sun. should be true
         assert (

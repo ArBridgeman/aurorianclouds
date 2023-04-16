@@ -80,6 +80,7 @@ class MenuBuilder:
             "defrost": defrost,
             "item": item,
             "type": item_type,
+            "selection": "either",
         }
         if not loaded_fixed_menu:
             return pd.DataFrame(menu, index=[0])
@@ -332,19 +333,19 @@ class TestMenu:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "cook_day,expected_week_day", [("weekend_1", "Saturday")]
+        "short_day,expected_week_day",
+        [("sat", "Saturday"), ("Mon", "Monday"), ("THU", "Thursday")],
     )
-    def test__get_cook_day_as_weekday(menu, cook_day, expected_week_day):
-        assert menu._get_cook_day_as_weekday(cook_day) == expected_week_day
+    def test__get_weekday_from_short(menu, short_day, expected_week_day):
+        assert menu._get_weekday_from_short(short_day) == expected_week_day
 
     @staticmethod
     def test__get_cook_day_as_weekday_unknown(menu):
         # derived exception MenuConfigError
         with pytest.raises(Exception) as error:
-            menu._get_cook_day_as_weekday("not-a-day")
+            menu._get_weekday_from_short("not-a-day")
         assert (
-            str(error.value)
-            == "[menu config error] not-a-day not defined in yaml"
+            str(error.value) == "[menu config error] not-a-day unknown weekday!"
         )
 
     @staticmethod

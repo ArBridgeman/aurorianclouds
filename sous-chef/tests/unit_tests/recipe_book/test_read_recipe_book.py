@@ -181,7 +181,9 @@ class TestRecipeBook:
             tags=recipe_book.tag_tuple,
             post_process_recipe=True,
         )
-        recipe_book.get_random_recipe_by_filter(filter_str=filter_str)
+        recipe_book.get_random_recipe_by_filter(
+            filter_str=filter_str, selection_type="either"
+        )
 
     @staticmethod
     def test__check_total_time_raises_error_when_nat(
@@ -345,7 +347,7 @@ class TestRecipeBook:
     ):
         search_term = "search_term"
         with pytest.raises(RecipeLabelNotFoundError) as error:
-            getattr(recipe_book, method)(search_term)
+            getattr(recipe_book, method)(search_term, "either")
         assert str(error.value) == (
             "[recipe label not found] "
             f"field={item_type} "
@@ -390,7 +392,7 @@ class TestRecipeBook:
         recipe_book.category_tuple = tuple([search_term])
         recipe_book.tag_tuple = tuple([search_term])
 
-        result = getattr(recipe_book, method)(search_term)
+        result = getattr(recipe_book, method)(search_term, "either")
         assert_equal_series(result, recipe.squeeze())
         assert log.events == [
             {
@@ -458,7 +460,9 @@ class TestRecipeBook:
         recipe_book.tag_tuple = tuple([search_term])
 
         result = getattr(recipe_book, method)(
-            search_term, exclude_uuid_list=[recipe_uuid]
+            search_term,
+            exclude_uuid_list=[recipe_uuid],
+            selection_type="either",
         )
         assert_equal_series(result, recipe.squeeze())
 
@@ -510,7 +514,9 @@ class TestRecipeBook:
         recipe_book.tag_tuple = tuple([search_term])
 
         result = getattr(recipe_book, method)(
-            search_term, max_cook_active_minutes=max_cook_time
+            search_term,
+            max_cook_active_minutes=max_cook_time,
+            selection_type="either",
         )
         assert_equal_series(
             result,
@@ -575,6 +581,7 @@ class TestRecipeBook:
         result = getattr(recipe_book, method)(
             f"t.{search_term}" if item_type == "filter" else search_term,
             min_rating=min_rating,
+            selection_type="either",
         )
         assert_equal_series(
             result,
@@ -598,7 +605,9 @@ class TestRecipeBook:
         recipe_book.tag_tuple = tuple([search_term])
 
         with pytest.raises(SelectRandomRecipeError):
-            recipe_book.get_random_recipe_by_tag(search_term)
+            recipe_book.get_random_recipe_by_tag(
+                search_term, selection_type="either"
+            )
 
     @staticmethod
     @pytest.mark.parametrize(

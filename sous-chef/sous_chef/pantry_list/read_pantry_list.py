@@ -162,7 +162,7 @@ class PantryList(DataframeSearchable):
             on=["replacement_ingredient", "true_ingredient"],
         )
         FILE_LOGGER.warning(
-            with_replacement[with_replacement["_merge"] != "both"]
+            with_replacement[with_replacement["_merge"] == "right_only"]
         )
         with_replacement = with_replacement[
             with_replacement["_merge"] == "both"
@@ -196,7 +196,7 @@ class PantryList(DataframeSearchable):
             right_on=["true_ingredient"],
         )
         FILE_LOGGER.warning(
-            misspelled_list[misspelled_list["_merge"] != "both"]
+            misspelled_list[misspelled_list["_merge"] == "right_only"]
         )
         misspelled_list = misspelled_list[misspelled_list["_merge"] == "both"]
         self._check_join(

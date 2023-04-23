@@ -130,7 +130,7 @@ class TestDueDatetimeFormatter:
     ):
         assert frozen_due_datetime_formatter.get_due_datetime_with_meal_time(
             "monday", "dinner"
-        ) == create_datetime(day=24, hour=18, minute=15)
+        ) == create_datetime(day=24, hour=16, minute=30)
 
     @staticmethod
     def test_get_due_datetime_with_hour_minute(
@@ -220,7 +220,7 @@ class TestDueDatetimeFormatter:
     @staticmethod
     @pytest.mark.parametrize(
         "meal_time,hour,minute",
-        [("breakfast", 8, 30), ("lunch", 11, 30), ("dinner", 18, 15)],
+        [("breakfast", 8, 30), ("lunch", 12, 00), ("dinner", 16, 30)],
     )
     def test__get_meal_time_hour_minute(
         frozen_due_datetime_formatter, meal_time, hour, minute
@@ -240,8 +240,8 @@ class TestDueDatetimeFormatter:
         assert frozen_due_datetime_formatter._get_meal_time_hour_minute(
             meal_time
         ) == (
-            18,
-            15,
+            16,
+            30,
         )
 
     @staticmethod

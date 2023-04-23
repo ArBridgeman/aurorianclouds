@@ -29,9 +29,10 @@ def config_recipe_book():
 
 class MockMealTime(ExtendedEnum):
     breakfast = {"hour": 8, "minute": 30}
-    lunch = {"hour": 11, "minute": 30}
+    lunch = {"hour": 12, "minute": 00}
     snack = {"hour": 15, "minute": 00}
-    dinner = {"hour": 18, "minute": 15}
+    dinner = {"hour": 16, "minute": 30}
+    dessert = {"hour": 19, "minute": 30}
 
 
 @dataclass

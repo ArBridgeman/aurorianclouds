@@ -27,8 +27,8 @@ def menu_config():
     with initialize(version_base=None, config_path="../../../config/menu"):
         config = compose(config_name="create_menu").create_menu
         config.final_menu.worksheet = "test-tmp-menu"
-        config.fixed.basic = "test-menu-basic"
-        config.fixed.file_prefix = "test-menu-"
+        config.fixed.workbook = "test-fixed_menus"
+        config.fixed.menu_number = 1
         config.todoist.project_name = PROJECT
         return config
 
@@ -77,7 +77,7 @@ class TestMenu:
     def test_finalize_fixed_menu_and_load_final_menu(
         menu_with_recipe_book, menu_config
     ):
-        menu_config.fixed.menu_number = 0
+        menu_config.fixed.menu_number = 1
         menu_with_recipe_book.finalize_fixed_menu()
         assert_equal_dataframe(
             menu_with_recipe_book.load_final_menu(), get_tmp_menu()

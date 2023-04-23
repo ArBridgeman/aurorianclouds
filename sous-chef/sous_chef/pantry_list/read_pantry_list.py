@@ -205,7 +205,7 @@ class PantryList(DataframeSearchable):
 
         # swap 'ingredient' to 'misspelled_ingredient' for search
         misspelled_list["ingredient"] = misspelled_list["misspelled_ingredient"]
-        return misspelled_list.drop(columns=["misspelled_ingredient"])
+        return misspelled_list.drop(columns=["misspelled_ingredient", "_merge"])
 
     def _retrieve_replacement_pantry_list(self) -> DataFrame:
         dataframe = self.gsheets_helper.get_worksheet(

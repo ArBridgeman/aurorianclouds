@@ -63,7 +63,7 @@ def get_tasks_menu() -> pd.DataFrame:
     tasks_menu.labels = tasks_menu.labels.apply(
         lambda cell: cell[1:-1].split(", ")
     )
-    return tasks_menu.sort_values("content")
+    return tasks_menu.sort_values("content").reset_index(drop=True)
 
 
 def get_tasks_grocery_list() -> pd.DataFrame:
@@ -71,4 +71,4 @@ def get_tasks_grocery_list() -> pd.DataFrame:
     tasks_menu.labels = tasks_menu.labels.apply(
         lambda cell: cell[1:-1].split(", ")
     )
-    return tasks_menu.sort_values("content")
+    return tasks_menu.sort_values("content").reset_index(drop=True)

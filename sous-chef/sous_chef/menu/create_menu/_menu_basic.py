@@ -301,6 +301,7 @@ class MenuBasic(BaseWithExceptionHandling):
     def _get_weekday_from_short(short_week_day: str):
         day_mapping = {
             "mon": "Monday",
+            "tue": "Tuesday",
             "tues": "Tuesday",
             "wed": "Wednesday",
             "thu": "Thursday",

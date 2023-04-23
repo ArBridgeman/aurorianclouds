@@ -30,7 +30,7 @@ class Base:
     def _set_config_menu(config: DictConfig):
         create_menu = config.menu.create_menu
         create_menu.final_menu.worksheet = "test-tmp-menu"
-        create_menu.fixed.basic = "test-menu-basic"
-        create_menu.fixed.file_prefix = "test-menu-"
-        create_menu.fixed.menu_number = 0
+        create_menu.fixed.workbook = "test-fixed_menus"
+        create_menu.fixed.basic_number = 0
+        create_menu.fixed.menu_number = 1
         create_menu.todoist.project_name = PROJECT

@@ -39,8 +39,10 @@ class Test(Base):
             [task.__dict__ for task in task_list]
         )
         task_df.due = task_df.due.astype(str)
-        return task_df[["content", "due", "labels", "priority"]].sort_values(
-            "content"
+        return (
+            task_df[["content", "due", "labels", "priority"]]
+            .sort_values("content")
+            .reset_index(drop=True)
         )
 
     def _run_menu(self):

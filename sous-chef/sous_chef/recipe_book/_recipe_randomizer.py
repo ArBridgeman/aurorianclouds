@@ -127,7 +127,11 @@ class RecipeRandomizer(RecipeBasic):
             lambda x: _replace_ingredient(x),
             filter_str,
         )
+        # try:
         return eval(filter_str)
+        # except Exception as error:
+        #     FILE_LOGGER.info(row["title"])
+        #     FILE_LOGGER.exception(error)
 
     def _construct_mask(
         self,

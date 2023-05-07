@@ -103,11 +103,17 @@ class RecipeRandomizer(RecipeBasic):
             # and ensure it exists... complicated as don't want to wrap
             # around replacement, bad, misspelled...
             # e.g. red cabbage vs cabbage
-            if (entity := match_obj.group(1)) is not None:
+            if (entity := match_obj.group(1)) is not None and isinstance(
+                row["ingredients"], str
+            ):
                 # add leading space
                 search_term = " " + re.sub("#", " ", entity.lower())
-                ingredients = re.sub("\n", " ", row["ingredients"].lower())
+                ingredients = re.sub(
+                    r"\n|\r|'", " ", row["ingredients"].lower()
+                )
                 return f"('{search_term}' in '{ingredients}')"
+            # return false
+            return "(1==0)"
 
         for entity_i in ["category", "tag"]:
             filter_str = re.sub(
@@ -121,7 +127,6 @@ class RecipeRandomizer(RecipeBasic):
             lambda x: _replace_ingredient(x),
             filter_str,
         )
-
         return eval(filter_str)
 
     def _construct_mask(

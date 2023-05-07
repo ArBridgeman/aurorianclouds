@@ -356,10 +356,15 @@ class MenuBasic(BaseWithExceptionHandling):
         self, row: pd.Series, entry_type: str, processed_uuid_list: List
     ):
         max_cook_active_minutes = None
-        if row.override_check == "N" and row.prep_datetime.weekday() < 5:
-            max_cook_active_minutes = float(
-                self.config.quality_check.workday.cook_active_minutes_max
-            )
+        if row.override_check == "N":
+            if row.prep_datetime.weekday() < 5:
+                max_cook_active_minutes = float(
+                    self.config.quality_check.workday.cook_active_minutes_max
+                )
+            elif row.prep_datetime.weekday() >= 5:
+                max_cook_active_minutes = float(
+                    self.config.quality_check.weekend.cook_active_minutes_max
+                )
 
         exclude_uuid_list = self.menu_history_uuid_list
         if processed_uuid_list:

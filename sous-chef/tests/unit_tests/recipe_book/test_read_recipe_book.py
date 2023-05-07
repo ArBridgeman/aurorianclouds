@@ -279,6 +279,37 @@ class TestRecipeBook:
         )
 
     @staticmethod
+    def test__construct_filter_handles_ingredient(
+        recipe_book, recipe_book_builder
+    ):
+        category = "side/veggies"
+        tag = "cuisine/italian"
+        ingredient = "red cabbage"
+        not_ingredient = "chocolate"
+        filter_str = f"i.{'#'.join(ingredient.split(' '))}"
+
+        ingredients = (
+            "100 g sweet corn\n0.5 red onion\n1 tbsp %s\n1 zucchini (sliced)"
+        )
+
+        recipe_book.category_tuple = tuple([category])
+        recipe_book.tag_tuple = tuple([tag])
+
+        recipe_base = recipe_book_builder.create_recipe(
+            categories=[category],
+            tags=[tag],
+            ingredients=ingredients % ingredient,
+        ).squeeze()
+        assert recipe_book._construct_filter(
+            row=recipe_base, filter_str=filter_str
+        )
+
+        recipe_base.ingredients = ingredients % not_ingredient
+        assert not recipe_book._construct_filter(
+            row=recipe_base, filter_str=filter_str
+        )
+
+    @staticmethod
     @pytest.mark.parametrize(
         "cell,expected_result",
         [

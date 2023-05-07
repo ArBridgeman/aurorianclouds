@@ -98,12 +98,30 @@ class RecipeRandomizer(RecipeBasic):
                     f"('{entity.lower()}' in {row[row_name_map[entity_name]]})"
                 )
 
+        def _replace_ingredient(match_obj: re.Match) -> str:
+            # TODO could do check against pantry to avoid mistakes
+            # and ensure it exists... complicated as don't want to wrap
+            # around replacement, bad, misspelled...
+            # e.g. red cabbage vs cabbage
+            if (entity := match_obj.group(1)) is not None:
+                # add leading space
+                search_term = " " + re.sub("#", " ", entity.lower())
+                ingredients = re.sub("\n", " ", row["ingredients"].lower())
+                return f"('{search_term}' in '{ingredients}')"
+
         for entity_i in ["category", "tag"]:
             filter_str = re.sub(
                 rf"{entity_i[0]}\.([\w\-/]+)",
                 lambda x: _replace_entity(entity_i, x),
                 filter_str,
             )
+        # ingredient check
+        filter_str = re.sub(
+            r"i\.([\w\-/#]+)",
+            lambda x: _replace_ingredient(x),
+            filter_str,
+        )
+
         return eval(filter_str)
 
     def _construct_mask(

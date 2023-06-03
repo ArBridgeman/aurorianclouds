@@ -115,6 +115,14 @@ class RecipeRandomizer(RecipeBasic):
             # return false
             return "(1==0)"
 
+        def _replace_time(match_obj: re.Match) -> str:
+            if (entity := match_obj.group(1)) is not None:
+                # TODO refactor to come from recipe
+                active_time = row["time_total"] - row["time_inactive"]
+                max_active_time = pd.to_timedelta(entity)
+                return f"('{active_time < max_active_time}' == 'True')"
+            return "(1==0)"
+
         for entity_i in ["category", "tag"]:
             filter_str = re.sub(
                 rf"{entity_i[0]}\.([\w\-/]+)",
@@ -127,6 +135,11 @@ class RecipeRandomizer(RecipeBasic):
             lambda x: _replace_ingredient(x),
             filter_str,
         )
+        # time check
+        filter_str = re.sub(
+            r"time\.([\w]+)", lambda x: _replace_time(x), filter_str
+        )
+
         # try:
         return eval(filter_str)
         # except Exception as error:

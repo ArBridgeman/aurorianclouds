@@ -108,6 +108,7 @@ class RecipeBasic(DataframeSearchable):
         self.dataframe["factor"] = 1
         self.dataframe["amount"] = None
         self.dataframe.replace("nan", pd.NA, inplace=True)
+        self.dataframe.time_inactive.replace(pd.NA, 0, inplace=True)
         self.dataframe = Recipe.validate(self.dataframe)
         num_rated = sum(~self.dataframe.rating.isnull())
         FILE_LOGGER.info(

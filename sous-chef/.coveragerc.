@@ -4,6 +4,7 @@ branch = True
 source =
      sous_chef
      sous_chef/abstract
+     sous_chef/api
      sous_chef/date
      sous_chef/formatter
      sous_chef/grocery_list

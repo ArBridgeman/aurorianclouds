@@ -19,73 +19,78 @@ LOGGER = get_logger(__name__)
 
 
 def run_grocery_list(config: DictConfig) -> pd.DataFrame:
-    if config.grocery_list.run_mode.only_clean_todoist_mode:
+
+    # unzip latest recipe versions
+    rtk_service = RtkService(config.rtk)
+    rtk_service.unzip()
+
+    gsheets_helper = GsheetsHelper(config.api.gsheets)
+    unit_formatter = UnitFormatter()
+    recipe_book = RecipeBook(config.recipe_book)
+    ingredient_formatter = _get_ingredient_formatter(
+        config, gsheets_helper, unit_formatter
+    )
+    ingredient_field = IngredientField(
+        config.formatter.get_ingredient_field,
+        ingredient_formatter=ingredient_formatter,
+        recipe_book=recipe_book,
+    )
+
+    due_date_formatter = DueDatetimeFormatter(config=config.date.due_date)
+
+    # get menu for grocery list
+    menu = Menu(
+        config=config.menu.create_menu,
+        due_date_formatter=due_date_formatter,
+        gsheets_helper=gsheets_helper,
+        ingredient_formatter=ingredient_formatter,
+        recipe_book=recipe_book,
+    )
+    (
+        menu_ingredient_list,
+        menu_recipe_list,
+    ) = menu.get_menu_for_grocery_list()
+
+    # get grocery list
+    grocery_list = GroceryList(
+        config.grocery_list,
+        due_date_formatter=due_date_formatter,
+        ingredient_field=ingredient_field,
+        unit_formatter=unit_formatter,
+    )
+    final_grocery_list = grocery_list.get_grocery_list_from_menu(
+        menu_ingredient_list, menu_recipe_list
+    )
+
+    # send grocery list to desired output
+    # TODO add functionality to choose which helper/function
+    if config.grocery_list.run_mode.with_todoist:
         todoist_helper = TodoistHelper(config.api.todoist)
-        LOGGER.info(
-            "Deleting previous tasks in project {}".format(
-                config.grocery_list.todoist.project_name
-            )
-        )
-        todoist_helper.delete_all_items_in_project(
+        grocery_list.upload_grocery_list_to_todoist(todoist_helper)
+        grocery_list.send_preparation_to_todoist(todoist_helper)
+    return final_grocery_list
+
+
+def clean_grocery_list(config):
+    todoist_helper = TodoistHelper(config.api.todoist)
+    LOGGER.info(
+        "Deleting previous tasks in project {}".format(
             config.grocery_list.todoist.project_name
         )
-    else:
-        # unzip latest recipe versions
-        rtk_service = RtkService(config.rtk)
-        rtk_service.unzip()
-
-        gsheets_helper = GsheetsHelper(config.api.gsheets)
-        unit_formatter = UnitFormatter()
-        recipe_book = RecipeBook(config.recipe_book)
-        ingredient_formatter = _get_ingredient_formatter(
-            config, gsheets_helper, unit_formatter
-        )
-        ingredient_field = IngredientField(
-            config.formatter.get_ingredient_field,
-            ingredient_formatter=ingredient_formatter,
-            recipe_book=recipe_book,
-        )
-
-        due_date_formatter = DueDatetimeFormatter(config=config.date.due_date)
-
-        # get menu for grocery list
-        menu = Menu(
-            config=config.menu.create_menu,
-            due_date_formatter=due_date_formatter,
-            gsheets_helper=gsheets_helper,
-            ingredient_formatter=ingredient_formatter,
-            recipe_book=recipe_book,
-        )
-        (
-            menu_ingredient_list,
-            menu_recipe_list,
-        ) = menu.get_menu_for_grocery_list()
-
-        # get grocery list
-        grocery_list = GroceryList(
-            config.grocery_list,
-            due_date_formatter=due_date_formatter,
-            ingredient_field=ingredient_field,
-            unit_formatter=unit_formatter,
-        )
-        final_grocery_list = grocery_list.get_grocery_list_from_menu(
-            menu_ingredient_list, menu_recipe_list
-        )
-
-        # send grocery list to desired output
-        # TODO add functionality to choose which helper/function
-        if config.grocery_list.run_mode.with_todoist:
-            todoist_helper = TodoistHelper(config.api.todoist)
-            grocery_list.upload_grocery_list_to_todoist(todoist_helper)
-            grocery_list.send_preparation_to_todoist(todoist_helper)
-        return final_grocery_list
+    )
+    todoist_helper.delete_all_items_in_project(
+        config.grocery_list.todoist.project_name
+    )
 
 
 @hydra.main(
     config_path="../../config", config_name="grocery_list", version_base=None
 )
 def main(config: DictConfig) -> None:
-    run_grocery_list(config=config)
+    if config.grocery_list.run_mode.only_clean_todoist_mode:
+        clean_grocery_list(config)
+    else:
+        run_grocery_list(config)
 
 
 def _get_ingredient_formatter(

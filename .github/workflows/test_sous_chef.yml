@@ -1,5 +1,8 @@
 name: unit_test
-on: [push]
+on:
+  push:
+    paths:
+      - sous-chef/**
 jobs:
   pytest:
     strategy:

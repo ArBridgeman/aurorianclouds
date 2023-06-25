@@ -13,9 +13,6 @@ from sous_chef.formatter.ingredient.format_ingredient import (
 )
 from sous_chef.formatter.ingredient.get_ingredient_field import IngredientField
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
-from sous_chef.menu.create_menu._for_grocery_list import (
-    MenuRecipe,
-)
 from sous_chef.recipe_book.recipe_util import Recipe
 from structlog import get_logger
 from termcolor import cprint

@@ -29,9 +29,10 @@ def config_recipe_book():
 
 class MockMealTime(ExtendedEnum):
     breakfast = {"hour": 8, "minute": 30}
-    lunch = {"hour": 11, "minute": 30}
+    lunch = {"hour": 12, "minute": 00}
     snack = {"hour": 15, "minute": 00}
-    dinner = {"hour": 18, "minute": 15}
+    dinner = {"hour": 16, "minute": 30}
+    dessert = {"hour": 19, "minute": 30}
 
 
 @dataclass
@@ -74,6 +75,7 @@ def config_due_date():
 @freeze_time(FROZEN_DATE)
 def frozen_due_datetime_formatter(config_due_date):
     config_due_date.anchor_day = FROZEN_DAY
+    config_due_date.week_offset = 1
     due_datetime_formatter = DueDatetimeFormatter(config=config_due_date)
     due_datetime_formatter.meal_time = MockMealTime
     return due_datetime_formatter

@@ -42,7 +42,7 @@ class MenuBuilder:
 
     @staticmethod
     def create_menu_row(
-        prep_day_before: int = 0,
+        prep_day: int = 0,
         meal_time: str = "dinner",
         item_type: str = "recipe",
         eat_factor: float = 1.0,
@@ -72,7 +72,7 @@ class MenuBuilder:
 
         menu = {
             "weekday": "work_day_2",
-            "prep_day_before": prep_day_before,
+            "prep_day": prep_day,
             "meal_time": meal_time,
             "eat_factor": eat_factor,
             "eat_unit": eat_unit,
@@ -80,6 +80,7 @@ class MenuBuilder:
             "defrost": defrost,
             "item": item,
             "type": item_type,
+            "selection": "either",
         }
         if not loaded_fixed_menu:
             return pd.DataFrame(menu, index=[0])
@@ -95,10 +96,10 @@ class MenuBuilder:
         menu["rating"] = rating
         menu["time_total"] = time_total
         menu["uuid"] = "1666465773100"
-        if prep_day_before != 0:
+        if prep_day != 0:
             menu["cook_datetime"] = menu["eat_datetime"]
             menu["prep_datetime"] = menu["eat_datetime"] - datetime.timedelta(
-                days=prep_day_before
+                days=prep_day
             )
         else:
             menu["cook_datetime"] = menu["eat_datetime"] - time_total
@@ -238,27 +239,35 @@ class TestMenu:
         )
 
     @staticmethod
-    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4])
+    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4, 5, 6])
     def test__check_menu_quality_ensure_workday_not_unrated_recipe(
         menu, menu_config, weekday
     ):
-        menu_config.quality_check.workday.recipe_unrated_allowed = False
+        day_type = "workday"
+        if weekday >= 5:
+            day_type = "weekend"
+
+        menu_config.quality_check[day_type].recipe_unrated_allowed = False
         # derived exception MenuQualityError
         with pytest.raises(Exception) as error:
             menu._check_menu_quality(
-                weekday=0, recipe=create_recipe(rating=np.nan)
+                weekday=weekday, recipe=create_recipe(rating=np.nan)
             )
         assert str(error.value) == (
             "[menu quality] recipe=dummy_title "
-            "error=(on workday) unrated recipe"
+            f"error=(on {day_type}) unrated recipe"
         )
 
     @staticmethod
-    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4])
+    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4, 5, 6])
     def test__check_menu_quality_ensure_workday_not_exceed_active_cook_time(
         menu, menu_config, weekday
     ):
-        menu_config.quality_check.workday.cook_active_minutes_max = 10
+        day_type = "workday"
+        if weekday >= 5:
+            day_type = "weekend"
+
+        menu_config.quality_check[day_type].cook_active_minutes_max = 10
         # derived exception MenuQualityError
         with pytest.raises(Exception) as error:
             menu._check_menu_quality(
@@ -267,7 +276,7 @@ class TestMenu:
             )
         assert str(error.value) == (
             "[menu quality] recipe=dummy_title "
-            "error=(on workday) cook_active_minutes=15.0 > 10.0"
+            f"error=(on {day_type}) cook_active_minutes=15.0 > 10.0"
         )
 
     @staticmethod
@@ -324,19 +333,19 @@ class TestMenu:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "cook_day,expected_week_day", [("weekend_1", "Saturday")]
+        "short_day,expected_week_day",
+        [("sat", "Saturday"), ("Mon", "Monday"), ("THU", "Thursday")],
     )
-    def test__get_cook_day_as_weekday(menu, cook_day, expected_week_day):
-        assert menu._get_cook_day_as_weekday(cook_day) == expected_week_day
+    def test__get_weekday_from_short(menu, short_day, expected_week_day):
+        assert menu._get_weekday_from_short(short_day) == expected_week_day
 
     @staticmethod
     def test__get_cook_day_as_weekday_unknown(menu):
         # derived exception MenuConfigError
         with pytest.raises(Exception) as error:
-            menu._get_cook_day_as_weekday("not-a-day")
+            menu._get_weekday_from_short("not-a-day")
         assert (
-            str(error.value)
-            == "[menu config error] not-a-day not defined in yaml"
+            str(error.value) == "[menu config error] not-a-day unknown weekday!"
         )
 
     @staticmethod

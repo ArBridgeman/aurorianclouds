@@ -7,12 +7,12 @@ import numpy as np
 import pandas as pd
 import pytest
 from hydra import compose, initialize
-from sous_chef.recipe_book.read_recipe_book import (
-    RecipeBook,
+from sous_chef.recipe_book._recipe_book import create_timedelta
+from sous_chef.recipe_book.read_recipe_book import RecipeBook
+from sous_chef.recipe_book.recipe_util import (
     RecipeLabelNotFoundError,
     RecipeTotalTimeUndefinedError,
     SelectRandomRecipeError,
-    create_timedelta,
 )
 from tests.util import assert_equal_dataframe, assert_equal_series
 
@@ -181,7 +181,9 @@ class TestRecipeBook:
             tags=recipe_book.tag_tuple,
             post_process_recipe=True,
         )
-        recipe_book.get_random_recipe_by_filter(filter_str=filter_str)
+        recipe_book.get_random_recipe_by_filter(
+            filter_str=filter_str, selection_type="either"
+        )
 
     @staticmethod
     def test__check_total_time_raises_error_when_nat(
@@ -277,6 +279,59 @@ class TestRecipeBook:
         )
 
     @staticmethod
+    def test__construct_filter_handles_ingredient(
+        recipe_book, recipe_book_builder
+    ):
+        category = "side/veggies"
+        tag = "cuisine/italian"
+        ingredient = "red cabbage"
+        not_ingredient = "chocolate"
+        filter_str = f"i.{'#'.join(ingredient.split(' '))}"
+
+        ingredients = (
+            "100 g sweet corn\n0.5 red onion\n1 tbsp %s\n1 zucchini (sliced)"
+        )
+
+        recipe_book.category_tuple = tuple([category])
+        recipe_book.tag_tuple = tuple([tag])
+
+        recipe_base = recipe_book_builder.create_recipe(
+            categories=[category],
+            tags=[tag],
+            ingredients=ingredients % ingredient,
+        ).squeeze()
+        assert recipe_book._construct_filter(
+            row=recipe_base, filter_str=filter_str
+        )
+
+        recipe_base.ingredients = ingredients % not_ingredient
+        assert not recipe_book._construct_filter(
+            row=recipe_base, filter_str=filter_str
+        )
+
+    @staticmethod
+    def test__construct_filter_handles_time(recipe_book, recipe_book_builder):
+        category = "entree/protein"
+        tag = "cuisine/italian"
+        filter_str = "time.30min"
+        not_filter_str = "time.5min"
+
+        recipe_book.category_tuple = tuple([category])
+        recipe_book.tag_tuple = tuple([tag])
+
+        recipe_base = recipe_book_builder.create_recipe(
+            categories=[category],
+            tags=[tag],
+        ).squeeze()
+        assert recipe_book._construct_filter(
+            row=recipe_base, filter_str=filter_str
+        )
+
+        assert not recipe_book._construct_filter(
+            row=recipe_base, filter_str=not_filter_str
+        )
+
+    @staticmethod
     @pytest.mark.parametrize(
         "cell,expected_result",
         [
@@ -345,7 +400,7 @@ class TestRecipeBook:
     ):
         search_term = "search_term"
         with pytest.raises(RecipeLabelNotFoundError) as error:
-            getattr(recipe_book, method)(search_term)
+            getattr(recipe_book, method)(search_term, "either")
         assert str(error.value) == (
             "[recipe label not found] "
             f"field={item_type} "
@@ -390,7 +445,7 @@ class TestRecipeBook:
         recipe_book.category_tuple = tuple([search_term])
         recipe_book.tag_tuple = tuple([search_term])
 
-        result = getattr(recipe_book, method)(search_term)
+        result = getattr(recipe_book, method)(search_term, "either")
         assert_equal_series(result, recipe.squeeze())
         assert log.events == [
             {
@@ -458,7 +513,9 @@ class TestRecipeBook:
         recipe_book.tag_tuple = tuple([search_term])
 
         result = getattr(recipe_book, method)(
-            search_term, exclude_uuid_list=[recipe_uuid]
+            search_term,
+            exclude_uuid_list=[recipe_uuid],
+            selection_type="either",
         )
         assert_equal_series(result, recipe.squeeze())
 
@@ -510,7 +567,9 @@ class TestRecipeBook:
         recipe_book.tag_tuple = tuple([search_term])
 
         result = getattr(recipe_book, method)(
-            search_term, max_cook_active_minutes=max_cook_time
+            search_term,
+            max_cook_active_minutes=max_cook_time,
+            selection_type="either",
         )
         assert_equal_series(
             result,
@@ -575,6 +634,7 @@ class TestRecipeBook:
         result = getattr(recipe_book, method)(
             f"t.{search_term}" if item_type == "filter" else search_term,
             min_rating=min_rating,
+            selection_type="either",
         )
         assert_equal_series(
             result,
@@ -598,7 +658,9 @@ class TestRecipeBook:
         recipe_book.tag_tuple = tuple([search_term])
 
         with pytest.raises(SelectRandomRecipeError):
-            recipe_book.get_random_recipe_by_tag(search_term)
+            recipe_book.get_random_recipe_by_tag(
+                search_term, selection_type="either"
+            )
 
     @staticmethod
     @pytest.mark.parametrize(

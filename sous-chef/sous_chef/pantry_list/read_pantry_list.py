@@ -157,9 +157,16 @@ class PantryList(DataframeSearchable):
         with_replacement = pd.merge(
             self.replacement_pantry_list,
             with_replacement,
-            how="inner",
+            how="outer",
+            indicator=True,
             on=["replacement_ingredient", "true_ingredient"],
         )
+        FILE_LOGGER.warning(
+            with_replacement[with_replacement["_merge"] == "right_only"]
+        )
+        with_replacement = with_replacement[
+            with_replacement["_merge"] == "both"
+        ]
         self._check_join(
             "with_replacement", shape_before, with_replacement.shape[0]
         )
@@ -183,17 +190,22 @@ class PantryList(DataframeSearchable):
         misspelled_list = pd.merge(
             self.basic_pantry_list,
             misspelled_list,
-            how="inner",
+            how="outer",
+            indicator=True,
             left_on=["ingredient"],
             right_on=["true_ingredient"],
         )
+        FILE_LOGGER.warning(
+            misspelled_list[misspelled_list["_merge"] == "right_only"]
+        )
+        misspelled_list = misspelled_list[misspelled_list["_merge"] == "both"]
         self._check_join(
             "misspelled_list", shape_before, misspelled_list.shape[0]
         )
 
         # swap 'ingredient' to 'misspelled_ingredient' for search
         misspelled_list["ingredient"] = misspelled_list["misspelled_ingredient"]
-        return misspelled_list.drop(columns=["misspelled_ingredient"])
+        return misspelled_list.drop(columns=["misspelled_ingredient", "_merge"])
 
     def _retrieve_replacement_pantry_list(self) -> DataFrame:
         dataframe = self.gsheets_helper.get_worksheet(

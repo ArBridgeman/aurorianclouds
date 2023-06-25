@@ -1,5 +1,5 @@
 import pandas as pd
-from sous_chef.recipe_book.read_recipe_book import Recipe
+from sous_chef.recipe_book.recipe_util import Recipe
 
 
 def create_recipe(

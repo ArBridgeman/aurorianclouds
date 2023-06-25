@@ -29,14 +29,14 @@ menu:
 
 grocery_list:
   shopping:
-    primary_day: Monday
-    secondary_day: Thursday
-    secondary_group: [fish, fresh herbs, fruits, meats, vegetables, Lidl]
+    primary_day: Friday
+    secondary_day: Monday
+    secondary_group: [fresh herbs, lettuce]
   preparation:
     project_name: Menu
     task_priority: 3
   bean_prep:
-    prep_day_before: 1
+    prep_day: 1
     prep_meal: lunch
   todoist:
     project_name: Groceries
@@ -73,6 +73,7 @@ grocery_list:
     grains: Bulk
     juices: Juices and beverages
     legumes: Bulk
+    lettuce: Farmland pride
     meats: Dead animal society
     nuts and seeds: Bulk
     pasta: GF park
@@ -80,4 +81,5 @@ grocery_list:
     sauces: Sauces cans and oils
     spices and herbs: Spices and herbs
     vegetables: Farmland pride
-  store_to_specialty_list: [unknown, America, Food Oase, Kaufland, Lillehus]
+  store_to_specialty_list: [unknown, America, Food Oase,
+                            Kaufland, Lillehus, Waldstadt]

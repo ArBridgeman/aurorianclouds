@@ -35,6 +35,9 @@ def get_final_grocery_list() -> pd.DataFrame:
         lambda cell: cell[1:-1].split(", ")
     )
     final_grocery_list.for_day = pd.to_datetime(final_grocery_list.for_day)
+    final_grocery_list.shopping_date = pd.to_datetime(
+        final_grocery_list.shopping_date
+    )
     return final_grocery_list
 
 
@@ -60,7 +63,7 @@ def get_tasks_menu() -> pd.DataFrame:
     tasks_menu.labels = tasks_menu.labels.apply(
         lambda cell: cell[1:-1].split(", ")
     )
-    return tasks_menu
+    return tasks_menu.sort_values("content").reset_index(drop=True)
 
 
 def get_tasks_grocery_list() -> pd.DataFrame:
@@ -68,4 +71,4 @@ def get_tasks_grocery_list() -> pd.DataFrame:
     tasks_menu.labels = tasks_menu.labels.apply(
         lambda cell: cell[1:-1].split(", ")
     )
-    return tasks_menu
+    return tasks_menu.sort_values("content").reset_index(drop=True)

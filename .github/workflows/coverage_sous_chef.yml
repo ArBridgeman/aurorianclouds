@@ -1,5 +1,8 @@
 name: coverage
-on: [pull_request]
+on:
+  pull_request:
+    paths:
+      - sous-chef/**
 jobs:
   coverage:
     strategy:

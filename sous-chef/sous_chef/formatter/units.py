@@ -22,6 +22,7 @@ unit_registry.define("sheet = 1")
 unit_registry.define("package = 1 =  pkg")
 unit_registry.define("packet = 1 = pkt")
 unit_registry.define("slice = 1")
+unit_registry.define("square = 1")
 unit_registry.define("strip = 1")
 
 custom_list = [
@@ -38,6 +39,7 @@ custom_list = [
     unit_registry.pinch,
     unit_registry.sheet,
     unit_registry.slice,
+    unit_registry.square,
     unit_registry.strip,
 ]
 

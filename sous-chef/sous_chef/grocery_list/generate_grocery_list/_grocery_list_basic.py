@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
-from itertools import chain
 from typing import List, Tuple
 
 import pandas as pd
@@ -12,14 +11,11 @@ from sous_chef.formatter.format_unit import UnitFormatter, unit_registry
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.formatter.ingredient.get_ingredient_field import IngredientField
 from sous_chef.menu.create_menu._for_grocery_list import (
-    MenuIngredient,
     MenuRecipe,
 )
 from sous_chef.recipe_book.recipe_util import Recipe
 from structlog import get_logger
 from termcolor import cprint
-
-from utilities.api.todoist_api import TodoistHelper
 
 # TODO method to mark ingredients that can only be bought the day before
 
@@ -39,7 +35,7 @@ class GroceryListIncompleteError(Exception):
 
 
 @dataclass
-class GroceryList:
+class GroceryListBasic:
     config: DictConfig
     due_date_formatter: DueDatetimeFormatter
     unit_formatter: UnitFormatter
@@ -79,90 +75,6 @@ class GroceryList:
 
         calendar_week = self.due_date_formatter.get_calendar_week()
         self.app_week_label = f"app-week-{calendar_week}"
-
-    def get_grocery_list_from_menu(
-        self,
-        menu_ingredient_list: List[MenuIngredient],
-        menu_recipe_list: List[MenuRecipe],
-    ) -> pd.DataFrame:
-        self._add_bulk_manual_ingredient_to_grocery_list(menu_ingredient_list)
-        self._add_menu_recipe_to_queue(menu_recipe_list)
-        self._process_recipe_queue()
-        self._aggregate_grocery_list()
-        return self.grocery_list
-
-    def upload_grocery_list_to_todoist(self, todoist_helper: TodoistHelper):
-        if self.has_errors:
-            raise GroceryListIncompleteError(
-                "will not send to ToDoist until fixed"
-            )
-
-        # TODO what should be in todoist (e.g. dry mode & messages?)
-        project_name = self.config.todoist.project_name
-        if self.config.todoist.remove_existing_task:
-            todoist_helper.delete_all_items_in_project(
-                project_name, only_with_label=self.app_week_label
-            )
-
-        for aisle_group, group in self.grocery_list.groupby(
-            "aisle_group", as_index=False
-        ):
-            section_name = aisle_group
-            if aisle_group in self.config.store_to_specialty_list:
-                section_name = "Specialty"
-            if aisle_group in self.config.todoist.skip_group:
-                FILE_LOGGER.warning(
-                    "[skip group]",
-                    action="do not add to todoist",
-                    section=section_name,
-                    aisle_group=aisle_group,
-                    ingredient_list=group["item"].values,
-                )
-                continue
-
-            project_id = todoist_helper.get_project_id(project_name)
-            section_id = todoist_helper.get_section_id(
-                project_id=project_id, section_name=section_name
-            )
-
-            # TODO CODE-197 add barcode (and later item name in description)
-            for _, entry in group.iterrows():
-                todoist_helper.add_task_to_project(
-                    task=self._format_ingredient_str(entry),
-                    due_date=entry["shopping_date"],
-                    label_list=entry["from_recipe"]
-                    + entry["for_day_str"]
-                    + [self.app_week_label],
-                    description=str(entry["barcode"]),
-                    project=project_name,
-                    project_id=project_id,
-                    section=section_name,
-                    section_id=section_id,
-                    priority=2
-                    if entry["shopping_date"] != self.primary_shopping_date
-                    else 1,
-                )
-
-    def send_preparation_to_todoist(self, todoist_helper: TodoistHelper):
-        # TODO separate service? need freezer check for defrosts
-        project_name = self.config.preparation.project_name
-        if self.config.todoist.remove_existing_prep_task:
-            todoist_helper.delete_all_items_in_project(
-                project_name, only_with_label=self.app_week_label
-            )
-
-        if self.queue_preparation is not None:
-            for _, row in self.queue_preparation.iterrows():
-                todoist_helper.add_task_to_project(
-                    task=row.task,
-                    project=project_name,
-                    label_list=list(
-                        chain.from_iterable([row.from_recipe, row.for_day_str])
-                    )
-                    + ["prep", self.app_week_label],
-                    due_date=row.due_date,
-                    priority=self.config.preparation.task_priority,
-                )
 
     def _add_to_grocery_list_raw(
         self,
@@ -213,36 +125,6 @@ class GroceryList:
             [self.grocery_list_raw, new_entry], ignore_index=True
         )
 
-    def _add_bulk_manual_ingredient_to_grocery_list(
-        self, manual_ingredient_list: List[MenuIngredient]
-    ):
-        def access_ingredient(x: MenuIngredient):
-            return x.ingredient
-
-        [
-            self._add_to_grocery_list_raw(
-                quantity=x.quantity,
-                unit=x.unit,
-                pint_unit=x.pint_unit,
-                item=x.item,
-                is_staple=x.is_staple,
-                is_optional=x.is_optional,
-                food_group=x.group,
-                item_plural=x.item_plural,
-                store=x.store,
-                barcode=x.barcode,
-                from_recipe=manual_ingredient.from_recipe,
-                for_day=manual_ingredient.for_day,
-            )
-            for manual_ingredient in manual_ingredient_list
-            if (x := access_ingredient(manual_ingredient))
-        ]
-
-    def _add_menu_recipe_to_queue(self, menu_recipe_list: list[MenuRecipe]):
-        if self.queue_menu_recipe is None:
-            self.queue_menu_recipe = []
-        self.queue_menu_recipe.extend(menu_recipe_list)
-
     def _add_preparation_task_to_queue(
         self,
         task: str,
@@ -264,6 +146,11 @@ class GroceryList:
             self.queue_preparation = pd.concat(
                 [self.queue_preparation, preparation_task]
             )
+
+    def _add_menu_recipe_to_queue(self, menu_recipe_list: list[MenuRecipe]):
+        if self.queue_menu_recipe is None:
+            self.queue_menu_recipe = []
+        self.queue_menu_recipe.extend(menu_recipe_list)
 
     def _add_referenced_recipe_to_queue(
         self, menu_recipe: MenuRecipe, recipe_list: List[Recipe]
@@ -341,64 +228,6 @@ class GroceryList:
                                 ],
                             )
 
-    def _aggregate_grocery_list(self):
-        # do not drop nas, as some items are dimensionless (None)
-        if self.grocery_list is None:
-            self.grocery_list = pd.DataFrame()
-
-        # TODO add for_day option
-
-        # TODO fix pantry list to not do lidl for meats (real group instead)
-        grouped = self.grocery_list_raw.groupby(
-            ["item", "dimension", "shopping_date"], dropna=False
-        )
-        for name, group in grouped:
-            # if more than 1 unit, use largest
-            if group.pint_unit.nunique() > 1:
-                group = self._get_group_in_same_pint_unit(group)
-            agg_group = self._aggregate_group_to_grocery_list(group)
-            self.grocery_list = pd.concat(
-                [self.grocery_list, agg_group], ignore_index=True
-            )
-
-        # get aisle/store
-        self.grocery_list["aisle_group"] = self.grocery_list.food_group.apply(
-            self._transform_food_to_aisle_group
-        )
-
-        # replace aisle group to store name when not default store
-        self.grocery_list["aisle_group"] = self.grocery_list.apply(
-            self._override_aisle_group_when_not_default_store, axis=1
-        )
-
-        # reset index and set in class
-        self.grocery_list = self.grocery_list.reset_index(drop=True)
-
-    def _aggregate_group_to_grocery_list(
-        self, group: pd.DataFrame
-    ) -> pd.DataFrame:
-        groupby_columns = ["unit", "pint_unit", "item", "is_optional"]
-        # set dropna to false, as item may not have unit
-        agg = (
-            group.groupby(groupby_columns, as_index=False, dropna=False)
-            .agg(
-                quantity=("quantity", "sum"),
-                is_staple=("is_staple", "first"),
-                food_group=("food_group", "first"),
-                item_plural=("item_plural", "first"),
-                store=("store", "first"),
-                barcode=("barcode", "first"),
-                from_recipe=("from_recipe", lambda x: sorted(list(set(x)))),
-                for_day=("for_day", "min"),
-                for_day_str=("for_day_str", lambda x: sorted(list(set(x)))),
-                shopping_date=("shopping_date", "first"),
-            )
-            .astype({"is_staple": bool, "barcode": str})
-        )
-        if self.config.ingredient_replacement.can_to_dried_bean.is_active:
-            agg = agg.apply(self._override_can_to_dried_bean, axis=1)
-        return agg
-
     def _format_bean_prep_task_str(
         self, row: pd.Series, freeze_quantity: int
     ) -> str:
@@ -436,18 +265,6 @@ class GroceryList:
             ingredient_str += " (optional)"
 
         return ingredient_str
-
-    def _get_group_in_same_pint_unit(self, group: pd.DataFrame) -> pd.DataFrame:
-        largest_unit = max(group.pint_unit.unique())
-        group["quantity"], group["unit"], group["pint_unit"] = zip(
-            *group.apply(
-                lambda row: self.unit_formatter.convert_to_desired_unit(
-                    row.quantity, row.pint_unit, largest_unit
-                ),
-                axis=1,
-            )
-        )
-        return group
 
     def _get_shopping_day(self, for_day: datetime, food_group: str) -> date:
         if (
@@ -496,17 +313,6 @@ class GroceryList:
                 return row.store
         return row.aisle_group
 
-    def _process_recipe_queue(self):
-        while len(self.queue_menu_recipe) > 0:
-            current_recipe = self.queue_menu_recipe[0]
-            FILE_LOGGER.info(
-                "[grocery list]",
-                action="processing",
-                recipe=current_recipe.recipe.title,
-            )
-            self._parse_ingredient_from_recipe(current_recipe)
-            self.queue_menu_recipe = self.queue_menu_recipe[1:]
-
     def _parse_ingredient_from_recipe(self, menu_recipe: MenuRecipe):
         (
             recipe_list,
@@ -542,10 +348,3 @@ class GroceryList:
                 from_recipe=menu_recipe.from_recipe,
                 for_day=menu_recipe.for_day,
             )
-
-    def _transform_food_to_aisle_group(self, food_group: str):
-        aisle_map = self.config.food_group_to_aisle_map
-        # food_group may be none, particularly if pantry item not found
-        if food_group and food_group.casefold() in aisle_map:
-            return aisle_map[food_group.casefold()]
-        return "Unknown"

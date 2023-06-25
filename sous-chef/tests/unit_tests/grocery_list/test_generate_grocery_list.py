@@ -9,7 +9,7 @@ from pint import Unit
 from pytz import timezone
 from sous_chef.formatter.format_unit import UnitFormatter, unit_registry
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
-from sous_chef.grocery_list.generate_grocery_list import (
+from sous_chef.grocery_list.generate_grocery_list._grocery_list_basic import (
     GroceryListIncompleteError,
 )
 from sous_chef.menu.create_menu._for_grocery_list import MenuRecipe

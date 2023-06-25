@@ -4,12 +4,15 @@ from typing import List, Tuple
 
 import pandas as pd
 from omegaconf import DictConfig
-from pint import Unit
 from sous_chef.date.get_due_date import DueDatetimeFormatter, MealTime, Weekday
 from sous_chef.formatter.format_str import convert_number_to_str
 from sous_chef.formatter.format_unit import UnitFormatter, unit_registry
-from sous_chef.formatter.ingredient.format_ingredient import Ingredient
+from sous_chef.formatter.ingredient.format_ingredient import (
+    Ingredient,
+    IngredientFormatter,
+)
 from sous_chef.formatter.ingredient.get_ingredient_field import IngredientField
+from sous_chef.recipe_book.read_recipe_book import RecipeBook
 from sous_chef.menu.create_menu._for_grocery_list import (
     MenuRecipe,
 )
@@ -38,10 +41,11 @@ class GroceryListIncompleteError(Exception):
 class GroceryListBasic:
     config: DictConfig
     due_date_formatter: DueDatetimeFormatter
+    ingredient_formatter: IngredientFormatter
+    recipe_book: RecipeBook
     unit_formatter: UnitFormatter
     ingredient_field: IngredientField
     # TODO do properly? pass everything inside methods? only set final list?
-    queue_menu_recipe: List[MenuRecipe] = None
     queue_preparation: pd.DataFrame = None
     grocery_list_raw: pd.DataFrame = None
     grocery_list: pd.DataFrame = None
@@ -76,46 +80,109 @@ class GroceryListBasic:
         calendar_week = self.due_date_formatter.get_calendar_week()
         self.app_week_label = f"app-week-{calendar_week}"
 
+    def add_manual_ingredient(
+        self, manual_ingredient: pd.Series, for_day: date
+    ):
+        ingredient = self.ingredient_formatter.format_manual_ingredient(
+            quantity=float(manual_ingredient["eat_factor"]),
+            unit=manual_ingredient["eat_unit"],
+            item=manual_ingredient["item"],
+        )
+
+        self._add_to_grocery_list_raw(
+            quantity=ingredient.quantity,
+            ingredient=ingredient,
+            from_recipe="manual",
+            for_day=for_day,
+        )
+
+    def add_recipe_ingredients(self, menu_recipe: pd.Series, for_day: date):
+        FILE_LOGGER.info(
+            "[grocery list]", action="processing", recipe=menu_recipe["item"]
+        )
+
+        # TODO catch if recipe not found and add to errors
+        recipe = self.recipe_book.get_recipe_by_title(menu_recipe["item"])
+
+        first_recipe = menu_recipe.copy()
+        first_recipe["recipe"] = recipe
+        first_recipe["from_recipe"] = recipe.title
+        first_recipe["for_day"] = for_day
+
+        recipe_queue = [first_recipe]
+        response = {
+            "recipe": recipe.title,
+            "has_error": False,
+            "ref_recipes": [],
+            "errors": {},
+        }
+
+        # TODO prevent infinite loop
+        while len(recipe_queue) > 0:
+            current_recipe = recipe_queue.pop(0)
+            (
+                ref_recipe_list,
+                ingredient_list,
+                error_list,
+            ) = self.ingredient_field.parse_ingredient_field(
+                ingredient_field=current_recipe.recipe.ingredients
+            )
+
+            if current_recipe.recipe.title != first_recipe.recipe.title:
+                response["ref_recipes"].append(current_recipe.recipe.title)
+
+            # TODO need to change if API; can't respond via CLI
+            self._add_referenced_recipe_to_queue(
+                menu_recipe=current_recipe,
+                recipe_list=ref_recipe_list,
+                queue=recipe_queue,
+            )
+            self._process_ingredient_list(
+                menu_recipe=current_recipe, ingredient_list=ingredient_list
+            )
+
+            # TODO somehow get back to a Google Drive doc
+            if error_list:
+                response["has_error"] = True
+                response["errors"][current_recipe["item"]] = error_list
+                self.has_errors = True
+                cprint("\t" + "\n\t".join(error_list), "green")
+
+        return response
+
     def _add_to_grocery_list_raw(
         self,
         quantity: float,
-        unit: str,
-        pint_unit: Unit,
-        item: str,
-        is_staple: bool,
-        is_optional: bool,
-        food_group: str,
-        item_plural: str,
-        store: str,
-        barcode: str,
+        ingredient: Ingredient,
         from_recipe: str,
-        for_day: datetime,
+        for_day: date,
     ):
         if self.grocery_list_raw is None:
             self.grocery_list_raw = pd.DataFrame()
 
+        # TODO if series in future, can simplify
         new_entry = pd.DataFrame(
             {
                 "quantity": quantity,
                 # TODO do we need unit?
-                "unit": unit,
-                "pint_unit": pint_unit,
+                "unit": ingredient.unit,
+                "pint_unit": ingredient.pint_unit,
                 # TODO already add to Ingredient when first created?
-                "dimension": str(pint_unit.dimensionality)
-                if pint_unit
+                "dimension": str(ingredient.pint_unit.dimensionality)
+                if ingredient.pint_unit
                 else None,
-                "item": item,
-                "is_staple": is_staple,
-                "is_optional": is_optional,
-                "food_group": food_group,
-                "item_plural": item_plural,
-                "store": store,
-                "barcode": barcode,
+                "item": ingredient.item,
+                "is_staple": ingredient.is_staple,
+                "is_optional": ingredient.is_optional,
+                "food_group": ingredient.group,
+                "item_plural": ingredient.item_plural,
+                "store": ingredient.store,
+                "barcode": ingredient.barcode,
                 "from_recipe": from_recipe,
                 "for_day": for_day,
                 "for_day_str": for_day.strftime("%a"),
                 "shopping_date": self._get_shopping_day(
-                    for_day=for_day, food_group=food_group
+                    for_day=for_day, food_group=ingredient.group
                 ),
             },
             index=[0],
@@ -147,13 +214,11 @@ class GroceryListBasic:
                 [self.queue_preparation, preparation_task]
             )
 
-    def _add_menu_recipe_to_queue(self, menu_recipe_list: list[MenuRecipe]):
-        if self.queue_menu_recipe is None:
-            self.queue_menu_recipe = []
-        self.queue_menu_recipe.extend(menu_recipe_list)
-
     def _add_referenced_recipe_to_queue(
-        self, menu_recipe: MenuRecipe, recipe_list: List[Recipe]
+        self,
+        menu_recipe: pd.Series,
+        recipe_list: List[Recipe],
+        queue: List[pd.Series],
     ):
         def _check_yes_no(text: str) -> str:
             response = None
@@ -165,17 +230,24 @@ class GroceryListBasic:
             day = None
             while day not in Weekday.name_list("capitalize"):
                 day = input("\nWeekday: ").capitalize()
+            due_date = self.due_date_formatter.get_date_relative_to_anchor(
+                weekday=day
+            ).date()
 
             meal_time = None
             meal_times = MealTime.name_list("lower")
             while meal_time not in meal_times:
                 meal_time = input(f"\nMealtime {meal_times}: ").lower()
-            meal_time = MealTime[meal_time].value
-            return self.due_date_formatter.get_due_datetime_with_time(
-                weekday=day, hour=meal_time["hour"], minute=meal_time["minute"]
-            )
 
-        def _give_referenced_recipe_details():
+            days_back = 0
+            if due_date > menu_recipe.for_day:
+                days_back = 7
+
+            return self.due_date_formatter.set_date_with_meal_time(
+                due_date=due_date, meal_time=meal_time
+            ) - timedelta(days=days_back)
+
+        def _give_referenced_recipe_details(recipe: Recipe):
             total_factor = menu_recipe.eat_factor + menu_recipe.freeze_factor
             print("\n#### REFERENCED RECIPE CHECK ####")
             print(f"- from recipe: {menu_recipe.recipe.title}")
@@ -185,46 +257,41 @@ class GroceryListBasic:
             print(f"-- amount needed: {recipe.amount}")
             print(f"-- total time: {recipe.time_total}")
 
-        for recipe in recipe_list:
-            from_recipe = f"{recipe.title}_{menu_recipe.recipe.title}"
-            menu_sub_recipe = MenuRecipe(
-                from_recipe=from_recipe,
-                for_day=menu_recipe.for_day,
-                eat_factor=menu_recipe.eat_factor * recipe.factor,
-                freeze_factor=menu_recipe.freeze_factor * recipe.factor,
-                recipe=recipe,
-            )
+        for ref_recipe in recipe_list:
 
             # TODO make more robust to other methods
             if (
                 self.config.run_mode.with_todoist
                 and self.config.run_mode.check_referenced_recipe
             ):
-                _give_referenced_recipe_details()
+                _give_referenced_recipe_details(recipe=ref_recipe)
                 # TODO would be ideal if could guess to
-                #  make ahead like beans; should just as if we need to make
-                if _check_yes_no(f"Need to make '{recipe.title}'?") == "Y":
-                    self._add_menu_recipe_to_queue([menu_sub_recipe])
+                #  make ahead like beans; should just add if we need to make
+                if _check_yes_no(f"Need to make '{ref_recipe.title}'?") == "Y":
+                    ref_menu_recipe = menu_recipe.copy()
+                    ref_menu_recipe["from_recipe"] += f"{ref_recipe.title}"
+                    ref_menu_recipe["eat_factor"] *= ref_recipe.factor
+                    ref_menu_recipe["freeze_factor"] *= ref_recipe.factor
+                    ref_menu_recipe["recipe"] = ref_recipe
+                    queue.append(ref_menu_recipe)
 
                     if (
-                        recipe.time_total is None
-                        or recipe.time_total > timedelta(minutes=15)
+                        ref_recipe.time_total is None
+                        or ref_recipe.time_total > timedelta(minutes=20)
                     ):
+                        # TODO simplify to day before at dessert or override?
                         if (
                             _check_yes_no(
-                                f"Separately schedule '{recipe.title}'?"
+                                f"Separately schedule '{ref_recipe.title}'?"
                             )
                             == "Y"
                         ):
-                            schedule_datetime = _get_schedule_day_hour_minute()
-                            if schedule_datetime > menu_recipe.for_day:
-                                schedule_datetime -= timedelta(days=7)
                             self._add_preparation_task_to_queue(
-                                f"[PREP] {recipe.amount}",
-                                due_date=schedule_datetime,
-                                from_recipe=[from_recipe],
+                                f"[PREP] {ref_recipe.amount}",
+                                due_date=_get_schedule_day_hour_minute(),
+                                from_recipe=[ref_menu_recipe.from_recipe],
                                 for_day_str=[
-                                    menu_sub_recipe.for_day.strftime("%a")
+                                    menu_recipe.for_day.strftime("%a")
                                 ],
                             )
 
@@ -266,10 +333,10 @@ class GroceryListBasic:
 
         return ingredient_str
 
-    def _get_shopping_day(self, for_day: datetime, food_group: str) -> date:
+    def _get_shopping_day(self, for_day: date, food_group: str) -> date:
         if (
             self.secondary_shopping_date
-            and (for_day.date() >= self.secondary_shopping_date)
+            and (for_day >= self.secondary_shopping_date)
             and (food_group.casefold() in self.second_shopping_day_group)
         ):
             return self.secondary_shopping_date
@@ -296,7 +363,7 @@ class GroceryListBasic:
             task=self._format_bean_prep_task_str(
                 row, config_bean.number_can_to_freeze
             ),
-            due_date=self.due_date_formatter.replace_time_with_meal_time(
+            due_date=self.due_date_formatter.set_date_with_meal_time(
                 due_date=row.for_day
                 - timedelta(days=config_bean_prep.prep_day),
                 meal_time=config_bean_prep.prep_meal,
@@ -313,38 +380,14 @@ class GroceryListBasic:
                 return row.store
         return row.aisle_group
 
-    def _parse_ingredient_from_recipe(self, menu_recipe: MenuRecipe):
-        (
-            recipe_list,
-            ingredient_list,
-            error_list,
-        ) = self.ingredient_field.parse_ingredient_field(
-            ingredient_field=menu_recipe.recipe.ingredients
-        )
-        self._add_referenced_recipe_to_queue(menu_recipe, recipe_list)
-        self._process_ingredient_list(menu_recipe, ingredient_list)
-        # TO DO somehow get back to a google drive doc
-        if error_list:
-            self.has_errors = True
-            cprint("\t" + "\n\t".join(error_list), "green")
-
     def _process_ingredient_list(
-        self, menu_recipe: MenuRecipe, ingredient_list: List[Ingredient]
+        self, menu_recipe: pd.Series, ingredient_list: List[Ingredient]
     ):
-        # TODO if future pandas, then wouldn't need this function at all
         for ingredient in ingredient_list:
+            recipe_factor = menu_recipe.eat_factor + menu_recipe.freeze_factor
             self._add_to_grocery_list_raw(
-                quantity=ingredient.quantity
-                * (menu_recipe.eat_factor + menu_recipe.freeze_factor),
-                unit=ingredient.unit,
-                pint_unit=ingredient.pint_unit,
-                item=ingredient.item,
-                is_staple=ingredient.is_staple,
-                is_optional=ingredient.is_optional,
-                food_group=ingredient.group,
-                item_plural=ingredient.item_plural,
-                store=ingredient.store,
-                barcode=ingredient.barcode,
+                quantity=ingredient.quantity * recipe_factor,
+                ingredient=ingredient,
                 from_recipe=menu_recipe.from_recipe,
                 for_day=menu_recipe.for_day,
             )

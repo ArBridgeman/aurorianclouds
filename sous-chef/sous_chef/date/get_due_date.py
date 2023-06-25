@@ -83,6 +83,15 @@ class DueDatetimeFormatter:
         hour, minute = self._get_meal_time_hour_minute(meal_time)
         return self._set_specified_time(due_date, hour, minute)
 
+    def set_date_with_meal_time(
+        self, due_date: datetime.date, meal_time: str
+    ) -> datetime.datetime:
+        hour, minute = self._get_meal_time_hour_minute(meal_time)
+        time = datetime.time(hour=hour, minute=minute)
+        return datetime.datetime.combine(
+            due_date, time=time, tzinfo=timezone("UTC")
+        )
+
     def _get_anchor_date_at_midnight(self) -> datetime.datetime:
         weekday_index = get_weekday_index(self.anchor_day)
         today = datetime.date.today()

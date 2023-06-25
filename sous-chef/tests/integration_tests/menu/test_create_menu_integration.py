@@ -108,31 +108,6 @@ class TestMenu:
         }
 
     @staticmethod
-    def test_get_menu_for_grocery_list(menu_with_recipe_book):
-        menu_with_recipe_book.get_menu_for_grocery_list()
-
-    @staticmethod
-    def test_get_menu_for_grocery_list_fails_for_record_exception(
-        menu, mock_recipe_book
-    ):
-        menu.tuple_log_exception = (RecipeNotFoundError,)
-        mock_recipe_book.get_recipe_by_title.side_effect = RecipeNotFoundError(
-            recipe_title="dummy", search_results="dummy"
-        )
-
-        # derived exception MenuIncompleteError
-        with pytest.raises(Exception) as error:
-            menu.get_menu_for_grocery_list()
-
-        assert (
-            str(error.value)
-            == "[menu had errors] will not send to grocery list until fixed"
-        )
-        assert set(menu.record_exception) == {
-            "[recipe not found] recipe=dummy search_results=[dummy]"
-        }
-
-    @staticmethod
     @pytest.mark.todoist
     def test_upload_menu_to_todoist(menu, todoist_helper):
         menu.load_final_menu()

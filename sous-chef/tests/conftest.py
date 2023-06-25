@@ -5,7 +5,6 @@ from unittest.mock import Mock, patch
 import pandas as pd
 import pytest
 from freezegun import freeze_time
-from grocery_list.generate_grocery_list.generate_grocery_list import GroceryList
 from hydra import compose, initialize
 from pytz import UTC
 from sous_chef.abstract.extended_enum import ExtendedEnum
@@ -13,6 +12,9 @@ from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
 from sous_chef.formatter.ingredient.get_ingredient_field import IngredientField
+from sous_chef.grocery_list.generate_grocery_list.generate_grocery_list import (
+    GroceryList,
+)
 from sous_chef.nutrition.provide_nutritional_info import Nutritionist
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
 
@@ -92,8 +94,10 @@ def grocery_list(
     grocery_list = GroceryList(
         config=config_grocery_list,
         due_date_formatter=frozen_due_datetime_formatter,
-        unit_formatter=unit_formatter,
         ingredient_field=mock_ingredient_field,
+        ingredient_formatter=mock_ingredient_formatter,
+        recipe_book=mock_recipe_book,
+        unit_formatter=unit_formatter,
     )
     grocery_list.second_shopping_day_group = ["vegetables"]
     return grocery_list

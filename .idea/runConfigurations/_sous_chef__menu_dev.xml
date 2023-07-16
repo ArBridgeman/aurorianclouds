@@ -19,7 +19,7 @@
       <option name="useCurrentConnection" value="false" />
     </EXTENSION>
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/sous-chef/sous_chef/menu/main.py" />
-    <option name="PARAMETERS" value="menu.create_menu.fixed.menu_number=7 menu.run_mode.with_todoist=false" />
+    <option name="PARAMETERS" value="menu.create_menu.fixed.menu_number=8 menu.run_mode.with_todoist=false" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="true" />
     <option name="MODULE_MODE" value="false" />

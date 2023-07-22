@@ -2,7 +2,7 @@ unit,pint_unit,item,is_optional,quantity,is_staple,food_group,item_plural,store,
 ,,baguette,False,1.0,True,Prepared,baguettes,Lillehus,,[manual],2022-01-21 16:10:00+00:00,[Fri],2022-01-14,Lillehus
 tsp,teaspoon,baking soda,False,0.5,True,Baking,baking soda,Amazon,,[Baked Oatmeal Bars],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Amazon
 cup,cup,basmati rice,False,1.0,True,Grains,basmati rice,grocery store,4104420218574,[manual],2022-01-22 16:10:00+00:00,[Sat],2022-01-14,Bulk
-cup,cup,buckwheat flakes,False,0.5,True,Grains,buckwheat flakes,Waldstadt,,[Baked Oatmeal Bars],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Waldstadt
+cup,cup,buckwheat flakes,False,0.5,True,Grains,buckwheat flakes,Amazon,,[Baked Oatmeal Bars],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Amazon
 tsp,teaspoon,chili powder,False,0.75,True,Spices and herbs,chili powder,Asian store,,[Lasagna],2022-01-25 15:30:00+00:00,[Tue],2022-01-14,Asian store
 g,gram,chocolate,False,130.0,True,Baking,chocolate,grocery store,4013320081426,"[Baked Oatmeal Bars, Holiday cheesecake]",2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Sweet carolina
 tbsp,tablespoon,cinnamon powder,False,1.0,True,Spices and herbs,cinnamon powder,Amazon,,[Baked Oatmeal Bars],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Amazon

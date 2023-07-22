@@ -7,6 +7,12 @@ inputs:
   poetry-version:
     required: true
     description: "Poetry version to use"
+  poetry-dir:
+    required: true
+    description: "Poetry directory"
+  tokens-dir:
+    required: true
+    description: "Tokens directory"
   gsheets-service-token:
     required: true
     description: "Token for Gsheets service"
@@ -26,12 +32,12 @@ runs:
         poetry-version: ${{ inputs.poetry-version }}
     - name: Install dependencies
       shell: bash
-      working-directory: ./sous-chef
-      run: poetry install --without analysis
+      working-directory: ./${{ inputs.poetry-dir }}
+      run: poetry install
     - name: Setup token directory
       shell: bash
       run: |
-        TOKEN_DIR=./sous-chef/sous_chef/tokens
+        TOKEN_DIR=./${{ inputs.tokens-dir }}
         mkdir $TOKEN_DIR
         GSHEETS_TOKEN="${TOKEN_DIR}/google_client_key.json"
         TODOIST_TOKEN="${TOKEN_DIR}/todoist_token.txt"

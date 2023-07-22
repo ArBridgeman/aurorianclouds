@@ -1,12 +1,6 @@
 name: Setup Python environment
 description: "Setup Python Environment"
 inputs:
-  python-version:
-    required: true
-    description: "Python version to use"
-  poetry-version:
-    required: true
-    description: "Poetry version to use"
   poetry-dir:
     required: true
     description: "Poetry directory"
@@ -22,14 +16,14 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Setup Python ${{ inputs.python-version }}
+    - name: Setup Python 3.9
       uses: actions/setup-python@v2
       with:
-        python-version: ${{ inputs.python-version }}
+        python-version: 3.9
     - name: Run image
       uses: abatilo/actions-poetry@v2.0.0
       with:
-        poetry-version: ${{ inputs.poetry-version }}
+        poetry-version: 1.2.2
     - name: Install dependencies
       shell: bash
       working-directory: ./${{ inputs.poetry-dir }}

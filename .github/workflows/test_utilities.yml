@@ -1,23 +1,22 @@
-name: unit_test
+name: utilities tests
 on:
   push:
     paths:
-      - sous-chef/**
-      - .github/workflows/test_sous_chef.yml
-env:
-  PYTHON_VERSION: 3.9
-  POETRY_VERSION: 1.2.2
+      - utilities/**
+      - .github/workflows/test_utilities.yml
 jobs:
   pytest:
     runs-on: ubuntu-latest
     steps:
       - name: Check out our repo branch
         uses: actions/checkout@v2
-      - name: Setup Python environment for sous-chef
-        uses: ./.github/actions/sous-chef-setup
+      - name: Setup Python environment
+        uses: ./.github/actions/poetry-setup-with-tokens
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          poetry-version: ${{ env.POETRY_VERSION }}
-      - name: Run unit tests
-        working-directory: ./sous-chef
-        run: poetry run pytest ./tests/unit_tests
+          poetry-dir: utilities
+          tokens-dir: ./utilities/utilities/tokens
+          gsheets-service-token: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
+          todoist-token: ${{ secrets.TODOIST_TOKEN }}
+      - name: Run tests
+        working-directory: ./utilities
+        run: poetry run pytest ./tests

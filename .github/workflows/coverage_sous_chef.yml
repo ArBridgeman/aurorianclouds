@@ -5,20 +5,15 @@ on:
       - sous-chef/**
 jobs:
   coverage:
-    strategy:
-      matrix:
-        python-version: [3.9]
-        poetry-version: [1.2.2]
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - name: Check out our repo branch
         uses: actions/checkout@v2
       - name: Setup Python environment
-        uses: ./.github/actions/sous-chef-setup
+        uses: ./.github/actions/poetry-setup-with-tokens
         with:
-          python-version: ${{ matrix.python-version }}
-          poetry-version: ${{ matrix.poetry-version }}
+          poetry-dir: sous-chef
+          tokens-dir: ./sous-chef/sous_chef/tokens
           gsheets-service-token: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
           todoist-token: ${{ secrets.TODOIST_TOKEN }}
       - name: Get coverage

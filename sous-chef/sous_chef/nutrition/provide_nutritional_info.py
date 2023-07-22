@@ -9,9 +9,10 @@ from sous_chef.abstract.pandas_util import (
     are_shared_df_entries_identical,
     find_column_intersection,
 )
-from sous_chef.messaging.gsheets_api import GsheetsHelper
 from sous_chef.pantry_list.read_pantry_list import PantryList
 from structlog import get_logger
+
+from utilities.api.gsheets_api import GsheetsHelper
 
 FILE_LOGGER = get_logger(__name__)
 

@@ -2,11 +2,12 @@ from unittest.mock import patch
 
 import pytest
 from hydra import compose, initialize
-from sous_chef.messaging.gsheets_api import GsheetsHelper
-from sous_chef.messaging.todoist_api import TodoistHelper
 from sous_chef.pantry_list.read_pantry_list import PantryList
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
 from tests.data.util_data import get_local_recipe_book_path
+
+from utilities.api.gsheets_api import GsheetsHelper
+from utilities.api.todoist_api import TodoistHelper
 
 
 @pytest.fixture

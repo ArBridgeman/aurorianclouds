@@ -4,8 +4,9 @@ import pandas as pd
 from omegaconf import DictConfig
 from pandas import DataFrame
 from sous_chef.abstract.search_dataframe import DataframeSearchable
-from sous_chef.messaging.gsheets_api import GsheetsHelper
 from structlog import get_logger
+
+from utilities.api.gsheets_api import GsheetsHelper
 
 FILE_LOGGER = get_logger(__name__)
 

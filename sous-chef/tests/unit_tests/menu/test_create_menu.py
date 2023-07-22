@@ -22,7 +22,8 @@ from sous_chef.menu.create_menu.create_menu import Menu
 from sous_chef.menu.record_menu_history import MenuHistoryError
 from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
-from tests.util import assert_equal_series
+
+from utilities.testing.pandas_util import assert_equal_series
 
 
 @dataclass

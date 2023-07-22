@@ -14,7 +14,11 @@ from sous_chef.recipe_book.recipe_util import (
     RecipeTotalTimeUndefinedError,
     SelectRandomRecipeError,
 )
-from tests.util import assert_equal_dataframe, assert_equal_series
+
+from utilities.testing.pandas_util import (
+    assert_equal_dataframe,
+    assert_equal_series,
+)
 
 
 def get_lowered_tuple(values: List[str]) -> Tuple:

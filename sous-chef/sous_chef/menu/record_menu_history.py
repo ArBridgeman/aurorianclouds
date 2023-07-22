@@ -9,8 +9,9 @@ from pandera.typing import DataFrame, Series
 
 # from sous_chef.menu.create_menu import FinalizedMenuSchema
 from sous_chef.abstract.extended_enum import ExtendedEnum
-from sous_chef.messaging.gsheets_api import GsheetsHelper
 from structlog import get_logger
+
+from utilities.api.gsheets_api import GsheetsHelper
 
 FILE_LOGGER = get_logger(__name__)
 

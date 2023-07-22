@@ -7,7 +7,8 @@ from sous_chef.formatter.ingredient.get_ingredient_field import IngredientField
 from structlog import get_logger
 from tests.unit_tests.formatter.util import create_ingredient_line
 from tests.unit_tests.util import create_recipe
-from tests.util import assert_equal_series
+
+from utilities.testing.pandas_util import assert_equal_series
 
 FILE_LOGGER = get_logger(__name__)
 

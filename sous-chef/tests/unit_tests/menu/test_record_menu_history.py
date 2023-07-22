@@ -1,4 +1,4 @@
-from tests.util import assert_equal_series
+from utilities.testing.pandas_util import assert_equal_series
 
 
 class TestMenuHistory:

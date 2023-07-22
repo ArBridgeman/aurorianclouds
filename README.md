@@ -1,3 +1,6 @@
+[![codecov](https://codecov.io/gh/ArBridgeman/aurorianclouds/branch/main/graph/badge.svg?token=86JV74K4VY)](https://codecov.io/gh/ArBridgeman/aurorianclouds)
+[![license](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+
 sous_chef is a Python application used to parse recipes to create grocery lists
 & menus, which are exported to third-party APIs (i.e. Todoist).
 

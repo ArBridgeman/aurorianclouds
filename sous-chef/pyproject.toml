@@ -25,8 +25,8 @@ uvicorn = {extras = ["standard"], version = "^0.22.0"}
 utilities = {path = "../utilities/", develop = true}
 
 [tool.poetry.group.test.dependencies]
-coverage = "^6.5"
 pytest = "^7.1.2"
+pytest-cov = "^4.1.0"
 pytest-structlog = "^0.5"
 freezegun = "^1.1.0"
 

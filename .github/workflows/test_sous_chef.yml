@@ -1,9 +1,14 @@
-name: sous-chef unit_tests
+name: sous-chef tests
 on:
   push:
     paths:
       - sous-chef/**
       - .github/workflows/test_sous_chef.yml
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   pytest:
     runs-on: ubuntu-latest
@@ -14,8 +19,17 @@ jobs:
         uses: ./.github/actions/poetry-setup-with-tokens
         with:
           poetry-dir: sous-chef
-#          gsheets-service-token: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
-#          todoist-token: ${{ secrets.TODOIST_TOKEN }}
+          gsheets-service-token: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
+          todoist-token: ${{ secrets.TODOIST_TOKEN }}
       - name: Run unit tests
         working-directory: ./sous-chef
-        run: poetry run pytest ./tests/unit_tests
+        run: poetry run pytest --cov=sous_chef --cov-report=xml:sous_chef_unit_tests.xml ./tests/unit_tests
+      - name: Run integration tests
+        working-directory: ./sous-chef
+        run: poetry run pytest --cov=sous_chef --cov-report=xml:sous_chef_integration_tests.xml -k "not dropbox" ./tests/integration_tests ./tests/e2e_tests
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          verbose: false

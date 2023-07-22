@@ -18,4 +18,12 @@ jobs:
           todoist-token: ${{ secrets.TODOIST_TOKEN }}
       - name: Run tests
         working-directory: ./utilities
-        run: poetry run pytest ./tests
+        run: poetry run pytest --cov=utilities --cov-report=xml:utilities_tests.xml ./tests/
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./utilities/utilities_tests.xml
+          fail_ci_if_error: true
+          verbose: false
+

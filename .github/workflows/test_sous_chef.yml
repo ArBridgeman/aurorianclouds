@@ -31,5 +31,6 @@ jobs:
         uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./sous-chef/sous_chef_unit_tests.xml,./sous-chef/sous_chef_integration_tests.xml
           fail_ci_if_error: true
           verbose: false

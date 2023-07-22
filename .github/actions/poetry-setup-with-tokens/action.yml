@@ -4,9 +4,6 @@ inputs:
   poetry-dir:
     required: true
     description: "Poetry directory"
-  tokens-dir:
-    required: true
-    description: "Tokens directory"
   gsheets-service-token:
     required: true
     description: "Token for Gsheets service"
@@ -31,7 +28,7 @@ runs:
     - name: Setup token directory
       shell: bash
       run: |
-        TOKEN_DIR=./${{ inputs.tokens-dir }}
+        TOKEN_DIR=./tokens
         mkdir $TOKEN_DIR
         GSHEETS_TOKEN="${TOKEN_DIR}/google_client_key.json"
         TODOIST_TOKEN="${TOKEN_DIR}/todoist_token.txt"

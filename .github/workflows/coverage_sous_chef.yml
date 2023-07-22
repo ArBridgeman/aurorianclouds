@@ -16,7 +16,6 @@ jobs:
         uses: ./.github/actions/poetry-setup-with-tokens
         with:
           poetry-dir: sous-chef
-          tokens-dir: ./sous-chef/sous_chef/tokens
           gsheets-service-token: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
           todoist-token: ${{ secrets.TODOIST_TOKEN }}
       - name: Get coverage

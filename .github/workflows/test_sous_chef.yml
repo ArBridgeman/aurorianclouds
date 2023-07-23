@@ -4,7 +4,7 @@ on:
     paths:
       - sous-chef/**
       - .github/workflows/test_sous_chef.yml
-      - utilities/** # since dependent on without version atm
+      - utilities/utilities/** # since dependent on without version atm
 
 concurrency:
   group: ${{ github.ref }}

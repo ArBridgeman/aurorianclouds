@@ -8,7 +8,6 @@ source =
      sous_chef/formatter
      sous_chef/grocery_list
      sous_chef/menu
-     sous_chef/messaging
      sous_chef/nutrition
      sous_chef/pantry_list
      sous_chef/recipe_book

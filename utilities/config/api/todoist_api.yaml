@@ -1,0 +1,2 @@
+todoist:
+  token_file_path: ../../../tokens/todoist_token.txt

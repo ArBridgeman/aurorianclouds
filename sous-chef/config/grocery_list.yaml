@@ -6,8 +6,8 @@ defaults:
   - date/get_due_date
   - formatter/format_ingredient
   - formatter/get_ingredient_field
-  - messaging/gsheets_api
-  - messaging/todoist_api
+  - api/gsheets_api
+  - api/todoist_api
   - _self_
 
 formatter:

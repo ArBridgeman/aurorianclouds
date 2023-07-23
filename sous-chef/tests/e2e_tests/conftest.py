@@ -1,14 +1,15 @@
 import pytest
 from hydra import compose, initialize
 from sous_chef.menu.record_menu_history import MenuHistorian
-from sous_chef.messaging.gsheets_api import GsheetsHelper
-from sous_chef.messaging.todoist_api import TodoistHelper
 from tests.conftest import FROZEN_DATETIME
+
+from utilities.api.gsheets_api import GsheetsHelper
+from utilities.api.todoist_api import TodoistHelper
 
 
 @pytest.fixture(scope="module")
 def gsheets_helper():
-    with initialize(version_base=None, config_path="../../config/messaging"):
+    with initialize(version_base=None, config_path="../../config/api"):
         config = compose(config_name="gsheets_api")
         return GsheetsHelper(config.gsheets)
 
@@ -27,6 +28,6 @@ def menu_history(gsheets_helper):
 
 @pytest.fixture(scope="module")
 def todoist_helper():
-    with initialize(version_base=None, config_path="../../config/messaging"):
+    with initialize(version_base=None, config_path="../../config/api"):
         config = compose(config_name="todoist_api")
         return TodoistHelper(config.todoist)

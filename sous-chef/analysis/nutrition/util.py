@@ -1,7 +1,8 @@
 import pandas as pd
 from hydra import compose, initialize
-from sous_chef.messaging.gsheets_api import GsheetsHelper
 from sous_chef.nutrition.provide_nutritional_info import Nutritionist
+
+from utilities.api.gsheets_api import GsheetsHelper
 
 
 def get_nutritionist():
@@ -11,7 +12,7 @@ def get_nutritionist():
 
 
 def get_gsheets_helper():
-    with initialize(version_base=None, config_path="../../config/messaging"):
+    with initialize(version_base=None, config_path="../../config/api"):
         config = compose(config_name="gsheets_api")
         return GsheetsHelper(config.gsheets)
 

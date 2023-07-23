@@ -14,7 +14,11 @@ from sous_chef.grocery_list.generate_grocery_list import (
 )
 from sous_chef.menu.create_menu._for_grocery_list import MenuRecipe
 from tests.unit_tests.util import create_recipe
-from tests.util import assert_equal_dataframe, assert_equal_series
+
+from utilities.testing.pandas_util import (
+    assert_equal_dataframe,
+    assert_equal_series,
+)
 
 
 def create_grocery_list_row(

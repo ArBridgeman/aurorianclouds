@@ -14,7 +14,8 @@ from tests.data.util_data import (
     get_tasks_menu,
 )
 from tests.e2e_tests.util import PROJECT, Base
-from tests.util import assert_equal_dataframe
+
+from utilities.testing.pandas_util import assert_equal_dataframe
 
 
 @pytest.mark.gsheets

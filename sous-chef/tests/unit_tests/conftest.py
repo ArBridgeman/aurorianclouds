@@ -7,14 +7,15 @@ import pandas as pd
 import pytest
 from hydra import compose, initialize
 from sous_chef.menu.record_menu_history import MenuHistorian
-from sous_chef.messaging.gsheets_api import GsheetsHelper
-from sous_chef.messaging.todoist_api import TodoistHelper
 from tests.conftest import FROZEN_DATETIME
+
+from utilities.api.gsheets_api import GsheetsHelper
+from utilities.api.todoist_api import TodoistHelper
 
 
 @pytest.fixture
 def mock_gsheets():
-    with initialize(version_base=None, config_path="../../config/messaging"):
+    with initialize(version_base=None, config_path="../../config/api"):
         config = compose(config_name="gsheets_api")
         with patch.object(GsheetsHelper, "__post_init__"):
             return Mock(GsheetsHelper(config))
@@ -22,7 +23,7 @@ def mock_gsheets():
 
 @pytest.fixture
 def mock_todoist_helper():
-    with initialize(version_base=None, config_path="../../config/messaging"):
+    with initialize(version_base=None, config_path="../../config/api"):
         config = compose(config_name="todoist_api")
         with patch.object(TodoistHelper, "__post_init__", lambda x: None):
             return TodoistHelper(config)

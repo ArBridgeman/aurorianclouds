@@ -9,12 +9,13 @@ from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
 from sous_chef.menu.create_menu.create_menu import Menu
 from sous_chef.menu.record_menu_history import MenuHistorian
-from sous_chef.messaging.gsheets_api import GsheetsHelper
-from sous_chef.messaging.todoist_api import TodoistHelper
 from sous_chef.pantry_list.read_pantry_list import PantryList
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
 from sous_chef.rtk.read_write_rtk import RtkService
 from structlog import get_logger
+
+from utilities.api.gsheets_api import GsheetsHelper
+from utilities.api.todoist_api import TodoistHelper
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
 FILE_LOGGER = get_logger(__name__)
@@ -25,7 +26,7 @@ def run_menu(config: DictConfig):
     rtk_service = RtkService(config.rtk)
     rtk_service.unzip()
 
-    gsheets_helper = GsheetsHelper(config.messaging.gsheets)
+    gsheets_helper = GsheetsHelper(config.api.gsheets)
     ingredient_formatter = _get_ingredient_formatter(config, gsheets_helper)
 
     due_date_formatter = DueDatetimeFormatter(config=config.date.due_date)
@@ -55,7 +56,7 @@ def run_menu(config: DictConfig):
         menu.save_with_menu_historian()
 
         if config.menu.run_mode.with_todoist:
-            todoist_helper = TodoistHelper(config.messaging.todoist)
+            todoist_helper = TodoistHelper(config.api.todoist)
             menu.upload_menu_to_todoist(todoist_helper)
 
         return final_menu

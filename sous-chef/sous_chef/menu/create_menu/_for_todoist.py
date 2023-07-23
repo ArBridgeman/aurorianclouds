@@ -3,8 +3,9 @@ from typing import List, Union
 
 import pandas as pd
 from sous_chef.menu.create_menu._menu_basic import MenuBasic
-from sous_chef.messaging.todoist_api import TodoistHelper
 from todoist_api_python.models import Task
+
+from utilities.api.todoist_api import TodoistHelper
 
 
 class MenuForTodoist(MenuBasic):

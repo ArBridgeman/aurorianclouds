@@ -1,31 +1,37 @@
-name: unit_test
+name: sous-chef tests
 on:
   push:
     paths:
       - sous-chef/**
+      - .github/workflows/test_sous_chef.yml
+      - utilities/utilities/** # since dependent on without version atm
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   pytest:
-    strategy:
-      matrix:
-        python-version: [3.9]
-        poetry-version: [1.2.2]
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - name: Check out our repo branch
         uses: actions/checkout@v2
-      - name: Setup Python environment for sous-chef
-        uses: ./.github/actions/sous-chef-setup
+      - name: Setup Python environment
+        uses: ./.github/actions/poetry-setup-with-tokens
         with:
-          python-version: ${{ matrix.python-version }}
-          poetry-version: ${{ matrix.poetry-version }}
-#          gsheets-service-token: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
-#          todoist-token: ${{ secrets.TODOIST_TOKEN }}
+          poetry-dir: sous-chef
+          gsheets-service-token: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
+          todoist-token: ${{ secrets.TODOIST_TOKEN }}
       - name: Run unit tests
         working-directory: ./sous-chef
-        run: poetry run pytest ./tests/unit_tests
-#      - name: Run integration tests
-#        working-directory: ./sous-chef
-#        run: |
-#          poetry run pytest ./tests/integration_tests \
-#          -k "not dropbox"
+        run: poetry run pytest --cov=sous_chef --cov-report=xml:sous_chef_unit_tests.xml ./tests/unit_tests
+      - name: Run integration tests
+        working-directory: ./sous-chef
+        run: poetry run pytest --cov=sous_chef --cov-report=xml:sous_chef_integration_tests.xml -k "not dropbox and not openfoodfacts" ./tests/integration_tests
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./sous-chef/sous_chef_unit_tests.xml,./sous-chef/sous_chef_integration_tests.xml
+          fail_ci_if_error: true
+          verbose: false

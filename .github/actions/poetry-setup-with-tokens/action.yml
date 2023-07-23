@@ -1,12 +1,9 @@
 name: Setup Python environment
 description: "Setup Python Environment"
 inputs:
-  python-version:
+  poetry-dir:
     required: true
-    description: "Python version to use"
-  poetry-version:
-    required: true
-    description: "Poetry version to use"
+    description: "Poetry directory"
   gsheets-service-token:
     required: true
     description: "Token for Gsheets service"
@@ -16,22 +13,22 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Setup Python ${{ inputs.python-version }}
+    - name: Setup Python 3.9
       uses: actions/setup-python@v2
       with:
-        python-version: ${{ inputs.python-version }}
+        python-version: 3.9
     - name: Run image
       uses: abatilo/actions-poetry@v2.0.0
       with:
-        poetry-version: ${{ inputs.poetry-version }}
+        poetry-version: 1.2.2
     - name: Install dependencies
       shell: bash
-      working-directory: ./sous-chef
-      run: poetry install --without analysis
+      working-directory: ./${{ inputs.poetry-dir }}
+      run: poetry install
     - name: Setup token directory
       shell: bash
       run: |
-        TOKEN_DIR=./sous-chef/sous_chef/tokens
+        TOKEN_DIR=./tokens
         mkdir $TOKEN_DIR
         GSHEETS_TOKEN="${TOKEN_DIR}/google_client_key.json"
         TODOIST_TOKEN="${TOKEN_DIR}/todoist_token.txt"

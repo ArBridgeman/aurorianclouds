@@ -3,7 +3,8 @@ from hydra import compose, initialize
 from sous_chef.menu.record_menu_history import MenuHistorian
 from tests.conftest import FROZEN_DATETIME
 from tests.data.util_data import get_final_menu, get_menu_history
-from tests.util import assert_equal_dataframe
+
+from utilities.testing.pandas_util import assert_equal_dataframe
 
 
 @pytest.fixture

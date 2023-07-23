@@ -15,10 +15,11 @@ from sous_chef.menu.create_menu._for_grocery_list import (
     MenuIngredient,
     MenuRecipe,
 )
-from sous_chef.messaging.todoist_api import TodoistHelper
 from sous_chef.recipe_book.recipe_util import Recipe
 from structlog import get_logger
 from termcolor import cprint
+
+from utilities.api.todoist_api import TodoistHelper
 
 # TODO method to mark ingredients that can only be bought the day before
 

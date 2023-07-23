@@ -3,7 +3,8 @@ from random import choice
 
 import pandas as pd
 import pytest
-from tests.util import assert_equal_dataframe
+
+from utilities.testing.pandas_util import assert_equal_dataframe
 
 
 def random_string(length: int):

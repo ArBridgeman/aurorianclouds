@@ -2,8 +2,9 @@ from datetime import date, datetime
 from typing import Dict, List, Optional
 
 import pytest
-from sous_chef.messaging.todoist_api import TodoistKeyError
 from todoist_api_python.api import TodoistAPI
+
+from utilities.api.todoist_api import TodoistKeyError
 
 PROJECT = "Pytest-area"
 

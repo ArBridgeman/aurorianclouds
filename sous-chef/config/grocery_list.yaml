@@ -37,7 +37,7 @@ grocery_list:
     task_priority: 3
   bean_prep:
     prep_day: 1
-    prep_meal: lunch
+    prep_meal: dessert
   todoist:
     project_name: Groceries
     remove_existing_task: true

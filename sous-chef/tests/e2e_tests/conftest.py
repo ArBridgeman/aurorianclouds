@@ -9,7 +9,7 @@ from utilities.api.todoist_api import TodoistHelper
 
 @pytest.fixture(scope="module")
 def gsheets_helper():
-    with initialize(version_base=None, config_path="../../config/messaging"):
+    with initialize(version_base=None, config_path="../../config/api"):
         config = compose(config_name="gsheets_api")
         return GsheetsHelper(config.gsheets)
 
@@ -28,6 +28,6 @@ def menu_history(gsheets_helper):
 
 @pytest.fixture(scope="module")
 def todoist_helper():
-    with initialize(version_base=None, config_path="../../config/messaging"):
+    with initialize(version_base=None, config_path="../../config/api"):
         config = compose(config_name="todoist_api")
         return TodoistHelper(config.todoist)

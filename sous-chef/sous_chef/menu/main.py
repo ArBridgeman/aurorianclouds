@@ -26,7 +26,7 @@ def run_menu(config: DictConfig):
     rtk_service = RtkService(config.rtk)
     rtk_service.unzip()
 
-    gsheets_helper = GsheetsHelper(config.messaging.gsheets)
+    gsheets_helper = GsheetsHelper(config.api.gsheets)
     ingredient_formatter = _get_ingredient_formatter(config, gsheets_helper)
 
     due_date_formatter = DueDatetimeFormatter(config=config.date.due_date)
@@ -56,7 +56,7 @@ def run_menu(config: DictConfig):
         menu.save_with_menu_historian()
 
         if config.menu.run_mode.with_todoist:
-            todoist_helper = TodoistHelper(config.messaging.todoist)
+            todoist_helper = TodoistHelper(config.api.todoist)
             menu.upload_menu_to_todoist(todoist_helper)
 
         return final_menu

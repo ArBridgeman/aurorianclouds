@@ -7,8 +7,8 @@ defaults:
   - formatter/format_ingredient
   - menu/create_menu
   - menu/record_menu_history
-  - messaging/gsheets_api
-  - messaging/todoist_api
+  - api/gsheets_api
+  - api/todoist_api
   - _self_
 
 menu:

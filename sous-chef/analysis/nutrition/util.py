@@ -12,7 +12,7 @@ def get_nutritionist():
 
 
 def get_gsheets_helper():
-    with initialize(version_base=None, config_path="../../config/messaging"):
+    with initialize(version_base=None, config_path="../../config/api"):
         config = compose(config_name="gsheets_api")
         return GsheetsHelper(config.gsheets)
 

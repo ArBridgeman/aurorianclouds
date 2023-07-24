@@ -6,13 +6,17 @@ from utilities.api.gsheets_api import GsheetsHelper
 
 
 def get_nutritionist():
-    with initialize(version_base=None, config_path="../../config/"):
+    with initialize(
+        version_base=None, config_path="../../../sous-chef/config/"
+    ):
         config = compose(config_name="nutrition").nutrition
         return Nutritionist(config=config)
 
 
 def get_gsheets_helper():
-    with initialize(version_base=None, config_path="../../config/api"):
+    with initialize(
+        version_base=None, config_path="../../../sous-chef/config/api"
+    ):
         config = compose(config_name="gsheets_api")
         return GsheetsHelper(config.gsheets)
 

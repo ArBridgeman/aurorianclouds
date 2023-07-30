@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 import requests
+from numpy import ndarray
 from omegaconf import DictConfig
 from pydantic import HttpUrl
 from pydantic.tools import parse_obj_as
@@ -26,7 +27,7 @@ def _build_url(server_url: HttpUrl, path: str, kwargs: OrderedDict) -> str:
 def _convert_parameter_value_to_string(value: Union[int, str, List]) -> str:
     if isinstance(value, str):
         return value
-    elif isinstance(value, list):
+    elif isinstance(value, list) or isinstance(value, ndarray):
         return ",".join(value)
     return str(value)
 

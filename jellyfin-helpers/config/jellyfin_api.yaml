@@ -1,0 +1,2 @@
+jellyfin_api:
+  credentials_file_path: ../../tokens/jellyfin.json

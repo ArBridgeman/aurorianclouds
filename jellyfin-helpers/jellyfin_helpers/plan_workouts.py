@@ -1,3 +1,4 @@
+import re
 from datetime import timedelta
 from enum import Enum
 from typing import List
@@ -69,8 +70,8 @@ class WorkoutPlanner:
         time_tag = list(filter(lambda x: " min" in x, tags))
         if len(time_tag) < 1:
             return timedelta(minutes=-100)
-        smaller_time = int(time_tag[0].split("-")[0])
-        average_time = (smaller_time + 5) / 2
+        times = re.search(r"(\d+)-(\d+) min", time_tag[0])
+        average_time = (int(times.group(1)) + int(times.group(2))) / 2
         return timedelta(minutes=average_time)
 
     def _parse_workout_videos(self):
@@ -134,8 +135,9 @@ class WorkoutPlanner:
         mask = self.workout_videos.Genre.str.lower() == genre.lower()
         mask &= self.workout_videos.Duration <= duration_timedelta
 
-        if sum(mask) == 0:
+        if (total_found := sum(mask)) == 0:
             raise ValueError(f"no entries found for genre={genre}")
+        print(f"(genre={genre}, {duration_in_minutes} min): {total_found}")
 
         return self._select_exercise(
             data=self.workout_videos[mask],
@@ -149,8 +151,9 @@ class WorkoutPlanner:
         )
         mask &= self.workout_videos.Duration <= duration_timedelta
 
-        if sum(mask) == 0:
+        if (total_found := sum(mask)) == 0:
             raise ValueError(f"no entries found for tag={tag}")
+        print(f"(tag={tag}, {duration_in_minutes} min): {total_found}")
 
         return self._select_exercise(
             data=self.workout_videos[mask],

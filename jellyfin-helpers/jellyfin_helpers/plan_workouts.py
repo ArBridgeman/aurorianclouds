@@ -1,6 +1,6 @@
 import re
-from datetime import timedelta
-from enum import Enum
+from datetime import datetime, timedelta
+from enum import Enum, IntEnum
 from typing import List
 
 import pandas as pd
@@ -12,6 +12,16 @@ from pandera.typing import Series
 
 from utilities.api.gsheets_api import GsheetsHelper
 from utilities.api.todoist_api import TodoistHelper
+
+
+class Day(IntEnum):
+    sat = 0
+    sun = 1
+    mon = 2
+    tue = 3
+    wed = 4
+    thu = 5
+    fri = 6
 
 
 # TODO put enum extensions in utilities
@@ -99,6 +109,8 @@ class WorkoutPlanner:
                     data_frame,
                 ]
             )
+            # debug
+            # print(data_frame)
             WorkoutVideos.validate(data_frame)
         return data_frame
 
@@ -170,12 +182,16 @@ class WorkoutPlanner:
         workout.total_in_min = workout.total_in_min.astype("int64")
         WorkoutPlan.validate(workout)
 
+        today_index = Day[datetime.now().strftime("%A").lower()[:3]].value
         for _, row in workout.iterrows():
             start, day_str = row.day.split("_")
-            playlist_name = self.app_config.jellyfin.playlist_1
-            if int(start) > 6:
-                day_str = f"next {day_str}"
-                playlist_name = self.app_config.jellyfin.playlist_2
+
+            # TODO only set correctly for sat/sun/mon
+            # better to extract due date formatter shared logic?
+            days = int(start) - today_index
+            week = (days // 7) + 1
+            playlist_name = self.app_config.jellyfin[f"playlist_{week}"]
+            day_str = f"in {days} days"
 
             description = None
             item_ids = None

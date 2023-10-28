@@ -411,6 +411,10 @@ class GroceryList:
             f"(freeze: {freeze_quantity} {unit_str})"
         )
 
+    def _format_bean_soak_task_str(self, row: pd.Series) -> str:
+        ingredient_str = self._format_ingredient_str(row)
+        return f"[BEAN SOAK] {ingredient_str}"
+
     def _format_ingredient_str(self, entry: pd.Series) -> str:
         item = entry["item"]
         if entry["quantity"] > 1 or not pd.isnull(entry["pint_unit"]):
@@ -475,6 +479,20 @@ class GroceryList:
         row["pint_unit"] = unit_registry.gram
         row["quantity"] = cans * config_bean.g_per_can
 
+        # bean soaking task
+        self._add_preparation_task_to_queue(
+            task=self._format_bean_soak_task_str(row),
+            due_date=self.due_date_formatter.replace_time_with_meal_time(
+                due_date=row.for_day
+                - timedelta(days=config_bean_prep.prep_day)
+                - timedelta(hours=config_bean_prep.soak_before_hours),
+                meal_time=config_bean_prep.prep_meal,
+            ),
+            from_recipe=row.from_recipe,
+            for_day_str=[row.for_day.strftime("%a")],
+        )
+
+        # bean cooking task
         self._add_preparation_task_to_queue(
             task=self._format_bean_prep_task_str(
                 row, config_bean.number_can_to_freeze

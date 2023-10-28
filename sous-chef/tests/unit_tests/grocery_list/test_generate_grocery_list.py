@@ -199,6 +199,22 @@ class TestGroceryList:
         )
 
     @staticmethod
+    def test__format_bean_soak_task_str(grocery_list):
+        row = pd.Series(
+            {
+                "quantity": 210,
+                "pint_unit": unit_registry.gram,
+                "item": "black beans",
+                "is_optional": False,
+                "item_plural": "black beans",
+            }
+        )
+        assert (
+            grocery_list._format_bean_soak_task_str(row)
+            == "[BEAN SOAK] black beans, 210 g"
+        )
+
+    @staticmethod
     @pytest.mark.parametrize(
         "quantity,pint_unit,item,is_optional,"
         "plural_ending,aisle_group,expected_result",

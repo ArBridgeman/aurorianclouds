@@ -268,10 +268,16 @@ class GroceryList:
     def _add_referenced_recipe_to_queue(
         self, menu_recipe: MenuRecipe, recipe_list: List[Recipe]
     ):
+        def _check_yes_defrost_skip(text: str) -> str:
+            response = None
+            while response not in ["y", "d", "s"]:
+                response = input(f"\n{text}[y]es, [d]efrost, [s]kip").lower()
+            return response
+
         def _check_yes_no(text: str) -> str:
             response = None
-            while response not in ["Y", "N"]:
-                response = input(f"\n{text} [Y/N] ").upper()
+            while response not in ["y", "n"]:
+                response = input(f"\n{text}[y]es, [n]o").lower()
             return response
 
         def _get_schedule_day_hour_minute() -> datetime:
@@ -308,27 +314,30 @@ class GroceryList:
                 recipe=recipe,
             )
 
-            # TODO make more robust to other methods
             if (
                 self.config.run_mode.with_todoist
                 and self.config.run_mode.check_referenced_recipe
             ):
                 _give_referenced_recipe_details()
-                # TODO would be ideal if could guess to
-                #  make ahead like beans; should just as if we need to make
-                if _check_yes_no(f"Need to make '{recipe.title}'?") == "Y":
+                sub_recipe_response = _check_yes_defrost_skip(
+                    f"Make '{recipe.title}'?"
+                )
+                if sub_recipe_response == "d":
+                    self._add_preparation_task_to_queue(
+                        f"[DEFROST] {recipe.amount}",
+                        due_date=menu_recipe.for_day - timedelta(days=1),
+                        from_recipe=[from_recipe],
+                        for_day_str=[menu_sub_recipe.for_day.strftime("%a")],
+                    )
+                elif sub_recipe_response == "y":
                     self._add_menu_recipe_to_queue([menu_sub_recipe])
 
                     if (
                         recipe.time_total is None
                         or recipe.time_total > timedelta(minutes=15)
                     ):
-                        if (
-                            _check_yes_no(
-                                f"Separately schedule '{recipe.title}'?"
-                            )
-                            == "Y"
-                        ):
+                        # TODO default make ahead date that could be overridden
+                        if _check_yes_no("...separately schedule?") == "y":
                             schedule_datetime = _get_schedule_day_hour_minute()
                             if schedule_datetime > menu_recipe.for_day:
                                 schedule_datetime -= timedelta(days=7)

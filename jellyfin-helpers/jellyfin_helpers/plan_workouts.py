@@ -184,6 +184,9 @@ class WorkoutPlanner:
 
         today_index = Day[datetime.now().strftime("%A").lower()[:3]].value
         for _, row in workout.iterrows():
+            if row.active == "N":
+                continue
+
             start, day_str = row.day.split("_")
 
             # TODO only set correctly for sat/sun/mon

@@ -217,7 +217,7 @@ class WorkoutPlanner:
                 )
 
             todoist_helper.add_task_to_project(
-                task=row["values"] + f" ({row.total_in_min} min)",
+                task=f"[wk {week}] {row['values']} ({row.total_in_min} min)",
                 due_string=day_str,
                 project=self.app_config.todoist.project,
                 section=self.app_config.todoist.section,

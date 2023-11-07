@@ -1,7 +1,7 @@
 import re
 from datetime import datetime, timedelta
 from enum import Enum, IntEnum
-from typing import List
+from typing import List, Tuple
 
 import pandas as pd
 import pandera as pa
@@ -114,6 +114,29 @@ class WorkoutPlanner:
             WorkoutVideos.validate(data_frame)
         return data_frame
 
+    def _search_for_workout(
+        self, row: pd.Series, skip_ids: List[str]
+    ) -> Tuple[str, List[str]]:
+        if row.search_type == SearchType.genre.value:
+            selected_workouts = self._select_exercise_by_genre(
+                genre=row["values"],
+                duration_in_minutes=row.total_in_min,
+                skip_ids=skip_ids,
+            )
+            description = "\n".join(selected_workouts.description.values)
+            item_ids = selected_workouts.Id.values
+            return description, item_ids
+        elif row.search_type == SearchType.tag.value:
+            selected_workouts = self._select_exercise_by_tag(
+                tag=row["values"],
+                duration_in_minutes=row.total_in_min,
+                skip_ids=skip_ids,
+            )
+            description = "\n".join(selected_workouts.description.values)
+            item_ids = selected_workouts.Id.values
+            return description, item_ids
+        raise ValueError("Unknown SearchType")
+
     @staticmethod
     def _select_exercise(
         data: pd.DataFrame, remaining_duration: timedelta
@@ -142,10 +165,13 @@ class WorkoutPlanner:
         # TODO use history & set random seed when running
         return selected_exercises
 
-    def _select_exercise_by_genre(self, genre: str, duration_in_minutes: int):
+    def _select_exercise_by_genre(
+        self, genre: str, duration_in_minutes: int, skip_ids: List[str]
+    ) -> pd.DataFrame:
         duration_timedelta = pd.to_timedelta(f"{duration_in_minutes} minutes")
         mask = self.workout_videos.Genre.str.lower() == genre.lower()
         mask &= self.workout_videos.Duration <= duration_timedelta
+        mask &= ~self.workout_videos.Id.isin(skip_ids)
 
         if (total_found := sum(mask)) == 0:
             raise ValueError(f"no entries found for genre={genre}")
@@ -156,12 +182,15 @@ class WorkoutPlanner:
             remaining_duration=duration_timedelta,
         )
 
-    def _select_exercise_by_tag(self, tag: str, duration_in_minutes: int):
+    def _select_exercise_by_tag(
+        self, tag: str, duration_in_minutes: int, skip_ids: List[str]
+    ) -> pd.DataFrame:
         duration_timedelta = pd.to_timedelta(f"{duration_in_minutes} minutes")
         mask = self.workout_videos["Tags"].apply(
             lambda row: self._is_value_in_list(row, tag)
         )
         mask &= self.workout_videos.Duration <= duration_timedelta
+        mask &= ~self.workout_videos.Id.isin(skip_ids)
 
         if (total_found := sum(mask)) == 0:
             raise ValueError(f"no entries found for tag={tag}")
@@ -183,6 +212,7 @@ class WorkoutPlanner:
         WorkoutPlan.validate(workout)
 
         today_index = Day[datetime.now().strftime("%A").lower()[:3]].value
+        selection_month = []
         for _, row in workout.iterrows():
             if row.active == "N":
                 continue
@@ -192,29 +222,18 @@ class WorkoutPlanner:
             # TODO only set correctly for sat/sun/mon
             # better to extract due date formatter shared logic?
             days = int(start) - today_index
-            week = (days // 7) + 1
+            week = max((days // 7) + 1, 1)
             playlist_name = self.app_config.jellyfin[f"playlist_{week}"]
             day_str = f"in {days} days"
 
-            description = None
-            item_ids = None
-            if row.search_type == SearchType.genre.value:
-                selected_workouts = self._select_exercise_by_genre(
-                    genre=row["values"], duration_in_minutes=row.total_in_min
-                )
-                description = "\n".join(selected_workouts.description.values)
-                item_ids = selected_workouts.Id.values
-            elif row.search_type == SearchType.tag.value:
-                selected_workouts = self._select_exercise_by_tag(
-                    tag=row["values"], duration_in_minutes=row.total_in_min
-                )
-                description = "\n".join(selected_workouts.description.values)
-                item_ids = selected_workouts.Id.values
+            description, item_ids = self._search_for_workout(
+                row, selection_month
+            )
+            selection_month.extend(item_ids)
 
-            if item_ids is not None:
-                self.jellyfin.post_add_to_playlist(
-                    playlist_name=playlist_name, item_ids=item_ids
-                )
+            self.jellyfin.post_add_to_playlist(
+                playlist_name=playlist_name, item_ids=item_ids
+            )
 
             todoist_helper.add_task_to_project(
                 task=f"[wk {week}] {row['values']} ({row.total_in_min} min)",

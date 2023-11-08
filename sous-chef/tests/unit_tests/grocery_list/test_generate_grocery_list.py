@@ -568,9 +568,7 @@ class TestAddReferencedRecipeToQueue:
     ):
         config_grocery_list.run_mode.with_todoist = True
 
-        with patch(
-            "builtins.input", side_effect=["y", "y", "tuesday", "lunch"]
-        ):
+        with patch("builtins.input", side_effect=["y", "y", "1", "1"]):
             grocery_list._add_referenced_recipe_to_queue(
                 self.menu_recipe_base, [self.menu_recipe_ref]
             )

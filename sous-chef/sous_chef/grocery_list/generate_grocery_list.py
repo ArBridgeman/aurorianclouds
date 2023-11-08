@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
+from enum import Enum
 from itertools import chain
 from typing import List, Tuple
 
@@ -271,25 +272,47 @@ class GroceryList:
         def _check_yes_defrost_skip(text: str) -> str:
             response = None
             while response not in ["y", "d", "s"]:
-                response = input(f"\n{text}[y]es, [d]efrost, [s]kip").lower()
+                response = input(f"\n{text} [y]es, [d]efrost, [s]kip: ").lower()
             return response
 
         def _check_yes_no(text: str) -> str:
             response = None
             while response not in ["y", "n"]:
-                response = input(f"\n{text}[y]es, [n]o").lower()
+                response = input(f"\n{text} [y]es, [n]o: ").lower()
             return response
+
+        def print_enum(eprint: Enum) -> str:
+            return ", ".join(f"{e.name} [{e.value}]" for e in eprint)
+
+        def print_list(lprint: list[str]) -> str:
+            return ", ".join(
+                f"{lprint[il]} [{il}]" for il in range(len(lprint))
+            )
 
         def _get_schedule_day_hour_minute() -> datetime:
             day = None
-            while day not in Weekday.name_list("capitalize"):
-                day = input("\nWeekday: ").capitalize()
+            while (
+                not day or not day.isnumeric() or int(day) not in iter(Weekday)
+            ):
+                day = input(f"\nWeekday ({print_enum(Weekday)}): ") or "-1"
+            day = Weekday(int(day)).name.capitalize()
 
             meal_time = None
             meal_times = MealTime.name_list("lower")
-            while meal_time not in meal_times:
-                meal_time = input(f"\nMealtime {meal_times}: ").lower()
-            meal_time = MealTime[meal_time].value
+            while (
+                not meal_time
+                or not meal_time.isnumeric()
+                or int(meal_time) not in range(len(meal_times))
+            ):
+                meal_time = (
+                    input(
+                        f"\nMealtime ({print_list(meal_times)}) "
+                        f"[default: dessert]: "
+                    )
+                    or "4"
+                )
+            meal_time = MealTime[meal_times[int(meal_time)]].value
+
             return self.due_date_formatter.get_due_datetime_with_time(
                 weekday=day, hour=meal_time["hour"], minute=meal_time["minute"]
             )

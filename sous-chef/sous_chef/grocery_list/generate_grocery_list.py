@@ -281,10 +281,10 @@ class GroceryList:
                 response = input(f"\n{text} [y]es, [n]o: ").lower()
             return response
 
-        def print_enum(eprint: Enum) -> str:
+        def _print_enum(eprint: Enum) -> str:
             return ", ".join(f"{e.name} [{e.value}]" for e in eprint)
 
-        def print_list(lprint: list[str]) -> str:
+        def _print_list(lprint: list[str]) -> str:
             return ", ".join(
                 f"{lprint[il]} [{il}]" for il in range(len(lprint))
             )
@@ -294,7 +294,7 @@ class GroceryList:
             while (
                 not day or not day.isnumeric() or int(day) not in iter(Weekday)
             ):
-                day = input(f"\nWeekday ({print_enum(Weekday)}): ") or "-1"
+                day = input(f"\nWeekday ({_print_enum(Weekday)}): ") or "-1"
             day = Weekday(int(day)).name.capitalize()
 
             meal_time = None
@@ -306,7 +306,7 @@ class GroceryList:
             ):
                 meal_time = (
                     input(
-                        f"\nMealtime ({print_list(meal_times)}) "
+                        f"\nMealtime ({_print_list(meal_times)}) "
                         f"[default: dessert]: "
                     )
                     or "4"

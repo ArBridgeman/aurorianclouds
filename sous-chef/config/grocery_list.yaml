@@ -37,6 +37,7 @@ grocery_list:
     task_priority: 3
   bean_prep:
     prep_day: 1
+    soak_before_hours: 18
     prep_meal: lunch
   todoist:
     project_name: Groceries

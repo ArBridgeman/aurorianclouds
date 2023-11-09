@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
+from enum import Enum
 from itertools import chain
 from typing import List, Tuple
 
@@ -268,22 +269,50 @@ class GroceryList:
     def _add_referenced_recipe_to_queue(
         self, menu_recipe: MenuRecipe, recipe_list: List[Recipe]
     ):
+        def _check_yes_defrost_skip(text: str) -> str:
+            response = None
+            while response not in ["y", "d", "s"]:
+                response = input(f"\n{text} [y]es, [d]efrost, [s]kip: ").lower()
+            return response
+
         def _check_yes_no(text: str) -> str:
             response = None
-            while response not in ["Y", "N"]:
-                response = input(f"\n{text} [Y/N] ").upper()
+            while response not in ["y", "n"]:
+                response = input(f"\n{text} [y]es, [n]o: ").lower()
             return response
+
+        def _print_enum(eprint: Enum) -> str:
+            return ", ".join(f"{e.name} [{e.value}]" for e in eprint)
+
+        def _print_list(lprint: list[str]) -> str:
+            return ", ".join(
+                f"{lprint[il]} [{il}]" for il in range(len(lprint))
+            )
 
         def _get_schedule_day_hour_minute() -> datetime:
             day = None
-            while day not in Weekday.name_list("capitalize"):
-                day = input("\nWeekday: ").capitalize()
+            while (
+                not day or not day.isnumeric() or int(day) not in iter(Weekday)
+            ):
+                day = input(f"\nWeekday ({_print_enum(Weekday)}): ") or "-1"
+            day = Weekday(int(day)).name.capitalize()
 
             meal_time = None
             meal_times = MealTime.name_list("lower")
-            while meal_time not in meal_times:
-                meal_time = input(f"\nMealtime {meal_times}: ").lower()
-            meal_time = MealTime[meal_time].value
+            while (
+                not meal_time
+                or not meal_time.isnumeric()
+                or int(meal_time) not in range(len(meal_times))
+            ):
+                meal_time = (
+                    input(
+                        f"\nMealtime ({_print_list(meal_times)}) "
+                        f"[default: dessert]: "
+                    )
+                    or "4"
+                )
+            meal_time = MealTime[meal_times[int(meal_time)]].value
+
             return self.due_date_formatter.get_due_datetime_with_time(
                 weekday=day, hour=meal_time["hour"], minute=meal_time["minute"]
             )
@@ -308,27 +337,30 @@ class GroceryList:
                 recipe=recipe,
             )
 
-            # TODO make more robust to other methods
             if (
                 self.config.run_mode.with_todoist
                 and self.config.run_mode.check_referenced_recipe
             ):
                 _give_referenced_recipe_details()
-                # TODO would be ideal if could guess to
-                #  make ahead like beans; should just as if we need to make
-                if _check_yes_no(f"Need to make '{recipe.title}'?") == "Y":
+                sub_recipe_response = _check_yes_defrost_skip(
+                    f"Make '{recipe.title}'?"
+                )
+                if sub_recipe_response == "d":
+                    self._add_preparation_task_to_queue(
+                        f"[DEFROST] {recipe.amount}",
+                        due_date=menu_recipe.for_day - timedelta(days=1),
+                        from_recipe=[from_recipe],
+                        for_day_str=[menu_sub_recipe.for_day.strftime("%a")],
+                    )
+                elif sub_recipe_response == "y":
                     self._add_menu_recipe_to_queue([menu_sub_recipe])
 
                     if (
                         recipe.time_total is None
                         or recipe.time_total > timedelta(minutes=15)
                     ):
-                        if (
-                            _check_yes_no(
-                                f"Separately schedule '{recipe.title}'?"
-                            )
-                            == "Y"
-                        ):
+                        # TODO default make ahead date that could be overridden
+                        if _check_yes_no("...separately schedule?") == "y":
                             schedule_datetime = _get_schedule_day_hour_minute()
                             if schedule_datetime > menu_recipe.for_day:
                                 schedule_datetime -= timedelta(days=7)
@@ -411,6 +443,10 @@ class GroceryList:
             f"(freeze: {freeze_quantity} {unit_str})"
         )
 
+    def _format_bean_soak_task_str(self, row: pd.Series) -> str:
+        ingredient_str = self._format_ingredient_str(row)
+        return f"[BEAN SOAK] {ingredient_str}"
+
     def _format_ingredient_str(self, entry: pd.Series) -> str:
         item = entry["item"]
         if entry["quantity"] > 1 or not pd.isnull(entry["pint_unit"]):
@@ -475,6 +511,20 @@ class GroceryList:
         row["pint_unit"] = unit_registry.gram
         row["quantity"] = cans * config_bean.g_per_can
 
+        # bean soaking task
+        self._add_preparation_task_to_queue(
+            task=self._format_bean_soak_task_str(row),
+            due_date=self.due_date_formatter.replace_time_with_meal_time(
+                due_date=row.for_day
+                - timedelta(days=config_bean_prep.prep_day)
+                - timedelta(hours=config_bean_prep.soak_before_hours),
+                meal_time=config_bean_prep.prep_meal,
+            ),
+            from_recipe=row.from_recipe,
+            for_day_str=[row.for_day.strftime("%a")],
+        )
+
+        # bean cooking task
         self._add_preparation_task_to_queue(
             task=self._format_bean_prep_task_str(
                 row, config_bean.number_can_to_freeze

@@ -1,6 +1,8 @@
 import builtins
 import datetime
+from typing import Optional
 from unittest import mock
+from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
@@ -13,6 +15,7 @@ from sous_chef.grocery_list.generate_grocery_list import (
     GroceryListIncompleteError,
 )
 from sous_chef.menu.create_menu._for_grocery_list import MenuRecipe
+from sous_chef.recipe_book.recipe_util import Recipe
 from tests.unit_tests.util import create_recipe
 
 from utilities.testing.pandas_util import (
@@ -116,19 +119,18 @@ def create_ingredient_and_grocery_entry_raw(
 
 
 def create_menu_recipe(
+    recipe: Optional[Recipe] = None,
     from_recipe: str = "dummy recipe",
     eat_factor: float = 1.0,
     freeze_factor: float = 0.0,
     for_day=datetime.datetime(
         year=2022, month=1, day=27, tzinfo=timezone("UTC")
     ),
-    recipe=None,
 ):
-    this_recipe = create_recipe(title=from_recipe)
-    if recipe is not None:
-        this_recipe = recipe
+    if recipe is None:
+        recipe = create_recipe(title=from_recipe)
     return MenuRecipe(
-        recipe=this_recipe,
+        recipe=recipe,
         eat_factor=eat_factor,
         freeze_factor=freeze_factor,
         for_day=for_day,
@@ -150,34 +152,6 @@ class TestGroceryList:
         )
 
     @staticmethod
-    def test__add_referenced_recipe_to_queue(grocery_list, config_grocery_list):
-        menu_recipe_base = create_menu_recipe()
-        menu_recipe_ref = create_recipe(title="referenced", factor=1.0)
-        config_grocery_list.run_mode.with_todoist = True
-
-        with mock.patch.object(builtins, "input", lambda _: "Y"):
-            grocery_list._add_referenced_recipe_to_queue(
-                menu_recipe_base, [menu_recipe_ref]
-            )
-
-        added_recipe = MenuRecipe(
-            from_recipe=f"{menu_recipe_ref.title}_"
-            f"{menu_recipe_base.recipe.title}",
-            for_day=menu_recipe_base.for_day,
-            eat_factor=menu_recipe_base.eat_factor * menu_recipe_ref.factor,
-            freeze_factor=menu_recipe_base.freeze_factor
-            * menu_recipe_ref.factor,
-            recipe=menu_recipe_ref,
-        )
-        result = grocery_list.queue_menu_recipe[0]
-
-        assert result.eat_factor == added_recipe.eat_factor
-        assert result.for_day == added_recipe.for_day
-        assert result.freeze_factor == added_recipe.freeze_factor
-        assert result.from_recipe == added_recipe.from_recipe
-        assert_equal_series(result.recipe, added_recipe.recipe)
-
-    @staticmethod
     @pytest.mark.parametrize(
         "number_can_to_freeze, freeze_text", [(1, "1 can"), (2, "2 cans")]
     )
@@ -196,6 +170,22 @@ class TestGroceryList:
         assert (
             grocery_list._format_bean_prep_task_str(row, number_can_to_freeze)
             == f"[BEAN PREP] black beans, 210 g (freeze: {freeze_text})"
+        )
+
+    @staticmethod
+    def test__format_bean_soak_task_str(grocery_list):
+        row = pd.Series(
+            {
+                "quantity": 210,
+                "pint_unit": unit_registry.gram,
+                "item": "black beans",
+                "is_optional": False,
+                "item_plural": "black beans",
+            }
+        )
+        assert (
+            grocery_list._format_bean_soak_task_str(row)
+            == "[BEAN SOAK] black beans, 210 g"
         )
 
     @staticmethod
@@ -510,3 +500,125 @@ class TestGroceryList:
         assert (
             grocery_list._transform_food_to_aisle_group("asdfjl") == "Unknown"
         )
+
+
+class TestAddReferencedRecipeToQueue:
+    menu_recipe_base = create_menu_recipe(
+        recipe=create_recipe(title="recipe_base")
+    )
+    menu_recipe_ref = create_recipe(
+        title="referenced",
+        factor=1.0,
+        amount="1 cup referenced",
+        time_total_str="20 minutes",
+    )
+
+    def _get_added_recipe(self):
+        return MenuRecipe(
+            from_recipe=f"{self.menu_recipe_ref.title}_"
+            f"{self.menu_recipe_base.recipe.title}",
+            for_day=self.menu_recipe_base.for_day,
+            eat_factor=self.menu_recipe_base.eat_factor
+            * self.menu_recipe_ref.factor,
+            freeze_factor=self.menu_recipe_base.freeze_factor
+            * self.menu_recipe_ref.factor,
+            recipe=self.menu_recipe_ref,
+        )
+
+    def _get_preparation_queue(
+        self, task_str: str, due_date: datetime.datetime
+    ) -> pd.DataFrame:
+        return pd.DataFrame(
+            {
+                "task": [task_str],
+                "due_date": [due_date],
+                "from_recipe": [
+                    [
+                        f"{self.menu_recipe_ref.title}_"
+                        f"{self.menu_recipe_base.recipe.title}"
+                    ]
+                ],
+                "for_day_str": [["Thu"]],
+            }
+        )
+
+    def test__make_yes_schedule_separately_no(
+        self, grocery_list, config_grocery_list
+    ):
+        config_grocery_list.run_mode.with_todoist = True
+
+        with patch("builtins.input", side_effect=["y", "n"]):
+            grocery_list._add_referenced_recipe_to_queue(
+                self.menu_recipe_base, [self.menu_recipe_ref]
+            )
+
+        result = grocery_list.queue_menu_recipe[0]
+
+        added_recipe = self._get_added_recipe()
+        assert result.eat_factor == added_recipe.eat_factor
+        assert result.for_day == added_recipe.for_day
+        assert result.freeze_factor == added_recipe.freeze_factor
+        assert result.from_recipe == added_recipe.from_recipe
+        assert_equal_series(result.recipe, added_recipe.recipe)
+
+        assert grocery_list.queue_preparation is None
+
+    def test__make_yes_schedule_separately_yes(
+        self, grocery_list, config_grocery_list
+    ):
+        config_grocery_list.run_mode.with_todoist = True
+
+        with patch("builtins.input", side_effect=["y", "y", "1", "1"]):
+            grocery_list._add_referenced_recipe_to_queue(
+                self.menu_recipe_base, [self.menu_recipe_ref]
+            )
+
+        result = grocery_list.queue_menu_recipe[0]
+
+        added_recipe = self._get_added_recipe()
+        assert result.eat_factor == added_recipe.eat_factor
+        assert result.for_day == added_recipe.for_day
+        assert result.freeze_factor == added_recipe.freeze_factor
+        assert result.from_recipe == added_recipe.from_recipe
+        assert_equal_series(result.recipe, added_recipe.recipe)
+
+        assert_equal_dataframe(
+            grocery_list.queue_preparation,
+            self._get_preparation_queue(
+                task_str=f"[PREP] {self.menu_recipe_ref.amount}",
+                due_date=datetime.datetime(
+                    year=2022, month=1, day=25, hour=12, tzinfo=timezone("UTC")
+                ),
+            ),
+        )
+
+    def test__defrost(self, grocery_list, config_grocery_list):
+        config_grocery_list.run_mode.with_todoist = True
+
+        with mock.patch.object(builtins, "input", lambda _: "d"):
+            grocery_list._add_referenced_recipe_to_queue(
+                self.menu_recipe_base, [self.menu_recipe_ref]
+            )
+
+        assert grocery_list.queue_menu_recipe is None
+
+        assert_equal_dataframe(
+            grocery_list.queue_preparation,
+            self._get_preparation_queue(
+                task_str=f"[DEFROST] {self.menu_recipe_ref.amount}",
+                due_date=datetime.datetime(
+                    year=2022, month=1, day=26, tzinfo=timezone("UTC")
+                ),
+            ),
+        )
+
+    def test__skip(self, grocery_list, config_grocery_list):
+        config_grocery_list.run_mode.with_todoist = True
+
+        with mock.patch.object(builtins, "input", lambda _: "s"):
+            grocery_list._add_referenced_recipe_to_queue(
+                self.menu_recipe_base, [self.menu_recipe_ref]
+            )
+
+        assert grocery_list.queue_menu_recipe is None
+        assert grocery_list.queue_preparation is None

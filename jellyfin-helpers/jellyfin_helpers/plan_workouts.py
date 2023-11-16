@@ -1,17 +1,27 @@
 import re
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from enum import Enum, IntEnum
+from pathlib import Path
 from typing import List, Tuple
 
 import pandas as pd
 import pandera as pa
 from jellyfin_helpers.jellyfin_api import Jellyfin
 from jellyfin_helpers.utils import get_config
+from joblib import Memory
 from omegaconf import DictConfig
 from pandera.typing import Series
+from structlog import get_logger
 
 from utilities.api.gsheets_api import GsheetsHelper
 from utilities.api.todoist_api import TodoistHelper
+
+# initialize disk cache
+ABS_FILE_PATH = Path(__file__).absolute().parent
+CACHE_DIR = ABS_FILE_PATH / "diskcache"
+cache = Memory(CACHE_DIR, mmap_mode="r")
+
+LOGGER = get_logger(__name__)
 
 
 class Day(IntEnum):
@@ -84,22 +94,31 @@ class WorkoutPlanner:
         average_time = (int(times.group(1)) + int(times.group(2))) / 2
         return timedelta(minutes=average_time)
 
-    def _parse_workout_videos(self):
+    @staticmethod
+    @cache.cache
+    def _parse_workout_videos(
+        library_name: str = "Ariel Fitness",
+        genres: Tuple[str] = ("Advice", "Pregnancy", "Injury - Dance Party"),
+        date: date = datetime.today().date(),
+        debug: bool = False,
+    ):
+        LOGGER.info(f"Querying library={library_name}")
+
         exercise_genres = jellyfin.get_genres_per_library(
-            library_name="Ariel Fitness"
+            library_name=library_name
         )
 
         data_frame = pd.DataFrame()
         for genre in exercise_genres:
-            if genre["Name"] in ["Advice", "Pregnancy", "Injury - Dance Party"]:
+            if genre["Name"] in genres:
                 continue
-            print(f"genre={genre['Name']}")
+            LOGGER.info(f"genre={genre['Name']}")
             raw_data = pd.DataFrame(
                 jellyfin.get_items_per_genre(genre_id=genre["Id"])
             )
             raw_data = raw_data[~raw_data.VideoType.isna()]
             raw_data["Duration"] = raw_data["Tags"].apply(
-                self._get_duration_from_tags
+                WorkoutPlanner._get_duration_from_tags
             )
             raw_data["Genre"] = genre["Name"]
 
@@ -109,9 +128,11 @@ class WorkoutPlanner:
                     data_frame,
                 ]
             )
-            # debug
-            # print(data_frame)
+            if debug:
+                LOGGER.info(data_frame)
+
             WorkoutVideos.validate(data_frame)
+
         return data_frame
 
     def _search_for_workout(

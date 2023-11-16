@@ -124,7 +124,7 @@ class MenuSchema(pa.SchemaModel):
     selection: Series[str] = pa.Field(
         isin=RandomSelectType.name_list(), nullable=True
     )
-    eat_factor: Series[float] = pa.Field(gt=0, nullable=False, coerce=True)
+    eat_factor: Series[float] = pa.Field(ge=0, nullable=False, coerce=True)
     eat_unit: Series[str] = pa.Field(nullable=True)
     freeze_factor: Series[float] = pa.Field(ge=0, nullable=False, coerce=True)
     defrost: Series[str] = pa.Field(

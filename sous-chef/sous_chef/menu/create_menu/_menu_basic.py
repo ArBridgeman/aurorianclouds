@@ -136,7 +136,7 @@ class MenuSchema(pa.SchemaModel):
     item: Series[str]
 
     class Config:
-        strict = True
+        strict = False
 
 
 class FinalizedMenuSchema(MenuSchema):
@@ -151,7 +151,7 @@ class FinalizedMenuSchema(MenuSchema):
     uuid: Series[str] = pa.Field(nullable=True)
 
     class Config:
-        strict = True
+        strict = False
 
 
 @dataclass

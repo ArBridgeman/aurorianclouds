@@ -10,7 +10,7 @@
       <excludeFolder url="file://$MODULE_DIR$/utilities/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/analysis/.venv" />
     </content>
-    <orderEntry type="jdk" jdkName="aurorianclouds (poetry, python 3.9)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="aurorianclouds" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PackageRequirementsSettings">

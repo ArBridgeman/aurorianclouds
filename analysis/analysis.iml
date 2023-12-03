@@ -6,7 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/sous-chef" isTestSource="false" />
     </content>
     <content url="file://$MODULE_DIR$/.venv" />
-    <orderEntry type="jdk" jdkName="aurorianclouds/analysis (poetry, python 3.10)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="aur/analysis" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>

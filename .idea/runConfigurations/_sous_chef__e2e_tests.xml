@@ -4,7 +4,7 @@
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <option name="SDK_HOME" value="$PROJECT_DIR$/sous-chef/.venv/bin/python" />
-    <option name="SDK_NAME" value="aurorianclouds/sous-chef (poetry, python 3.9)" />
+    <option name="SDK_NAME" value="aur/sous-chef" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/sous-chef/tests/e2e_tests" />
     <option name="IS_MODULE_SDK" value="true" />
     <option name="ADD_CONTENT_ROOTS" value="true" />

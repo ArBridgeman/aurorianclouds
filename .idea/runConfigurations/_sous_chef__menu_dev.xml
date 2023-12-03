@@ -7,7 +7,7 @@
       <env name="PYTHONUNBUFFERED" value="1" />
     </envs>
     <option name="SDK_HOME" value="$PROJECT_DIR$/sous-chef/.venv/bin/python" />
-    <option name="SDK_NAME" value="aurorianclouds/sous-chef (poetry, python 3.9)" />
+    <option name="SDK_NAME" value="aur/sous-chef" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/sous-chef/sous_chef/menu" />
     <option name="IS_MODULE_SDK" value="true" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
@@ -19,7 +19,7 @@
       <option name="useCurrentConnection" value="false" />
     </EXTENSION>
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/sous-chef/sous_chef/menu/main.py" />
-    <option name="PARAMETERS" value="menu.create_menu.fixed.menu_number=12 menu.run_mode.with_todoist=false" />
+    <option name="PARAMETERS" value="menu.create_menu.fixed.menu_number=14 menu.run_mode.with_todoist=false" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="true" />
     <option name="MODULE_MODE" value="false" />

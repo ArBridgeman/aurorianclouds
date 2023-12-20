@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import List
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -10,6 +10,8 @@ from sous_chef.menu.create_menu._menu_basic import (
 )
 from structlog import get_logger
 from termcolor import cprint
+
+from utilities.api.gsheets_api import GsheetsHelper
 
 FILE_LOGGER = get_logger(__name__)
 
@@ -34,7 +36,11 @@ class MenuFromFixedTemplate(MenuBasic):
 
         self.record_exception = []
 
-        self.dataframe = self._load_fixed_menu().reset_index(drop=True)
+        all_menus = get_all_fixed_menus(
+            gsheets_helper=self.gsheets_helper,
+            menu_file=self.config.fixed.workbook,
+        )
+        self.dataframe = self._load_fixed_menu(all_menus=all_menus)
 
         # remove menu entries that are inactive and drop column
         mask_inactive = self.dataframe.inactive.str.upper() == "Y"
@@ -81,11 +87,18 @@ class MenuFromFixedTemplate(MenuBasic):
         # validate schema & process menu
         self._validate_menu_schema()
 
+        future_uuid_tuple = ()
+        if self.config.fixed.already_in_future_menus.active:
+            future_uuid_tuple = self._get_future_menu_uuids(all_menus=all_menus)
+
         holder_dataframe = pd.DataFrame()
         processed_uuid_list = []
         for _, entry in self.dataframe.iterrows():
+
             processed_entry = self._process_menu(
-                entry.copy(deep=True), processed_uuid_list=processed_uuid_list
+                entry.copy(deep=True),
+                processed_uuid_list=processed_uuid_list,
+                future_uuid_tuple=future_uuid_tuple,
             )
 
             # in cases where error is logged
@@ -118,33 +131,45 @@ class MenuFromFixedTemplate(MenuBasic):
         if not isinstance(menu_number, int):
             raise ValueError(f"fixed menu number ({menu_number}) not an int")
 
-    def _load_fixed_menu(self):
-        menu_file = self.config.fixed.workbook
-
-        sheet_to_mealtime = {
-            "breakfast": "breakfast",
-            "snack": "snack",
-            "dinner": "dinner",
-            "dessert": "dessert",
-        }
-
-        combined_menu = pd.DataFrame()
-        for sheet, meal_time in sheet_to_mealtime.items():
-            sheet_pd = self.gsheets_helper.get_worksheet(
-                menu_file, worksheet_name=sheet
+    def _get_future_menu_uuids(self, all_menus: pd.DataFrame) -> Tuple:
+        FILE_LOGGER.info("[get future menu uuids]")
+        menu_number = self.config.fixed.menu_number
+        num_weeks = self.config.fixed.already_in_future_menus.num_weeks
+        if not isinstance(num_weeks, int) or num_weeks <= 0:
+            raise ValueError(
+                "fixed.already_in_future_menus.num_weeks must be int>0"
             )
-            sheet_pd["meal_time"] = meal_time
-            combined_menu = pd.concat([combined_menu, sheet_pd])
 
+        max_num_menu = all_menus.menu.max()
+
+        current_menu = menu_number
+        future_menus = []
+        for x in range(num_weeks):
+            current_menu += 1
+            if current_menu > max_num_menu:
+                current_menu = max(
+                    all_menus.menu.min(), self.config.fixed.min_menu_number
+                )
+            future_menus.append(current_menu)
+
+        mask_week = all_menus.menu.isin(future_menus)
+        mask_type = all_menus["type"] == "recipe"
+        future_recipes = all_menus[mask_week & mask_type].copy()
+        return tuple(
+            self.recipe_book.get_recipe_by_title(recipe).uuid
+            for recipe in future_recipes["item"].values
+        )
+
+    def _load_fixed_menu(self, all_menus: pd.DataFrame) -> pd.DataFrame:
         basic_number = self.config.fixed.basic_number
-        # self._check_fixed_menu_number(basic_number)
+        self._check_fixed_menu_number(basic_number)
 
         menu_number = self.config.fixed.menu_number
         self._check_fixed_menu_number(menu_number)
 
-        combined_menu = combined_menu[
-            combined_menu.menu.astype(int).isin([basic_number, menu_number])
-        ]
+        combined_menu = all_menus[
+            all_menus.menu.isin([basic_number, menu_number])
+        ].copy()
 
         combined_menu["weekday"] = (
             combined_menu.day.str.split("_")
@@ -162,9 +187,14 @@ class MenuFromFixedTemplate(MenuBasic):
                 "Menu entries ignored",
                 skipped_entries=combined_menu[mask_skip_none],
             )
-        return combined_menu[~mask_skip_none]
+        return combined_menu[~mask_skip_none].reset_index(drop=True)
 
-    def _process_menu(self, row: pd.Series, processed_uuid_list: List):
+    def _process_menu(
+        self,
+        row: pd.Series,
+        processed_uuid_list: List,
+        future_uuid_tuple: Optional[Tuple] = (),
+    ):
         FILE_LOGGER.info(
             "[process menu]",
             action="processing",
@@ -175,7 +205,9 @@ class MenuFromFixedTemplate(MenuBasic):
         if row["type"] == "ingredient":
             return self._process_ingredient(row)
         return self._process_menu_recipe(
-            row, processed_uuid_list=processed_uuid_list
+            row,
+            processed_uuid_list=processed_uuid_list,
+            future_uuid_tuple=future_uuid_tuple,
         )
 
     def _process_ingredient(self, row: pd.Series):
@@ -191,14 +223,40 @@ class MenuFromFixedTemplate(MenuBasic):
         row["prep_datetime"] = cook_datetime
         return row
 
-    def _process_menu_recipe(self, row: pd.Series, processed_uuid_list: List):
+    def _process_menu_recipe(
+        self,
+        row: pd.Series,
+        processed_uuid_list: List,
+        future_uuid_tuple: Optional[Tuple] = (),
+    ):
         if row["type"] in ["category", "tag", "filter"]:
             return self._select_random_recipe(
                 row=row,
                 entry_type=row["type"],
                 processed_uuid_list=processed_uuid_list,
+                future_uuid_tuple=future_uuid_tuple,
             )
 
         return self._retrieve_recipe(
-            row, processed_uuid_list=processed_uuid_list
+            row,
+            processed_uuid_list=processed_uuid_list,
+            future_uuid_tuple=future_uuid_tuple,
         )
+
+
+def get_all_fixed_menus(gsheets_helper: GsheetsHelper, menu_file: str):
+    # TODO move to config
+    sheet_to_mealtime = {
+        "breakfast": "breakfast",
+        "snack": "snack",
+        "dinner": "dinner",
+        "dessert": "dessert",
+    }
+    combined_menu = pd.DataFrame()
+    for sheet, meal_time in sheet_to_mealtime.items():
+        sheet_pd = gsheets_helper.get_worksheet(menu_file, worksheet_name=sheet)
+        sheet_pd["meal_time"] = meal_time
+        combined_menu = pd.concat([combined_menu, sheet_pd])
+    # TODO add pandera validator so this & others are handled by default
+    combined_menu.menu = combined_menu.menu.astype(int)
+    return combined_menu

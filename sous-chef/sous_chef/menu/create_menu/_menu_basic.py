@@ -2,7 +2,7 @@ import datetime
 from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -83,6 +83,21 @@ class MenuQualityError(Exception):
     error_text: str
     recipe_title: str
     message: str = "[menu quality]"
+
+    def __post_init__(self):
+        super().__init__(self.message)
+
+    def __str__(self):
+        return (
+            f"{self.message} recipe={self.recipe_title} error={self.error_text}"
+        )
+
+
+@dataclass
+class MenuFutureError(Exception):
+    error_text: str
+    recipe_title: str
+    message: str = "[future menu]"
 
     def __post_init__(self):
         super().__init__(self.message)
@@ -340,7 +355,12 @@ class MenuBasic(BaseWithExceptionHandling):
             )
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
-    def _retrieve_recipe(self, row: pd.Series, processed_uuid_list: List):
+    def _retrieve_recipe(
+        self,
+        row: pd.Series,
+        processed_uuid_list: List,
+        future_uuid_tuple: Optional[Tuple] = (),
+    ) -> pd.Series:
         recipe = self.recipe_book.get_recipe_by_title(row["item"])
         if row.override_check == "N":
             if recipe.uuid in processed_uuid_list:
@@ -350,11 +370,20 @@ class MenuBasic(BaseWithExceptionHandling):
                 )
             elif recipe.uuid in self.menu_history_uuid_list:
                 raise MenuHistoryError(recipe_title=recipe.title)
+            elif recipe.uuid in future_uuid_tuple:
+                raise MenuFutureError(
+                    recipe_title=recipe.title,
+                    error_text="recipe is in an upcoming menu",
+                )
         return self._add_recipe_columns(row=row, recipe=recipe)
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _select_random_recipe(
-        self, row: pd.Series, entry_type: str, processed_uuid_list: List
+        self,
+        row: pd.Series,
+        entry_type: str,
+        processed_uuid_list: List,
+        future_uuid_tuple: Optional[Tuple],
     ):
         max_cook_active_minutes = None
         if row.override_check == "N":
@@ -369,7 +398,7 @@ class MenuBasic(BaseWithExceptionHandling):
 
         exclude_uuid_list = self.menu_history_uuid_list
         if processed_uuid_list:
-            exclude_uuid_list += processed_uuid_list
+            exclude_uuid_list += processed_uuid_list + list(future_uuid_tuple)
 
         recipe = getattr(
             self.recipe_book, f"get_random_recipe_by_{entry_type}"

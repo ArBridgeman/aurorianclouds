@@ -32,6 +32,13 @@ create_menu:
     workbook: fixed_menus
     basic_number: 0
     menu_number:
+    # if 0 is used as a basic menu, then change this to 1
+    min_menu_number: 1
+    # skips for random selections; gives error for hard-coded recipes
+    # will include even ignored recipes atm
+    already_in_future_menus:
+      active: true
+      num_weeks: 4
   final_menu:
     workbook: menu-tmp
     worksheet: menu-tmp

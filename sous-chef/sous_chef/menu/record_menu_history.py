@@ -36,7 +36,7 @@ class MenuHistory(pa.SchemaModel):
     cook_datetime: Series[pd.DatetimeTZDtype] = pa.Field(
         dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
     )
-    eat_factor: Series[float] = pa.Field(gt=0, nullable=False, coerce=True)
+    eat_factor: Series[float] = pa.Field(ge=0, nullable=False, coerce=True)
     item: Series[str]
     uuid: Series[str]
 

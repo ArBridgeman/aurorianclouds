@@ -68,6 +68,7 @@ class TodoistHelper:
     def add_task_to_project(
         self,
         task: str,
+        due_string: str = None,
         due_date: Union[datetime.date, datetime.datetime] = None,
         project: str = None,
         project_id: str = None,
@@ -79,7 +80,7 @@ class TodoistHelper:
         priority: int = 1,
     ) -> Union[None, Task]:
 
-        due_date_str = None
+        due_date_str = due_string
         if isinstance(due_date, datetime.datetime):
             due_date_str = self._get_due_datetime_str(due_date)
         elif isinstance(due_date, datetime.date):
@@ -88,6 +89,7 @@ class TodoistHelper:
         FILE_LOGGER.info(
             "[todoist add]",
             task=task,
+            due_string=due_string,
             due_date=due_date_str,
             project=project,
             section=section,
@@ -199,14 +201,3 @@ class TodoistHelper:
             if section.name.casefold() == section_name.casefold():
                 return section.id
         raise TodoistKeyError(tag="section_id", value=section_name)
-
-    # TODO implement defrost task uploader
-    def retrieve_freezer(self):
-        raise NotImplementedError("Should implement this for defrost!")
-        # freezer_contents = defaultdict(list)
-        # for task in self.connection.state["items"]:
-        #     if task["project_id"] in [self.get_project_id("Freezer")]:
-        #         freezer_contents["title"].append(task["content"])
-        #         # TODO implement type based on section name
-        #         freezer_contents["type"].append("undefined")
-        # return pd.DataFrame(freezer_contents)

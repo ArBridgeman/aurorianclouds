@@ -1,0 +1,20 @@
+defaults:
+  - gsheets_api
+  - jellyfin_api
+  - todoist_api
+  - _self_
+
+
+plan_workouts:
+  todoist:
+    project: Active tasks
+    section: ariel_workouts
+    task_priority: 2
+  gsheets:
+    workbook: ariel_workout
+    worksheet: weekly # unwell
+  jellyfin:
+    playlist_1: ariel-week-1
+    playlist_2: ariel-week-2
+    playlist_3: ariel-week-3
+    playlist_4: ariel-week-4

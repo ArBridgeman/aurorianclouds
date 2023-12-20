@@ -8,6 +8,7 @@
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/htmlcov" />
       <excludeFolder url="file://$MODULE_DIR$/utilities/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/analysis/.venv" />
     </content>
     <orderEntry type="jdk" jdkName="aurorianclouds" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

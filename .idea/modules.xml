@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/analysis/analysis.iml" filepath="$PROJECT_DIR$/analysis/analysis.iml" />
       <module fileurl="file://$PROJECT_DIR$/ansible/ansible.iml" filepath="$PROJECT_DIR$/ansible/ansible.iml" />
       <module fileurl="file://$PROJECT_DIR$/aurorianclouds.iml" filepath="$PROJECT_DIR$/aurorianclouds.iml" />
       <module fileurl="file://$PROJECT_DIR$/house-keeper/house-keeper.iml" filepath="$PROJECT_DIR$/house-keeper/house-keeper.iml" />

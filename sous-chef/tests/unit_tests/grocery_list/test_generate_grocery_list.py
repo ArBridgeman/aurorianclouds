@@ -561,7 +561,20 @@ class TestAddReferencedRecipeToQueue:
         assert result.from_recipe == added_recipe.from_recipe
         assert_equal_series(result.recipe, added_recipe.recipe)
 
-        assert grocery_list.queue_preparation is None
+        assert_equal_dataframe(
+            grocery_list.queue_preparation,
+            self._get_preparation_queue(
+                task_str=f"[PREP] {self.menu_recipe_ref.amount}",
+                due_date=datetime.datetime(
+                    year=2022,
+                    month=1,
+                    day=26,
+                    hour=23,
+                    minute=40,
+                    tzinfo=timezone("UTC"),
+                ),
+            ),
+        )
 
     def test__make_yes_schedule_separately_yes(
         self, grocery_list, config_grocery_list

@@ -360,18 +360,27 @@ class GroceryList:
                         or recipe.time_total > timedelta(minutes=15)
                     ):
                         # TODO default make ahead date that could be overridden
+                        schedule_datetime = (
+                            menu_recipe.for_day - recipe.time_total
+                            if recipe.time_total is not None
+                            else timedelta(minutes=30)
+                        )
+                        # todo: check if before or after lunch of day
+                        #  and "round" to either lunch or dessert day before
+
                         if _check_yes_no("...separately schedule?") == "y":
                             schedule_datetime = _get_schedule_day_hour_minute()
                             if schedule_datetime > menu_recipe.for_day:
                                 schedule_datetime -= timedelta(days=7)
-                            self._add_preparation_task_to_queue(
-                                f"[PREP] {recipe.amount}",
-                                due_date=schedule_datetime,
-                                from_recipe=[from_recipe],
-                                for_day_str=[
-                                    menu_sub_recipe.for_day.strftime("%a")
-                                ],
-                            )
+
+                        self._add_preparation_task_to_queue(
+                            f"[PREP] {recipe.amount}",
+                            due_date=schedule_datetime,
+                            from_recipe=[from_recipe],
+                            for_day_str=[
+                                menu_sub_recipe.for_day.strftime("%a")
+                            ],
+                        )
 
     def _aggregate_grocery_list(self):
         # do not drop nas, as some items are dimensionless (None)

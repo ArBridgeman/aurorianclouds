@@ -34,6 +34,7 @@ class TestTodoistHelper:
             "level": "info",
             "event": "[todoist add]",
             "task": task,
+            "due_string": None,
             "due_date": due_date_str,
             "project": PROJECT,
             "section": section,
@@ -111,6 +112,7 @@ class TestTodoistHelper:
                 "action": "Deleted 1 tasks!",
             },
         ]
+        todoist_helper.delete_all_items_in_project(project=PROJECT)
 
     def test_delete_all_items_in_project_skip_recurring(
         self, todoist_helper, pytest_area_project_id

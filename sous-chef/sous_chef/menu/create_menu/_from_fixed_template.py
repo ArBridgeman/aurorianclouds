@@ -94,9 +94,8 @@ class MenuFromFixedTemplate(MenuBasic):
         holder_dataframe = pd.DataFrame()
         processed_uuid_list = []
         for _, entry in self.dataframe.iterrows():
-
             processed_entry = self._process_menu(
-                entry.copy(deep=True),
+                row=entry,
                 processed_uuid_list=processed_uuid_list,
                 future_uuid_tuple=future_uuid_tuple,
             )
@@ -202,10 +201,11 @@ class MenuFromFixedTemplate(MenuBasic):
             item=row["item"],
             type=row["type"],
         )
+        tmp_row = row.copy(deep=True)
         if row["type"] == "ingredient":
-            return self._process_ingredient(row)
+            return self._process_ingredient(tmp_row)
         return self._process_menu_recipe(
-            row,
+            tmp_row,
             processed_uuid_list=processed_uuid_list,
             future_uuid_tuple=future_uuid_tuple,
         )

@@ -1,122 +1,14 @@
-import datetime
-from dataclasses import dataclass
-from typing import Union
-
 import numpy as np
 import pandas as pd
 import pytest
 from freezegun import freeze_time
-from hydra import compose, initialize
-from pandas import DataFrame
-from pandera.typing.common import DataFrameBase
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.menu.create_menu._for_grocery_list import (
     MenuIngredient,
     MenuRecipe,
 )
-from sous_chef.menu.create_menu._menu_basic import (
-    FinalizedMenuSchema,
-    MenuFutureError,
-    MenuSchema,
-)
-from sous_chef.menu.create_menu.create_menu import Menu
-from sous_chef.menu.record_menu_history import MenuHistoryError
 from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
-
-from utilities.testing.pandas_util import assert_equal_series
-
-
-@dataclass
-class MenuBuilder:
-    menu: pd.DataFrame = None
-
-    def add_menu_row(self, row: pd.DataFrame):
-        if self.menu is None:
-            self.menu = row
-        else:
-            self.menu = pd.concat([self.menu, row], ignore_index=True)
-
-    def add_menu_list(self, menu_row_list: list[pd.DataFrame]):
-        for menu_row in menu_row_list:
-            self.add_menu_row(menu_row)
-        return self
-
-    @staticmethod
-    def create_menu_row(
-        prep_day: int = 0,
-        meal_time: str = "dinner",
-        item_type: str = "recipe",
-        eat_factor: float = 1.0,
-        # gsheets has "", whereas read_csv defaults to np.nans
-        eat_unit: str = "",
-        freeze_factor: float = 0.0,
-        defrost: str = "N",
-        item: str = "dummy",
-        # template matched with cook_days
-        loaded_fixed_menu: bool = True,
-        # after recipe/ingredient matched
-        post_process_recipe: bool = False,
-        rating: float = 3.0,  # np.nan, if unrated
-        time_total_str: str = np.nan,
-    ) -> Union[
-        DataFrame, DataFrameBase[MenuSchema], DataFrameBase[FinalizedMenuSchema]
-    ]:
-        if item_type == "recipe":
-            if time_total_str is np.nan:
-                time_total_str = "5 min"
-        elif item_type == "ingredient":
-            if time_total_str is np.nan:
-                time_total_str = "20 min"
-
-        if (time_total := pd.to_timedelta(time_total_str)) is pd.NaT:
-            time_total = None
-
-        menu = {
-            "weekday": "work_day_2",
-            "prep_day": prep_day,
-            "meal_time": meal_time,
-            "eat_factor": eat_factor,
-            "eat_unit": eat_unit,
-            "freeze_factor": freeze_factor,
-            "defrost": defrost,
-            "item": item,
-            "type": item_type,
-            "selection": "either",
-        }
-        if not loaded_fixed_menu:
-            return pd.DataFrame(menu, index=[0])
-        menu["weekday"] = "Friday"
-        menu["eat_datetime"] = pd.Timestamp(
-            year=2022, month=1, day=21, hour=17, minute=45, tz="Europe/Berlin"
-        )
-        # needed for schema validation, not "proper" prep_datetime
-        menu["prep_datetime"] = menu["eat_datetime"]
-        menu["override_check"] = "N"
-        if not post_process_recipe:
-            return MenuSchema.validate(pd.DataFrame(menu, index=[0]))
-        menu["rating"] = rating
-        menu["time_total"] = time_total
-        menu["uuid"] = "1666465773100"
-        if prep_day != 0:
-            menu["cook_datetime"] = menu["eat_datetime"]
-            menu["prep_datetime"] = menu["eat_datetime"] - datetime.timedelta(
-                days=prep_day
-            )
-        else:
-            menu["cook_datetime"] = menu["eat_datetime"] - time_total
-            menu["prep_datetime"] = menu["eat_datetime"] - time_total
-        menu_df = pd.DataFrame(menu, index=[0])
-        menu_df.time_total = pd.to_timedelta(menu_df.time_total)
-        return FinalizedMenuSchema.validate(menu_df)
-
-    def get_menu(self) -> pd.DataFrame:
-        return self.menu
-
-
-@pytest.fixture
-def menu_builder():
-    return MenuBuilder()
 
 
 @pytest.fixture
@@ -140,55 +32,7 @@ def menu_default(menu_builder):
     return menu_builder.get_menu()
 
 
-@pytest.fixture
-def menu_config():
-    with initialize(version_base=None, config_path="../../../config/menu"):
-        return compose(config_name="create_menu").create_menu
-
-
-@pytest.fixture
-@freeze_time(FROZEN_DATE)
-def menu(
-    menu_config,
-    mock_gsheets,
-    mock_ingredient_formatter,
-    mock_menu_history,
-    mock_recipe_book,
-    frozen_due_datetime_formatter,
-):
-    menu = Menu(
-        config=menu_config,
-        due_date_formatter=frozen_due_datetime_formatter,
-        gsheets_helper=mock_gsheets,
-        ingredient_formatter=mock_ingredient_formatter,
-        menu_historian=mock_menu_history,
-        recipe_book=mock_recipe_book,
-    )
-    return menu
-
-
 class TestMenu:
-    @staticmethod
-    @pytest.mark.parametrize("menu_number", [1, 12])
-    def test__check_fixed_menu_number(menu, menu_number):
-        menu._check_fixed_menu_number(menu_number)
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "menu_number,error_message",
-        [
-            (None, "fixed menu number not specified"),
-            (1.2, "fixed menu number (1.2) not an int"),
-            ("a", "fixed menu number (a) not an int"),
-        ],
-    )
-    def test__check_fixed_menu_number_raise_value_error(
-        menu, menu_number, error_message
-    ):
-        with pytest.raises(ValueError) as error:
-            menu._check_fixed_menu_number(menu_number)
-        assert str(error.value) == error_message
-
     @staticmethod
     def test__add_recipe_columns_nat(menu, menu_builder, mock_recipe_book):
         recipe_title = "recipe_without_cook_time"
@@ -397,74 +241,6 @@ class TestMenu:
     @pytest.mark.parametrize(
         "quantity,unit,item", [(1.0, "cup", "frozen broccoli")]
     )
-    def test__process_menu_ingredient(
-        menu, menu_builder, mock_ingredient_formatter, quantity, unit, item
-    ):
-        row = menu_builder.create_menu_row(
-            eat_factor=quantity,
-            eat_unit=unit,
-            item=item,
-            item_type="ingredient",
-            loaded_fixed_menu=True,
-            post_process_recipe=True,
-        ).squeeze()
-
-        ingredient = Ingredient(quantity=quantity, unit=unit, item=item)
-        mock_ingredient_formatter.format_manual_ingredient.return_value = (
-            ingredient
-        )
-
-        result = menu._process_menu(row.copy(deep=True), processed_uuid_list=[])
-        assert_equal_series(result, row)
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "item_type,method",
-        [
-            ("tag", "get_random_recipe_by_tag"),
-            ("category", "get_random_recipe_by_category"),
-        ],
-    )
-    def test__process_menu_category_or_tag(
-        menu, menu_builder, mock_recipe_book, log, item_type, method
-    ):
-        row = menu_builder.create_menu_row(
-            item_type=item_type,
-            item=f"dummy_{item_type}",
-            loaded_fixed_menu=True,
-        ).squeeze()
-
-        recipe = create_recipe(title="dummy_recipe")
-        getattr(mock_recipe_book, method).return_value = recipe
-        mock_recipe_book.get_recipe_by_title.return_value = recipe
-
-        result = menu._process_menu(row, processed_uuid_list=[])
-
-        assert_equal_series(
-            result,
-            menu_builder.create_menu_row(
-                post_process_recipe=True,
-                item=recipe.title,
-                item_type="recipe",
-                time_total_str=recipe.time_total,
-                rating=recipe.rating,
-            ).squeeze(),
-        )
-        assert log.events == [
-            {
-                "event": "[process menu]",
-                "level": "info",
-                "action": "processing",
-                "day": "Friday",
-                "item": f"dummy_{item_type}",
-                "type": item_type,
-            },
-        ]
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "quantity,unit,item", [(1.0, "cup", "frozen broccoli")]
-    )
     def test__retrieve_manual_menu_ingredient(
         menu, menu_builder, mock_ingredient_formatter, quantity, unit, item
     ):
@@ -526,84 +302,3 @@ class TestMenu:
     def test__validate_menu_schema(menu, menu_builder):
         menu.dataframe = menu_builder.create_menu_row(loaded_fixed_menu=True)
         menu._validate_menu_schema()
-
-
-class TestCreateMenuProcessMenuRecipe:
-    recipe_title = "garlic aioli"
-    time_total_str = "5 minutes"
-
-    def _set_up_recipe(self, menu_builder, mock_recipe_book):
-        row = menu_builder.create_menu_row(
-            item=self.recipe_title, item_type="recipe", loaded_fixed_menu=True
-        ).squeeze()
-
-        recipe_with_time_total = create_recipe(
-            title=self.recipe_title, time_total_str=self.time_total_str
-        )
-        mock_recipe_book.get_recipe_by_title.return_value = (
-            recipe_with_time_total
-        )
-        return row, recipe_with_time_total.uuid
-
-    def test__normal(self, menu, menu_builder, mock_recipe_book):
-        menu_row, _ = self._set_up_recipe(menu_builder, mock_recipe_book)
-
-        result = menu._process_menu(
-            menu_row.copy(deep=True), processed_uuid_list=[]
-        )
-
-        assert_equal_series(
-            result,
-            menu_builder.create_menu_row(
-                post_process_recipe=True,
-                item=self.recipe_title,
-                item_type="recipe",
-                time_total_str=pd.to_timedelta(self.time_total_str),
-            ).squeeze(),
-        )
-
-    def test__error_when_in_processed_uuid_list(
-        self, menu, menu_builder, mock_recipe_book
-    ):
-        menu_row, recipe_uuid = self._set_up_recipe(
-            menu_builder, mock_recipe_book
-        )
-
-        # derived exception MenuQualityError
-        with pytest.raises(Exception) as error:
-            menu._process_menu(menu_row, processed_uuid_list=[recipe_uuid])
-        assert (
-            str(error.value) == "[menu quality] recipe=garlic aioli "
-            "error=recipe already processed in menu"
-        )
-
-    def test__error_when_in_menu_history_uuid_list(
-        self, menu, menu_builder, mock_recipe_book
-    ):
-        menu_row, recipe_uuid = self._set_up_recipe(
-            menu_builder, mock_recipe_book
-        )
-
-        menu.menu_history_uuid_list = [recipe_uuid]
-
-        with pytest.raises(MenuHistoryError) as error:
-            menu._process_menu(menu_row, processed_uuid_list=[])
-        assert (
-            str(error.value) == "[in recent menu history] recipe=garlic aioli"
-        )
-
-    def test__error_when_in_future_menu_history_uuid_list(
-        self, menu, menu_builder, mock_recipe_book
-    ):
-        menu_row, recipe_uuid = self._set_up_recipe(
-            menu_builder, mock_recipe_book
-        )
-
-        with pytest.raises(MenuFutureError) as error:
-            menu._process_menu(
-                menu_row, processed_uuid_list=[], future_uuid_tuple=recipe_uuid
-            )
-        assert str(error.value) == (
-            "[future menu] recipe=garlic aioli "
-            "error=recipe is in an upcoming menu"
-        )

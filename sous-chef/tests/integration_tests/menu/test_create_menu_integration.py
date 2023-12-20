@@ -31,6 +31,7 @@ def menu_config():
         config.fixed.workbook = "test-fixed_menus"
         config.fixed.menu_number = 1
         config.todoist.project_name = PROJECT
+        config.fixed.already_in_future_menus.active = False
         return config
 
 

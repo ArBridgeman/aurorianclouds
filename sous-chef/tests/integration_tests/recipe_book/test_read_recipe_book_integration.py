@@ -95,21 +95,23 @@ class TestCurrentRecipeBook:
         assert self._has_no_duplicates(recipe_book.category_tuple)
         assert self._has_no_space_label_tuple(recipe_book.category_tuple)
         assert self._has_no_unused_label(
-            recipe_book.dataframe.categories, recipe_book.category_tuple
+            recipe_book.all_menus_df.categories, recipe_book.category_tuple
         )
 
     def test__read_tag_tuple_quality_check(self, recipe_book):
         assert self._has_no_duplicates(recipe_book.tag_tuple)
         assert self._has_no_space_label_tuple(recipe_book.tag_tuple)
         assert self._has_no_unused_label(
-            recipe_book.dataframe.tags, recipe_book.tag_tuple
+            recipe_book.all_menus_df.tags, recipe_book.tag_tuple
         )
 
     def test_recipe_book_has_no_missing_category(self, recipe_book):
-        mask_missing_category = ~recipe_book.dataframe.categories.astype(bool)
+        mask_missing_category = ~recipe_book.all_menus_df.categories.astype(
+            bool
+        )
         if has_missing_category := any(mask_missing_category):
             print(
-                recipe_book.dataframe[mask_missing_category][
+                recipe_book.all_menus_df[mask_missing_category][
                     ["title"]
                 ].sort_values(by=["title"])
             )
@@ -119,39 +121,39 @@ class TestCurrentRecipeBook:
         reason=">300 lack tags; enact after recipe standardizer created"
     )
     def test_recipe_book_has_no_missing_tag(self, recipe_book):
-        mask_missing_tag = ~recipe_book.dataframe.tags.astype(bool)
+        mask_missing_tag = ~recipe_book.all_menus_df.tags.astype(bool)
         if has_missing_tag := any(mask_missing_tag):
             print(
-                recipe_book.dataframe[mask_missing_tag][["title"]].sort_values(
-                    by=["title"]
-                )
+                recipe_book.all_menus_df[mask_missing_tag][
+                    ["title"]
+                ].sort_values(by=["title"])
             )
         assert not has_missing_tag
 
     def test_recipe_book_no_duplicate_recipe_titles(self, recipe_book):
-        mask_duplicates = recipe_book.dataframe.duplicated(
+        mask_duplicates = recipe_book.all_menus_df.duplicated(
             subset=["title"], keep="first"
         )
         if has_duplicates := any(mask_duplicates):
             print(
-                recipe_book.dataframe[mask_duplicates][["title"]].sort_values(
-                    by=["title"]
-                )
+                recipe_book.all_menus_df[mask_duplicates][
+                    ["title"]
+                ].sort_values(by=["title"])
             )
         assert not has_duplicates
 
     def test_recipe_book_no_duplicate_urls(self, recipe_book):
-        mask_is_url = recipe_book.dataframe.url.str.strip().str.startswith(
+        mask_is_url = recipe_book.all_menus_df.url.str.strip().str.startswith(
             "http"
         )
-        mask_duplicates = recipe_book.dataframe.duplicated(
+        mask_duplicates = recipe_book.all_menus_df.duplicated(
             subset=["url"], keep=False
         )
         mask_all = mask_is_url & mask_duplicates
         if has_duplicates := any(mask_all):
             print(
-                recipe_book.dataframe[mask_all][["title", "url"]].sort_values(
-                    by=["url"]
-                )
+                recipe_book.all_menus_df[mask_all][
+                    ["title", "url"]
+                ].sort_values(by=["url"])
             )
         assert not has_duplicates

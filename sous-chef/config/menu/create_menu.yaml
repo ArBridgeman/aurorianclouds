@@ -4,7 +4,6 @@ create_menu:
   ingredient:
     default_cook_minutes: 20
   prep_separate:
-    default_time: dinner
     min_inactive_minutes: 20
   quality_check:
     recipe_rating_min: 3.0
@@ -39,6 +38,7 @@ create_menu:
     already_in_future_menus:
       active: true
       num_weeks: 4
+    default_time: dinner
   final_menu:
     workbook: menu-tmp
     worksheet: menu-tmp

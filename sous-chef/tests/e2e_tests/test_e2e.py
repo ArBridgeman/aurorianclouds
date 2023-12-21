@@ -99,7 +99,7 @@ class Test(Base):
 
                 menu_history._load_history()
                 assert_equal_dataframe(
-                    menu_history.dataframe, get_menu_history()
+                    menu_history.all_menus_df, get_menu_history()
                 )
 
                 tasks_menu = self._convert_task_list_to_df(

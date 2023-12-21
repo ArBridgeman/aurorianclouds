@@ -7,6 +7,7 @@ from sous_chef.menu.create_menu._for_grocery_list import (
     MenuIngredient,
     MenuRecipe,
 )
+from sous_chef.menu.create_menu._menu_basic import get_weekday_from_short
 from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
 
@@ -178,23 +179,6 @@ class TestMenu:
         )
 
     @staticmethod
-    @pytest.mark.parametrize(
-        "short_day,expected_week_day",
-        [("sat", "Saturday"), ("Mon", "Monday"), ("THU", "Thursday")],
-    )
-    def test__get_weekday_from_short(menu, short_day, expected_week_day):
-        assert menu._get_weekday_from_short(short_day) == expected_week_day
-
-    @staticmethod
-    def test__get_cook_day_as_weekday_unknown(menu):
-        # derived exception MenuConfigError
-        with pytest.raises(Exception) as error:
-            menu._get_weekday_from_short("not-a-day")
-        assert (
-            str(error.value) == "[menu config error] not-a-day unknown weekday!"
-        )
-
-    @staticmethod
     @pytest.mark.parametrize("rating", [np.nan])
     def test__inspect_unrated_recipe(
         capsys,
@@ -300,5 +284,24 @@ class TestMenu:
 
     @staticmethod
     def test__validate_menu_schema(menu, menu_builder):
-        menu.dataframe = menu_builder.create_menu_row(loaded_fixed_menu=True)
+        menu.all_menus_df = menu_builder.create_menu_row(loaded_fixed_menu=True)
         menu._validate_menu_schema()
+
+
+class TestGetWeekdayFromShort:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "short_day,expected_week_day",
+        [("sat", "Saturday"), ("Mon", "Monday"), ("THU", "Thursday")],
+    )
+    def test_expected_values_succeed(short_day, expected_week_day):
+        assert get_weekday_from_short(short_day) == expected_week_day
+
+    @staticmethod
+    def test__unknown_date_raise_error():
+        # derived exception MenuConfigError
+        with pytest.raises(Exception) as error:
+            get_weekday_from_short("not-a-day")
+        assert (
+            str(error.value) == "[menu config error] not-a-day unknown weekday!"
+        )

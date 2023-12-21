@@ -121,9 +121,12 @@ class MapMenuErrorToException(ExtendedEnum):
 
 
 class MenuSchema(pa.SchemaModel):
+    # TODO replace all panderas with pydantic & create own validator with
+    #  dataframe returned, as no default functions & coerce is poorly made
+    menu: Series[int] = pa.Field(ge=0, nullable=False)
     weekday: Series[str] = pa.Field(isin=Weekday.name_list("capitalize"))
     prep_day: Optional[Series[float]] = pa.Field(
-        ge=0, lt=7, nullable=False, coerce=True
+        ge=0, lt=7, default=0, nullable=False, coerce=True
     )
     eat_datetime: Optional[Series[pd.DatetimeTZDtype]] = pa.Field(
         dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
@@ -139,19 +142,24 @@ class MenuSchema(pa.SchemaModel):
     selection: Series[str] = pa.Field(
         isin=RandomSelectType.name_list(), nullable=True
     )
-    eat_factor: Series[float] = pa.Field(ge=0, nullable=False, coerce=True)
-    eat_unit: Series[str] = pa.Field(nullable=True)
-    freeze_factor: Series[float] = pa.Field(ge=0, nullable=False, coerce=True)
-    defrost: Series[str] = pa.Field(
-        isin=["Y", "N"], nullable=False, coerce=True
+    eat_factor: Series[float] = pa.Field(
+        ge=0, default=0, nullable=False, coerce=True
     )
-    override_check: Optional[Series[str]] = pa.Field(
-        isin=["Y", "N"], nullable=False, coerce=True
+    eat_unit: Series[str] = pa.Field(nullable=True)
+    freeze_factor: Series[float] = pa.Field(
+        ge=0, default=0, nullable=False, coerce=True
+    )
+    defrost: Series[str] = pa.Field(
+        isin=["Y", "N"], default="N", nullable=False, coerce=True
+    )
+    override_check: Series[str] = pa.Field(
+        isin=["Y", "N"], default="N", nullable=False, coerce=True
     )
     item: Series[str]
 
     class Config:
-        strict = False
+        strict = True
+        coerce = True
 
 
 class FinalizedMenuSchema(MenuSchema):
@@ -313,22 +321,6 @@ class MenuBasic(BaseWithExceptionHandling):
                 recipe_title=recipe.title, error_text=error_text
             )
 
-    @staticmethod
-    def _get_weekday_from_short(short_week_day: str):
-        day_mapping = {
-            "mon": "Monday",
-            "tue": "Tuesday",
-            "tues": "Tuesday",
-            "wed": "Wednesday",
-            "thu": "Thursday",
-            "fri": "Friday",
-            "sat": "Saturday",
-            "sun": "Sunday",
-        }
-        if short_week_day.lower() in day_mapping:
-            return day_mapping[short_week_day.lower()]
-        raise MenuConfigError(f"{short_week_day} unknown weekday!")
-
     def _inspect_unrated_recipe(self, recipe: pd.Series):
         if pd.isna(recipe.rating):
             self.number_of_unrated_recipes += 1
@@ -444,3 +436,21 @@ class MenuBasic(BaseWithExceptionHandling):
 
     def _validate_finalized_menu_schema(self):
         self.dataframe = FinalizedMenuSchema.validate(self.dataframe)
+
+
+def get_weekday_from_short(short_week_day: str):
+    # TODO move to config
+    day_mapping = {
+        "mon": "Monday",
+        "tue": "Tuesday",
+        "tues": "Tuesday",
+        "wed": "Wednesday",
+        "thu": "Thursday",
+        "fri": "Friday",
+        "sat": "Saturday",
+        "sun": "Sunday",
+    }
+    if short_week_day.lower() in day_mapping:
+        return day_mapping[short_week_day.lower()]
+    print(short_week_day)
+    raise MenuConfigError(f"{short_week_day} unknown weekday!")

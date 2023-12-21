@@ -6,5 +6,5 @@ class TestMenuHistory:
     def test_get_history_from(mock_menu_history):
         assert_equal_series(
             mock_menu_history.get_history_from(days_ago=7).squeeze(),
-            mock_menu_history.dataframe.loc[0],
+            mock_menu_history.all_menus_df.loc[0],
         )

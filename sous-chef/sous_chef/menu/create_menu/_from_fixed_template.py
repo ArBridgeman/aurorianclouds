@@ -172,11 +172,9 @@ class FixedTemplates:
         self.all_menus_df = self._get_all_fixed_menus()
 
     def _check_fixed_menu_number(self, menu_number: int):
-        if menu_number is None:
-            raise ValueError("fixed menu number not specified")
         if not isinstance(menu_number, int):
             raise ValueError(f"fixed menu number ({menu_number}) not an int")
-        if menu_number not in self.all_menus_df.menu.values:
+        elif menu_number not in self.all_menus_df.menu.values:
             raise ValueError(f"fixed menu number ({menu_number}) is not found")
 
     def _convert_fixed_menu_to_menu_schema(
@@ -193,6 +191,7 @@ class FixedTemplates:
             all_menus.day.str.split("_").str[1].apply(get_weekday_from_short)
         )
 
+        # TODO move eat_datetime & prep_time to load_fixed_menu only
         all_menus["eat_datetime"] = all_menus.apply(
             lambda row: self.due_date_formatter.get_due_datetime_with_meal_time(
                 weekday=row.weekday, meal_time=row.meal_time

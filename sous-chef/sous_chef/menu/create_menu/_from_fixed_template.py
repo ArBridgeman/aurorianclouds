@@ -52,8 +52,6 @@ class MenuFromFixedTemplate(MenuBasic):
         self.dataframe = self.dataframe.sort_values(
             by=["is_unrated", "process_order"], ascending=[False, True]
         ).drop(columns=["process_order", "is_unrated"])
-        # validate schema & process menu
-        self._validate_menu_schema()
 
         future_uuid_tuple = ()
         if self.config.fixed.already_in_future_menus.active:
@@ -258,7 +256,8 @@ class FixedTemplates:
 
         if not isinstance(num_weeks_in_future, int) or num_weeks_in_future <= 0:
             raise ValueError(
-                "fixed.already_in_future_menus.num_weeks must be int>0"
+                "fixed.already_in_future_menus.num_weeks "
+                f"({num_weeks_in_future}) must be int>0"
             )
 
         max_num_menu = self.all_menus_df.menu.max()

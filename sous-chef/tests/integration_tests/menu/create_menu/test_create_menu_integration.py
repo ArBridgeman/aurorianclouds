@@ -14,7 +14,9 @@ PROJECT = "Pytest-area"
 
 @pytest.fixture
 def ingredient_formatter(pantry_list, unit_formatter):
-    with initialize(version_base=None, config_path="../../../config/formatter"):
+    with initialize(
+        version_base=None, config_path="../../../../config/formatter"
+    ):
         config = compose(config_name="format_ingredient")
         return IngredientFormatter(
             config=config.format_ingredient,
@@ -25,7 +27,7 @@ def ingredient_formatter(pantry_list, unit_formatter):
 
 @pytest.fixture
 def menu_config():
-    with initialize(version_base=None, config_path="../../../config/menu"):
+    with initialize(version_base=None, config_path="../../../../config/menu"):
         config = compose(config_name="create_menu").create_menu
         config.final_menu.worksheet = "test-tmp-menu"
         config.fixed.workbook = "test-fixed_menus"

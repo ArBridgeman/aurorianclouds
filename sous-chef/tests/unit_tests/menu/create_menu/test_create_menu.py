@@ -282,11 +282,6 @@ class TestMenu:
             ).__dict__
         )
 
-    @staticmethod
-    def test__validate_menu_schema(menu, menu_builder):
-        menu.all_menus_df = menu_builder.create_menu_row(loaded_fixed_menu=True)
-        menu._validate_menu_schema()
-
 
 class TestGetWeekdayFromShort:
     @staticmethod

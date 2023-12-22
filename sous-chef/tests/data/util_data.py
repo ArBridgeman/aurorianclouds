@@ -1,7 +1,11 @@
 from pathlib import Path
 
 import pandas as pd
-from sous_chef.menu.create_menu._menu_basic import FinalizedMenuSchema
+from pandera.typing.common import DataFrameBase
+from sous_chef.menu.create_menu._menu_basic import (
+    FinalizedMenuSchema,
+    MenuSchema,
+)
 
 abs_path = Path(__file__).parent.absolute()
 
@@ -72,3 +76,10 @@ def get_tasks_grocery_list() -> pd.DataFrame:
         lambda cell: cell[1:-1].split(", ")
     )
     return tasks_menu.sort_values("content").reset_index(drop=True)
+
+
+def get_all_menus() -> DataFrameBase[MenuSchema]:
+    all_menus_df = pd.read_csv(abs_path / "all_menus.csv", header=0)
+    all_menus_df.eat_datetime = pd.to_datetime(all_menus_df.eat_datetime)
+    all_menus_df.prep_datetime = pd.to_datetime(all_menus_df.prep_datetime)
+    return MenuSchema.validate(all_menus_df)

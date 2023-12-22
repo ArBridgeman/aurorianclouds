@@ -70,7 +70,6 @@ class MenuBuilder:
         defrost: str = "N",
         item: str = "dummy",
         # template matched with cook_days
-        loaded_fixed_menu: bool = True,
         # after recipe/ingredient matched
         post_process_recipe: bool = False,
         rating: float = 3.0,  # np.nan, if unrated
@@ -88,41 +87,46 @@ class MenuBuilder:
         if (time_total := pd.to_timedelta(time_total_str)) is pd.NaT:
             time_total = None
 
-        menu = {
-            "weekday": "work_day_2",
-            "prep_day": prep_day,
-            "meal_time": meal_time,
-            "eat_factor": eat_factor,
-            "eat_unit": eat_unit,
-            "freeze_factor": freeze_factor,
-            "defrost": defrost,
-            "item": item,
-            "type": item_type,
-            "selection": "either",
-        }
-        if not loaded_fixed_menu:
-            return pd.DataFrame(menu, index=[0])
-        menu["weekday"] = "Friday"
-        menu["eat_datetime"] = pd.Timestamp(
+        eat_datetime = pd.Timestamp(
             year=2022, month=1, day=21, hour=17, minute=45, tz="Europe/Berlin"
         )
-        # needed for schema validation, not "proper" prep_datetime
-        menu["prep_datetime"] = menu["eat_datetime"]
-        menu["override_check"] = "N"
-        if not post_process_recipe:
-            return MenuSchema.validate(pd.DataFrame(menu, index=[0]))
-        menu["rating"] = rating
-        menu["time_total"] = time_total
-        menu["uuid"] = "1666465773100"
-        if prep_day != 0:
-            menu["cook_datetime"] = menu["eat_datetime"]
-            menu["prep_datetime"] = menu["eat_datetime"] - datetime.timedelta(
-                days=prep_day
+
+        menu_df = MenuSchema.validate(
+            pd.DataFrame(
+                {
+                    "menu": 1,
+                    "weekday": "Friday",
+                    "prep_day": prep_day,
+                    "eat_datetime": eat_datetime,
+                    # not realistic prep_datetime
+                    "prep_datetime": eat_datetime,
+                    "meal_time": meal_time,
+                    "type": item_type,
+                    "selection": "either",
+                    "eat_factor": eat_factor,
+                    "eat_unit": eat_unit,
+                    "freeze_factor": freeze_factor,
+                    "defrost": defrost,
+                    "override_check": "N",
+                    "item": item,
+                },
+                index=[0],
             )
+        )
+
+        if not post_process_recipe:
+            return menu_df
+        menu_df["rating"] = rating
+        menu_df["time_total"] = time_total
+        menu_df["uuid"] = "1666465773100"
+        if prep_day != 0:
+            menu_df["cook_datetime"] = menu_df["eat_datetime"]
+            menu_df["prep_datetime"] = menu_df[
+                "eat_datetime"
+            ] - datetime.timedelta(days=prep_day)
         else:
-            menu["cook_datetime"] = menu["eat_datetime"] - time_total
-            menu["prep_datetime"] = menu["eat_datetime"] - time_total
-        menu_df = pd.DataFrame(menu, index=[0])
+            menu_df["cook_datetime"] = menu_df["eat_datetime"] - time_total
+            menu_df["prep_datetime"] = menu_df["eat_datetime"] - time_total
         menu_df.time_total = pd.to_timedelta(menu_df.time_total)
         return FinalizedMenuSchema.validate(menu_df)
 

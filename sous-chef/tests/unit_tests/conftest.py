@@ -6,8 +6,11 @@ from uuid import uuid1
 import pandas as pd
 import pytest
 from hydra import compose, initialize
+from pandera.typing.common import DataFrameBase
+from sous_chef.menu.create_menu._menu_basic import MenuSchema
 from sous_chef.menu.record_menu_history import MenuHistorian
 from tests.conftest import FROZEN_DATETIME
+from tests.data.util_data import get_all_menus
 
 from utilities.api.gsheets_api import GsheetsHelper
 from utilities.api.todoist_api import TodoistHelper
@@ -63,3 +66,8 @@ def mock_menu_history(config_menu_history, mock_gsheets):
             ]
         )
     return menu_historian
+
+
+@pytest.fixture(scope="session")
+def mock_all_menus_df() -> DataFrameBase[MenuSchema]:
+    return get_all_menus()

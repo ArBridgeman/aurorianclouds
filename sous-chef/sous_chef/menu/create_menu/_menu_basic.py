@@ -431,9 +431,6 @@ class MenuBasic(BaseWithExceptionHandling):
                 return list(menu_history_recent_df.uuid.values)
         return []
 
-    def _validate_menu_schema(self):
-        self.dataframe = MenuSchema.validate(self.dataframe)
-
     def _validate_finalized_menu_schema(self):
         self.dataframe = FinalizedMenuSchema.validate(self.dataframe)
 

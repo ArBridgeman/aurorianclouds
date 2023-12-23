@@ -87,12 +87,11 @@ class TestProcessMenu:
     def test__process_menu_ingredient(
         menu, menu_builder, mock_ingredient_formatter, quantity, unit, item
     ):
-        row = menu_builder.create_menu_row(
+        row = menu_builder.create_tmp_menu_row(
             eat_factor=quantity,
             eat_unit=unit,
             item=item,
             item_type="ingredient",
-            post_process_recipe=True,
         ).squeeze()
 
         ingredient = Ingredient(quantity=quantity, unit=unit, item=item)
@@ -114,7 +113,7 @@ class TestProcessMenu:
     def test__process_menu_category_or_tag(
         menu, menu_builder, mock_recipe_book, log, item_type, method
     ):
-        row = menu_builder.create_menu_row(
+        row = menu_builder.create_loaded_menu_row(
             item_type=item_type,
             item=f"dummy_{item_type}",
         ).squeeze()
@@ -127,8 +126,7 @@ class TestProcessMenu:
 
         assert_equal_series(
             result,
-            menu_builder.create_menu_row(
-                post_process_recipe=True,
+            menu_builder.create_tmp_menu_row(
                 item=recipe.title,
                 item_type="recipe",
                 time_total_str=recipe.time_total,
@@ -152,7 +150,7 @@ class TestCreateMenuProcessMenuRecipe:
     time_total_str = "5 minutes"
 
     def _set_up_recipe(self, menu_builder, mock_recipe_book):
-        row = menu_builder.create_menu_row(
+        row = menu_builder.create_loaded_menu_row(
             item=self.recipe_title, item_type="recipe"
         ).squeeze()
 
@@ -173,8 +171,7 @@ class TestCreateMenuProcessMenuRecipe:
 
         assert_equal_series(
             result,
-            menu_builder.create_menu_row(
-                post_process_recipe=True,
+            menu_builder.create_tmp_menu_row(
                 item=self.recipe_title,
                 item_type="recipe",
                 time_total_str=pd.to_timedelta(self.time_total_str),

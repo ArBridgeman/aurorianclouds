@@ -9,10 +9,13 @@ from pandera.typing.common import DataFrameBase
 from sous_chef.abstract.extended_enum import ExtendedIntEnum
 from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.menu.create_menu._menu_basic import (
+    AllMenuSchemas,
+    BasicMenuSchema,
     MenuBasic,
     MenuIncompleteError,
-    MenuSchema,
+    TmpMenuSchema,
     get_weekday_from_short,
+    validate_menu_schema,
 )
 from structlog import get_logger
 from termcolor import cprint
@@ -94,7 +97,7 @@ class MenuFromFixedTemplate(MenuBasic):
         self._save_menu()
 
     def _get_future_menu_uuids(
-        self, future_menus: DataFrameBase[MenuSchema]
+        self, future_menus: DataFrameBase[BasicMenuSchema]
     ) -> Tuple:
         FILE_LOGGER.info("[_get_future_menu_uuids]")
         mask_type = future_menus["type"] == "recipe"
@@ -108,7 +111,7 @@ class MenuFromFixedTemplate(MenuBasic):
         row: pd.Series,
         processed_uuid_list: List,
         future_uuid_tuple: Optional[Tuple] = (),
-    ):
+    ) -> DataFrameBase[TmpMenuSchema]:
         FILE_LOGGER.info(
             "[process menu]",
             action="processing",
@@ -125,7 +128,9 @@ class MenuFromFixedTemplate(MenuBasic):
             future_uuid_tuple=future_uuid_tuple,
         )
 
-    def _process_ingredient(self, row: pd.Series):
+    def _process_ingredient(
+        self, row: pd.Series
+    ) -> DataFrameBase[TmpMenuSchema]:
         # do NOT need returned, as just ensuring exists
         self._check_manual_ingredient(row=row)
 
@@ -136,14 +141,14 @@ class MenuFromFixedTemplate(MenuBasic):
         cook_datetime = row["eat_datetime"] - row["time_total"]
         row["cook_datetime"] = cook_datetime
         row["prep_datetime"] = cook_datetime
-        return row
+        return validate_menu_schema(dataframe=row, model=TmpMenuSchema)
 
     def _process_menu_recipe(
         self,
         row: pd.Series,
         processed_uuid_list: List,
         future_uuid_tuple: Optional[Tuple] = (),
-    ):
+    ) -> DataFrameBase[TmpMenuSchema]:
         if row["type"] in ["category", "tag", "filter"]:
             return self._select_random_recipe(
                 row=row,
@@ -151,7 +156,6 @@ class MenuFromFixedTemplate(MenuBasic):
                 processed_uuid_list=processed_uuid_list,
                 future_uuid_tuple=future_uuid_tuple,
             )
-
         return self._retrieve_recipe(
             row,
             processed_uuid_list=processed_uuid_list,
@@ -164,7 +168,7 @@ class FixedTemplates:
     config: DictConfig
     due_date_formatter: DueDatetimeFormatter
     gsheets_helper: GsheetsHelper
-    all_menus_df: DataFrameBase[MenuSchema] = None
+    all_menus_df: DataFrameBase[AllMenuSchemas] = None
 
     def __post_init__(self):
         self.all_menus_df = self._get_all_fixed_menus()
@@ -175,9 +179,10 @@ class FixedTemplates:
         elif menu_number not in self.all_menus_df.menu.values:
             raise ValueError(f"fixed menu number ({menu_number}) is not found")
 
-    def _convert_fixed_menu_to_menu_schema(
-        self, all_menus: pd.DataFrame
-    ) -> pd.DataFrame:
+    @staticmethod
+    def _convert_fixed_menu_to_all_menu_schemas(
+        all_menus: pd.DataFrame,
+    ) -> DataFrameBase[AllMenuSchemas]:
         # need already converted to default for "prep_datetime" calculation
         all_menus["prep_day"] = all_menus.prep_day.replace("", 0, inplace=False)
 
@@ -189,27 +194,13 @@ class FixedTemplates:
             all_menus.day.str.split("_").str[1].apply(get_weekday_from_short)
         )
 
-        # TODO move eat_datetime & prep_time to load_fixed_menu only
-        all_menus["eat_datetime"] = all_menus.apply(
-            lambda row: self.due_date_formatter.get_due_datetime_with_meal_time(
-                weekday=row.weekday, meal_time=row.meal_time
-            ),
-            axis=1,
-        )
-        all_menus["prep_datetime"] = all_menus.apply(
-            self._get_default_prep_datetime, axis=1
-        )
-
-        selected_cols = MenuSchema.__annotations__.keys()
-        all_menus = (
-            all_menus[selected_cols]
+        return (
+            validate_menu_schema(dataframe=all_menus, model=AllMenuSchemas)
             .sort_values(by=["weekday", "meal_time"])
             .reset_index(drop=True)
         )
-        return MenuSchema.validate(all_menus)
 
-    # TODO write integration test for?
-    def _get_all_fixed_menus(self) -> DataFrameBase[MenuSchema]:
+    def _get_all_fixed_menus(self) -> DataFrameBase[AllMenuSchemas]:
         FILE_LOGGER.info("[_get_all_fixed_menus]")
         # TODO move to config
         sheet_to_mealtime = {
@@ -228,7 +219,7 @@ class FixedTemplates:
 
         # remove inactives as not part of active menus
         all_menus = all_menus.loc[~(all_menus.inactive.str.upper() == "Y")]
-        return self._convert_fixed_menu_to_menu_schema(all_menus)
+        return self._convert_fixed_menu_to_all_menu_schemas(all_menus)
 
     def _get_default_prep_datetime(self, row: pd.Series):
         return self.due_date_formatter.replace_time_with_meal_time(
@@ -236,19 +227,31 @@ class FixedTemplates:
             meal_time=self.config.default_time,
         )
 
-    def load_fixed_menu(self) -> DataFrameBase[MenuSchema]:
+    def load_fixed_menu(self) -> pd.DataFrame:
         FILE_LOGGER.info("[load_fixed_menu]")
         basic_number = self.config.basic_number
         menu_number = self.config.menu_number
         self._check_fixed_menu_number(basic_number)
         self._check_fixed_menu_number(menu_number)
-        return self.all_menus_df[
+
+        fixed_menu = self.all_menus_df[
             self.all_menus_df.menu.isin([basic_number, menu_number])
         ].copy()
 
+        fixed_menu["eat_datetime"] = fixed_menu.apply(
+            lambda row: self.due_date_formatter.get_due_datetime_with_meal_time(
+                weekday=row.weekday, meal_time=row.meal_time
+            ),
+            axis=1,
+        )
+        fixed_menu["prep_datetime"] = fixed_menu.apply(
+            self._get_default_prep_datetime, axis=1
+        )
+        return fixed_menu
+
     def select_upcoming_menus(
         self, num_weeks_in_future: int
-    ) -> DataFrameBase[MenuSchema]:
+    ) -> DataFrameBase[BasicMenuSchema]:
         FILE_LOGGER.info("[select_upcoming_menus]")
 
         menu_number = self.config.menu_number

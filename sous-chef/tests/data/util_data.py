@@ -3,15 +3,16 @@ from pathlib import Path
 import pandas as pd
 from pandera.typing.common import DataFrameBase
 from sous_chef.menu.create_menu._menu_basic import (
-    FinalizedMenuSchema,
-    MenuSchema,
+    AllMenuSchemas,
+    BasicMenuSchema,
+    TmpMenuSchema,
 )
 
 abs_path = Path(__file__).parent.absolute()
 
 
 def _get_menu_df(file_name: str) -> pd.DataFrame:
-    menu = FinalizedMenuSchema.validate(
+    menu = TmpMenuSchema.validate(
         pd.read_csv(abs_path / file_name, dtype={"uuid": str}, header=0)
     )
     menu.eat_unit.fillna("", inplace=True)
@@ -78,8 +79,6 @@ def get_tasks_grocery_list() -> pd.DataFrame:
     return tasks_menu.sort_values("content").reset_index(drop=True)
 
 
-def get_all_menus() -> DataFrameBase[MenuSchema]:
+def get_all_menus() -> DataFrameBase[BasicMenuSchema]:
     all_menus_df = pd.read_csv(abs_path / "all_menus.csv", header=0)
-    all_menus_df.eat_datetime = pd.to_datetime(all_menus_df.eat_datetime)
-    all_menus_df.prep_datetime = pd.to_datetime(all_menus_df.prep_datetime)
-    return MenuSchema.validate(all_menus_df)
+    return AllMenuSchemas.validate(all_menus_df)

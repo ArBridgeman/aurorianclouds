@@ -1,17 +1,17 @@
 import datetime
 from dataclasses import dataclass
-from typing import Union
 
 import numpy as np
 import pandas as pd
 import pytest
 from freezegun import freeze_time
 from hydra import compose, initialize
-from pandas import DataFrame
 from pandera.typing.common import DataFrameBase
 from sous_chef.menu.create_menu._menu_basic import (
-    FinalizedMenuSchema,
-    MenuSchema,
+    AllMenuSchemas,
+    LoadedMenuSchema,
+    TmpMenuSchema,
+    validate_menu_schema,
 )
 from sous_chef.menu.create_menu.create_menu import Menu
 from tests.conftest import FROZEN_DATE
@@ -59,7 +59,7 @@ class MenuBuilder:
         return self
 
     @staticmethod
-    def create_menu_row(
+    def create_all_menu_row(
         prep_day: int = 0,
         meal_time: str = "dinner",
         item_type: str = "recipe",
@@ -69,37 +69,14 @@ class MenuBuilder:
         freeze_factor: float = 0.0,
         defrost: str = "N",
         item: str = "dummy",
-        # template matched with cook_days
-        # after recipe/ingredient matched
-        post_process_recipe: bool = False,
-        rating: float = 3.0,  # np.nan, if unrated
-        time_total_str: str = np.nan,
-    ) -> Union[
-        DataFrame, DataFrameBase[MenuSchema], DataFrameBase[FinalizedMenuSchema]
-    ]:
-        if item_type == "recipe":
-            if time_total_str is np.nan:
-                time_total_str = "5 min"
-        elif item_type == "ingredient":
-            if time_total_str is np.nan:
-                time_total_str = "20 min"
-
-        if (time_total := pd.to_timedelta(time_total_str)) is pd.NaT:
-            time_total = None
-
-        eat_datetime = pd.Timestamp(
-            year=2022, month=1, day=21, hour=17, minute=45, tz="Europe/Berlin"
-        )
-
-        menu_df = MenuSchema.validate(
+        **kwargs,
+    ) -> DataFrameBase[AllMenuSchemas]:
+        return AllMenuSchemas.validate(
             pd.DataFrame(
                 {
                     "menu": 1,
                     "weekday": "Friday",
                     "prep_day": prep_day,
-                    "eat_datetime": eat_datetime,
-                    # not realistic prep_datetime
-                    "prep_datetime": eat_datetime,
                     "meal_time": meal_time,
                     "type": item_type,
                     "selection": "either",
@@ -114,21 +91,57 @@ class MenuBuilder:
             )
         )
 
-        if not post_process_recipe:
-            return menu_df
-        menu_df["rating"] = rating
-        menu_df["time_total"] = time_total
-        menu_df["uuid"] = "1666465773100"
+    def create_loaded_menu_row(
+        self, **kwargs
+    ) -> DataFrameBase[LoadedMenuSchema]:
+        loaded_menu_row = self.create_all_menu_row(**kwargs)
+        eat_datetime = pd.Timestamp(
+            year=2022, month=1, day=21, hour=17, minute=45, tz="Europe/Berlin"
+        )
+        loaded_menu_row["eat_datetime"] = eat_datetime
+        # not realistic prep_datetime
+        loaded_menu_row["prep_datetime"] = eat_datetime
+        return validate_menu_schema(
+            dataframe=loaded_menu_row, model=LoadedMenuSchema
+        )
+
+    def create_tmp_menu_row(
+        self,
+        item_type: str = "recipe",
+        prep_day: int = 0,
+        rating: float = 3.0,  # np.nan, if unrated
+        time_total_str: str = np.nan,
+        **kwargs,
+    ) -> DataFrameBase[TmpMenuSchema]:
+        tmp_menu = self.create_loaded_menu_row(
+            item_type=item_type, prep_day=prep_day, **kwargs
+        )
+        # template matched with cook_days
+        # after recipe/ingredient matched
+
+        if item_type == "recipe":
+            if time_total_str is np.nan:
+                time_total_str = "5 min"
+        elif item_type == "ingredient":
+            if time_total_str is np.nan:
+                time_total_str = "20 min"
+
+        if (time_total := pd.to_timedelta(time_total_str)) is pd.NaT:
+            time_total = None
+
+        tmp_menu["rating"] = rating
+        tmp_menu["time_total"] = time_total
+        tmp_menu["uuid"] = "1666465773100"
         if prep_day != 0:
-            menu_df["cook_datetime"] = menu_df["eat_datetime"]
-            menu_df["prep_datetime"] = menu_df[
+            tmp_menu["cook_datetime"] = tmp_menu["eat_datetime"]
+            tmp_menu["prep_datetime"] = tmp_menu[
                 "eat_datetime"
             ] - datetime.timedelta(days=prep_day)
         else:
-            menu_df["cook_datetime"] = menu_df["eat_datetime"] - time_total
-            menu_df["prep_datetime"] = menu_df["eat_datetime"] - time_total
-        menu_df.time_total = pd.to_timedelta(menu_df.time_total)
-        return FinalizedMenuSchema.validate(menu_df)
+            tmp_menu["cook_datetime"] = tmp_menu["eat_datetime"] - time_total
+            tmp_menu["prep_datetime"] = tmp_menu["eat_datetime"] - time_total
+        tmp_menu.time_total = pd.to_timedelta(tmp_menu.time_total)
+        return validate_menu_schema(dataframe=tmp_menu, model=TmpMenuSchema)
 
     def get_menu(self) -> pd.DataFrame:
         return self.menu

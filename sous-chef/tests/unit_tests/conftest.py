@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 from hydra import compose, initialize
 from pandera.typing.common import DataFrameBase
-from sous_chef.menu.create_menu._menu_basic import MenuSchema
+from sous_chef.menu.create_menu._menu_basic import BasicMenuSchema
 from sous_chef.menu.record_menu_history import MenuHistorian
 from tests.conftest import FROZEN_DATETIME
 from tests.data.util_data import get_all_menus
@@ -69,5 +69,5 @@ def mock_menu_history(config_menu_history, mock_gsheets):
 
 
 @pytest.fixture(scope="session")
-def mock_all_menus_df() -> DataFrameBase[MenuSchema]:
+def mock_all_menus_df() -> DataFrameBase[BasicMenuSchema]:
     return get_all_menus()

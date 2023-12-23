@@ -16,13 +16,13 @@ from tests.unit_tests.util import create_recipe
 def menu_default(menu_builder):
     menu_builder.add_menu_list(
         [
-            menu_builder.create_menu_row(
+            menu_builder.create_all_menu_row(
                 item="recipe_no_freezing", freeze_factor=0.0
             ),
-            menu_builder.create_menu_row(
+            menu_builder.create_all_menu_row(
                 item="recipe_with_freezing", freeze_factor=0.5
             ),
-            menu_builder.create_menu_row(
+            menu_builder.create_all_menu_row(
                 item="manual ingredient",
                 item_type="ingredient",
                 eat_factor=1.0,
@@ -37,7 +37,7 @@ class TestMenu:
     @staticmethod
     def test__add_recipe_columns_nat(menu, menu_builder, mock_recipe_book):
         recipe_title = "recipe_without_cook_time"
-        row = menu_builder.create_menu_row(
+        row = menu_builder.create_loaded_menu_row(
             item=recipe_title, item_type="recipe"
         ).squeeze()
 
@@ -129,8 +129,7 @@ class TestMenu:
     @staticmethod
     @freeze_time(FROZEN_DATE)
     def test__format_task_name(menu, menu_builder):
-        row = menu_builder.create_menu_row(
-            post_process_recipe=True,
+        row = menu_builder.create_tmp_menu_row(
             item="french onion soup",
             meal_time="dinner",
             time_total_str=pd.to_timedelta("40 min"),
@@ -142,8 +141,7 @@ class TestMenu:
     @staticmethod
     @freeze_time(FROZEN_DATE)
     def test__format_task_name_defrost(menu, menu_builder):
-        row = menu_builder.create_menu_row(
-            post_process_recipe=True,
+        row = menu_builder.create_tmp_menu_row(
             item="french onion soup",
             meal_time="dinner",
             time_total_str=pd.to_timedelta("40 min"),
@@ -154,8 +152,7 @@ class TestMenu:
     @staticmethod
     @freeze_time(FROZEN_DATE)
     def test__format_task_name_ingredient(menu, menu_builder):
-        row = menu_builder.create_menu_row(
-            post_process_recipe=True,
+        row = menu_builder.create_tmp_menu_row(
             item="fries",
             item_type="ingredient",
             meal_time="dinner",
@@ -168,8 +165,7 @@ class TestMenu:
     @freeze_time(FROZEN_DATE)
     def test__format_task_name_with_freeze_factor(menu, menu_builder):
         recipe_title = "french onion soup"
-        row = menu_builder.create_menu_row(
-            post_process_recipe=True,
+        row = menu_builder.create_tmp_menu_row(
             item=recipe_title,
             meal_time="dinner",
             freeze_factor=0.5,
@@ -228,12 +224,11 @@ class TestMenu:
     def test__retrieve_manual_menu_ingredient(
         menu, menu_builder, mock_ingredient_formatter, quantity, unit, item
     ):
-        row = menu_builder.create_menu_row(
+        row = menu_builder.create_loaded_menu_row(
             eat_factor=quantity,
             eat_unit=unit,
             item=item,
             item_type="ingredient",
-            post_process_recipe=True,
         ).squeeze()
 
         ingredient = Ingredient(quantity=quantity, unit=unit, item=item)
@@ -261,8 +256,9 @@ class TestMenu:
         mock_recipe_book,
         recipe_title,
     ):
-        row = menu_builder.create_menu_row(
-            item=recipe_title, item_type="recipe", post_process_recipe=True
+        row = menu_builder.create_loaded_menu_row(
+            item=recipe_title,
+            item_type="recipe",
         ).squeeze()
         recipe_with_recipe_title = create_recipe(title=recipe_title)
         mock_recipe_book.get_recipe_by_title.return_value = (

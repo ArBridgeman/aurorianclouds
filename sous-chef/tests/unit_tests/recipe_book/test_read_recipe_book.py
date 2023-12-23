@@ -183,7 +183,6 @@ class TestRecipeBook:
         recipe_book.dataframe = recipe_book_builder.create_recipe(
             categories=recipe_book.category_tuple,
             tags=recipe_book.tag_tuple,
-            post_process_recipe=True,
         )
         recipe_book.get_random_recipe_by_filter(
             filter_str=filter_str, selection_type="either"

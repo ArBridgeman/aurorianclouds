@@ -4,7 +4,6 @@ from datetime import timedelta
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
-import numpy as np
 import pandas as pd
 import pandera as pa
 from omegaconf import DictConfig
@@ -124,9 +123,6 @@ class BasicMenuSchema(pa.SchemaModel):
     # TODO replace all panderas with pydantic & create own validator with
     #  dataframe returned, as no default functions & coerce is poorly made
     weekday: Series[str] = pa.Field(isin=Weekday.name_list("capitalize"))
-    prep_day: Optional[Series[float]] = pa.Field(
-        ge=0, lt=7, default=0, nullable=False, coerce=True
-    )
     meal_time: Series[str] = pa.Field(isin=MealTime.name_list("lower"))
     type: Series[str] = pa.Field(isin=TypeProcessOrder.name_list())
     eat_factor: Series[float] = pa.Field(
@@ -139,9 +135,6 @@ class BasicMenuSchema(pa.SchemaModel):
     defrost: Series[str] = pa.Field(
         isin=["Y", "N"], default="N", nullable=False, coerce=True
     )
-    override_check: Series[str] = pa.Field(
-        isin=["Y", "N"], default="N", nullable=False, coerce=True
-    )
     item: Series[str]
 
     class Config:
@@ -149,18 +142,24 @@ class BasicMenuSchema(pa.SchemaModel):
         coerce = True
 
 
-class AllMenuSchemas(BasicMenuSchema):
+class InProgressSchema(BasicMenuSchema):
+    selection: Series[str] = pa.Field(
+        isin=RandomSelectType.name_list(), nullable=True
+    )
+    prep_day: Optional[Series[float]] = pa.Field(
+        ge=0, lt=7, default=0, nullable=False, coerce=True
+    )
+    override_check: Series[str] = pa.Field(
+        isin=["Y", "N"], default="N", nullable=False, coerce=True
+    )
+
+
+class AllMenuSchemas(InProgressSchema):
     menu: Series[int] = pa.Field(ge=0, nullable=False)
-    selection: Series[str] = pa.Field(
-        isin=RandomSelectType.name_list(), nullable=True
-    )
 
 
-class LoadedMenuSchema(BasicMenuSchema):
-    selection: Series[str] = pa.Field(
-        isin=RandomSelectType.name_list(), nullable=True
-    )
-    eat_datetime: Optional[Series[pd.DatetimeTZDtype]] = pa.Field(
+class LoadedMenuSchema(InProgressSchema):
+    cook_datetime: Optional[Series[pd.DatetimeTZDtype]] = pa.Field(
         dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
     )
     prep_datetime: Series[pd.DatetimeTZDtype] = pa.Field(
@@ -169,7 +168,7 @@ class LoadedMenuSchema(BasicMenuSchema):
 
 
 class TmpMenuSchema(BasicMenuSchema):
-    eat_datetime: Optional[Series[pd.DatetimeTZDtype]] = pa.Field(
+    cook_datetime: Optional[Series[pd.DatetimeTZDtype]] = pa.Field(
         dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
     )
     prep_datetime: Series[pd.DatetimeTZDtype] = pa.Field(
@@ -221,7 +220,6 @@ class MenuBasic(BaseWithExceptionHandling):
             workbook_name=workbook, worksheet_name=worksheet
         )
         self.dataframe.time_total = pd.to_timedelta(self.dataframe.time_total)
-        self.dataframe.selection.replace("NaN", np.NaN, inplace=True)
         return validate_menu_schema(
             dataframe=self.dataframe, model=TmpMenuSchema
         )
@@ -236,9 +234,9 @@ class MenuBasic(BaseWithExceptionHandling):
 
         def _cook_prep_datetime() -> (datetime.timedelta, datetime.timedelta):
             if row.defrost == "Y":
-                return row.eat_datetime, row.eat_datetime
+                return row.cook_datetime, row.cook_datetime
 
-            default_cook_datetime = row.eat_datetime - recipe.time_total
+            default_cook_datetime = row.cook_datetime - recipe.time_total
             default_prep_datetime = default_cook_datetime
 
             if (
@@ -253,7 +251,7 @@ class MenuBasic(BaseWithExceptionHandling):
                 return default_cook_datetime, default_prep_datetime
             # prep_day was set, so use prep_config default time; unsure
             # how cook time altered, but assume large inactive times handled
-            return (default_cook_datetime, row.prep_datetime)
+            return default_cook_datetime, row.prep_datetime
 
         row["item"] = recipe.title
         row["rating"] = recipe.rating

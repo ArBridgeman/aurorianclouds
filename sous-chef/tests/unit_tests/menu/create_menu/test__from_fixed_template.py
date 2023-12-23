@@ -87,7 +87,7 @@ class TestProcessMenu:
     def test__process_menu_ingredient(
         menu, menu_builder, mock_ingredient_formatter, quantity, unit, item
     ):
-        row = menu_builder.create_tmp_menu_row(
+        row = menu_builder.create_loaded_menu_row(
             eat_factor=quantity,
             eat_unit=unit,
             item=item,
@@ -100,7 +100,15 @@ class TestProcessMenu:
         )
 
         result = menu._process_menu(row.copy(deep=True), processed_uuid_list=[])
-        assert_equal_series(result, row)
+        assert_equal_series(
+            result,
+            menu_builder.create_tmp_menu_row(
+                eat_factor=quantity,
+                eat_unit=unit,
+                item=item,
+                item_type="ingredient",
+            ).squeeze(),
+        )
 
     @staticmethod
     @pytest.mark.parametrize(

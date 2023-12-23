@@ -90,14 +90,15 @@ class MenuFromFixedTemplate(MenuBasic):
                 custom_message="will not send to finalize until fixed"
             )
 
-        self.dataframe.drop(
-            columns=["eat_datetime", "override_check", "prep_day"],
-            inplace=True,
-        )
+        # TODO add validator instead of dropping!
+        # self.dataframe.drop(
+        #     columns=["eat_datetime", "override_check", "prep_day"],
+        #     inplace=True,
+        # )
         self._save_menu()
 
     def _get_future_menu_uuids(
-        self, future_menus: DataFrameBase[BasicMenuSchema]
+        self, future_menus: DataFrameBase[AllMenuSchemas]
     ) -> Tuple:
         FILE_LOGGER.info("[_get_future_menu_uuids]")
         mask_type = future_menus["type"] == "recipe"
@@ -137,10 +138,10 @@ class MenuFromFixedTemplate(MenuBasic):
         row["time_total"] = timedelta(
             minutes=int(self.config.ingredient.default_cook_minutes)
         )
-
-        cook_datetime = row["eat_datetime"] - row["time_total"]
-        row["cook_datetime"] = cook_datetime
-        row["prep_datetime"] = cook_datetime
+        row["rating"] = np.NaN
+        row["uuid"] = np.NaN
+        row["cook_datetime"] = row["cook_datetime"] - row["time_total"]
+        row["prep_datetime"] = row["cook_datetime"]
         return validate_menu_schema(dataframe=row, model=TmpMenuSchema)
 
     def _process_menu_recipe(
@@ -223,7 +224,7 @@ class FixedTemplates:
 
     def _get_default_prep_datetime(self, row: pd.Series):
         return self.due_date_formatter.replace_time_with_meal_time(
-            due_date=row.eat_datetime - timedelta(days=int(row.prep_day)),
+            due_date=row.cook_datetime - timedelta(days=int(row.prep_day)),
             meal_time=self.config.default_time,
         )
 
@@ -238,7 +239,7 @@ class FixedTemplates:
             self.all_menus_df.menu.isin([basic_number, menu_number])
         ].copy()
 
-        fixed_menu["eat_datetime"] = fixed_menu.apply(
+        fixed_menu["cook_datetime"] = fixed_menu.apply(
             lambda row: self.due_date_formatter.get_due_datetime_with_meal_time(
                 weekday=row.weekday, meal_time=row.meal_time
             ),

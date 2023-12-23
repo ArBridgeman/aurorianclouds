@@ -95,12 +95,12 @@ class MenuBuilder:
         self, **kwargs
     ) -> DataFrameBase[LoadedMenuSchema]:
         loaded_menu_row = self.create_all_menu_row(**kwargs)
-        eat_datetime = pd.Timestamp(
+        cook_datetime = pd.Timestamp(
             year=2022, month=1, day=21, hour=17, minute=45, tz="Europe/Berlin"
         )
-        loaded_menu_row["eat_datetime"] = eat_datetime
+        loaded_menu_row["cook_datetime"] = cook_datetime
         # not realistic prep_datetime
-        loaded_menu_row["prep_datetime"] = eat_datetime
+        loaded_menu_row["prep_datetime"] = cook_datetime
         return validate_menu_schema(
             dataframe=loaded_menu_row, model=LoadedMenuSchema
         )
@@ -120,26 +120,27 @@ class MenuBuilder:
         # after recipe/ingredient matched
 
         if item_type == "recipe":
+            tmp_menu["rating"] = rating
+            tmp_menu["uuid"] = "1666465773100"
             if time_total_str is np.nan:
                 time_total_str = "5 min"
         elif item_type == "ingredient":
+            tmp_menu["rating"] = np.NaN
+            tmp_menu["uuid"] = np.NaN
             if time_total_str is np.nan:
                 time_total_str = "20 min"
 
-        if (time_total := pd.to_timedelta(time_total_str)) is pd.NaT:
-            time_total = None
-
-        tmp_menu["rating"] = rating
+        time_total = pd.to_timedelta(time_total_str)
         tmp_menu["time_total"] = time_total
-        tmp_menu["uuid"] = "1666465773100"
+
         if prep_day != 0:
-            tmp_menu["cook_datetime"] = tmp_menu["eat_datetime"]
+            tmp_menu["cook_datetime"] = tmp_menu["cook_datetime"]
             tmp_menu["prep_datetime"] = tmp_menu[
-                "eat_datetime"
+                "cook_datetime"
             ] - datetime.timedelta(days=prep_day)
         else:
-            tmp_menu["cook_datetime"] = tmp_menu["eat_datetime"] - time_total
-            tmp_menu["prep_datetime"] = tmp_menu["eat_datetime"] - time_total
+            tmp_menu["cook_datetime"] = tmp_menu["cook_datetime"] - time_total
+            tmp_menu["prep_datetime"] = tmp_menu["cook_datetime"]
         tmp_menu.time_total = pd.to_timedelta(tmp_menu.time_total)
         return validate_menu_schema(dataframe=tmp_menu, model=TmpMenuSchema)
 

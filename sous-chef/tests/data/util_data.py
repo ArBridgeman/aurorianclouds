@@ -4,8 +4,8 @@ import pandas as pd
 from pandera.typing.common import DataFrameBase
 from sous_chef.menu.create_menu._menu_basic import (
     AllMenuSchemas,
-    BasicMenuSchema,
     TmpMenuSchema,
+    validate_menu_schema,
 )
 
 abs_path = Path(__file__).parent.absolute()
@@ -46,8 +46,10 @@ def get_final_grocery_list() -> pd.DataFrame:
     return final_grocery_list
 
 
-def get_final_menu() -> pd.DataFrame:
-    return _get_menu_df("final_menu.csv")
+def get_final_menu() -> DataFrameBase[TmpMenuSchema]:
+    return validate_menu_schema(
+        dataframe=_get_menu_df("final_menu.csv"), model=TmpMenuSchema
+    )
 
 
 def get_local_recipe_book_path():
@@ -79,6 +81,6 @@ def get_tasks_grocery_list() -> pd.DataFrame:
     return tasks_menu.sort_values("content").reset_index(drop=True)
 
 
-def get_all_menus() -> DataFrameBase[BasicMenuSchema]:
+def get_all_menus() -> DataFrameBase[AllMenuSchemas]:
     all_menus_df = pd.read_csv(abs_path / "all_menus.csv", header=0)
-    return AllMenuSchemas.validate(all_menus_df)
+    return validate_menu_schema(dataframe=all_menus_df, model=AllMenuSchemas)

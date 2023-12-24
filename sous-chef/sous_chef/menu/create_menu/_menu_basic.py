@@ -117,6 +117,7 @@ class MenuFutureError(Exception):
 )
 class MapMenuErrorToException(ExtendedEnum):
     menu_quality_check = MenuQualityError
+    menu_future_error = MenuFutureError
 
 
 class BasicMenuSchema(pa.SchemaModel):

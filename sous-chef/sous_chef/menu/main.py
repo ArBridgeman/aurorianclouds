@@ -52,14 +52,12 @@ def run_menu(config: DictConfig):
     if config.menu.create_menu.input_method == "fixed":
         menu.finalize_fixed_menu()
     elif config.menu.create_menu.input_method == "final":
-        final_menu = menu.load_final_menu()
+        menu.load_final_menu()
         menu.save_with_menu_historian()
 
         if config.menu.run_mode.with_todoist:
             todoist_helper = TodoistHelper(config.api.todoist)
             menu.upload_menu_to_todoist(todoist_helper)
-
-        return final_menu
 
 
 @hydra.main(

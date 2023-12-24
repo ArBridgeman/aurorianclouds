@@ -83,9 +83,8 @@ class TestMenu:
     ):
         menu_config.fixed.menu_number = 1
         menu_with_recipe_book.finalize_fixed_menu()
-        assert_equal_dataframe(
-            menu_with_recipe_book.load_final_menu(), get_tmp_menu()
-        )
+        menu_with_recipe_book.load_final_menu()
+        assert_equal_dataframe(menu_with_recipe_book.dataframe, get_tmp_menu())
 
     @staticmethod
     def test_finalize_fixed_menu_fails_for_record_exception(

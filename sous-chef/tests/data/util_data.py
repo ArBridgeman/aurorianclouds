@@ -24,8 +24,9 @@ def _get_menu_df(file_name: str) -> pd.DataFrame:
 
 
 def get_tmp_menu() -> pd.DataFrame:
-    # TODO figure out why differs by 30 minutes from final_menu entries
-    return _get_menu_df("tmp-menu.csv")
+    return validate_menu_schema(
+        dataframe=_get_menu_df("tmp-menu.csv"), model=TmpMenuSchema
+    )
 
 
 def get_final_grocery_list() -> pd.DataFrame:

@@ -185,16 +185,21 @@ class FixedTemplates:
         all_menus: pd.DataFrame,
     ) -> DataFrameBase[AllMenuSchemas]:
         # need already converted to default for "prep_datetime" calculation
-        all_menus["prep_day"] = all_menus.prep_day.replace("", 0, inplace=False)
+        all_menus["prep_day"] = all_menus.prep_day.replace("", 0)
 
         # pandera does not support replacing "" with default values, only NAs
-        all_menus = all_menus.replace("", np.NaN, inplace=False)
+        nan_columns = [
+            "selection",
+            "freeze_factor",
+            "defrost",
+            "override_check",
+        ]
+        all_menus[nan_columns] = all_menus[nan_columns].replace("", np.NaN)
 
         # unravel short form for weekday values
         all_menus["weekday"] = (
             all_menus.day.str.split("_").str[1].apply(get_weekday_from_short)
         )
-
         return (
             validate_menu_schema(dataframe=all_menus, model=AllMenuSchemas)
             .sort_values(by=["weekday", "meal_time"])

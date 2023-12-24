@@ -449,7 +449,7 @@ class MenuBasic(BaseWithExceptionHandling):
 
 def validate_menu_schema(
     dataframe: Union[pd.Series, pd.DataFrame], model
-) -> Union[DataFrameBase, pd.Series]:
+) -> Union[pd.DataFrame, pd.Series]:
     def validate_schema(tmp_df: pd.DataFrame):
         selected_cols = model._collect_fields().keys()
         return model.validate(tmp_df[selected_cols].copy())

@@ -159,7 +159,7 @@ class AllMenuSchemas(InProgressSchema):
     menu: Series[int] = pa.Field(ge=0, nullable=False)
 
 
-class LoadedMenuSchema(InProgressSchema):
+class TimeSchema(pa.SchemaModel):
     cook_datetime: Optional[Series[pd.DatetimeTZDtype]] = pa.Field(
         dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
     )
@@ -168,19 +168,14 @@ class LoadedMenuSchema(InProgressSchema):
     )
 
 
-class TmpMenuSchema(BasicMenuSchema):
-    cook_datetime: Optional[Series[pd.DatetimeTZDtype]] = pa.Field(
-        dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
-    )
-    prep_datetime: Series[pd.DatetimeTZDtype] = pa.Field(
-        dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True, nullable=False
-    )
+class LoadedMenuSchema(InProgressSchema, TimeSchema):
+    pass
+
+
+class TmpMenuSchema(BasicMenuSchema, TimeSchema):
     # override as should be replaced with one of these
     type: Series[str] = pa.Field(isin=["ingredient", "recipe"])
     time_total: Series[pd.Timedelta] = pa.Field(nullable=False, coerce=True)
-    cook_datetime: Series[pd.DatetimeTZDtype] = pa.Field(
-        dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True, nullable=False
-    )
     # manual ingredients lack these
     rating: Series[float] = pa.Field(nullable=True, coerce=True)
     uuid: Series[str] = pa.Field(nullable=True)

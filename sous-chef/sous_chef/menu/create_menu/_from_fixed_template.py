@@ -11,6 +11,7 @@ from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.menu.create_menu._menu_basic import (
     AllMenuSchemas,
     BasicMenuSchema,
+    LoadedMenuSchema,
     MenuBasic,
     MenuIncompleteError,
     TmpMenuSchema,
@@ -227,7 +228,7 @@ class FixedTemplates:
             meal_time=self.config.default_time,
         )
 
-    def load_fixed_menu(self) -> pd.DataFrame:
+    def load_fixed_menu(self) -> DataFrameBase[LoadedMenuSchema]:
         FILE_LOGGER.info("[load_fixed_menu]")
         basic_number = self.config.basic_number
         menu_number = self.config.menu_number
@@ -247,7 +248,9 @@ class FixedTemplates:
         fixed_menu["prep_datetime"] = fixed_menu.apply(
             self._get_default_prep_datetime, axis=1
         )
-        return fixed_menu
+        return validate_menu_schema(
+            dataframe=fixed_menu, model=LoadedMenuSchema
+        )
 
     def select_upcoming_menus(
         self, num_weeks_in_future: int

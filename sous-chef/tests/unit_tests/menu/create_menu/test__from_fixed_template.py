@@ -56,7 +56,8 @@ class TestFixedTemplates:
     @staticmethod
     def test_load_fixed_menu(fixed_templates):
         result = fixed_templates.load_fixed_menu()
-        assert (result.menu.unique() == [0, 2]).all()
+        # from basic + 2
+        assert result.shape[0] == 2
 
     @staticmethod
     def test_select_upcoming_menus(fixed_templates):

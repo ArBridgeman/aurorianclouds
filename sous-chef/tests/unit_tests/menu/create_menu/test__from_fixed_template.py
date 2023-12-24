@@ -54,6 +54,14 @@ class TestFixedTemplates:
         assert str(error.value) == error_message
 
     @staticmethod
+    def test__check_fixed_menu_number_not_in_all_menus_raise_value_error(
+        fixed_templates,
+    ):
+        with pytest.raises(ValueError) as error:
+            fixed_templates._check_fixed_menu_number(100)
+        assert str(error.value) == "fixed menu number (100) is not found"
+
+    @staticmethod
     def test_load_fixed_menu(fixed_templates):
         result = fixed_templates.load_fixed_menu()
         # from basic + 2

@@ -6,10 +6,9 @@ from sous_chef.menu.create_menu.create_menu import Menu
 from sous_chef.recipe_book.recipe_util import RecipeNotFoundError
 from tests.conftest import FROZEN_DATE
 from tests.data.util_data import get_tmp_menu
+from tests.integration_tests.menu.create_menu.conftest import PROJECT
 
 from utilities.testing.pandas_util import assert_equal_dataframe
-
-PROJECT = "Pytest-area"
 
 
 @pytest.fixture
@@ -23,18 +22,6 @@ def ingredient_formatter(pantry_list, unit_formatter):
             pantry_list=pantry_list,
             unit_formatter=unit_formatter,
         )
-
-
-@pytest.fixture
-def menu_config():
-    with initialize(version_base=None, config_path="../../../../config/menu"):
-        config = compose(config_name="create_menu").create_menu
-        config.final_menu.worksheet = "test-tmp-menu"
-        config.fixed.workbook = "test-fixed_menus"
-        config.fixed.menu_number = 1
-        config.todoist.project_name = PROJECT
-        config.fixed.already_in_future_menus.active = False
-        return config
 
 
 @pytest.fixture

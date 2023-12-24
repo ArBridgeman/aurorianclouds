@@ -89,12 +89,6 @@ class MenuFromFixedTemplate(MenuBasic):
             raise MenuIncompleteError(
                 custom_message="will not send to finalize until fixed"
             )
-
-        # TODO add validator instead of dropping!
-        # self.dataframe.drop(
-        #     columns=["eat_datetime", "override_check", "prep_day"],
-        #     inplace=True,
-        # )
         self._save_menu()
 
     def _get_future_menu_uuids(

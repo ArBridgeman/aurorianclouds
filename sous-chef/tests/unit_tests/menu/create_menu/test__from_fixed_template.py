@@ -76,6 +76,17 @@ class TestFixedTemplates:
         assert len(result.menu.unique()) == num_weeks
 
     @staticmethod
+    def test_select_upcoming_menus_start_from_min_when_over(
+        fixed_templates, menu_config
+    ):
+        menu_config.fixed.menu_number = 15
+        num_weeks = 4
+        result = fixed_templates.select_upcoming_menus(
+            num_weeks_in_future=num_weeks
+        )
+        assert len(result.menu.unique()) == num_weeks
+
+    @staticmethod
     @pytest.mark.parametrize("num_weeks", [None, 1.2, "a", 0])
     def test_select_upcoming_menus_num_weeks_unexpected_value(
         fixed_templates, num_weeks

@@ -199,7 +199,7 @@ class MenuBasic(BaseWithExceptionHandling):
     menu_historian: MenuHistorian = None
     dataframe: Union[
         pd.DataFrame,
-        DataFrameBase[BasicMenuSchema],
+        DataFrameBase[LoadedMenuSchema],
         DataFrameBase[TmpMenuSchema],
     ] = None
     menu_history_uuid_list: List = field(init=False)

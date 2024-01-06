@@ -155,7 +155,7 @@ class InProgressSchema(BasicMenuSchema):
     )
 
 
-class AllMenuSchemas(InProgressSchema):
+class AllMenuSchema(InProgressSchema):
     menu: Series[int] = pa.Field(ge=0, nullable=False)
 
 
@@ -444,8 +444,8 @@ class MenuBasic(BaseWithExceptionHandling):
 
 
 def validate_menu_schema(
-    dataframe: Union[pd.Series, pd.DataFrame], model
-) -> Union[pd.DataFrame, pd.Series]:
+    dataframe: Union[DataFrameBase, pd.DataFrame, pd.Series], model
+) -> Union[DataFrameBase, pd.Series]:
     def validate_schema(tmp_df: pd.DataFrame):
         selected_cols = model._collect_fields().keys()
         return model.validate(tmp_df[selected_cols].copy())

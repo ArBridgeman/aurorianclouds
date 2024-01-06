@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 from pandera.typing.common import DataFrameBase
 from sous_chef.menu.create_menu._menu_basic import (
-    AllMenuSchemas,
+    AllMenuSchema,
     TmpMenuSchema,
     validate_menu_schema,
 )
@@ -23,7 +23,7 @@ def _get_menu_df(file_name: str) -> pd.DataFrame:
     return menu
 
 
-def get_tmp_menu() -> pd.DataFrame:
+def get_tmp_menu() -> DataFrameBase:
     return validate_menu_schema(
         dataframe=_get_menu_df("tmp-menu.csv"), model=TmpMenuSchema
     )
@@ -82,6 +82,6 @@ def get_tasks_grocery_list() -> pd.DataFrame:
     return tasks_menu.sort_values("content").reset_index(drop=True)
 
 
-def get_all_menus() -> DataFrameBase[AllMenuSchemas]:
+def get_all_menus() -> DataFrameBase[AllMenuSchema]:
     all_menus_df = pd.read_csv(abs_path / "all_menus.csv", header=0)
-    return validate_menu_schema(dataframe=all_menus_df, model=AllMenuSchemas)
+    return validate_menu_schema(dataframe=all_menus_df, model=AllMenuSchema)

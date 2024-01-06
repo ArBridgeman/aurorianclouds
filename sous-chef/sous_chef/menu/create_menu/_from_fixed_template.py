@@ -9,7 +9,7 @@ from pandera.typing.common import DataFrameBase
 from sous_chef.abstract.extended_enum import ExtendedIntEnum
 from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.menu.create_menu._menu_basic import (
-    AllMenuSchemas,
+    AllMenuSchema,
     BasicMenuSchema,
     LoadedMenuSchema,
     MenuBasic,
@@ -93,7 +93,7 @@ class MenuFromFixedTemplate(MenuBasic):
         self._save_menu()
 
     def _get_future_menu_uuids(
-        self, future_menus: DataFrameBase[AllMenuSchemas]
+        self, future_menus: DataFrameBase[AllMenuSchema]
     ) -> Tuple:
         FILE_LOGGER.info("[_get_future_menu_uuids]")
         mask_type = future_menus["type"] == "recipe"
@@ -164,7 +164,7 @@ class FixedTemplates:
     config: DictConfig
     due_date_formatter: DueDatetimeFormatter
     gsheets_helper: GsheetsHelper
-    all_menus_df: DataFrameBase[AllMenuSchemas] = None
+    all_menus_df: DataFrameBase[AllMenuSchema] = None
 
     def __post_init__(self):
         self.all_menus_df = self._get_all_fixed_menus()
@@ -178,7 +178,7 @@ class FixedTemplates:
     @staticmethod
     def _convert_fixed_menu_to_all_menu_schemas(
         all_menus: pd.DataFrame,
-    ) -> DataFrameBase[AllMenuSchemas]:
+    ) -> DataFrameBase[AllMenuSchema]:
         # need already converted to default for "prep_datetime" calculation
         all_menus["prep_day"] = all_menus.prep_day.replace("", 0)
 
@@ -196,12 +196,12 @@ class FixedTemplates:
             all_menus.day.str.split("_").str[1].apply(get_weekday_from_short)
         )
         return (
-            validate_menu_schema(dataframe=all_menus, model=AllMenuSchemas)
+            validate_menu_schema(dataframe=all_menus, model=AllMenuSchema)
             .sort_values(by=["weekday", "meal_time"])
             .reset_index(drop=True)
         )
 
-    def _get_all_fixed_menus(self) -> DataFrameBase[AllMenuSchemas]:
+    def _get_all_fixed_menus(self) -> DataFrameBase[AllMenuSchema]:
         FILE_LOGGER.info("[_get_all_fixed_menus]")
         # TODO move to config
         sheet_to_mealtime = {

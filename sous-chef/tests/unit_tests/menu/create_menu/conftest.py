@@ -8,7 +8,7 @@ from freezegun import freeze_time
 from hydra import compose, initialize
 from pandera.typing.common import DataFrameBase
 from sous_chef.menu.create_menu._menu_basic import (
-    AllMenuSchemas,
+    AllMenuSchema,
     LoadedMenuSchema,
     TmpMenuSchema,
     validate_menu_schema,
@@ -70,8 +70,8 @@ class MenuBuilder:
         defrost: str = "N",
         item: str = "dummy",
         **kwargs,
-    ) -> DataFrameBase[AllMenuSchemas]:
-        return AllMenuSchemas.validate(
+    ) -> DataFrameBase[AllMenuSchema]:
+        return AllMenuSchema.validate(
             pd.DataFrame(
                 {
                     "menu": 1,

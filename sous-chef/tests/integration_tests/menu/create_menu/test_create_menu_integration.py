@@ -6,32 +6,22 @@ from sous_chef.menu.create_menu.create_menu import Menu
 from sous_chef.recipe_book.recipe_util import RecipeNotFoundError
 from tests.conftest import FROZEN_DATE
 from tests.data.util_data import get_tmp_menu
+from tests.integration_tests.menu.create_menu.conftest import PROJECT
 
 from utilities.testing.pandas_util import assert_equal_dataframe
-
-PROJECT = "Pytest-area"
 
 
 @pytest.fixture
 def ingredient_formatter(pantry_list, unit_formatter):
-    with initialize(version_base=None, config_path="../../../config/formatter"):
+    with initialize(
+        version_base=None, config_path="../../../../config/formatter"
+    ):
         config = compose(config_name="format_ingredient")
         return IngredientFormatter(
             config=config.format_ingredient,
             pantry_list=pantry_list,
             unit_formatter=unit_formatter,
         )
-
-
-@pytest.fixture
-def menu_config():
-    with initialize(version_base=None, config_path="../../../config/menu"):
-        config = compose(config_name="create_menu").create_menu
-        config.final_menu.worksheet = "test-tmp-menu"
-        config.fixed.workbook = "test-fixed_menus"
-        config.fixed.menu_number = 1
-        config.todoist.project_name = PROJECT
-        return config
 
 
 @pytest.fixture
@@ -80,9 +70,8 @@ class TestMenu:
     ):
         menu_config.fixed.menu_number = 1
         menu_with_recipe_book.finalize_fixed_menu()
-        assert_equal_dataframe(
-            menu_with_recipe_book.load_final_menu(), get_tmp_menu()
-        )
+        menu_with_recipe_book.load_final_menu()
+        assert_equal_dataframe(menu_with_recipe_book.dataframe, get_tmp_menu())
 
     @staticmethod
     def test_finalize_fixed_menu_fails_for_record_exception(

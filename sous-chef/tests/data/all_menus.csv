@@ -1,0 +1,18 @@
+menu,weekday,prep_day,meal_time,type,selection,eat_factor,eat_unit,freeze_factor,defrost,override_check,item
+0,Friday,0.0,dinner,ingredient,,1.0,cup,0.0,N,N,rice
+1,Friday,0.0,dinner,ingredient,,1.0,cup,0.0,N,N,rice
+2,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Harissa Honey Chicken Bowl
+3,Friday,0.0,dinner,filter,either,0.5,,0.0,N,N,t.entree/burger & t.protein/beef
+4,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Creamy Ramen Noodles
+5,Friday,0.0,dinner,recipe,,1.0,,0.0,N,Y,Beef Bulgogi & Lotus Bowl
+6,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Volcano Salmon Bowl
+7,Friday,0.0,dinner,ingredient,,2.0,,0.0,N,N,steaks
+8,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Beef pan-fried noodles
+9,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Barbie Pink Pasta
+10,Friday,0.0,dinner,filter,rated,1.0,,0.0,N,N,t.side/veggies-european
+11,Friday,0.0,dinner,recipe,,1.0,,0.0,Y,N,Cali burgers
+11,Friday,0.0,dinner,ingredient,,450.0,g,0.0,N,N,steak fries
+12,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Southwest Chile Lime Ranch Salad
+13,Friday,0.0,dinner,recipe,,1.0,,0.0,Y,N,Gigi Hadid Pasta
+14,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Tex Mex Fries
+15,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Pad Thai

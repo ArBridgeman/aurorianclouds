@@ -1,13 +1,18 @@
 from pathlib import Path
 
 import pandas as pd
-from sous_chef.menu.create_menu._menu_basic import FinalizedMenuSchema
+from pandera.typing.common import DataFrameBase
+from sous_chef.menu.create_menu._menu_basic import (
+    AllMenuSchema,
+    TmpMenuSchema,
+    validate_menu_schema,
+)
 
 abs_path = Path(__file__).parent.absolute()
 
 
 def _get_menu_df(file_name: str) -> pd.DataFrame:
-    menu = FinalizedMenuSchema.validate(
+    menu = TmpMenuSchema.validate(
         pd.read_csv(abs_path / file_name, dtype={"uuid": str}, header=0)
     )
     menu.eat_unit.fillna("", inplace=True)
@@ -18,9 +23,10 @@ def _get_menu_df(file_name: str) -> pd.DataFrame:
     return menu
 
 
-def get_tmp_menu() -> pd.DataFrame:
-    # TODO figure out why differs by 30 minutes from final_menu entries
-    return _get_menu_df("tmp-menu.csv")
+def get_tmp_menu() -> DataFrameBase:
+    return validate_menu_schema(
+        dataframe=_get_menu_df("tmp-menu.csv"), model=TmpMenuSchema
+    )
 
 
 def get_final_grocery_list() -> pd.DataFrame:
@@ -41,8 +47,10 @@ def get_final_grocery_list() -> pd.DataFrame:
     return final_grocery_list
 
 
-def get_final_menu() -> pd.DataFrame:
-    return _get_menu_df("final_menu.csv")
+def get_final_menu() -> DataFrameBase[TmpMenuSchema]:
+    return validate_menu_schema(
+        dataframe=_get_menu_df("final_menu.csv"), model=TmpMenuSchema
+    )
 
 
 def get_local_recipe_book_path():
@@ -72,3 +80,8 @@ def get_tasks_grocery_list() -> pd.DataFrame:
         lambda cell: cell[1:-1].split(", ")
     )
     return tasks_menu.sort_values("content").reset_index(drop=True)
+
+
+def get_all_menus() -> DataFrameBase[AllMenuSchema]:
+    all_menus_df = pd.read_csv(abs_path / "all_menus.csv", header=0)
+    return validate_menu_schema(dataframe=all_menus_df, model=AllMenuSchema)

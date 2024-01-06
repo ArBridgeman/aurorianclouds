@@ -2,9 +2,8 @@ import datetime
 from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
-import numpy as np
 import pandas as pd
 import pandera as pa
 from omegaconf import DictConfig
@@ -93,6 +92,21 @@ class MenuQualityError(Exception):
         )
 
 
+@dataclass
+class MenuFutureError(Exception):
+    error_text: str
+    recipe_title: str
+    message: str = "[future menu]"
+
+    def __post_init__(self):
+        super().__init__(self.message)
+
+    def __str__(self):
+        return (
+            f"{self.message} recipe={self.recipe_title} error={self.error_text}"
+        )
+
+
 @extend_enum(
     [
         MapMenuHistoryErrorToException,
@@ -103,55 +117,72 @@ class MenuQualityError(Exception):
 )
 class MapMenuErrorToException(ExtendedEnum):
     menu_quality_check = MenuQualityError
+    menu_future_error = MenuFutureError
 
 
-class MenuSchema(pa.SchemaModel):
+class BasicMenuSchema(pa.SchemaModel):
+    # TODO replace all panderas with pydantic & create own validator with
+    #  dataframe returned, as no default functions & coerce is poorly made
     weekday: Series[str] = pa.Field(isin=Weekday.name_list("capitalize"))
-    prep_day: Optional[Series[float]] = pa.Field(
-        ge=0, lt=7, nullable=False, coerce=True
+    meal_time: Series[str] = pa.Field(isin=MealTime.name_list("lower"))
+    type: Series[str] = pa.Field(isin=TypeProcessOrder.name_list())
+    eat_factor: Series[float] = pa.Field(
+        ge=0, default=0, nullable=False, coerce=True
     )
-    eat_datetime: Optional[Series[pd.DatetimeTZDtype]] = pa.Field(
+    eat_unit: Series[str] = pa.Field(nullable=True)
+    freeze_factor: Series[float] = pa.Field(
+        ge=0, default=0, nullable=False, coerce=True
+    )
+    defrost: Series[str] = pa.Field(
+        isin=["Y", "N"], default="N", nullable=False, coerce=True
+    )
+    item: Series[str]
+
+    class Config:
+        strict = True
+        coerce = True
+
+
+class InProgressSchema(BasicMenuSchema):
+    selection: Series[str] = pa.Field(
+        isin=RandomSelectType.name_list(), nullable=True
+    )
+    prep_day: Optional[Series[float]] = pa.Field(
+        ge=0, lt=7, default=0, nullable=False, coerce=True
+    )
+    override_check: Series[str] = pa.Field(
+        isin=["Y", "N"], default="N", nullable=False, coerce=True
+    )
+
+
+class AllMenuSchema(InProgressSchema):
+    menu: Series[int] = pa.Field(ge=0, nullable=False)
+
+
+class TimeSchema(pa.SchemaModel):
+    cook_datetime: Optional[Series[pd.DatetimeTZDtype]] = pa.Field(
         dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
     )
     prep_datetime: Series[pd.DatetimeTZDtype] = pa.Field(
         dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True, nullable=False
     )
-    meal_time: Series[str] = pa.Field(isin=MealTime.name_list("lower"))
-    type: Series[str] = pa.Field(isin=TypeProcessOrder.name_list())
-    # TODO remove from here as don't need in menu-tmp, right?
-    #  so should add check that only these values elsewhere
-    # TODO add check that # allowed unrated >= explicit unrateds listed in menus
-    selection: Series[str] = pa.Field(
-        isin=RandomSelectType.name_list(), nullable=True
-    )
-    eat_factor: Series[float] = pa.Field(ge=0, nullable=False, coerce=True)
-    eat_unit: Series[str] = pa.Field(nullable=True)
-    freeze_factor: Series[float] = pa.Field(ge=0, nullable=False, coerce=True)
-    defrost: Series[str] = pa.Field(
-        isin=["Y", "N"], nullable=False, coerce=True
-    )
-    override_check: Optional[Series[str]] = pa.Field(
-        isin=["Y", "N"], nullable=False, coerce=True
-    )
-    item: Series[str]
-
-    class Config:
-        strict = False
 
 
-class FinalizedMenuSchema(MenuSchema):
+class LoadedMenuSchema(InProgressSchema, TimeSchema):
+    pass
+
+
+class TmpMenuSchema(BasicMenuSchema, TimeSchema):
     # override as should be replaced with one of these
     type: Series[str] = pa.Field(isin=["ingredient", "recipe"])
     time_total: Series[pd.Timedelta] = pa.Field(nullable=False, coerce=True)
-    cook_datetime: Series[pd.DatetimeTZDtype] = pa.Field(
-        dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True, nullable=False
-    )
     # manual ingredients lack these
     rating: Series[float] = pa.Field(nullable=True, coerce=True)
     uuid: Series[str] = pa.Field(nullable=True)
 
     class Config:
-        strict = False
+        strict = True
+        coerce = True
 
 
 @dataclass
@@ -164,8 +195,8 @@ class MenuBasic(BaseWithExceptionHandling):
     menu_historian: MenuHistorian = None
     dataframe: Union[
         pd.DataFrame,
-        DataFrameBase[MenuSchema],
-        DataFrameBase[FinalizedMenuSchema],
+        DataFrameBase[LoadedMenuSchema],
+        DataFrameBase[TmpMenuSchema],
     ] = None
     menu_history_uuid_list: List = field(init=False)
     number_of_unrated_recipes: int = 0
@@ -178,16 +209,16 @@ class MenuBasic(BaseWithExceptionHandling):
         )
         self.menu_history_uuid_list = self._set_menu_history_uuid_list()
 
-    def load_final_menu(self) -> pd.DataFrame:
+    def load_final_menu(self):
         workbook = self.config.final_menu.workbook
         worksheet = self.config.final_menu.worksheet
         self.dataframe = self.gsheets_helper.get_worksheet(
             workbook_name=workbook, worksheet_name=worksheet
         )
         self.dataframe.time_total = pd.to_timedelta(self.dataframe.time_total)
-        self.dataframe.selection.replace("NaN", np.NaN, inplace=True)
-        self._validate_finalized_menu_schema()
-        return self.dataframe
+        self.dataframe = validate_menu_schema(
+            dataframe=self.dataframe, model=TmpMenuSchema
+        )
 
     def save_with_menu_historian(self):
         self.menu_historian.add_current_menu_to_history(self.dataframe)
@@ -199,9 +230,9 @@ class MenuBasic(BaseWithExceptionHandling):
 
         def _cook_prep_datetime() -> (datetime.timedelta, datetime.timedelta):
             if row.defrost == "Y":
-                return row.eat_datetime, row.eat_datetime
+                return row.cook_datetime, row.cook_datetime
 
-            default_cook_datetime = row.eat_datetime - recipe.time_total
+            default_cook_datetime = row.cook_datetime - recipe.time_total
             default_prep_datetime = default_cook_datetime
 
             if (
@@ -216,7 +247,7 @@ class MenuBasic(BaseWithExceptionHandling):
                 return default_cook_datetime, default_prep_datetime
             # prep_day was set, so use prep_config default time; unsure
             # how cook time altered, but assume large inactive times handled
-            return (default_cook_datetime, row.prep_datetime)
+            return default_cook_datetime, row.prep_datetime
 
         row["item"] = recipe.title
         row["rating"] = recipe.rating
@@ -298,22 +329,6 @@ class MenuBasic(BaseWithExceptionHandling):
                 recipe_title=recipe.title, error_text=error_text
             )
 
-    @staticmethod
-    def _get_weekday_from_short(short_week_day: str):
-        day_mapping = {
-            "mon": "Monday",
-            "tue": "Tuesday",
-            "tues": "Tuesday",
-            "wed": "Wednesday",
-            "thu": "Thursday",
-            "fri": "Friday",
-            "sat": "Saturday",
-            "sun": "Sunday",
-        }
-        if short_week_day.lower() in day_mapping:
-            return day_mapping[short_week_day.lower()]
-        raise MenuConfigError(f"{short_week_day} unknown weekday!")
-
     def _inspect_unrated_recipe(self, recipe: pd.Series):
         if pd.isna(recipe.rating):
             self.number_of_unrated_recipes += 1
@@ -340,7 +355,12 @@ class MenuBasic(BaseWithExceptionHandling):
             )
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
-    def _retrieve_recipe(self, row: pd.Series, processed_uuid_list: List):
+    def _retrieve_recipe(
+        self,
+        row: pd.Series,
+        processed_uuid_list: List,
+        future_uuid_tuple: Optional[Tuple] = (),
+    ) -> DataFrameBase[TmpMenuSchema]:
         recipe = self.recipe_book.get_recipe_by_title(row["item"])
         if row.override_check == "N":
             if recipe.uuid in processed_uuid_list:
@@ -350,12 +370,22 @@ class MenuBasic(BaseWithExceptionHandling):
                 )
             elif recipe.uuid in self.menu_history_uuid_list:
                 raise MenuHistoryError(recipe_title=recipe.title)
-        return self._add_recipe_columns(row=row, recipe=recipe)
+            elif recipe.uuid in future_uuid_tuple:
+                raise MenuFutureError(
+                    recipe_title=recipe.title,
+                    error_text="recipe is in an upcoming menu",
+                )
+        row = self._add_recipe_columns(row=row, recipe=recipe)
+        return validate_menu_schema(dataframe=row, model=TmpMenuSchema)
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _select_random_recipe(
-        self, row: pd.Series, entry_type: str, processed_uuid_list: List
-    ):
+        self,
+        row: pd.Series,
+        entry_type: str,
+        processed_uuid_list: List,
+        future_uuid_tuple: Optional[Tuple],
+    ) -> DataFrameBase[TmpMenuSchema]:
         max_cook_active_minutes = None
         if row.override_check == "N":
             if row.prep_datetime.weekday() < 5:
@@ -369,7 +399,7 @@ class MenuBasic(BaseWithExceptionHandling):
 
         exclude_uuid_list = self.menu_history_uuid_list
         if processed_uuid_list:
-            exclude_uuid_list += processed_uuid_list
+            exclude_uuid_list += processed_uuid_list + list(future_uuid_tuple)
 
         recipe = getattr(
             self.recipe_book, f"get_random_recipe_by_{entry_type}"
@@ -382,8 +412,8 @@ class MenuBasic(BaseWithExceptionHandling):
         )
         row["item"] = recipe.title
         row["type"] = "recipe"
-
-        return self._add_recipe_columns(row=row, recipe=recipe)
+        row = self._add_recipe_columns(row=row, recipe=recipe)
+        return validate_menu_schema(dataframe=row, model=TmpMenuSchema)
 
     def _save_menu(self):
         save_loc = self.config.final_menu
@@ -392,7 +422,9 @@ class MenuBasic(BaseWithExceptionHandling):
             workbook=save_loc.workbook,
             worksheet=save_loc.worksheet,
         )
-        self._validate_finalized_menu_schema()
+        self.dataframe = validate_menu_schema(
+            dataframe=self.dataframe, model=TmpMenuSchema
+        )
         self.gsheets_helper.write_worksheet(
             df=self.dataframe.sort_values(by=["cook_datetime"]).reindex(
                 sorted(self.dataframe.columns), axis=1
@@ -410,8 +442,33 @@ class MenuBasic(BaseWithExceptionHandling):
                 return list(menu_history_recent_df.uuid.values)
         return []
 
-    def _validate_menu_schema(self):
-        self.dataframe = MenuSchema.validate(self.dataframe)
 
-    def _validate_finalized_menu_schema(self):
-        self.dataframe = FinalizedMenuSchema.validate(self.dataframe)
+def validate_menu_schema(
+    dataframe: Union[DataFrameBase, pd.DataFrame, pd.Series], model
+) -> Union[DataFrameBase, pd.Series]:
+    def validate_schema(tmp_df: pd.DataFrame):
+        selected_cols = model._collect_fields().keys()
+        return model.validate(tmp_df[selected_cols].copy())
+
+    if isinstance(dataframe, pd.DataFrame):
+        return validate_schema(tmp_df=dataframe)
+    elif isinstance(dataframe, pd.Series):
+        tmp_df = validate_schema(tmp_df=dataframe.to_frame().T)
+        return tmp_df.squeeze()
+
+
+def get_weekday_from_short(short_week_day: str):
+    # TODO move to config
+    day_mapping = {
+        "mon": "Monday",
+        "tue": "Tuesday",
+        "tues": "Tuesday",
+        "wed": "Wednesday",
+        "thu": "Thursday",
+        "fri": "Friday",
+        "sat": "Saturday",
+        "sun": "Sunday",
+    }
+    if short_week_day.lower() in day_mapping:
+        return day_mapping[short_week_day.lower()]
+    raise MenuConfigError(f"{short_week_day} unknown weekday!")

@@ -1,5 +1,5 @@
 import re
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from enum import Enum, IntEnum
 from pathlib import Path
 from typing import List, Tuple
@@ -68,7 +68,6 @@ class WorkoutVideos(pa.SchemaModel):
 
 # TODO create option to catch videos without tag
 # TODO use video file to get duration info
-# TODO cache result of _parse_workout_videos
 
 
 def convert_timedelta_to_min(time_delta: pd.Series) -> int:
@@ -99,7 +98,6 @@ class WorkoutPlanner:
     def _parse_workout_videos(
         library_name: str = "Ariel Fitness",
         genres: Tuple[str] = ("Advice", "Pregnancy", "Injury - Dance Party"),
-        date: date = datetime.today().date(),
         debug: bool = False,
     ):
         LOGGER.info(f"Querying library={library_name}")

@@ -1,4 +1,3 @@
-import re
 from datetime import datetime, timedelta
 from enum import Enum, IntEnum
 from pathlib import Path
@@ -8,9 +7,14 @@ import pandas as pd
 import pandera as pa
 from jellyfin_helpers.jellyfin_api import Jellyfin
 from jellyfin_helpers.utils import get_config
+from jellyfin_helpers.workouts.get_workouts import (
+    WorkoutVideos,
+    WorkoutVideoSchema,
+)
 from joblib import Memory
 from omegaconf import DictConfig
 from pandera.typing import Series
+from pandera.typing.common import DataFrameBase
 from structlog import get_logger
 
 from utilities.api.gsheets_api import GsheetsHelper
@@ -53,19 +57,6 @@ class WorkoutPlan(pa.SchemaModel):
     active: Series[str] = pa.Field(isin=["Y", "N"], nullable=False)
 
 
-class WorkoutVideos(pa.SchemaModel):
-    Name: Series[str]
-    Id: Series[str]
-    Duration: Series[timedelta] = pa.Field(
-        ge=timedelta(minutes=0), nullable=False
-    )
-    Genre: Series[str]
-    Tags: Series[List[str]]
-
-    class Config:
-        strict = True
-
-
 # TODO create option to catch videos without tag
 # TODO use video file to get duration info
 
@@ -75,63 +66,19 @@ def convert_timedelta_to_min(time_delta: pd.Series) -> int:
 
 
 class WorkoutPlanner:
-    def __init__(self, app_config: DictConfig, jellyfin: Jellyfin):
+    def __init__(
+        self,
+        app_config: DictConfig,
+        jellyfin: Jellyfin,
+        workout_videos: DataFrameBase[WorkoutVideoSchema],
+    ):
         self.app_config = app_config
         self.jellyfin = jellyfin
-        self.workout_videos = self._parse_workout_videos()
+        self.workout_videos = workout_videos
 
     @staticmethod
     def _is_value_in_list(row: pd.Series, search_term: str):
         return search_term in row
-
-    @staticmethod
-    def _get_duration_from_tags(tags: List[str]) -> timedelta:
-        time_tag = list(filter(lambda x: " min" in x, tags))
-        if len(time_tag) < 1:
-            return timedelta(minutes=-100)
-        times = re.search(r"(\d+)-(\d+) min", time_tag[0])
-        average_time = (int(times.group(1)) + int(times.group(2))) / 2
-        return timedelta(minutes=average_time)
-
-    @staticmethod
-    @cache.cache
-    def _parse_workout_videos(
-        library_name: str = "Ariel Fitness",
-        genres: Tuple[str] = ("Advice", "Pregnancy", "Injury - Dance Party"),
-        debug: bool = False,
-    ):
-        LOGGER.info(f"Querying library={library_name}")
-
-        exercise_genres = jellyfin.get_genres_per_library(
-            library_name=library_name
-        )
-
-        data_frame = pd.DataFrame()
-        for genre in exercise_genres:
-            if genre["Name"] in genres:
-                continue
-            LOGGER.info(f"genre={genre['Name']}")
-            raw_data = pd.DataFrame(
-                jellyfin.get_items_per_genre(genre_id=genre["Id"])
-            )
-            raw_data = raw_data[~raw_data.VideoType.isna()]
-            raw_data["Duration"] = raw_data["Tags"].apply(
-                WorkoutPlanner._get_duration_from_tags
-            )
-            raw_data["Genre"] = genre["Name"]
-
-            data_frame = pd.concat(
-                [
-                    raw_data[["Name", "Id", "Duration", "Genre", "Tags"]],
-                    data_frame,
-                ]
-            )
-            if debug:
-                LOGGER.info(data_frame)
-
-            WorkoutVideos.validate(data_frame)
-
-        return data_frame
 
     def _search_for_workout(
         self, row: pd.Series, skip_ids: List[str]
@@ -267,9 +214,17 @@ class WorkoutPlanner:
 
 config = get_config(config_name="plan_workouts")
 
-jellyfin = Jellyfin(config=config.jellyfin_api)
+jellyfin_helper = Jellyfin(config=config.jellyfin_api)
+
+# todo separate out configs
+workout_videos_df = WorkoutVideos(
+    app_config=config.plan_workouts, jellyfin=jellyfin_helper
+).parse_workout_videos()
+
 workout_planner = WorkoutPlanner(
-    app_config=config.plan_workouts, jellyfin=jellyfin
+    app_config=config.plan_workouts,
+    jellyfin=jellyfin_helper,
+    workout_videos=workout_videos_df,
 )
 workout_planner.create_workout_plan(
     gsheets_helper=GsheetsHelper(config=config.gsheets),

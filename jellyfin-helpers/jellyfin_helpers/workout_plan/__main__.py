@@ -5,6 +5,7 @@ from jellyfin_helpers.workout_plan.get_workouts import WorkoutVideos
 from jellyfin_helpers.workout_plan.plan_workouts import WorkoutPlanner
 
 from utilities.api.gsheets_api import GsheetsHelper
+from utilities.api.todoist_api import TodoistHelper
 
 if __name__ == "__main__":
     config = get_config(config_name="plan_workouts")
@@ -31,7 +32,7 @@ if __name__ == "__main__":
     )
     # -- overwrites existing data in gsheets
     plan_exporter.export_to_gsheets(gsheets_helper=gsheets_helper)
-    # plan_exporter.export_to_jellyfin_playlist(jellyfin=jellyfin)
-    # plan_exporter.export_to_todoist(
-    #     todoist_helper=TodoistHelper(config=config.todoist)
-    # )
+    plan_exporter.export_to_jellyfin_playlist(jellyfin=jellyfin)
+    plan_exporter.export_to_todoist(
+        todoist_helper=TodoistHelper(config=config.todoist)
+    )

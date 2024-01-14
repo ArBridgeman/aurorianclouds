@@ -13,9 +13,7 @@ if __name__ == "__main__":
     gsheets_helper = GsheetsHelper(config=config.gsheets)
 
     # load workout library videos
-    workout_videos_df = WorkoutVideos(
-        app_config=config.plan_workouts, jellyfin=jellyfin
-    ).parse_workout_videos()
+    workout_videos_df = WorkoutVideos(jellyfin=jellyfin).parse_workout_videos()
 
     # create workout plan
     workout_planner = WorkoutPlanner(

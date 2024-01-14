@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from enum import Enum, IntEnum
 from typing import List, Tuple
 
+import numpy as np
 import pandas as pd
 import pandera as pa
 from jellyfin_helpers.jellyfin_api import Jellyfin
@@ -46,12 +47,14 @@ class PlanTemplate(pa.SchemaModel):
 
 
 class WorkoutPlan(pa.SchemaModel):
-    day: Series[int] = pa.Field(gt=0, le=28, nullable=False)
-    week: Series[int] = pa.Field(gt=0, le=4, nullable=False)
+    day: Series[int] = pa.Field(gt=0, le=28, nullable=False, coerce=True)
+    week: Series[int] = pa.Field(gt=0, le=4, nullable=False, coerce=True)
     title: Series[str]
-    total_in_min: Series[int] = pa.Field(gt=0, le=60, nullable=False)
-    description: Series[str]
-    item_id: Series[str]
+    total_in_min: Series[int] = pa.Field(
+        gt=0, le=60, nullable=False, coerce=True
+    )
+    description: Series[str] = pa.Field(nullable=True)
+    item_id: Series[str] = pa.Field(nullable=True)
 
 
 # TODO create option to catch videos without tag
@@ -189,7 +192,8 @@ class WorkoutPlanner:
         template = self._load_plan_template(gsheets_helper=gsheets_helper)
         last_plan = self._load_last_plan(gsheets_helper=gsheets_helper)
 
-        skip_ids = last_plan.item_id.values
+        all_skip_ids = list(last_plan.item_id.values)
+        in_month_skip_ids = list()
         today_index = Day[datetime.now().strftime("%A").lower()[:3]].value
         plan = pd.DataFrame()
         for _, row in template.iterrows():
@@ -202,22 +206,40 @@ class WorkoutPlanner:
             days = int(start) - today_index
             week = max((days // 7) + 1, 1)
 
-            descriptions, item_ids = self._search_for_workout(
-                row=row, skip_ids=skip_ids
-            )
-            skip_ids.extend(item_ids)
+            title = row["values"]
+            if row.search_type == "reminder":
+                print(f"(reminder): {title}")
+                new_row = pd.DataFrame(
+                    {
+                        "day": [days],
+                        "week": [week],
+                        "title": [title],
+                        "total_in_min": [row.total_in_min],
+                        "description": [np.NaN],
+                        "item_id": [np.NaN],
+                    }
+                )
+            else:
+                descriptions, item_ids = self._search_for_workout(
+                    row=row,
+                    skip_ids=all_skip_ids
+                    if row["values"] != "tennis/arm"
+                    else in_month_skip_ids,
+                )
+                in_month_skip_ids.extend(item_ids)
+                all_skip_ids.extend(item_ids)
 
-            num_entries = len(descriptions)
-            new_row = pd.DataFrame(
-                {
-                    "day": [days] * num_entries,
-                    "week": [week] * num_entries,
-                    "title": [row.values] * num_entries,
-                    "total_in_min": [row.total_in_min] * num_entries,
-                    "description": descriptions,
-                    "item_id": item_ids,
-                }
-            )
+                num_entries = len(descriptions)
+                new_row = pd.DataFrame(
+                    {
+                        "day": [days] * num_entries,
+                        "week": [week] * num_entries,
+                        "title": [title] * num_entries,
+                        "total_in_min": [row.total_in_min] * num_entries,
+                        "description": descriptions,
+                        "item_id": item_ids,
+                    }
+                )
 
             plan = pd.concat([plan, new_row])
 

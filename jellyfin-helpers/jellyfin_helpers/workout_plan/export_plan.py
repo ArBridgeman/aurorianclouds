@@ -15,7 +15,6 @@ class PlanExporter:
         self.plan = plan
 
     def export_to_gsheets(self, gsheets_helper: GsheetsHelper):
-        # overwrites existing data
         gsheets_helper.write_worksheet(
             df=self.plan,
             workbook_name=self.app_config.gsheets.workbook,

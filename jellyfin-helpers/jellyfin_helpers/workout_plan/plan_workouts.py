@@ -174,14 +174,25 @@ class WorkoutPlanner:
         plan_template.total_in_min = plan_template.total_in_min.astype("int64")
         return PlanTemplate.validate(plan_template)
 
+    def _load_last_plan(
+        self, gsheets_helper: GsheetsHelper
+    ) -> DataFrameBase[WorkoutPlan]:
+        df = gsheets_helper.get_worksheet(
+            workbook_name=self.app_config.gsheets.workbook,
+            worksheet_name=self.app_config.gsheets.plan_worksheet,
+        )
+        return WorkoutPlan.validate(df)
+
     def create_workout_plan(
         self, gsheets_helper: GsheetsHelper
     ) -> DataFrameBase[WorkoutPlan]:
-        workout = self._load_plan_template(gsheets_helper=gsheets_helper)
+        template = self._load_plan_template(gsheets_helper=gsheets_helper)
+        last_plan = self._load_last_plan(gsheets_helper=gsheets_helper)
 
+        skip_ids = last_plan.item_id.values
         today_index = Day[datetime.now().strftime("%A").lower()[:3]].value
         plan = pd.DataFrame()
-        for _, row in workout.iterrows():
+        for _, row in template.iterrows():
             if row.active == "N":
                 continue
 
@@ -192,8 +203,9 @@ class WorkoutPlanner:
             week = max((days // 7) + 1, 1)
 
             descriptions, item_ids = self._search_for_workout(
-                row=row, skip_ids=plan.item_id.values
+                row=row, skip_ids=skip_ids
             )
+            skip_ids.extend(item_ids)
 
             num_entries = len(descriptions)
             new_row = pd.DataFrame(

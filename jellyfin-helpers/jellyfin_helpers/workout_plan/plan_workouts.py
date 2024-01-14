@@ -1,29 +1,17 @@
 from datetime import datetime, timedelta
 from enum import Enum, IntEnum
-from pathlib import Path
 from typing import List, Tuple
 
 import pandas as pd
 import pandera as pa
 from jellyfin_helpers.jellyfin_api import Jellyfin
-from jellyfin_helpers.utils import get_config
-from jellyfin_helpers.workouts.get_workouts import (
-    WorkoutVideos,
-    WorkoutVideoSchema,
-)
-from joblib import Memory
+from jellyfin_helpers.workout_plan.get_workouts import WorkoutVideoSchema
 from omegaconf import DictConfig
 from pandera.typing import Series
 from pandera.typing.common import DataFrameBase
 from structlog import get_logger
 
 from utilities.api.gsheets_api import GsheetsHelper
-from utilities.api.todoist_api import TodoistHelper
-
-# initialize disk cache
-ABS_FILE_PATH = Path(__file__).absolute().parent
-CACHE_DIR = ABS_FILE_PATH / "diskcache"
-cache = Memory(CACHE_DIR, mmap_mode="r")
 
 LOGGER = get_logger(__name__)
 
@@ -49,12 +37,21 @@ class SearchType(Enum):
         return list(map(lambda c: getattr(c.name, string_method)(), cls))
 
 
-class WorkoutPlan(pa.SchemaModel):
+class PlanTemplate(pa.SchemaModel):
     day: Series[str]
     total_in_min: Series[int] = pa.Field(gt=0, le=60, nullable=False)
     search_type: Series[str] = pa.Field(isin=SearchType.name_list("lower"))
     values: Series[str]
     active: Series[str] = pa.Field(isin=["Y", "N"], nullable=False)
+
+
+class WorkoutPlan(pa.SchemaModel):
+    day: Series[int] = pa.Field(gt=0, le=28, nullable=False)
+    week: Series[int] = pa.Field(gt=0, le=4, nullable=False)
+    title: Series[str]
+    total_in_min: Series[int] = pa.Field(gt=0, le=60, nullable=False)
+    description: Series[str]
+    item_id: Series[str]
 
 
 # TODO create option to catch videos without tag
@@ -82,25 +79,25 @@ class WorkoutPlanner:
 
     def _search_for_workout(
         self, row: pd.Series, skip_ids: List[str]
-    ) -> Tuple[str, List[str]]:
+    ) -> Tuple[List[str], List[str]]:
         if row.search_type == SearchType.genre.value:
             selected_workouts = self._select_exercise_by_genre(
                 genre=row["values"],
                 duration_in_minutes=row.total_in_min,
                 skip_ids=skip_ids,
             )
-            description = "\n".join(selected_workouts.description.values)
+            descriptions = selected_workouts.description.values
             item_ids = selected_workouts.Id.values
-            return description, item_ids
+            return descriptions, item_ids
         elif row.search_type == SearchType.tag.value:
             selected_workouts = self._select_exercise_by_tag(
                 tag=row["values"],
                 duration_in_minutes=row.total_in_min,
                 skip_ids=skip_ids,
             )
-            description = "\n".join(selected_workouts.description.values)
+            descriptions = selected_workouts.description.values
             item_ids = selected_workouts.Id.values
-            return description, item_ids
+            return descriptions, item_ids
         raise ValueError("Unknown SearchType")
 
     @staticmethod
@@ -167,66 +164,49 @@ class WorkoutPlanner:
             remaining_duration=duration_timedelta,
         )
 
-    def create_workout_plan(
-        self, gsheets_helper: GsheetsHelper, todoist_helper: TodoistHelper
-    ):
-        workout = gsheets_helper.get_worksheet(
+    def _load_plan_template(
+        self, gsheets_helper: GsheetsHelper
+    ) -> DataFrameBase[PlanTemplate]:
+        plan_template = gsheets_helper.get_worksheet(
             workbook_name=self.app_config.gsheets.workbook,
-            worksheet_name=self.app_config.gsheets.worksheet,
+            worksheet_name=self.app_config.gsheets.template_worksheet,
         )
-        workout.total_in_min = workout.total_in_min.astype("int64")
-        WorkoutPlan.validate(workout)
+        plan_template.total_in_min = plan_template.total_in_min.astype("int64")
+        return PlanTemplate.validate(plan_template)
+
+    def create_workout_plan(
+        self, gsheets_helper: GsheetsHelper
+    ) -> DataFrameBase[WorkoutPlan]:
+        workout = self._load_plan_template(gsheets_helper=gsheets_helper)
 
         today_index = Day[datetime.now().strftime("%A").lower()[:3]].value
-        selection_month = []
+        plan = pd.DataFrame()
         for _, row in workout.iterrows():
             if row.active == "N":
                 continue
 
-            start, day_str = row.day.split("_")
-
+            start, _ = row.day.split("_")
             # TODO only set correctly for sat/sun/mon
             # better to extract due date formatter shared logic?
             days = int(start) - today_index
             week = max((days // 7) + 1, 1)
-            playlist_name = self.app_config.jellyfin[f"playlist_{week}"]
-            day_str = f"in {days} days"
 
-            description, item_ids = self._search_for_workout(
-                row, selection_month
-            )
-            selection_month.extend(item_ids)
-
-            self.jellyfin.post_add_to_playlist(
-                playlist_name=playlist_name, item_ids=item_ids
+            descriptions, item_ids = self._search_for_workout(
+                row=row, skip_ids=plan.item_id.values
             )
 
-            todoist_helper.add_task_to_project(
-                task=f"[wk {week}] {row['values']} ({row.total_in_min} min)",
-                due_string=day_str,
-                project=self.app_config.todoist.project,
-                section=self.app_config.todoist.section,
-                description=description,
-                priority=self.app_config.todoist.task_priority,
-                label_list=["health"],
+            num_entries = len(descriptions)
+            new_row = pd.DataFrame(
+                {
+                    "day": [days] * num_entries,
+                    "week": [week] * num_entries,
+                    "title": [row.values] * num_entries,
+                    "total_in_min": [row.total_in_min] * num_entries,
+                    "description": descriptions,
+                    "item_id": item_ids,
+                }
             )
 
+            plan = pd.concat([plan, new_row])
 
-config = get_config(config_name="plan_workouts")
-
-jellyfin_helper = Jellyfin(config=config.jellyfin_api)
-
-# todo separate out configs
-workout_videos_df = WorkoutVideos(
-    app_config=config.plan_workouts, jellyfin=jellyfin_helper
-).parse_workout_videos()
-
-workout_planner = WorkoutPlanner(
-    app_config=config.plan_workouts,
-    jellyfin=jellyfin_helper,
-    workout_videos=workout_videos_df,
-)
-workout_planner.create_workout_plan(
-    gsheets_helper=GsheetsHelper(config=config.gsheets),
-    todoist_helper=TodoistHelper(config=config.todoist),
-)
+        return WorkoutPlan.validate(plan).sort_values(by="day")

@@ -223,7 +223,8 @@ class WorkoutPlanner:
                 descriptions, item_ids = self._search_for_workout(
                     row=row,
                     skip_ids=all_skip_ids
-                    if row["values"] != "tennis/arm"
+                    # currently not enough entries for both of these filters
+                    if row["values"] not in ("tennis/arm", "mobility/ankle")
                     else in_month_skip_ids,
                 )
                 in_month_skip_ids.extend(item_ids)

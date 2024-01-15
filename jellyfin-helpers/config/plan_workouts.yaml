@@ -6,13 +6,16 @@ defaults:
 
 
 plan_workouts:
+  overall:
+    run: dev
   todoist:
     project: Active tasks
     section: ariel_workouts
     task_priority: 2
   gsheets:
     workbook: ariel_workout
-    worksheet: weekly # unwell
+    template_worksheet: weekly # unwell
+    plan_worksheet: plan
   jellyfin:
     playlist_1: ariel-week-1
     playlist_2: ariel-week-2

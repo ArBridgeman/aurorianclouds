@@ -47,7 +47,7 @@ class PlanTemplate(pa.SchemaModel):
 
 
 class WorkoutPlan(pa.SchemaModel):
-    day: Series[int] = pa.Field(gt=0, le=28, nullable=False, coerce=True)
+    day: Series[int] = pa.Field(ge=0, le=28, nullable=False, coerce=True)
     week: Series[int] = pa.Field(gt=0, le=4, nullable=False, coerce=True)
     title: Series[str]
     total_in_min: Series[int] = pa.Field(
@@ -83,18 +83,10 @@ class WorkoutPlanner:
     def _search_for_workout(
         self, row: pd.Series, skip_ids: List[str]
     ) -> Tuple[List[str], List[str]]:
-        if row.search_type == SearchType.genre.value:
-            selected_workouts = self._select_exercise_by_genre(
-                genre=row["values"],
-                duration_in_minutes=row.total_in_min,
-                skip_ids=skip_ids,
-            )
-            descriptions = selected_workouts.description.values
-            item_ids = selected_workouts.Id.values
-            return descriptions, item_ids
-        elif row.search_type == SearchType.tag.value:
-            selected_workouts = self._select_exercise_by_tag(
-                tag=row["values"],
+        if row.search_type in SearchType.name_list():
+            selected_workouts = self._select_exercise_by_key(
+                key=row.search_type,
+                value=row["values"],
                 duration_in_minutes=row.total_in_min,
                 skip_ids=skip_ids,
             )
@@ -131,41 +123,43 @@ class WorkoutPlanner:
         # TODO use history & set random seed when running
         return selected_exercises
 
-    def _select_exercise_by_genre(
-        self, genre: str, duration_in_minutes: int, skip_ids: List[str]
+    def _select_exercise_by_key(
+        self,
+        key: str,
+        value: str,
+        duration_in_minutes: int,
+        skip_ids: List[str],
     ) -> pd.DataFrame:
         duration_timedelta = pd.to_timedelta(f"{duration_in_minutes} minutes")
-        mask = self.workout_videos.Genre.str.lower() == genre.lower()
-        mask &= self.workout_videos.Duration <= duration_timedelta
-        mask &= ~self.workout_videos.Id.isin(skip_ids)
+
+        mask = np.ones(self.workout_videos.shape[0], dtype=bool)
+        if key == "genre":
+            mask &= self.workout_videos.Genre.str.lower() == value.lower()
+        elif key == "tag":
+            mask &= self.workout_videos["Tags"].apply(
+                lambda row: self._is_value_in_list(row, value)
+            )
+        mask = self._add_duration_mask(mask, duration_timedelta)
+        mask = self._add_skip_ids_to_mask(mask, skip_ids)
 
         if (total_found := sum(mask)) == 0:
-            raise ValueError(f"no entries found for genre={genre}")
-        print(f"(genre={genre}, {duration_in_minutes} min): {total_found}")
+            raise ValueError(f"no entries found for {key}={value}")
+        print(f"({key}={value}, {duration_in_minutes} min): {total_found}")
 
         return self._select_exercise(
             data=self.workout_videos[mask],
             remaining_duration=duration_timedelta,
         )
 
-    def _select_exercise_by_tag(
-        self, tag: str, duration_in_minutes: int, skip_ids: List[str]
-    ) -> pd.DataFrame:
-        duration_timedelta = pd.to_timedelta(f"{duration_in_minutes} minutes")
-        mask = self.workout_videos["Tags"].apply(
-            lambda row: self._is_value_in_list(row, tag)
-        )
-        mask &= self.workout_videos.Duration <= duration_timedelta
-        mask &= ~self.workout_videos.Id.isin(skip_ids)
+    def _add_duration_mask(
+        self, mask: pd.Series, duration_timedelta: pd.Timedelta
+    ) -> pd.Series:
+        return mask & (self.workout_videos.Duration <= duration_timedelta)
 
-        if (total_found := sum(mask)) == 0:
-            raise ValueError(f"no entries found for tag={tag}")
-        print(f"(tag={tag}, {duration_in_minutes} min): {total_found}")
-
-        return self._select_exercise(
-            data=self.workout_videos[mask],
-            remaining_duration=duration_timedelta,
-        )
+    def _add_skip_ids_to_mask(
+        self, mask: pd.Series, skip_ids: List[str]
+    ) -> pd.Series:
+        return mask & ~self.workout_videos.Id.isin(skip_ids)
 
     def _load_plan_template(
         self, gsheets_helper: GsheetsHelper

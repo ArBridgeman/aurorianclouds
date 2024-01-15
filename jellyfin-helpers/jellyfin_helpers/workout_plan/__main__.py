@@ -30,7 +30,7 @@ if __name__ == "__main__":
     plan_exporter = PlanExporter(
         app_config=config.plan_workouts, plan=workout_plan
     )
-    # -- overwrites existing data in gsheets
+    # overwrites existing data in gsheets
     plan_exporter.export_to_gsheets(gsheets_helper=gsheets_helper)
     plan_exporter.export_to_jellyfin_playlist(jellyfin=jellyfin)
     plan_exporter.export_to_todoist(

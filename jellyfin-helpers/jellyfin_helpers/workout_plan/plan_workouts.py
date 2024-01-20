@@ -50,11 +50,14 @@ class WorkoutPlan(pa.SchemaModel):
     day: Series[int] = pa.Field(ge=0, le=28, nullable=False, coerce=True)
     week: Series[int] = pa.Field(gt=0, le=4, nullable=False, coerce=True)
     title: Series[str]
+    source_type: Series[str] = pa.Field(
+        isin=["reminder", "video"], nullable=False
+    )
     total_in_min: Series[int] = pa.Field(
         gt=0, le=60, nullable=False, coerce=True
     )
     description: Series[str] = pa.Field(nullable=True)
-    item_id: Series[str] = pa.Field(nullable=True)
+    item_id: Series[str] = pa.Field(nullable=True, coerce=True)
 
 
 # TODO create option to catch videos without tag
@@ -208,6 +211,7 @@ class WorkoutPlanner:
                         "day": [days],
                         "week": [week],
                         "title": [title],
+                        "source_type": ["reminder"],
                         "total_in_min": [row.total_in_min],
                         "description": [np.NaN],
                         "item_id": [np.NaN],
@@ -230,6 +234,7 @@ class WorkoutPlanner:
                         "day": [days] * num_entries,
                         "week": [week] * num_entries,
                         "title": [title] * num_entries,
+                        "source_type": ["video"] * num_entries,
                         "total_in_min": [row.total_in_min] * num_entries,
                         "description": descriptions,
                         "item_id": item_ids,

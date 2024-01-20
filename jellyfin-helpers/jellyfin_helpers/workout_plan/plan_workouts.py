@@ -222,8 +222,7 @@ class WorkoutPlanner:
                     row=row,
                     skip_ids=all_skip_ids
                     # currently not enough entries for both of these filters
-                    if row["values"] not in ("tennis/arm", "mobility/ankle")
-                    else in_month_skip_ids,
+                    if row["values"] != "tennis/arm" else in_month_skip_ids,
                 )
                 in_month_skip_ids.extend(item_ids)
                 all_skip_ids.extend(item_ids)

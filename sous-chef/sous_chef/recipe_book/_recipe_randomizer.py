@@ -118,9 +118,15 @@ class RecipeRandomizer(RecipeBasic):
         def _replace_time(match_obj: re.Match) -> str:
             if (entity := match_obj.group(1)) is not None:
                 # TODO refactor to come from recipe
-                active_time = row["time_total"] - row["time_inactive"]
+                # we should not filter out recipes with undefined total time
+                # otherwise they'll never show up in later error messages
+                if pd.isnull(row["time_total"]):
+                    return "(1==1)"
+                active_time = row["time_total"]
+                if not pd.isnull(t_i := row["time_inactive"]):
+                    active_time -= t_i
                 max_active_time = pd.to_timedelta(entity)
-                return f"('{active_time < max_active_time}' == 'True')"
+                return f"('{active_time <= max_active_time}' == 'True')"
             return "(1==0)"
 
         for entity_i in ["category", "tag"]:

@@ -335,6 +335,43 @@ class TestRecipeBook:
         )
 
     @staticmethod
+    def test__construct_filter_handles_time_nat(
+        recipe_book, recipe_book_builder
+    ):
+        category = "entree/protein"
+        tag = "cuisine/italian"
+        filter_str = "time.30min"
+        not_filter_str = "time.5min"
+
+        recipe_book.category_tuple = tuple([category])
+        recipe_book.tag_tuple = tuple([tag])
+
+        recipe_base = recipe_book_builder.create_recipe(
+            categories=[category],
+            tags=[tag],
+        ).squeeze()
+
+        recipe_base.time_total = (
+            recipe_base.time_total - recipe_base.time_inactive
+        )
+        recipe_base.time_inactive = pd.NaT
+
+        assert recipe_book._construct_filter(
+            row=recipe_base, filter_str=filter_str
+        )
+
+        assert not recipe_book._construct_filter(
+            row=recipe_base, filter_str=not_filter_str
+        )
+
+        # recipes with undefined total time should be raised elsewhere
+        recipe_base.time_total = pd.NaT
+
+        assert recipe_book._construct_filter(
+            row=recipe_base, filter_str=filter_str
+        )
+
+    @staticmethod
     @pytest.mark.parametrize(
         "cell,expected_result",
         [

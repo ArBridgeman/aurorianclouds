@@ -22,7 +22,6 @@ LOGGER = get_logger(__name__)
 
 
 # TODO create option to catch videos without tag
-# TODO use video file to get duration info
 
 
 def convert_timedelta_to_min(time_delta: pd.Series) -> int:

@@ -4,6 +4,11 @@ on:
     paths:
       - utilities/**
       - .github/workflows/test_utilities.yml
+
+concurrency:
+  group: ${{ github.ref }}-utilities
+  cancel-in-progress: true
+
 jobs:
   pytest:
     runs-on: ubuntu-latest

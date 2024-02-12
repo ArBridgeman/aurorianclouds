@@ -7,7 +7,7 @@ on:
       - utilities/utilities/** # since dependent on without version atm
 
 concurrency:
-  group: ${{ github.ref }}
+  group: ${{ github.ref }}-sous-chef
   cancel-in-progress: true
 
 jobs:

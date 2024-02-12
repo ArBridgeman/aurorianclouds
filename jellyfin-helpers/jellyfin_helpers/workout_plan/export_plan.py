@@ -1,5 +1,5 @@
 from jellyfin_helpers.jellyfin_api import Jellyfin
-from jellyfin_helpers.workout_plan.plan_workouts import WorkoutPlan
+from jellyfin_helpers.workout_plan.models import WorkoutPlan
 from omegaconf import DictConfig
 from pandera.typing.common import DataFrameBase
 

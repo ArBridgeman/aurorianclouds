@@ -42,10 +42,15 @@ class WorkoutVideoSchema(pa.SchemaModel):
 
 class PlanTemplate(pa.SchemaModel):
     day: Series[str]
-    total_in_min: Series[int] = pa.Field(gt=0, le=60, nullable=False)
+    total_in_min: Series[int] = pa.Field(gt=0, le=75, nullable=False)
     search_type: Series[str] = pa.Field(isin=SearchType.name_list("lower"))
     values: Series[str]
-    active: Series[str] = pa.Field(isin=["Y", "N"], nullable=False)
+    optional: Series[str] = pa.Field(
+        isin=["Y", "N"], nullable=False, default="N", coerce=True
+    )
+    active: Series[str] = pa.Field(
+        isin=["Y", "N"], nullable=False, default="Y", coerce=True
+    )
 
 
 class WorkoutPlan(pa.SchemaModel):
@@ -57,3 +62,6 @@ class WorkoutPlan(pa.SchemaModel):
     )
     description: Series[str] = pa.Field(nullable=True)
     item_id: Series[str] = pa.Field(nullable=True)
+    optional: Series[str] = pa.Field(
+        isin=["Y", "N"], nullable=False, default="N", coerce=True
+    )

@@ -132,6 +132,8 @@ class WorkoutPlanner:
             worksheet_name=self.app_config.gsheets.template_worksheet,
         )
         plan_template.total_in_min = plan_template.total_in_min.astype("int64")
+        # pandera does not replace "" by default, only None
+        plan_template.optional.replace("", None, inplace=True)
         return PlanTemplate.validate(plan_template)
 
     def _load_last_plan(
@@ -175,6 +177,7 @@ class WorkoutPlanner:
                         "total_in_min": [row.total_in_min],
                         "description": [np.NaN],
                         "item_id": [np.NaN],
+                        "optional": [row.optional],
                     }
                 )
             else:
@@ -197,6 +200,7 @@ class WorkoutPlanner:
                         "total_in_min": [row.total_in_min] * num_entries,
                         "description": descriptions,
                         "item_id": item_ids,
+                        "optional": [row.optional] * num_entries,
                     }
                 )
 

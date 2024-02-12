@@ -20,6 +20,8 @@ jobs:
         uses: ./.github/actions/poetry-setup-with-tokens
         with:
           poetry-dir: jellyfin-helpers
+          gsheets-service-token: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
+          todoist-token: ${{ secrets.TODOIST_TOKEN }}
       - name: Run unit tests
         working-directory: ./jellyfin-helpers
         run: poetry run pytest --cov=jellyfin_helpers --cov-report=xml:jellyfin_helpers_unit_tests.xml ./tests/unit_tests

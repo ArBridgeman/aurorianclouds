@@ -33,20 +33,26 @@ class PlanExporter:
 
     def export_to_todoist(self, todoist_helper: TodoistHelper):
         for group_conditions, values in self.plan.groupby(
-            ["title", "week", "day", "total_in_min"]
+            ["title", "week", "day", "total_in_min", "optional"]
         ):
-            title, week, day, total_in_min = group_conditions
+            title, week, day, total_in_min, optional = group_conditions
+
+            task = f"[wk {week}] {title} ({total_in_min} min)"
+            priority = self.app_config.todoist.task_priority
+            if optional == "Y":
+                task += " (optional)"
+                priority = self.app_config.todoist.task_priority_optional
 
             description = ""
             if values.source_type.unique() != ["reminder"]:
                 description = "\n".join(values.description.values)
 
             todoist_helper.add_task_to_project(
-                task=f"[wk {week}] {title} ({total_in_min} min)",
+                task=task,
                 due_string=f"in {day} days",
                 project=self.app_config.todoist.project,
                 section=self.app_config.todoist.section,
                 description=description,
-                priority=self.app_config.todoist.task_priority,
+                priority=priority,
                 label_list=["health"],
             )

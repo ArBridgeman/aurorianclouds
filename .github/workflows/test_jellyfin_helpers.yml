@@ -1,0 +1,35 @@
+name: jellyfin-helper tests
+on:
+  push:
+    paths:
+      - jellyfin-helpers/**
+      - .github/workflows/test_jellyfin_helpers.yml
+      - utilities/utilities/** # since dependent on without version atm
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out our repo branch
+        uses: actions/checkout@v2
+      - name: Setup Python environment
+        uses: ./.github/actions/poetry-setup-with-tokens
+        with:
+          poetry-dir: jellyfin-helpers
+      - name: Run unit tests
+        working-directory: ./jellyfin-helpers
+        run: poetry run pytest --cov=jellyfin_helpers --cov-report=xml:jellyfin_helpers_unit_tests.xml ./tests/unit_tests
+      - name: Run integration tests
+        working-directory: ./jellyfin-helpers
+        run: poetry run pytest --cov=jellyfin_helpers --cov-report=xml:jellyfin_helpers_integration_tests.xml ./tests/integration_tests
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./jellyfin-helpers/jellyfin_helpers_unit_tests.xml,./jellyfin-helpers/jellyfin_helpers_integration_tests.xml
+          fail_ci_if_error: true
+          verbose: false

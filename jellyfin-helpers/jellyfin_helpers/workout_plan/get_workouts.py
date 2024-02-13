@@ -4,10 +4,9 @@ from pathlib import Path
 from typing import List, Tuple
 
 import pandas as pd
-import pandera as pa
 from jellyfin_helpers.jellyfin_api import Jellyfin
+from jellyfin_helpers.workout_plan.models import WorkoutVideoSchema
 from joblib import Memory
-from pandera.typing import Series
 from pandera.typing.common import DataFrameBase
 from structlog import get_logger
 
@@ -17,19 +16,6 @@ CACHE_DIR = ABS_FILE_PATH / "diskcache"
 cache = Memory(CACHE_DIR, mmap_mode="r")
 
 LOGGER = get_logger(__name__)
-
-
-class WorkoutVideoSchema(pa.SchemaModel):
-    Name: Series[str]
-    Id: Series[str]
-    Duration: Series[timedelta] = pa.Field(
-        ge=timedelta(minutes=0), nullable=False
-    )
-    Genre: Series[str]
-    Tags: Series[List[str]]
-
-    class Config:
-        strict = True
 
 
 class WorkoutVideos:

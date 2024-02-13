@@ -32,7 +32,7 @@ def _convert_parameter_value_to_string(value: Union[int, str, List]) -> str:
     return str(value)
 
 
-def _compare_strings(str1: str, str2: str):
+def _compare_strings(str1: str, str2: str) -> bool:
     return str1.strip().lower() == str2.strip().lower()
 
 

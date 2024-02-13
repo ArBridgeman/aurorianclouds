@@ -1,63 +1,23 @@
 from datetime import datetime, timedelta
-from enum import Enum, IntEnum
 from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
-import pandera as pa
 from jellyfin_helpers.jellyfin_api import Jellyfin
-from jellyfin_helpers.workout_plan.get_workouts import WorkoutVideoSchema
+from jellyfin_helpers.workout_plan.models import (
+    Day,
+    PlanTemplate,
+    SearchType,
+    WorkoutPlan,
+    WorkoutVideoSchema,
+)
 from omegaconf import DictConfig
-from pandera.typing import Series
 from pandera.typing.common import DataFrameBase
 from structlog import get_logger
 
 from utilities.api.gsheets_api import GsheetsHelper
 
 LOGGER = get_logger(__name__)
-
-
-class Day(IntEnum):
-    sat = 0
-    sun = 1
-    mon = 2
-    tue = 3
-    wed = 4
-    thu = 5
-    fri = 6
-
-
-# TODO put enum extensions in utilities
-class SearchType(Enum):
-    genre = "genre"
-    reminder = "reminder"
-    tag = "tag"
-
-    @classmethod
-    def name_list(cls, string_method: str = "casefold"):
-        return list(map(lambda c: getattr(c.name, string_method)(), cls))
-
-
-class PlanTemplate(pa.SchemaModel):
-    day: Series[str]
-    total_in_min: Series[int] = pa.Field(gt=0, le=60, nullable=False)
-    search_type: Series[str] = pa.Field(isin=SearchType.name_list("lower"))
-    values: Series[str]
-    active: Series[str] = pa.Field(isin=["Y", "N"], nullable=False)
-
-
-class WorkoutPlan(pa.SchemaModel):
-    day: Series[int] = pa.Field(ge=0, le=28, nullable=False, coerce=True)
-    week: Series[int] = pa.Field(gt=0, le=4, nullable=False, coerce=True)
-    title: Series[str]
-    source_type: Series[str] = pa.Field(
-        isin=["reminder", "video"], nullable=False
-    )
-    total_in_min: Series[int] = pa.Field(
-        gt=0, le=60, nullable=False, coerce=True
-    )
-    description: Series[str] = pa.Field(nullable=True)
-    item_id: Series[str] = pa.Field(nullable=True, coerce=True)
 
 
 # TODO create option to catch videos without tag
@@ -172,6 +132,8 @@ class WorkoutPlanner:
             worksheet_name=self.app_config.gsheets.template_worksheet,
         )
         plan_template.total_in_min = plan_template.total_in_min.astype("int64")
+        # pandera does not replace "" by default, only None
+        plan_template.optional.replace("", None, inplace=True)
         return PlanTemplate.validate(plan_template)
 
     def _load_last_plan(
@@ -215,6 +177,7 @@ class WorkoutPlanner:
                         "total_in_min": [row.total_in_min],
                         "description": [np.NaN],
                         "item_id": [np.NaN],
+                        "optional": [row.optional],
                     }
                 )
             else:
@@ -237,6 +200,7 @@ class WorkoutPlanner:
                         "total_in_min": [row.total_in_min] * num_entries,
                         "description": descriptions,
                         "item_id": item_ids,
+                        "optional": [row.optional] * num_entries,
                     }
                 )
 

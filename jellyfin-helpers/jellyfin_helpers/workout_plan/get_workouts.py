@@ -83,7 +83,7 @@ def _parse_workout_videos(
 
         data_frame = pd.concat(
             [
-                raw_data[["Name", "Id", "Duration", "Genre", "Tags"]],
+                raw_data[["Name", "Id", "Duration", "Genre", "Tags", "Tool"]],
                 data_frame,
             ]
         )

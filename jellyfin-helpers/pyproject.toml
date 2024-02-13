@@ -20,3 +20,11 @@ pytest-cov = "^4.1.0"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+markers = [
+    "gsheets: marks tests using gsheets",
+    "jellyfin: marks tests using jellyfin",
+    "todoist: marks tests using todoist, which requires periodically updating API key",
+    "youtube: marks tests using youtube",
+]

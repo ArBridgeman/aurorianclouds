@@ -38,6 +38,7 @@ def gsheets_helper(config):
     return GsheetsHelper(config.gsheets)
 
 
+@pytest.mark.gsheets
 class TestLoadLastPlan:
     @staticmethod
     def test_works_as_expected(workout_planner, gsheets_helper):

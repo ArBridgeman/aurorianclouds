@@ -31,6 +31,14 @@ class WorkoutVideos:
         average_time = (int(times.group(1)) + int(times.group(2))) / 2
         return timedelta(minutes=average_time)
 
+    @staticmethod
+    def get_tool_from_tags(tags: List[str]) -> str:
+        tool_str = "tool/"
+        tools = list(filter(lambda x: tool_str in x, tags))
+        if len(tools) < 1:
+            return ""
+        return ", ".join(tool.replace(tool_str, "") for tool in tools)
+
     def parse_workout_videos(self):
         return _parse_workout_videos(jellyfin=self.jellyfin)
 
@@ -65,6 +73,9 @@ def _parse_workout_videos(
             WorkoutVideos.get_duration_from_tags
         )
         raw_data["Genre"] = genre["Name"]
+        raw_data["Tool"] = raw_data["Tags"].apply(
+            WorkoutVideos.get_tool_from_tags
+        )
 
         data_frame = pd.concat(
             [

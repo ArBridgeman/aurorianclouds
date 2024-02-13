@@ -45,7 +45,7 @@ class WorkoutPlanner:
 
     def _search_for_workout(
         self, row: pd.Series, skip_ids: List[str]
-    ) -> Tuple[List[str], List[str]]:
+    ) -> Tuple[List[str], List[str], List[str]]:
         if row.search_type in SearchType.name_list():
             selected_workouts = self._select_exercise_by_key(
                 key=row.search_type,
@@ -54,8 +54,9 @@ class WorkoutPlanner:
                 skip_ids=skip_ids,
             )
             descriptions = selected_workouts.description.values
+            tools = selected_workouts.tool.values
             item_ids = selected_workouts.Id.values
-            return descriptions, item_ids
+            return descriptions, tools, item_ids
         raise ValueError("Unknown SearchType")
 
     @staticmethod
@@ -83,7 +84,6 @@ class WorkoutPlanner:
             # update duration
             remaining_duration -= exercise.Duration.values[0]
             data = data[data.Duration <= remaining_duration]
-        # TODO use history & set random seed when running
         return selected_exercises
 
     def _select_exercise_by_key(
@@ -134,6 +134,7 @@ class WorkoutPlanner:
         plan_template.total_in_min = plan_template.total_in_min.astype("int64")
         # pandera does not replace "" by default, only None
         plan_template.optional.replace("", None, inplace=True)
+        plan_template.active.replace("", None, inplace=True)
         return PlanTemplate.validate(plan_template)
 
     def _load_last_plan(
@@ -176,12 +177,13 @@ class WorkoutPlanner:
                         "source_type": ["reminder"],
                         "total_in_min": [row.total_in_min],
                         "description": [np.NaN],
+                        "tool": [np.NaN],
                         "item_id": [np.NaN],
                         "optional": [row.optional],
                     }
                 )
             else:
-                descriptions, item_ids = self._search_for_workout(
+                descriptions, tools, item_ids = self._search_for_workout(
                     row=row,
                     skip_ids=all_skip_ids
                     # currently not enough entries for both of these filters
@@ -199,6 +201,7 @@ class WorkoutPlanner:
                         "source_type": ["video"] * num_entries,
                         "total_in_min": [row.total_in_min] * num_entries,
                         "description": descriptions,
+                        "tool": tools,
                         "item_id": item_ids,
                         "optional": [row.optional] * num_entries,
                     }

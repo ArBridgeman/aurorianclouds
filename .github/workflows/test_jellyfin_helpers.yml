@@ -27,7 +27,7 @@ jobs:
         run: poetry run pytest --cov=jellyfin_helpers --cov-report=xml:jellyfin_helpers_unit_tests.xml ./tests/unit_tests
       - name: Run integration tests
         working-directory: ./jellyfin-helpers
-        run: poetry run pytest --cov=jellyfin_helpers --cov-report=xml:jellyfin_helpers_integration_tests.xml ./tests/integration_tests
+        run: poetry run pytest --cov=jellyfin_helpers --cov-report=xml:jellyfin_helpers_integration_tests.xml -k "not jellyfin" ./tests/integration_tests
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:

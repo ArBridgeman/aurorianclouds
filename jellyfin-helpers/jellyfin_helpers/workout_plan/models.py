@@ -35,6 +35,7 @@ class WorkoutVideoSchema(pa.SchemaModel):
     )
     Genre: Series[str]
     Tags: Series[List[str]]
+    Tool: Series[str]
 
     class Config:
         strict = True
@@ -57,11 +58,18 @@ class WorkoutPlan(pa.SchemaModel):
     day: Series[int] = pa.Field(ge=0, le=28, nullable=False, coerce=True)
     week: Series[int] = pa.Field(gt=0, le=4, nullable=False, coerce=True)
     title: Series[str]
+    source_type: Series[str] = pa.Field(
+        isin=["reminder", "video"], nullable=False
+    )
     total_in_min: Series[int] = pa.Field(
         gt=0, le=60, nullable=False, coerce=True
     )
     description: Series[str] = pa.Field(nullable=True)
+    tool: Series[str] = pa.Field(nullable=True)
     item_id: Series[str] = pa.Field(nullable=True)
     optional: Series[str] = pa.Field(
         isin=["Y", "N"], nullable=False, default="N", coerce=True
     )
+
+    class Config:
+        strict = True

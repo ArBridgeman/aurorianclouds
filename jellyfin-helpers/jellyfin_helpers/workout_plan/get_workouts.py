@@ -16,6 +16,7 @@ CACHE_DIR = ABS_FILE_PATH / "diskcache"
 cache = Memory(CACHE_DIR, mmap_mode="r")
 
 LOGGER = get_logger(__name__)
+DEFAULT_TIME = timedelta(minutes=-100)
 
 
 class WorkoutVideos:
@@ -24,12 +25,23 @@ class WorkoutVideos:
 
     @staticmethod
     def get_duration_from_tags(tags: List[str]) -> timedelta:
+        """Returns the average value first time tag range"""
         time_tag = list(filter(lambda x: " min" in x, tags))
         if len(time_tag) < 1:
-            return timedelta(minutes=-100)
+            return DEFAULT_TIME
         times = re.search(r"(\d+)-(\d+) min", time_tag[0])
         average_time = (int(times.group(1)) + int(times.group(2))) / 2
         return timedelta(minutes=average_time)
+
+    @staticmethod
+    def get_tool_from_tags(tags: List[str]) -> str:
+        if not isinstance(tags, list):
+            raise ValueError("tags must be a list of strings")
+        tool_str = "tool/"
+        tools = list(filter(lambda x: tool_str in x, tags))
+        if len(tools) < 1:
+            return ""
+        return ", ".join(tool.replace(tool_str, "") for tool in tools)
 
     def parse_workout_videos(self):
         return _parse_workout_videos(jellyfin=self.jellyfin)
@@ -65,10 +77,13 @@ def _parse_workout_videos(
             WorkoutVideos.get_duration_from_tags
         )
         raw_data["Genre"] = genre["Name"]
+        raw_data["Tool"] = raw_data["Tags"].apply(
+            WorkoutVideos.get_tool_from_tags
+        )
 
         data_frame = pd.concat(
             [
-                raw_data[["Name", "Id", "Duration", "Genre", "Tags"]],
+                raw_data[["Name", "Id", "Duration", "Genre", "Tags", "Tool"]],
                 data_frame,
             ]
         )

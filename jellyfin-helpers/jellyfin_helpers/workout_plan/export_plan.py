@@ -46,9 +46,11 @@ class PlanExporter:
             description = ""
             if values.source_type.unique() != ["reminder"]:
                 description = "\n".join(
-                    [f"{row.description} ({row.tool})" for row in values]
+                    [
+                        f"{row.description} ({row.tool})"
+                        for _, row in values.iterrows()
+                    ]
                 )
-
             todoist_helper.add_task_to_project(
                 task=task,
                 due_string=f"in {day} days",

@@ -1,11 +1,10 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
 from jellyfin_helpers.jellyfin_api import Jellyfin
 from jellyfin_helpers.workout_plan.models import (
-    Day,
     PlanTemplate,
     SearchType,
     WorkoutPlan,
@@ -14,6 +13,7 @@ from jellyfin_helpers.workout_plan.models import (
 from omegaconf import DictConfig
 from pandera.typing.common import DataFrameBase
 from structlog import get_logger
+from workout_plan.date_util import RelativeDate
 
 from utilities.api.gsheets_api import GsheetsHelper
 
@@ -157,16 +157,14 @@ class WorkoutPlanner:
 
         all_skip_ids = list(last_plan.item_id.values)
         in_month_skip_ids = list()
-        today_index = Day[datetime.now().strftime("%A").lower()[:3]].value
+        relative_date = RelativeDate()
         plan = pd.DataFrame()
         for _, row in template.iterrows():
             if row.active == "N":
                 continue
 
             start, _ = row.day.split("_")
-            # TODO only set correctly for sat/sun/mon
-            # better to extract due date formatter shared logic?
-            days = int(start) - today_index
+            days = relative_date.get_days_from_now(day_index=start)
             week = max((days // 7) + 1, 1)
 
             title = row["values"]

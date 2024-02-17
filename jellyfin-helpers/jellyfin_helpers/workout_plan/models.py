@@ -1,6 +1,6 @@
 from datetime import timedelta
 from enum import Enum, IntEnum
-from typing import List
+from typing import List, Optional
 
 import pandera as pa
 from pandera.typing import Series
@@ -14,6 +14,16 @@ class Day(IntEnum):
     wed = 4
     thu = 5
     fri = 6
+
+    @classmethod
+    def _missing_(cls, value: object) -> Optional["Day"]:
+        if isinstance(value, str):
+            # only select the first 3 values
+            value_short = value.lower()[:3]
+            for member in cls:
+                if value_short == member.name:
+                    return member
+            return None
 
 
 # TODO put enum extensions in utilities

@@ -1,11 +1,11 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
 from jellyfin_helpers.jellyfin_api import Jellyfin
+from jellyfin_helpers.workout_plan.date_util import RelativeDate
 from jellyfin_helpers.workout_plan.models import (
-    Day,
     PlanTemplate,
     SearchType,
     WorkoutPlan,
@@ -55,7 +55,7 @@ class WorkoutPlanner:
             )
             descriptions = selected_workouts.description.values
             tools = selected_workouts.tool.values
-            item_ids = selected_workouts.Id.values
+            item_ids = selected_workouts.id.values
             return descriptions, tools, item_ids
         raise ValueError("Unknown SearchType")
 
@@ -69,21 +69,21 @@ class WorkoutPlanner:
         while data.shape[0] > 0 & (remaining_duration > timedelta(minutes=0)):
             # add 1 min to avoid division by 0
             time_diff = (
-                remaining_duration + timedelta(minutes=1) - data.Duration
+                remaining_duration + timedelta(minutes=1) - data.duration
             ).dt.total_seconds() / 60
 
             # select exercise
             exercise = data.sample(n=1, weights=1 / time_diff.values)
             exercise["description"] = (
-                f"{exercise.Name.values[0]}"
-                f" ({convert_timedelta_to_min(exercise.Duration)} min)"
+                f"{exercise.name.values[0]}"
+                f" ({convert_timedelta_to_min(exercise.duration)} min)"
             )
             selected_exercises = pd.concat([exercise, selected_exercises])
             # remove it from consideration
-            data.drop(exercise.index, inplace=True)
+            data = data.drop(exercise.index)
             # update duration
-            remaining_duration -= exercise.Duration.values[0]
-            data = data[data.Duration <= remaining_duration]
+            remaining_duration -= exercise.duration.values[0]
+            data = data[data.duration <= remaining_duration]
         return selected_exercises
 
     def _select_exercise_by_key(
@@ -97,9 +97,12 @@ class WorkoutPlanner:
 
         mask = np.ones(self.workout_videos.shape[0], dtype=bool)
         if key == "genre":
-            mask &= self.workout_videos.Genre.str.lower() == value.lower()
+            mask &= (
+                self.workout_videos.genre.str.strip().str.lower()
+                == value.lower()
+            )
         elif key == "tag":
-            mask &= self.workout_videos["Tags"].apply(
+            mask &= self.workout_videos["tags"].apply(
                 lambda row: self._is_value_in_list(row, value)
             )
         mask = self._add_duration_mask(mask, duration_timedelta)
@@ -117,12 +120,12 @@ class WorkoutPlanner:
     def _add_duration_mask(
         self, mask: pd.Series, duration_timedelta: pd.Timedelta
     ) -> pd.Series:
-        return mask & (self.workout_videos.Duration <= duration_timedelta)
+        return mask & (self.workout_videos.duration <= duration_timedelta)
 
     def _add_skip_ids_to_mask(
         self, mask: pd.Series, skip_ids: List[str]
     ) -> pd.Series:
-        return mask & ~self.workout_videos.Id.isin(skip_ids)
+        return mask & ~self.workout_videos.id.isin(skip_ids)
 
     def _load_plan_template(
         self, gsheets_helper: GsheetsHelper
@@ -133,8 +136,8 @@ class WorkoutPlanner:
         )
         plan_template.total_in_min = plan_template.total_in_min.astype("int64")
         # pandera does not replace "" by default, only None
-        plan_template.optional.replace("", None, inplace=True)
-        plan_template.active.replace("", None, inplace=True)
+        plan_template["optional"] = plan_template["optional"].replace("", None)
+        plan_template["active"] = plan_template["active"].replace("", None)
         return PlanTemplate.validate(plan_template)
 
     def _load_last_plan(
@@ -154,16 +157,14 @@ class WorkoutPlanner:
 
         all_skip_ids = list(last_plan.item_id.values)
         in_month_skip_ids = list()
-        today_index = Day[datetime.now().strftime("%A").lower()[:3]].value
+        relative_date = RelativeDate()
         plan = pd.DataFrame()
         for _, row in template.iterrows():
             if row.active == "N":
                 continue
 
             start, _ = row.day.split("_")
-            # TODO only set correctly for sat/sun/mon
-            # better to extract due date formatter shared logic?
-            days = int(start) - today_index
+            days = relative_date.get_days_from_now(day_index=start)
             week = max((days // 7) + 1, 1)
 
             title = row["values"]
@@ -187,7 +188,7 @@ class WorkoutPlanner:
                     row=row,
                     skip_ids=all_skip_ids
                     # currently not enough entries for both of these filters
-                    if row["values"] != "tennis/arm" else in_month_skip_ids,
+                    if row["values"] != "tennis" else in_month_skip_ids,
                 )
                 in_month_skip_ids.extend(item_ids)
                 all_skip_ids.extend(item_ids)

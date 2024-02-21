@@ -7,6 +7,7 @@
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/jellyfin_helpers/tokens" />
+      <excludeFolder url="file://$MODULE_DIR$/jellyfin_helpers/workout_plan/diskcache/jellyfin_helpers/workout_plan/get_workouts/_parse_workout_videos" />
     </content>
     <orderEntry type="jdk" jdkName="aur/jellyfin-helpers" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

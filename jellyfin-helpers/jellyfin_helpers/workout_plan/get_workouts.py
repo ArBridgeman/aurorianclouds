@@ -73,17 +73,18 @@ def _parse_workout_videos(
             jellyfin.get_items_per_genre(genre_id=genre["Id"])
         )
         raw_data = raw_data[~raw_data.VideoType.isna()]
-        raw_data["Duration"] = raw_data["Tags"].apply(
+        raw_data["duration"] = raw_data["Tags"].apply(
             WorkoutVideos.get_duration_from_tags
         )
-        raw_data["Genre"] = genre["Name"]
-        raw_data["Tool"] = raw_data["Tags"].apply(
+        raw_data["genre"] = genre["Name"]
+        raw_data["tool"] = raw_data["Tags"].apply(
             WorkoutVideos.get_tool_from_tags
         )
+        raw_data.columns = raw_data.columns.str.lower()
 
         data_frame = pd.concat(
             [
-                raw_data[["Name", "Id", "Duration", "Genre", "Tags", "Tool"]],
+                raw_data[["name", "id", "duration", "genre", "tags", "tool"]],
                 data_frame,
             ]
         )

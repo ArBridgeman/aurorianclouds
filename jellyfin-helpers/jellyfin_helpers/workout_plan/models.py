@@ -1,6 +1,6 @@
 from datetime import timedelta
 from enum import Enum, IntEnum
-from typing import List
+from typing import List, Optional
 
 import pandera as pa
 from pandera.typing import Series
@@ -15,6 +15,16 @@ class Day(IntEnum):
     thu = 5
     fri = 6
 
+    @classmethod
+    def _missing_(cls, value: object) -> Optional["Day"]:
+        if isinstance(value, str):
+            # only select the first 3 values
+            value_short = value.lower()[:3]
+            for member in cls:
+                if value_short == member.name:
+                    return member
+            return None
+
 
 # TODO put enum extensions in utilities
 class SearchType(Enum):
@@ -28,14 +38,14 @@ class SearchType(Enum):
 
 
 class WorkoutVideoSchema(pa.SchemaModel):
-    Name: Series[str]
-    Id: Series[str]
-    Duration: Series[timedelta] = pa.Field(
+    name: Series[str]
+    id: Series[str]
+    duration: Series[timedelta] = pa.Field(
         ge=timedelta(minutes=0), nullable=False
     )
-    Genre: Series[str]
-    Tags: Series[List[str]]
-    Tool: Series[str]
+    genre: Series[str]
+    tags: Series[List[str]]
+    tool: Series[str]
 
     class Config:
         strict = True
@@ -62,7 +72,7 @@ class WorkoutPlan(pa.SchemaModel):
         isin=["reminder", "video"], nullable=False
     )
     total_in_min: Series[int] = pa.Field(
-        gt=0, le=60, nullable=False, coerce=True
+        gt=0, le=75, nullable=False, coerce=True
     )
     description: Series[str] = pa.Field(nullable=True)
     tool: Series[str] = pa.Field(nullable=True)

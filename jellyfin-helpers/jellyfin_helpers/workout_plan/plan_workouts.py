@@ -4,6 +4,7 @@ from typing import List, Tuple
 import numpy as np
 import pandas as pd
 from jellyfin_helpers.jellyfin_api import Jellyfin
+from jellyfin_helpers.workout_plan.date_util import RelativeDate
 from jellyfin_helpers.workout_plan.models import (
     PlanTemplate,
     SearchType,
@@ -13,7 +14,6 @@ from jellyfin_helpers.workout_plan.models import (
 from omegaconf import DictConfig
 from pandera.typing.common import DataFrameBase
 from structlog import get_logger
-from workout_plan.date_util import RelativeDate
 
 from utilities.api.gsheets_api import GsheetsHelper
 

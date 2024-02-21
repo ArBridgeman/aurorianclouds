@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from workout_plan.models import Day
+from jellyfin_helpers.workout_plan.models import Day
 
 
 def convert_datetime_to_enum(datetime_value: datetime) -> Day:

@@ -1,14 +1,16 @@
 from unittest.mock import patch
 
 import pytest
-from hydra import compose, initialize
-
-from utilities.api.todoist_api import TodoistHelper
+from api.todoist_api import TodoistHelper
 
 
-@pytest.fixture
-def mock_todoist_helper():
-    with initialize(version_base=None, config_path="../../../config/api"):
-        config = compose(config_name="todoist_api")
-        with patch.object(TodoistHelper, "__post_init__", lambda x: None):
-            return TodoistHelper(config)
+@pytest.fixture(scope="module")
+def mock_todoist_helper(config):
+    with patch.object(TodoistHelper, TodoistHelper.__post_init__.__name__):
+        return TodoistHelper(config)
+
+
+# fixture to iterate over other fixtures
+@pytest.fixture(params=["mock_todoist_helper", "test_todoist_helper"])
+def todoist_helper(request):
+    return request.getfixturevalue(request.param)

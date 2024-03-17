@@ -17,8 +17,8 @@ class TestTodoistHelper:
             ("pasta___broccoli", "pasta_broccoli"),
         ],
     )
-    def test__clean_label(mock_todoist_helper, label, cleaned_label):
-        assert mock_todoist_helper._clean_label(label) == cleaned_label
+    def test__clean_label(todoist_helper, label, cleaned_label):
+        assert todoist_helper._clean_label(label) == cleaned_label
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -35,16 +35,14 @@ class TestTodoistHelper:
             ),
         ],
     )
-    def test__get_due_date_str(mock_todoist_helper, due_date, string):
-        assert mock_todoist_helper._get_due_datetime_str(due_date) == string
+    def test__get_due_date_str(todoist_helper, due_date, string):
+        assert todoist_helper._get_due_datetime_str(due_date) == string
 
     @staticmethod
     @pytest.mark.parametrize(
         "due_date",
         [None, 42, "2022-02-22"],
     )
-    def test__get_due_date_str_raise_attribute_error(
-        mock_todoist_helper, due_date
-    ):
+    def test__get_due_date_str_raise_attribute_error(todoist_helper, due_date):
         with pytest.raises(AttributeError):
-            mock_todoist_helper._get_due_datetime_str(due_date)
+            todoist_helper._get_due_datetime_str(due_date)

@@ -3,13 +3,13 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict, List, Union
 
 import pandas as pd
 from omegaconf import DictConfig
 from structlog import get_logger
 from todoist_api_python.api import TodoistAPI
-from todoist_api_python.models import Project, Task
+from todoist_api_python.models import Project, Section, Task
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
 FILE_LOGGER = get_logger(__name__)
@@ -26,6 +26,10 @@ class TodoistKeyError(Exception):
 
     def __str__(self):
         return f"{self.message}: tag={self.tag} for value={self.value}"
+
+
+def get_due_datetime_str(due_datetime: datetime) -> str:
+    return due_datetime.strftime("on %Y-%m-%d at %H:%M")
 
 
 @dataclass
@@ -47,10 +51,6 @@ class AbstractTodoistHelper(ABC):
     def _get_due_date_str(due_date: date) -> str:
         return due_date.strftime("on %Y-%m-%d")
 
-    @staticmethod
-    def _get_due_datetime_str(due_datetime: datetime) -> str:
-        return due_datetime.strftime("on %Y-%m-%d at %H:%M")
-
     @abstractmethod
     def _get_projects(self) -> Dict[str, Project]:
         raise NotImplementedError
@@ -71,15 +71,15 @@ class AbstractTodoistHelper(ABC):
     ) -> Task:
         due_date_str = due_string
         if isinstance(due_date, datetime):
-            due_date_str = self._get_due_datetime_str(due_date)
+            due_date_str = get_due_datetime_str(due_date)
         elif isinstance(due_date, date):
             due_date_str = self._get_due_date_str(due_date)
 
         FILE_LOGGER.info(
             "[todoist add]",
             task=task,
-            due_string=due_string,
-            due_date=due_date_str,
+            due_string=due_date_str,
+            due_date=due_date,
             project=project,
             section=section,
             priority=priority,
@@ -117,11 +117,15 @@ class AbstractTodoistHelper(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def _get_task(self, task_id):
+    def _get_task(self, task_id: str) -> Task:
         raise NotImplementedError
 
     @abstractmethod
-    def _delete_task(self, task_id):
+    def _delete_task(self, task_id: str):
+        raise NotImplementedError
+
+    @abstractmethod
+    def _get_tasks(self, project_id: str) -> List[Task]:
         raise NotImplementedError
 
     def delete_all_items_in_project(
@@ -140,7 +144,7 @@ class AbstractTodoistHelper(ABC):
 
         project_id = self.get_project_id(project)
         tasks_deleted = 0
-        for task in self.connection.get_tasks(project_id=project_id):
+        for task in self._get_tasks(project_id):
             if task.is_completed:
                 continue
             if only_delete_after_date and task.due is None:
@@ -166,11 +170,21 @@ class AbstractTodoistHelper(ABC):
         return tasks_deleted
 
     def get_project_id(self, project_name: str) -> str:
-        try:
-            return self.projects[project_name.casefold()].id
-        except KeyError:
+        project_name = project_name.casefold()
+        project = self.projects.get(project_name)
+        if project is None:
             raise TodoistKeyError(tag="project_id", value=project_name)
+        return project.id
 
     @abstractmethod
-    def get_section_id(self, project_id: str, section_name: str) -> str:
+    def _get_sections(self, project_id: str) -> Dict[str, Section]:
         raise NotImplementedError
+
+    def get_section_id(self, project_id: str, section_name: str) -> str:
+        # TODO could we save time by loading all sections
+        #  & putting in list with key for project_id?
+        sections = self._get_sections(project_id=project_id)
+        section_name = section_name.casefold()
+        if section_name in sections.keys():
+            return sections[section_name].id
+        raise TodoistKeyError(tag="section_id", value=section_name)

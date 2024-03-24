@@ -13,7 +13,5 @@ def gsheets_helper():
 
 
 @pytest.fixture(scope="module")
-def todoist_helper():
-    with initialize(version_base=None, config_path="../../../config/api"):
-        config = compose(config_name="todoist_api")
-        return TodoistHelper(config.todoist)
+def todoist_helper_with_api(todoist_config):
+    return TodoistHelper(todoist_config)

@@ -13,9 +13,13 @@ from utilities.api.base_classes.todoist import (
 class TestTodoistHelper:
     @staticmethod
     @pytest.fixture
-    def implementation(debug_todoist_helper):
+    def implementation(debug_todoist_helper, default_project):
+        # clean up before test
+        debug_todoist_helper.delete_all_items_in_project(
+            project=default_project, skip_recurring=False
+        )
         # used to determine which fixture is being used
-        return debug_todoist_helper
+        yield debug_todoist_helper
 
     @staticmethod
     @pytest.fixture
@@ -89,8 +93,8 @@ class TestTodoistHelper:
             **task_kwarg,
             project=DEFAULT_PROJECT,
         )
-        implementation.delete_all_items_in_project(project=DEFAULT_PROJECT)
 
+        # checks
         assert task.id == task.id
         assert task.is_completed is False
         assert task.content == task_kwarg["task"].strip()
@@ -114,30 +118,11 @@ class TestTodoistHelper:
             )
         assert task.section_id == section_id
 
-        assert log.events == [
-            self._log_add_task(**task_kwarg),
-            {
-                "level": "info",
-                "event": "[todoist delete]",
-                "action": "delete items in project",
-                "project": DEFAULT_PROJECT,
-            },
-            {
-                "level": "info",
-                "event": "[todoist delete]",
-                "action": "Deleted 1 tasks!",
-            },
-        ]
+        assert log.events == [self._log_add_task(**task_kwarg)]
 
     def test_delete_all_items_in_project_skip_recurring(
         self, implementation, pytest_area_project_id
     ):
-
-        # initial delete
-        implementation.delete_all_items_in_project(
-            project=DEFAULT_PROJECT, skip_recurring=False
-        )
-
         implementation.connection.add_task(
             content="recurring_task",
             project_id=pytest_area_project_id,
@@ -174,11 +159,6 @@ class TestTodoistHelper:
     def test_delete_all_items_in_project_only_delete_after_date(
         self, implementation, pytest_area_project_id
     ):
-        # initial delete
-        implementation.delete_all_items_in_project(
-            project=DEFAULT_PROJECT, skip_recurring=False
-        )
-
         implementation.connection.add_task(
             content="before_delete_date",
             project_id=pytest_area_project_id,
@@ -228,22 +208,9 @@ class TestTodoistHelper:
             == 1
         )
 
-        implementation.delete_all_items_in_project(project=DEFAULT_PROJECT)
-        assert (
-            self._get_task_count(
-                todoist_helper=implementation, project_id=pytest_area_project_id
-            )
-            == 0
-        )
-
     def test_delete_all_items_in_project_only_with_label(
         self, implementation, pytest_area_project_id
     ):
-        # initial delete
-        implementation.delete_all_items_in_project(
-            project=DEFAULT_PROJECT, skip_recurring=False
-        )
-
         implementation.connection.add_task(
             content="has_relevant_label",
             project_id=pytest_area_project_id,
@@ -270,14 +237,6 @@ class TestTodoistHelper:
                 todoist_helper=implementation, project_id=pytest_area_project_id
             )
             == 1
-        )
-
-        implementation.delete_all_items_in_project(project=DEFAULT_PROJECT)
-        assert (
-            self._get_task_count(
-                todoist_helper=implementation, project_id=pytest_area_project_id
-            )
-            == 0
         )
 
     @staticmethod
@@ -312,9 +271,13 @@ class TestTodoistHelper:
 class TestTodoistHelperWithApi(TestTodoistHelper):
     @staticmethod
     @pytest.fixture
-    def implementation(todoist_helper_with_api):
+    def implementation(todoist_helper_with_api, default_project):
+        # clean up before running test
+        todoist_helper_with_api.delete_all_items_in_project(
+            project=default_project, skip_recurring=False
+        )
         # used to determine which fixture is being used
-        return todoist_helper_with_api
+        yield todoist_helper_with_api
 
     @staticmethod
     @pytest.fixture

@@ -24,3 +24,9 @@ pytest-structlog = "^0.5"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+markers = [
+    "gsheets: marks tests using gsheets",
+    "todoist: marks tests using todoist, which requires periodically updating API key"
+]

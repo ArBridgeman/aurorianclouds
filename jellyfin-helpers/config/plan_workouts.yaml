@@ -14,8 +14,11 @@ plan_workouts:
     task_priority_optional: 1
   gsheets:
     workbook: ariel_workout
-    template_worksheet: weekly # unwell
-    plan_worksheet: plan
+    worksheet:
+      weekly: weekly-tennis
+      sleep: basic-sleep
+      sets: basic-set
+      plan: plan
   jellyfin:
     playlist_1: ariel-week-1
     playlist_2: ariel-week-2

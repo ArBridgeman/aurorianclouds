@@ -36,4 +36,4 @@ def gsheets_helper(config):
 class TestLoadLastPlan:
     @staticmethod
     def test_works_as_expected(workout_planner, gsheets_helper):
-        workout_planner._load_plan_template(gsheets_helper=gsheets_helper)
+        workout_planner._load_weekly_plan(gsheets_helper=gsheets_helper)

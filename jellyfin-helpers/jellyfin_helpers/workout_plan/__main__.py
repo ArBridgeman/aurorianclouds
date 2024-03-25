@@ -1,8 +1,10 @@
+from typing import List
+
 from jellyfin_helpers.jellyfin_api import Jellyfin
 from jellyfin_helpers.utils import get_config
-from jellyfin_helpers.workout_plan.export_plan import PlanExporter
 from jellyfin_helpers.workout_plan.get_workouts import WorkoutVideos
 from jellyfin_helpers.workout_plan.plan_workouts import WorkoutPlanner
+from workout_plan.export_plan import PlanExporter
 
 from utilities.api.gsheets_api import GsheetsHelper
 from utilities.api.todoist_api import TodoistHelper
@@ -26,6 +28,13 @@ def get_todoist_helper():
     return TodoistHelper(config=config.todoist)
 
 
+class MockJellyfin:
+    @staticmethod
+    def post_add_to_playlist(playlist_name: str, item_ids: List[str]):
+        print(f"playlist_name: {playlist_name}")
+        print(f"... add item_ids: {item_ids}")
+
+
 if __name__ == "__main__":
     jellyfin = Jellyfin(config=config.jellyfin)
     gsheets_helper = GsheetsHelper(config=config.gsheets)
@@ -47,5 +56,10 @@ if __name__ == "__main__":
     plan_exporter = PlanExporter(app_config=workout_cfg, plan=workout_plan)
     # overwrites existing data in gsheets
     plan_exporter.export_to_gsheets(gsheets_helper=gsheets_helper)
-    plan_exporter.export_to_jellyfin_playlist(jellyfin=jellyfin)
+
+    if workout_cfg.debug:
+        plan_exporter.export_to_jellyfin_playlist(jellyfin=MockJellyfin())
+    else:
+        plan_exporter.export_to_jellyfin_playlist(jellyfin=jellyfin)
+
     plan_exporter.export_to_todoist(todoist_helper=get_todoist_helper())

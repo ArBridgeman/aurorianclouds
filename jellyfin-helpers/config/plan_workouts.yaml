@@ -6,8 +6,7 @@ defaults:
 
 
 plan_workouts:
-  overall:
-    run: dev
+  debug: True
   todoist:
     project: Active tasks
     section: ariel_workouts

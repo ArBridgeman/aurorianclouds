@@ -1,3 +1,5 @@
+import json
+
 from jellyfin_helpers.jellyfin_api import Jellyfin
 from jellyfin_helpers.workout_plan.models import WorkoutPlan
 from omegaconf import DictConfig
@@ -18,13 +20,13 @@ class PlanExporter:
         gsheets_helper.write_worksheet(
             df=self.plan,
             workbook_name=self.app_config.gsheets.workbook,
-            worksheet_name=self.app_config.gsheets.plan_worksheet,
+            worksheet_name=self.app_config.gsheets.worksheet.plan,
         )
 
     def export_to_jellyfin_playlist(self, jellyfin: Jellyfin):
         for week, values in self.plan.groupby(["week"]):
             # if no id, then not part of jellyfin
-            item_ids = values[~values.item_id.isna()].item_id.values
+            item_ids = values[~(values.item_id == "")].item_id.values
 
             jellyfin.post_add_to_playlist(
                 playlist_name=self.app_config.jellyfin[f"playlist_{week[0]}"],
@@ -32,12 +34,18 @@ class PlanExporter:
             )
 
     def export_to_todoist(self, todoist_helper: TodoistHelper):
-        for group_conditions, values in self.plan.groupby(
-            ["title", "week", "day", "total_in_min", "optional"]
+        for (
+            week,
+            day,
+            source_type,
+            key,
+            total_in_min,
+            optional,
+        ), values in self.plan.groupby(
+            ["week", "day", "source_type", "key", "total_in_min", "optional"]
         ):
-            title, week, day, total_in_min, optional = group_conditions
 
-            task = f"[wk {week}] {title} ({total_in_min} min)"
+            task = f"[wk {week}] {key} ({total_in_min} min)"
             priority = self.app_config.todoist.task_priority
             if optional == "Y":
                 task += " (optional)"
@@ -51,12 +59,17 @@ class PlanExporter:
                         for _, row in values.iterrows()
                     ]
                 )
-            todoist_helper.add_task_to_project(
+            task = todoist_helper.add_task_to_project(
                 task=task,
                 due_string=f"in {day} days",
                 project=self.app_config.todoist.project,
                 section=self.app_config.todoist.section,
                 description=description,
                 priority=priority,
-                label_list=["health"],
+                label_list=["health_app"],
             )
+
+            if self.app_config.debug:
+                task_dict = task.__dict__
+                task_dict["due"] = task_dict["due"].__dict__
+                print(json.dumps(task_dict, indent=4))

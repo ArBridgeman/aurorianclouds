@@ -6,8 +6,9 @@ import pandas as pd
 from jellyfin_helpers.jellyfin_api import Jellyfin
 from jellyfin_helpers.workout_plan.date_util import RelativeDate
 from jellyfin_helpers.workout_plan.models import (
-    PlanTemplate,
     SearchType,
+    SetSchema,
+    TimePlanSchema,
     WorkoutPlan,
     WorkoutVideoSchema,
 )
@@ -50,7 +51,7 @@ class WorkoutPlanner:
             selected_workouts = self._select_exercise_by_key(
                 key=row.search_type,
                 value=row["values"],
-                duration_in_minutes=row.total_in_min,
+                duration_in_minutes=row.time_in_min,
                 skip_ids=skip_ids,
             )
             descriptions = selected_workouts.description.values
@@ -127,68 +128,96 @@ class WorkoutPlanner:
     ) -> pd.Series:
         return mask & ~self.workout_videos.id.isin(skip_ids)
 
-    def _load_plan_template(
+    def _load_time_plan(
         self, gsheets_helper: GsheetsHelper
-    ) -> DataFrameBase[PlanTemplate]:
-        plan_template = gsheets_helper.get_worksheet(
+    ) -> DataFrameBase[TimePlanSchema]:
+        weekly = gsheets_helper.get_worksheet(
             workbook_name=self.app_config.gsheets.workbook,
-            worksheet_name=self.app_config.gsheets.template_worksheet,
+            worksheet_name=self.app_config.gsheets.worksheet.weekly,
         )
-        plan_template.total_in_min = plan_template.total_in_min.astype("int64")
+        sleep = gsheets_helper.get_worksheet(
+            workbook_name=self.app_config.gsheets.workbook,
+            worksheet_name=self.app_config.gsheets.worksheet.sleep,
+        )
+        plan_template = pd.concat([weekly, sleep])
+
         # pandera does not replace "" by default, only None
         plan_template["optional"] = plan_template["optional"].replace("", None)
         plan_template["active"] = plan_template["active"].replace("", None)
-        return PlanTemplate.validate(plan_template)
+        return TimePlanSchema.validate(plan_template)
+
+    def _load_sets(self, gsheets_helper: GsheetsHelper):
+        sets = gsheets_helper.get_worksheet(
+            workbook_name=self.app_config.gsheets.workbook,
+            worksheet_name=self.app_config.gsheets.worksheet.sets,
+        )
+        return SetSchema.validate(sets)
+
+    def _load_weekly_plan(self, gsheets_helper: GsheetsHelper):
+        time_plan = self._load_time_plan(gsheets_helper)
+        sets = self._load_sets(gsheets_helper)
+        weekly_plan = pd.merge(left=time_plan, right=sets, on="key", how="left")
+        return weekly_plan.sort_values(by=["day", "time_of_day", "order"])
 
     def _load_last_plan(
         self, gsheets_helper: GsheetsHelper
     ) -> DataFrameBase[WorkoutPlan]:
         df = gsheets_helper.get_worksheet(
             workbook_name=self.app_config.gsheets.workbook,
-            worksheet_name=self.app_config.gsheets.plan_worksheet,
+            worksheet_name=self.app_config.gsheets.worksheet.plan,
         )
         return WorkoutPlan.validate(df)
 
     def create_workout_plan(
         self, gsheets_helper: GsheetsHelper
     ) -> DataFrameBase[WorkoutPlan]:
-        template = self._load_plan_template(gsheets_helper=gsheets_helper)
+        weekly_plan = self._load_weekly_plan(gsheets_helper=gsheets_helper)
         last_plan = self._load_last_plan(gsheets_helper=gsheets_helper)
 
         all_skip_ids = list(last_plan.item_id.values)
         in_month_skip_ids = list()
         relative_date = RelativeDate()
         plan = pd.DataFrame()
-        for _, row in template.iterrows():
+        for _, row in weekly_plan.iterrows():
             if row.active == "N":
                 continue
 
-            start, _ = row.day.split("_")
-            days = relative_date.get_days_from_now(day_index=start)
-            week = max((days // 7) + 1, 1)
+            day_num = int(row.day.split("_")[0])
+            days_from_now = relative_date.get_days_from_now(day_index=day_num)
+            week = row.week
 
-            title = row["values"]
-            if row.search_type == "reminder":
-                print(f"(reminder): {title}")
+            key = row["key"]
+            if row.entry_type == "reminder":
+                print(f"(reminder): {key}")
                 new_row = pd.DataFrame(
                     {
-                        "day": [days],
                         "week": [week],
-                        "title": [title],
+                        "day": [days_from_now],
                         "source_type": ["reminder"],
+                        "key": [key],
                         "total_in_min": [row.total_in_min],
-                        "description": [np.NaN],
-                        "tool": [np.NaN],
-                        "item_id": [np.NaN],
                         "optional": [row.optional],
+                        "time_of_day": [row.time_of_day],
+                        "item_id": [""],
+                        "description": [""],
+                        "tool": [""],
                     }
                 )
             else:
                 descriptions, tools, item_ids = self._search_for_workout(
                     row=row,
                     skip_ids=all_skip_ids
-                    # currently not enough entries for both of these filters
-                    if row["values"] != "tennis" else in_month_skip_ids,
+                    # currently not enough entries for these filters
+                    if row["values"]
+                    not in [
+                        "tennis",
+                        "mobility",
+                        "calves",
+                        "stretching",
+                        "stretch/back",
+                        "dance single",
+                    ]
+                    else in_month_skip_ids,
                 )
                 in_month_skip_ids.extend(item_ids)
                 all_skip_ids.extend(item_ids)
@@ -196,18 +225,19 @@ class WorkoutPlanner:
                 num_entries = len(descriptions)
                 new_row = pd.DataFrame(
                     {
-                        "day": [days] * num_entries,
                         "week": [week] * num_entries,
-                        "title": [title] * num_entries,
+                        "day": [days_from_now] * num_entries,
                         "source_type": ["video"] * num_entries,
+                        "key": [key] * num_entries,
                         "total_in_min": [row.total_in_min] * num_entries,
+                        "optional": [row.optional] * num_entries,
+                        "time_of_day": [row.time_of_day] * num_entries,
+                        "item_id": item_ids,
                         "description": descriptions,
                         "tool": tools,
-                        "item_id": item_ids,
-                        "optional": [row.optional] * num_entries,
                     }
                 )
 
             plan = pd.concat([plan, new_row])
 
-        return WorkoutPlan.validate(plan).sort_values(by="day")
+        return WorkoutPlan.validate(plan)

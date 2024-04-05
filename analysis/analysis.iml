@@ -3,7 +3,7 @@
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/sous-chef" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/analysis" isTestSource="false" />
     </content>
     <content url="file://$MODULE_DIR$/.venv" />
     <orderEntry type="jdk" jdkName="aur/analysis" jdkType="Python SDK" />

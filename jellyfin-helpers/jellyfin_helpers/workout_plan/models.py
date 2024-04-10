@@ -1,5 +1,5 @@
 from datetime import timedelta
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, auto
 from typing import List, Optional
 
 import pandera as pa
@@ -26,11 +26,19 @@ class Day(IntEnum):
             return None
 
 
+class EntryType(Enum):
+    reminder = auto()
+    set = auto()
+
+    @classmethod
+    def name_list(cls, string_method: str = "casefold"):
+        return list(map(lambda c: getattr(c.name, string_method)(), cls))
+
+
 # TODO put enum extensions in utilities
 class SearchType(Enum):
-    genre = "genre"
-    reminder = "reminder"
-    tag = "tag"
+    genre = auto()
+    tag = auto()
 
     @classmethod
     def name_list(cls, string_method: str = "casefold"):
@@ -51,35 +59,52 @@ class WorkoutVideoSchema(pa.SchemaModel):
         strict = True
 
 
-class PlanTemplate(pa.SchemaModel):
+week_field = pa.Field(ge=1, le=4, nullable=False, coerce=True)
+total_in_min_field = pa.Field(gt=0, le=75, nullable=False, coerce=True)
+optional_field = pa.Field(
+    isin=["Y", "N"], nullable=False, default="N", coerce=True
+)
+time_of_day_field = pa.Field(
+    isin=["morning", "afternoon", "evening", "sleep"], nullable=False
+)
+
+
+class TimePlanSchema(pa.SchemaModel):
+    week: Series[int] = week_field
     day: Series[str]
-    total_in_min: Series[int] = pa.Field(gt=0, le=75, nullable=False)
-    search_type: Series[str] = pa.Field(isin=SearchType.name_list("lower"))
-    values: Series[str]
-    optional: Series[str] = pa.Field(
-        isin=["Y", "N"], nullable=False, default="N", coerce=True
-    )
+    total_in_min: Series[int] = total_in_min_field
+    entry_type: Series[str] = pa.Field(isin=EntryType.name_list("lower"))
+    key: Series[str]
+    optional: Series[str] = optional_field
     active: Series[str] = pa.Field(
         isin=["Y", "N"], nullable=False, default="Y", coerce=True
+    )
+    time_of_day: Series[str] = time_of_day_field
+
+
+class SetSchema(pa.SchemaModel):
+    key: Series[str]
+    search_type: Series[str] = pa.Field(isin=SearchType.name_list("lower"))
+    values: Series[str]
+    order: Series[int] = pa.Field(ge=1, le=4, nullable=False, coerce=True)
+    time_in_min: Series[int] = pa.Field(
+        ge=5, le=40, nullable=False, coerce=True
     )
 
 
 class WorkoutPlan(pa.SchemaModel):
-    day: Series[int] = pa.Field(ge=0, le=28, nullable=False, coerce=True)
-    week: Series[int] = pa.Field(gt=0, le=4, nullable=False, coerce=True)
-    title: Series[str]
+    week: Series[int] = week_field
+    day: Series[int] = pa.Field(ge=0, le=35, nullable=False, coerce=True)
     source_type: Series[str] = pa.Field(
         isin=["reminder", "video"], nullable=False
     )
-    total_in_min: Series[int] = pa.Field(
-        gt=0, le=75, nullable=False, coerce=True
-    )
+    key: Series[str]
+    total_in_min: Series[int] = total_in_min_field
+    optional: Series[str] = optional_field
+    time_of_day: Series[str] = time_of_day_field
+    item_id: Series[str] = pa.Field(nullable=True)
     description: Series[str] = pa.Field(nullable=True)
     tool: Series[str] = pa.Field(nullable=True)
-    item_id: Series[str] = pa.Field(nullable=True)
-    optional: Series[str] = pa.Field(
-        isin=["Y", "N"], nullable=False, default="N", coerce=True
-    )
 
     class Config:
         strict = True

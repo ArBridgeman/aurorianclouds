@@ -5,7 +5,7 @@ from jellyfin_helpers.workout_plan.get_workouts import WorkoutVideos
 
 @pytest.fixture(scope="module")
 def jellyfin(config):
-    return Jellyfin(config=config.jellyfin_api)
+    return Jellyfin(config=config.jellyfin)
 
 
 @pytest.mark.jellyfin

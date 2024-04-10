@@ -23,6 +23,7 @@ create_menu:
     pantry_ingredient_not_known: raise
     ingredient_marked_as_bad: raise
     menu_quality_check: raise
+    menu_future_error: raise
   todoist:
     project_name: Menu
     remove_existing_task: false

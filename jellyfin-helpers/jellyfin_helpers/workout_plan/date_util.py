@@ -13,7 +13,7 @@ class RelativeDate:
     today_index = convert_datetime_to_enum(datetime.now()).value
 
     def get_days_from_now(self, day_index: int) -> int:
-        days = day_index - self.today_index + 1
-        if self.today_index > Day.mon:
+        days = day_index - self.today_index
+        if self.today_index > Day.mon or self.today_index > day_index:
             days += 7
         return days

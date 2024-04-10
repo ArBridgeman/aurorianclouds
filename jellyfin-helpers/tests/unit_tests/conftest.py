@@ -7,6 +7,7 @@ from freezegun import freeze_time
 # Define a fixture to freeze time for the tests
 @pytest.fixture(scope="module")
 def frozen_time():
+    # frozen to a Sunday
     with freeze_time("2023-01-01 12:00:00"):
         yield
 

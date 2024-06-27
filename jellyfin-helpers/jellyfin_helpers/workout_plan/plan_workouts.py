@@ -217,7 +217,9 @@ class WorkoutPlanner:
                         "stretch/back",
                         "dance single",
                     ]
-                    else in_month_skip_ids,
+                    # TODO would ideally not want the same one in a week
+                    # as jellyfin does not add duplicates to playlist
+                    else [],
                 )
                 in_month_skip_ids.extend(item_ids)
                 all_skip_ids.extend(item_ids)

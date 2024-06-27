@@ -73,8 +73,9 @@ def _parse_workout_videos(
             jellyfin.get_items_per_genre(genre_id=genre["Id"])
         )
         raw_data = raw_data[~raw_data.VideoType.isna()]
-        raw_data["duration"] = raw_data["Tags"].apply(
-            WorkoutVideos.get_duration_from_tags
+        # duration in minutes
+        raw_data["duration"] = pd.to_timedelta(
+            raw_data["RunTimeTicks"] / 10**7 / 60, unit="m"
         )
         raw_data["genre"] = genre["Name"]
         raw_data["tool"] = raw_data["Tags"].apply(

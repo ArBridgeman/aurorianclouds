@@ -117,7 +117,12 @@ class Jellyfin:
         extra_fields = ["Tags", "Path"]
 
         def _extract_item(source_dict: Dict) -> Dict:
-            desired_keys = ["Name", "Id", "VideoType"] + extra_fields
+            desired_keys = [
+                "Name",
+                "Id",
+                "VideoType",
+                "RunTimeTicks",
+            ] + extra_fields
             return {key: source_dict.get(key) for key in desired_keys}
 
         items = self._send_get_request(

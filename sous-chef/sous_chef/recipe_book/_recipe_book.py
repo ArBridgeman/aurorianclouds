@@ -1,3 +1,4 @@
+import hashlib
 import re
 from collections import namedtuple
 from dataclasses import dataclass
@@ -5,6 +6,7 @@ from pathlib import Path
 from typing import Tuple
 
 import pandas as pd
+from joblib import Memory
 from sous_chef.abstract.pandas_util import get_dict_from_columns
 from sous_chef.abstract.search_dataframe import (
     DataframeSearchable,
@@ -19,6 +21,11 @@ from structlog import get_logger
 
 HOME_PATH = str(Path.home())
 FILE_LOGGER = get_logger(__name__)
+
+
+# initialize disk cache
+ABS_FILE_PATH = Path(__file__).absolute().parent
+CACHE_DIR = ABS_FILE_PATH / "diskcache"
 
 MAP_FIELD_TO_COL = namedtuple("Map", ["json_field", "df_column", "dtype"])
 
@@ -51,6 +58,7 @@ class RecipeBasic(DataframeSearchable):
 
     def __post_init__(self):
         self.recipe_book_path = Path(HOME_PATH, self.config.path)
+
         self._read_category_tuple()
         self._read_tag_tuple()
         # load basic recipe book to self.dataframe
@@ -77,7 +85,8 @@ class RecipeBasic(DataframeSearchable):
             return []
         return [entry["title"].casefold() for entry in cell]
 
-    def _format_recipe_row(self, row: pd.Series) -> pd.Series:
+    @staticmethod
+    def _format_recipe_row(row: pd.Series) -> pd.Series:
         FILE_LOGGER.info("[format recipe row]", recipe=row.title)
         for time_col in [
             "time_total",
@@ -87,7 +96,7 @@ class RecipeBasic(DataframeSearchable):
         ]:
             row[time_col] = create_timedelta(row[time_col])
         for col in ["categories", "tags"]:
-            row[col] = self._flatten_dict_to_list(row[col])
+            row[col] = RecipeBasic._flatten_dict_to_list(row[col])
         return row
 
     def _read_category_tuple(self):
@@ -97,19 +106,10 @@ class RecipeBasic(DataframeSearchable):
         self.category_tuple = tuple(category_df.title.str.lower().values)
 
     def _read_recipe_book(self):
-        self.dataframe = pd.concat(
-            [
-                self._retrieve_format_recipe_df(recipe_file)
-                for recipe_file in self.recipe_book_path.glob(
-                    self.config.file_recipe_pattern
-                )
-            ]
+        self.dataframe = read_recipe_book(
+            recipe_book_path=self.recipe_book_path,
+            recipe_file_pattern=self.config.file_recipe_pattern,
         )
-        self.dataframe["factor"] = 1
-        self.dataframe["amount"] = None
-        self.dataframe.replace("nan", pd.NA, inplace=True)
-        self.dataframe.time_inactive.replace(pd.NA, 0, inplace=True)
-        self.dataframe = Recipe.validate(self.dataframe)
         num_rated = sum(~self.dataframe.rating.isnull())
         FILE_LOGGER.info(
             "Recipe book stats",
@@ -121,7 +121,8 @@ class RecipeBasic(DataframeSearchable):
         tag_df = pd.read_json(self.recipe_book_path / self.config.file_tags)
         self.tag_tuple = tuple(tag_df.title.str.lower().values)
 
-    def _retrieve_format_recipe_df(self, json_file):
+    @staticmethod
+    def retrieve_format_recipe_df(json_file: Path) -> pd.DataFrame:
         tmp_df = pd.read_json(
             json_file,
             dtype=get_dict_from_columns(
@@ -136,7 +137,7 @@ class RecipeBasic(DataframeSearchable):
                 df=MAP_JSON_TO_DF, key_col="json_field", value_col="df_column"
             )
         )
-        return tmp_df.apply(self._format_recipe_row, axis=1)
+        return tmp_df.apply(RecipeBasic._format_recipe_row, axis=1)
 
     def _select_highest_rated_when_duplicated_name(self):
         self.dataframe = self.dataframe.sort_values(["rating"], ascending=False)
@@ -186,3 +187,49 @@ def create_timedelta(row_entry):
             )
 
         return time_converted
+
+
+def read_recipe_book(
+    recipe_book_path: Path, recipe_file_pattern: str
+) -> pd.DataFrame:
+    encoded_source_path = str(recipe_book_path).encode()
+    hash_obj = hashlib.sha256(encoded_source_path)
+    hex_dig = hash_obj.hexdigest()
+
+    cache = Memory(CACHE_DIR / hex_dig, mmap_mode="r")
+
+    recipe_files = [
+        recipe_file
+        for recipe_file in recipe_book_path.glob(recipe_file_pattern)
+    ]
+
+    def is_cache_valid(metadata) -> bool:
+        time_cache = metadata["time"]
+
+        if len(recipe_files) == 0:
+            return False
+
+        time_recipe_files = max(
+            recipe.stat().st_mtime for recipe in recipe_files
+        )
+        if time_recipe_files > time_cache:
+            return False
+
+        return True
+
+    @cache.cache(cache_validation_callback=is_cache_valid)
+    def _get_recipe_book() -> pd.DataFrame:
+        dataframe = pd.concat(
+            [
+                RecipeBasic.retrieve_format_recipe_df(recipe_file)
+                for recipe_file in recipe_files
+            ]
+        )
+        dataframe["factor"] = 1
+        dataframe["amount"] = None
+        dataframe = dataframe.replace("nan", pd.NA)
+        dataframe.time_inactive = dataframe.time_inactive.replace(pd.NA, 0)
+        dataframe = Recipe.validate(dataframe)
+        return dataframe
+
+    return _get_recipe_book()

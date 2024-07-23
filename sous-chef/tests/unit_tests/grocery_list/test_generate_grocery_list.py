@@ -15,7 +15,7 @@ from sous_chef.grocery_list.generate_grocery_list.generate_grocery_list import (
     GroceryListIncompleteError,
 )
 from sous_chef.menu.create_menu._for_grocery_list import MenuRecipe
-from sous_chef.recipe_book.recipe_util import Recipe
+from sous_chef.recipe_book.recipe_util import RecipeSchema
 from tests.unit_tests.util import create_recipe
 
 from utilities.testing.pandas_util import (
@@ -64,7 +64,7 @@ def create_ingredient_and_grocery_entry_raw(
     factor: float = 1.0,
     is_optional: bool = False,
     is_staple: bool = False,
-    pint_unit: Unit = None,
+    pint_unit: Unit = unit_registry.dimensionless,
     group: str = "Vegetables",
     plural_ending: str = "s",
     store: str = "grocery store",
@@ -78,13 +78,10 @@ def create_ingredient_and_grocery_entry_raw(
     # frozen anchor date is Friday & second group includes vegetables
     shopping_date: datetime.date = datetime.date(year=2022, month=1, day=24),
 ) -> (Ingredient, pd.DataFrame):
-    unit = None
-    if pint_unit is not None:
-        unit = UnitFormatter._get_unit_as_abbreviated_str(pint_unit)
+    unit = UnitFormatter.get_unit_as_abbreviated_str(pint_unit)
 
     ingredient = Ingredient(
         quantity=quantity,
-        unit=unit,
         pint_unit=pint_unit,
         item=item,
         factor=factor,
@@ -100,7 +97,7 @@ def create_ingredient_and_grocery_entry_raw(
             "quantity": quantity * recipe_factor,
             "unit": unit,
             "pint_unit": pint_unit,
-            "dimension": None,
+            "dimension": str(pint_unit.dimensionality),
             "item": item,
             "is_staple": is_staple,
             "is_optional": is_optional,
@@ -119,7 +116,7 @@ def create_ingredient_and_grocery_entry_raw(
 
 
 def create_menu_recipe(
-    recipe: Optional[Recipe] = None,
+    recipe: Optional[RecipeSchema] = None,
     from_recipe: str = "dummy recipe",
     eat_factor: float = 1.0,
     freeze_factor: float = 0.0,
@@ -285,7 +282,7 @@ class TestGroceryList:
             }
         )
 
-        larger_pint_unit_str = UnitFormatter()._get_unit_as_abbreviated_str(
+        larger_pint_unit_str = UnitFormatter().get_unit_as_abbreviated_str(
             larger_pint_unit
         )
 

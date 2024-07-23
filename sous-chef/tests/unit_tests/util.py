@@ -1,5 +1,7 @@
 import pandas as pd
-from sous_chef.recipe_book.recipe_util import Recipe
+from pint import Quantity
+from sous_chef.formatter.units import unit_registry
+from sous_chef.recipe_book.recipe_util import RecipeSchema
 
 
 def create_recipe(
@@ -10,10 +12,11 @@ def create_recipe(
     ingredients: str = "1 dummy ingredient",
     factor: float = 1.0,
     amount: str = None,
+    pint_quantity: Quantity = 3 * unit_registry.cups,
 ):
     if (time_total := pd.to_timedelta(time_total_str)) is pd.NaT:
         time_total = None
-    return Recipe.validate(
+    return RecipeSchema.validate(
         pd.DataFrame(
             [
                 {
@@ -27,7 +30,8 @@ def create_recipe(
                     "rating": rating,
                     "favorite": False,
                     "categories": [],
-                    "quantity": "3 servings",
+                    "output": f"{pint_quantity}",
+                    "quantity": pint_quantity,
                     "tags": [],
                     "uuid": "1666465773100",
                     "factor": factor,

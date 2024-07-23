@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 from freezegun import freeze_time
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
+from sous_chef.formatter.units import unit_registry
 from sous_chef.menu.create_menu._from_fixed_template import FixedTemplates
 from sous_chef.menu.create_menu._menu_basic import MenuFutureError
 from sous_chef.menu.record_menu_history import MenuHistoryError
@@ -102,19 +103,21 @@ class TestFixedTemplates:
 class TestProcessMenu:
     @staticmethod
     @pytest.mark.parametrize(
-        "quantity,unit,item", [(1.0, "cup", "frozen broccoli")]
+        "quantity,pint_unit,item", [(1.0, unit_registry.cup, "frozen broccoli")]
     )
     def test__process_menu_ingredient(
-        menu, menu_builder, mock_ingredient_formatter, quantity, unit, item
+        menu, menu_builder, mock_ingredient_formatter, quantity, pint_unit, item
     ):
         row = menu_builder.create_loaded_menu_row(
             eat_factor=quantity,
-            eat_unit=unit,
+            eat_unit=pint_unit,
             item=item,
             item_type="ingredient",
         ).squeeze()
 
-        ingredient = Ingredient(quantity=quantity, unit=unit, item=item)
+        ingredient = Ingredient(
+            quantity=quantity, pint_unit=pint_unit, item=item
+        )
         mock_ingredient_formatter.format_manual_ingredient.return_value = (
             ingredient
         )
@@ -124,7 +127,7 @@ class TestProcessMenu:
             result,
             menu_builder.create_tmp_menu_row(
                 eat_factor=quantity,
-                eat_unit=unit,
+                eat_unit=pint_unit,
                 item=item,
                 item_type="ingredient",
             ).squeeze(),

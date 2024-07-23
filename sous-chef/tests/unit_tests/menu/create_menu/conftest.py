@@ -1,5 +1,6 @@
 import datetime
 from dataclasses import dataclass
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -7,6 +8,7 @@ import pytest
 from freezegun import freeze_time
 from hydra import compose, initialize
 from pandera.typing.common import DataFrameBase
+from pint import Unit
 from sous_chef.menu.create_menu._menu_basic import (
     AllMenuSchema,
     LoadedMenuSchema,
@@ -65,12 +67,18 @@ class MenuBuilder:
         item_type: str = "recipe",
         eat_factor: float = 1.0,
         # gsheets has "", whereas read_csv defaults to np.nans
-        eat_unit: str = "",
+        eat_unit: Union[Unit, str] = "",
         freeze_factor: float = 0.0,
         defrost: str = "N",
         item: str = "dummy",
         **kwargs,
     ) -> DataFrameBase[AllMenuSchema]:
+
+        if isinstance(eat_unit, Unit):
+            eat_unit = str(eat_unit)
+            if eat_unit == "dimensionless":
+                eat_unit = ""
+
         return AllMenuSchema.validate(
             pd.DataFrame(
                 {

@@ -3,25 +3,28 @@ import re
 from collections import namedtuple
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Tuple
+from typing import Optional, Tuple
 
 import pandas as pd
+import regex
 from joblib import Memory
+from pint import Quantity
 from sous_chef.abstract.pandas_util import get_dict_from_columns
 from sous_chef.abstract.search_dataframe import (
     DataframeSearchable,
     FuzzySearchError,
 )
+from sous_chef.formatter.format_unit import UnitExtractionError, get_pint_repr
+from sous_chef.formatter.units import unit_registry
 from sous_chef.recipe_book.recipe_util import (
-    Recipe,
     RecipeNotFoundError,
+    RecipeSchema,
     RecipeTotalTimeUndefinedError,
 )
 from structlog import get_logger
 
 HOME_PATH = str(Path.home())
 FILE_LOGGER = get_logger(__name__)
-
 
 # initialize disk cache
 ABS_FILE_PATH = Path(__file__).absolute().parent
@@ -42,7 +45,7 @@ MAP_JSON_TO_DF = pd.DataFrame(
         MAP_FIELD_TO_COL("favorite", "favorite", bool),
         MAP_FIELD_TO_COL("categories", "categories", list),
         # TODO quantity should be split/standardized...it's bad!!!
-        MAP_FIELD_TO_COL("quantity", "quantity", str),
+        MAP_FIELD_TO_COL("quantity", "output", str),
         MAP_FIELD_TO_COL("tags", "tags", list),
         MAP_FIELD_TO_COL("uuid", "uuid", str),
         MAP_FIELD_TO_COL("url", "url", str),
@@ -63,6 +66,19 @@ class RecipeBasic(DataframeSearchable):
         self._read_tag_tuple()
         # load basic recipe book to self.dataframe
         self._read_recipe_book()
+
+        # cannot pickle pint quantities in cache
+        quantity_cfg = self.config.quantity
+        quantity_patterns = [
+            quantity_cfg[prefix_type] + quantity_cfg["unit"]
+            for prefix_type in quantity_cfg["prefix_pattern"]
+        ]
+        self.dataframe["quantity"] = self.dataframe.output.apply(
+            lambda x: extract_pint_quantity(
+                quantity_patterns=quantity_patterns, recipe_output=x
+            )
+        )
+
         if self.config.deduplicate:
             self._select_highest_rated_when_duplicated_name()
 
@@ -148,45 +164,42 @@ def create_timedelta(row_entry):
     from fractions import Fraction
 
     if row_entry == "" or row_entry is None:
-        return ""
+        return None
 
     row_entry = row_entry.lower().strip()
-
     if row_entry.isdecimal():
         return pd.to_timedelta(int(row_entry), unit="minutes")
-    else:
-        # has units in string or is nan
-        # cleaning, then parsing with pd.to_timedelta
-        row_entry = re.sub("time", "", row_entry)
-        row_entry = re.sub("prep", "", row_entry)
-        row_entry = re.sub("cooking", "", row_entry)
-        row_entry = re.sub("minut[eo]s.?", "min", row_entry)
-        row_entry = re.sub(r"^[\D]+", "", row_entry)
-        row_entry = re.sub(r"mins\.?", "min", row_entry)
-        row_entry = re.sub(r"hrs\.?", "hour", row_entry)
-        if re.match(r"^\d{1,2}:\d{1,2}$", row_entry):
-            row_entry = "{}:00".format(row_entry)
 
-        # handle fractions properly
-        # todo outsource to separate clean function
-        if "/" in row_entry:
-            groups = re.match(
-                r"^(\d?\s\d+[.,/]?\d*)?\s([\s\-_\w%]+)", row_entry
+    # has units in string or is nan
+    # cleaning, then parsing with pd.to_timedelta
+    row_entry = re.sub("time", "", row_entry)
+    row_entry = re.sub("prep", "", row_entry)
+    row_entry = re.sub("cooking", "", row_entry)
+    row_entry = re.sub("minut[eo]s.?", "min", row_entry)
+    row_entry = re.sub(r"^[\D]+", "", row_entry)
+    row_entry = re.sub(r"mins\.?", "min", row_entry)
+    row_entry = re.sub(r"hrs\.?", "hour", row_entry)
+    if re.match(r"^\d{1,2}:\d{1,2}$", row_entry):
+        row_entry = "{}:00".format(row_entry)
+
+    # handle fractions properly
+    # TODO outsource to separate clean function
+    if "/" in row_entry:
+        groups = re.match(r"^(\d?\s\d+[.,/]?\d*)?\s([\s\-_\w%]+)", row_entry)
+        if groups:
+            float_conv = float(
+                sum(Fraction(s) for s in groups.group(1).split())
             )
-            if groups:
-                float_conv = float(
-                    sum(Fraction(s) for s in groups.group(1).split())
-                )
-                row_entry = f"{float_conv} {groups.group(2).strip()}"
+            row_entry = f"{float_conv} {groups.group(2).strip()}"
 
-        # errors = "ignore", if confident we want to ignore further issues
-        time_converted = pd.to_timedelta(row_entry, unit=None, errors="coerce")
-        if time_converted is pd.NaT:
-            FILE_LOGGER.warning(
-                "[create_timedelta] conversion failed", entry=row_entry
-            )
+    # errors = "ignore", if confident we want to ignore further issues
+    time_converted = pd.to_timedelta(row_entry, unit=None, errors="coerce")
+    if time_converted is pd.NaT:
+        FILE_LOGGER.warning(
+            "[create_timedelta] conversion failed", entry=row_entry
+        )
 
-        return time_converted
+    return time_converted
 
 
 def read_recipe_book(
@@ -227,9 +240,41 @@ def read_recipe_book(
         )
         dataframe["factor"] = 1
         dataframe["amount"] = None
+        # cannot pickle pint units at this time
+        dataframe["quantity"] = None
         dataframe = dataframe.replace("nan", pd.NA)
+
+        dataframe.time_preparation = dataframe.time_preparation.astype(
+            "object"
+        ).replace(pd.NA, None)
+        dataframe.time_cooking = dataframe.time_cooking.astype(
+            "object"
+        ).replace(pd.NA, None)
         dataframe.time_inactive = dataframe.time_inactive.replace(pd.NA, 0)
-        dataframe = Recipe.validate(dataframe)
-        return dataframe
+        dataframe.time_total = dataframe.time_total.astype("object").replace(
+            pd.NA, None
+        )
+
+        return RecipeSchema.validate(dataframe)
 
     return _get_recipe_book()
+
+
+def extract_pint_quantity(
+    quantity_patterns: list, recipe_output: str
+) -> Optional[Quantity]:
+    if recipe_output is pd.NA or not recipe_output:
+        return None
+
+    if recipe_output.isdecimal():
+        return float(recipe_output) * unit_registry.dimensionless
+
+    for pattern in quantity_patterns:
+        result = regex.match(pattern, recipe_output)
+        if result is not None:
+            quantity = result.group(1)
+            unit = result.group(2)
+            try:
+                return get_pint_repr(quantity + unit)
+            except UnitExtractionError:
+                return float(quantity) * unit_registry.dimensionless

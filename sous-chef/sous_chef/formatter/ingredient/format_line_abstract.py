@@ -5,6 +5,7 @@ import regex
 from pint import Unit
 from sous_chef.abstract.extended_enum import ExtendedEnum
 from sous_chef.formatter.format_unit import UnitExtractionError, UnitFormatter
+from sous_chef.formatter.units import unit_registry
 
 
 @dataclass
@@ -31,8 +32,7 @@ class LineFormatter:
     quantity: str = None
     fraction: str = None
     quantity_float: float = 0.0
-    unit: str = None
-    pint_unit: Unit = None
+    pint_unit: Unit = unit_registry.dimensionless
     item: str = None
 
     def __post_init__(self):
@@ -67,13 +67,11 @@ class LineFormatter:
         text_split = self.item.split(" ")
         if len(text_split) >= 1:
             try:
-                text_unit = text_split[0]
-                unit, pint_unit = self.unit_formatter.extract_unit_from_text(
-                    text_unit
+                self.pint_unit = self.unit_formatter.get_pint_unit(
+                    text_split[0]
                 )
-                self.pint_unit = pint_unit
-                self.unit = unit
                 self.item = " ".join(text_split[1:])
+            # TODO remove try-block?
             # expected as data often lacks units
             except UnitExtractionError:
                 pass

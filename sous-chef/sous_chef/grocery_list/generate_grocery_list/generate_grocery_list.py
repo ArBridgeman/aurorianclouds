@@ -168,7 +168,6 @@ class GroceryList:
     def _add_to_grocery_list_raw(
         self,
         quantity: float,
-        unit: str,
         pint_unit: Unit,
         item: str,
         is_staple: bool,
@@ -187,12 +186,12 @@ class GroceryList:
             {
                 "quantity": quantity,
                 # TODO do we need unit?
-                "unit": unit,
+                "unit": self.unit_formatter.get_unit_as_abbreviated_str(
+                    pint_unit
+                ),
                 "pint_unit": pint_unit,
                 # TODO already add to Ingredient when first created?
-                "dimension": str(pint_unit.dimensionality)
-                if pint_unit
-                else None,
+                "dimension": str(pint_unit.dimensionality),
                 "item": item,
                 "is_staple": is_staple,
                 "is_optional": is_optional,
@@ -223,7 +222,6 @@ class GroceryList:
         [
             self._add_to_grocery_list_raw(
                 quantity=x.quantity,
-                unit=x.unit,
                 pint_unit=x.pint_unit,
                 item=x.item,
                 is_staple=x.is_staple,
@@ -572,7 +570,7 @@ class GroceryList:
             ingredient_list,
             error_list,
         ) = self.ingredient_field.parse_ingredient_field(
-            ingredient_field=menu_recipe.recipe.ingredients
+            recipe=menu_recipe.recipe
         )
         self._add_referenced_recipe_to_queue(menu_recipe, recipe_list)
         self._process_ingredient_list(menu_recipe, ingredient_list)
@@ -589,7 +587,6 @@ class GroceryList:
             self._add_to_grocery_list_raw(
                 quantity=ingredient.quantity
                 * (menu_recipe.eat_factor + menu_recipe.freeze_factor),
-                unit=ingredient.unit,
                 pint_unit=ingredient.pint_unit,
                 item=ingredient.item,
                 is_staple=ingredient.is_staple,

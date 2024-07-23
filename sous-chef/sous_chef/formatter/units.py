@@ -10,22 +10,24 @@ unit_registry.define("block = 1")
 unit_registry.define("bunch = 1")
 unit_registry.define("@alias bunch = bunches")
 unit_registry.define("can = 1")
-unit_registry.define("cube = 1")
+unit_registry.define("cube = 1 = 1.3 tbsp")
 unit_registry.define("dash = 1")
 unit_registry.define("@alias dash = dashes")
 unit_registry.define("drop = 1")
 unit_registry.define("head = 1")
 unit_registry.define("jar = 1")
+unit_registry.define("package = 1 =  pkg")
+unit_registry.define("packet = 1 = pkt")
 unit_registry.define("pinch = 1")
 unit_registry.define("@alias pinch = pinches")
 unit_registry.define("sheet = 1")
-unit_registry.define("package = 1 =  pkg")
-unit_registry.define("packet = 1 = pkt")
 unit_registry.define("slice = 1")
+unit_registry.define("roll = 2 slices")
 unit_registry.define("square = 1")
 unit_registry.define("strip = 1")
 
 custom_list = [
+    unit_registry.dimensionless,
     unit_registry.bag,
     unit_registry.ball,
     unit_registry.block,
@@ -37,6 +39,7 @@ custom_list = [
     unit_registry.head,
     unit_registry.jar,
     unit_registry.pinch,
+    unit_registry.roll,
     unit_registry.sheet,
     unit_registry.slice,
     unit_registry.square,

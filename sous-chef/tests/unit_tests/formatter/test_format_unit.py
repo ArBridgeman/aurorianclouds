@@ -27,23 +27,19 @@ class TestUnitFormatter:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "text,expected_unit,expected_pint_unit",
+        "text,expected_pint_unit",
         [
-            ("cp", "cup", unit_registry.cup),
-            ("cp.", "cup", unit_registry.cup),
-            ("cup", "cup", unit_registry.cup),
-            ("cups", "cup", unit_registry.cup),
-            ("ball", "ball", unit_registry.ball),
-            ("pinches", "pinch", unit_registry.pinch),
+            ("", unit_registry.dimensionless),
+            ("cp", unit_registry.cup),
+            ("cp.", unit_registry.cup),
+            ("cup", unit_registry.cup),
+            ("cups", unit_registry.cup),
+            ("ball", unit_registry.ball),
+            ("pinches", unit_registry.pinch),
         ],
     )
-    def test_extract_unit_from_text(
-        unit_formatter, text, expected_unit, expected_pint_unit
-    ):
-        assert unit_formatter.extract_unit_from_text(text) == (
-            expected_unit,
-            expected_pint_unit,
-        )
+    def test_get_pint_unit(unit_formatter, text, expected_pint_unit):
+        assert unit_formatter.get_pint_unit(text) == expected_pint_unit
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -64,19 +60,19 @@ class TestUnitFormatter:
         assert unit_formatter.get_unit_str(quantity, unit) == expected_str
 
     @staticmethod
-    def test__get_pint_unit_raise_error_for_not_unit(unit_formatter, log):
+    def test_get_pint_unit_raise_error_for_not_unit(unit_formatter, log):
         with pytest.raises(UnitExtractionError) as error:
-            unit_formatter._get_pint_unit("not-a-unit")
+            unit_formatter.get_pint_unit("not-a-unit")
 
         assert log.events == []
         assert str(error.value) == "[unit extraction failed] text=not-a-unit"
 
     @staticmethod
-    def test__get_pint_unit_raise_error_for_not_allowed_unit(
+    def test_get_pint_unit_raise_error_for_not_allowed_unit(
         unit_formatter, log
     ):
         with pytest.raises(UnitExtractionError) as error:
-            unit_formatter._get_pint_unit("mile")
+            unit_formatter.get_pint_unit("mile")
 
         assert log.events == [
             {
@@ -97,10 +93,10 @@ class TestUnitFormatter:
             ("in", unit_registry.inch),
         ],
     )
-    def test__get_pint_unit_parses_abbreviated_unit(
+    def test_get_pint_unit_parses_abbreviated_unit(
         unit_formatter, text_unit, expected_unit
     ):
-        assert unit_formatter._get_pint_unit(text_unit) == expected_unit
+        assert unit_formatter.get_pint_unit(text_unit) == expected_unit
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -111,10 +107,10 @@ class TestUnitFormatter:
             ("gram", unit_registry.gram),
         ],
     )
-    def test__get_pint_unit_parses_singular_unit(
+    def test_get_pint_unit_parses_singular_unit(
         unit_formatter, text_unit, expected_unit
     ):
-        assert unit_formatter._get_pint_unit(text_unit) == expected_unit
+        assert unit_formatter.get_pint_unit(text_unit) == expected_unit
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -127,7 +123,7 @@ class TestUnitFormatter:
     def test_get_pint_unit_parses_plural_unit(
         unit_formatter, text_unit, expected_unit
     ):
-        assert unit_formatter._get_pint_unit(text_unit) == expected_unit
+        assert unit_formatter.get_pint_unit(text_unit) == expected_unit
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -140,7 +136,7 @@ class TestUnitFormatter:
     def test_get_pint_unit_parses_upper_case_unit(
         unit_formatter, text_unit, expected_unit
     ):
-        assert unit_formatter._get_pint_unit(text_unit) == expected_unit
+        assert unit_formatter.get_pint_unit(text_unit) == expected_unit
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -152,9 +148,7 @@ class TestUnitFormatter:
             (unit_registry.ball, "ball"),
         ],
     )
-    def test__get_unit_as_abbreviated_str(
-        unit_formatter, unit, expected_result
-    ):
+    def test_get_unit_as_abbreviated_str(unit_formatter, unit, expected_result):
         assert (
-            unit_formatter._get_unit_as_abbreviated_str(unit) == expected_result
+            unit_formatter.get_unit_as_abbreviated_str(unit) == expected_result
         )

@@ -16,7 +16,7 @@ from sous_chef.menu.create_menu._for_grocery_list import (
     MenuIngredient,
     MenuRecipe,
 )
-from sous_chef.recipe_book.recipe_util import Recipe
+from sous_chef.recipe_book.recipe_util import RecipeSchema
 from structlog import get_logger
 from termcolor import cprint
 
@@ -168,7 +168,6 @@ class GroceryList:
     def _add_to_grocery_list_raw(
         self,
         quantity: float,
-        unit: str,
         pint_unit: Unit,
         item: str,
         is_staple: bool,
@@ -187,12 +186,12 @@ class GroceryList:
             {
                 "quantity": quantity,
                 # TODO do we need unit?
-                "unit": unit,
+                "unit": self.unit_formatter.get_unit_as_abbreviated_str(
+                    pint_unit
+                ),
                 "pint_unit": pint_unit,
                 # TODO already add to Ingredient when first created?
-                "dimension": str(pint_unit.dimensionality)
-                if pint_unit
-                else None,
+                "dimension": str(pint_unit.dimensionality),
                 "item": item,
                 "is_staple": is_staple,
                 "is_optional": is_optional,
@@ -223,7 +222,6 @@ class GroceryList:
         [
             self._add_to_grocery_list_raw(
                 quantity=x.quantity,
-                unit=x.unit,
                 pint_unit=x.pint_unit,
                 item=x.item,
                 is_staple=x.is_staple,
@@ -267,7 +265,7 @@ class GroceryList:
             )
 
     def _add_referenced_recipe_to_queue(
-        self, menu_recipe: MenuRecipe, recipe_list: List[Recipe]
+        self, menu_recipe: MenuRecipe, recipe_list: List[RecipeSchema]
     ):
         def _check_yes_defrost_skip(text: str) -> str:
             response = None
@@ -572,7 +570,7 @@ class GroceryList:
             ingredient_list,
             error_list,
         ) = self.ingredient_field.parse_ingredient_field(
-            ingredient_field=menu_recipe.recipe.ingredients
+            recipe=menu_recipe.recipe
         )
         self._add_referenced_recipe_to_queue(menu_recipe, recipe_list)
         self._process_ingredient_list(menu_recipe, ingredient_list)
@@ -589,7 +587,6 @@ class GroceryList:
             self._add_to_grocery_list_raw(
                 quantity=ingredient.quantity
                 * (menu_recipe.eat_factor + menu_recipe.freeze_factor),
-                unit=ingredient.unit,
                 pint_unit=ingredient.pint_unit,
                 item=ingredient.item,
                 is_staple=ingredient.is_staple,

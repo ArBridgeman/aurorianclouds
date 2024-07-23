@@ -1,5 +1,5 @@
 format_ingredient:
-  # mininum length for line to be considered
+  # minimum length for line to be considered
   min_line_length: 3
   # formats for referenced recipe
   referenced_recipe_format:

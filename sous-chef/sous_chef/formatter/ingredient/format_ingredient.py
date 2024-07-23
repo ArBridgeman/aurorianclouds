@@ -21,12 +21,11 @@ FILE_LOGGER = get_logger(__name__)
 @dataclass
 class Ingredient:
     quantity: float
+    pint_unit: Unit
     item: str
     factor: float = 1.0
     is_optional: bool = False
     is_staple: bool = False
-    unit: str = None
-    pint_unit: Unit = None
     group: str = None
     item_plural: str = None
     store: str = None
@@ -56,7 +55,6 @@ class IngredientLine(LineFormatter):
         self._split_item_instruction()
         ingredient = Ingredient(
             quantity=self.quantity_float,
-            unit=self.unit,
             pint_unit=self.pint_unit,
             item=self.item,
         )
@@ -129,13 +127,9 @@ class IngredientFormatter:
     def format_manual_ingredient(
         self, quantity: float, unit: str, item: str
     ) -> Ingredient:
-        pint_unit = None
-        if isinstance(unit, str) and unit != "":
-            unit, pint_unit = self.unit_formatter.extract_unit_from_text(unit)
-        if unit == "":
-            unit = None
+        pint_unit = self.unit_formatter.get_pint_unit(unit)
         ingredient = Ingredient(
-            quantity=quantity, unit=unit, pint_unit=pint_unit, item=item
+            quantity=quantity, pint_unit=pint_unit, item=item
         )
         self._enrich_with_pantry_detail(ingredient)
         return ingredient
@@ -186,11 +180,8 @@ class IngredientFormatter:
 
             ingredient.set_pantry_info(pantry_item)
 
-            if pantry_item.replace_unit != "" and ingredient.unit is None:
-                (
-                    ingredient.unit,
-                    ingredient.pint_unit,
-                ) = self.unit_formatter.extract_unit_from_text(
+            if pantry_item.replace_unit != "":
+                ingredient.pint_unit = self.unit_formatter.get_pint_unit(
                     pantry_item.replace_unit
                 )
 

@@ -10,7 +10,7 @@ from sous_chef.menu.create_menu._menu_basic import (
     MenuBasic,
     MenuIncompleteError,
 )
-from sous_chef.recipe_book.recipe_util import Recipe
+from sous_chef.recipe_book.recipe_util import RecipeSchema
 from termcolor import cprint
 
 
@@ -23,7 +23,7 @@ class MenuIngredient:
 
 @dataclass
 class MenuRecipe:
-    recipe: Recipe
+    recipe: RecipeSchema
     eat_factor: float
     freeze_factor: float
     for_day: datetime.datetime

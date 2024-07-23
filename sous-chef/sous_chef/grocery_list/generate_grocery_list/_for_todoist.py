@@ -1,6 +1,6 @@
 from itertools import chain
 
-from sous_chef.grocery_list.generate_grocery_list._grocery_list_basic import (
+from sous_chef.grocery_list.generate_grocery_list.generate_grocery_list import (
     GroceryListBasic,
     GroceryListIncompleteError,
 )

@@ -5,6 +5,7 @@ from omegaconf import DictConfig
 from pint import Unit
 from sous_chef.abstract.extended_enum import ExtendedEnum, extend_enum
 from sous_chef.abstract.handle_exception import BaseWithExceptionHandling
+from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import (
     Ingredient,
     IngredientFormatter,
@@ -112,15 +113,19 @@ class IngredientField(BaseWithExceptionHandling):
                 ref_recipe.quantity.units.dimensionality
                 == needed_ref_recipe.pint_unit.dimensionality
             ):
-                needed_quantity = (
-                    needed_ref_recipe.quantity * needed_ref_recipe.pint_unit
+                (
+                    needed_ref_quantity,
+                    needed_ref_units,
+                ) = UnitFormatter.convert_to_desired_unit(
+                    needed_ref_recipe.quantity,
+                    needed_ref_recipe.pint_unit,
+                    ref_recipe.quantity.units,
                 )
-                quantity_factor = (
-                    needed_quantity.to(ref_recipe.quantity.units)
-                    / ref_recipe.quantity
+                factor_dimensionless = (
+                    needed_ref_quantity * needed_ref_units / ref_recipe.quantity
                 )
 
-                ref_recipe.factor = quantity_factor.magnitude
+                ref_recipe.factor = factor_dimensionless.magnitude
                 ref_recipe.amount = needed_ref_recipe.amount
                 self.referenced_recipe_list.append(ref_recipe)
                 return

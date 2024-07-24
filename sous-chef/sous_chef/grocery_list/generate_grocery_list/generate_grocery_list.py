@@ -263,8 +263,10 @@ class GroceryList:
     ):
         def _check_yes_defrost_skip(text: str) -> str:
             response = None
-            while response not in ["y", "d", "s"]:
-                response = input(f"\n{text} [y]es, [d]efrost, [s]kip: ").lower()
+            while response not in ["p", "w", "d", "s"]:
+                response = input(
+                    f"\n{text} [p]artial, [w]hole, [d]efrost, [s]kip: "
+                ).lower()
             return response
 
         def _check_yes_no(text: str) -> str:
@@ -316,18 +318,12 @@ class GroceryList:
             print(f"-- total_factor: {total_factor}")
             print(f"-- for day: {menu_recipe.for_day.strftime('%a')}")
             print(f"- referenced recipe: {recipe.title}")
-            print(f"-- amount needed: {recipe.amount}")
+            print(f"-- factor (needed): {recipe.factor}")
+            print(f"-- amount (needed): {recipe.amount}")
             print(f"-- total time: {recipe.time_total}")
 
         for recipe in recipe_list:
             from_recipe = f"{recipe.title}_{menu_recipe.recipe.title}"
-            menu_sub_recipe = MenuRecipe(
-                from_recipe=from_recipe,
-                for_day=menu_recipe.for_day,
-                eat_factor=menu_recipe.eat_factor * recipe.factor,
-                freeze_factor=menu_recipe.freeze_factor * recipe.factor,
-                recipe=recipe,
-            )
 
             if (
                 self.config.run_mode.with_todoist
@@ -342,29 +338,37 @@ class GroceryList:
                         f"[DEFROST] {recipe.amount}",
                         due_date=menu_recipe.for_day - timedelta(days=1),
                         from_recipe=[from_recipe],
-                        for_day_str=[menu_sub_recipe.for_day.strftime("%a")],
+                        for_day_str=[menu_recipe.for_day.strftime("%a")],
                     )
-                elif sub_recipe_response == "y":
+                elif sub_recipe_response in ["p", "w"]:
+                    eat_factor = menu_recipe.eat_factor * recipe.factor
+                    freeze_factor = menu_recipe.freeze_factor * recipe.factor
+                    if sub_recipe_response == "w":
+                        eat_factor = recipe.factor
+                        freeze_factor = 1 - recipe.factor
+
+                    menu_sub_recipe = MenuRecipe(
+                        from_recipe=from_recipe,
+                        for_day=menu_recipe.for_day,
+                        eat_factor=eat_factor,
+                        freeze_factor=freeze_factor,
+                        recipe=recipe,
+                    )
                     self._add_menu_recipe_to_queue([menu_sub_recipe])
 
                     if (
                         recipe.time_total is None
                         or recipe.time_total > timedelta(minutes=15)
                     ):
-                        # TODO default make ahead date that could be overridden
                         schedule_datetime = (
                             menu_recipe.for_day - recipe.time_total
                             if recipe.time_total is not None
                             else timedelta(minutes=30)
                         )
-                        # todo: check if before or after lunch of day
-                        #  and "round" to either lunch or dessert day before
-
                         if _check_yes_no("...separately schedule?") == "y":
                             schedule_datetime = _get_schedule_day_hour_minute()
                             if schedule_datetime > menu_recipe.for_day:
                                 schedule_datetime -= timedelta(days=7)
-
                         self._add_preparation_task_to_queue(
                             f"[PREP] {recipe.amount}",
                             due_date=schedule_datetime,

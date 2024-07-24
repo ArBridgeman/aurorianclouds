@@ -185,13 +185,7 @@ class GroceryList:
         new_entry = pd.DataFrame(
             {
                 "quantity": quantity,
-                # TODO do we need unit?
-                "unit": self.unit_formatter.get_unit_as_abbreviated_str(
-                    pint_unit
-                ),
                 "pint_unit": pint_unit,
-                # TODO already add to Ingredient when first created?
-                "dimension": str(pint_unit.dimensionality),
                 "item": item,
                 "is_staple": is_staple,
                 "is_optional": is_optional,
@@ -386,6 +380,11 @@ class GroceryList:
             self.grocery_list = pd.DataFrame()
 
         # TODO add for_day option
+        self.grocery_list_raw[
+            "dimension"
+        ] = self.grocery_list_raw.pint_unit.apply(
+            lambda x: str(x.dimensionality)
+        )
 
         # TODO fix pantry list to not do lidl for meats (real group instead)
         grouped = self.grocery_list_raw.groupby(
@@ -416,7 +415,7 @@ class GroceryList:
     def _aggregate_group_to_grocery_list(
         self, group: pd.DataFrame
     ) -> pd.DataFrame:
-        groupby_columns = ["unit", "pint_unit", "item", "is_optional"]
+        groupby_columns = ["pint_unit", "item", "is_optional"]
         # set dropna to false, as item may not have unit
         agg = (
             group.groupby(groupby_columns, as_index=False, dropna=False)
@@ -468,7 +467,6 @@ class GroceryList:
             item=item, quantity=convert_number_to_str(entry.quantity)
         )
 
-        # TODO: do we need .unit anymore?
         if not pd.isnull(entry.pint_unit):
             unit_str = self.unit_formatter.get_unit_str(
                 entry["quantity"], entry["pint_unit"]
@@ -482,7 +480,7 @@ class GroceryList:
 
     def _get_group_in_same_pint_unit(self, group: pd.DataFrame) -> pd.DataFrame:
         largest_unit = max(group.pint_unit.unique())
-        group["quantity"], group["unit"], group["pint_unit"] = zip(
+        group["quantity"], group["pint_unit"] = zip(
             *group.apply(
                 lambda row: self.unit_formatter.convert_to_desired_unit(
                     row.quantity, row.pint_unit, largest_unit
@@ -514,7 +512,6 @@ class GroceryList:
         row["item"] = f"dried {row['item']}"
         row["item_plural"] = f"dried {row['item_plural']}"
         row["food_group"] = "Beans"
-        row["unit"] = "g"
         row["pint_unit"] = unit_registry.gram
         row["quantity"] = cans * config_bean.g_per_can
 

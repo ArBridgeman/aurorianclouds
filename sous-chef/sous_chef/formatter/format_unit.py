@@ -31,11 +31,9 @@ class UnitFormatter:
     ) -> (float, Unit):
         original_value = quantity * pint_unit
         converted_value = original_value.to(desired_pint_unit)
-
         # round to significant digits per defined unit_registry
         converted_quantity = round(converted_value.magnitude, 2)
-        converted_pint_unit = converted_value.units
-        return converted_quantity, converted_pint_unit
+        return converted_quantity, converted_value.units
 
     @staticmethod
     def get_unit_str(quantity: float, pint_unit: Unit) -> str:

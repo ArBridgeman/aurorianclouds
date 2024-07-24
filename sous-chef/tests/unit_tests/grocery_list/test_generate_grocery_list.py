@@ -9,7 +9,7 @@ import pandas as pd
 import pytest
 from pint import Unit
 from pytz import timezone
-from sous_chef.formatter.format_unit import UnitFormatter, unit_registry
+from sous_chef.formatter.format_unit import unit_registry
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.grocery_list.generate_grocery_list.generate_grocery_list import (
     GroceryListIncompleteError,
@@ -76,8 +76,6 @@ def create_ingredient_and_grocery_entry_raw(
     # frozen anchor date is Friday & second group includes vegetables
     shopping_date: datetime.date = datetime.date(year=2022, month=1, day=24),
 ) -> (Ingredient, pd.DataFrame):
-    UnitFormatter.get_unit_as_abbreviated_str(pint_unit)
-
     ingredient = Ingredient(
         quantity=quantity,
         pint_unit=pint_unit,

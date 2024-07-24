@@ -26,7 +26,6 @@ from utilities.testing.pandas_util import (
 
 def create_grocery_list_row(
     item: str = "dummy ingredient",
-    unit: str = None,
     pint_unit: Unit = None,
     is_optional: bool = False,
     quantity: float = 1.0,
@@ -43,7 +42,6 @@ def create_grocery_list_row(
     return pd.Series(
         {
             "item": item,
-            "unit": unit,
             "pint_unit": pint_unit,
             "is_optional": is_optional,
             "quantity": quantity,
@@ -78,7 +76,7 @@ def create_ingredient_and_grocery_entry_raw(
     # frozen anchor date is Friday & second group includes vegetables
     shopping_date: datetime.date = datetime.date(year=2022, month=1, day=24),
 ) -> (Ingredient, pd.DataFrame):
-    unit = UnitFormatter.get_unit_as_abbreviated_str(pint_unit)
+    UnitFormatter.get_unit_as_abbreviated_str(pint_unit)
 
     ingredient = Ingredient(
         quantity=quantity,
@@ -95,9 +93,7 @@ def create_ingredient_and_grocery_entry_raw(
     grocery_list_raw = pd.DataFrame(
         {
             "quantity": quantity * recipe_factor,
-            "unit": unit,
             "pint_unit": pint_unit,
-            "dimension": str(pint_unit.dimensionality),
             "item": item,
             "is_staple": is_staple,
             "is_optional": is_optional,
@@ -277,19 +273,13 @@ class TestGroceryList:
         group = pd.DataFrame(
             {
                 "quantity": [1.0, 1.0],
-                "unit": ["dummy", "dummy"],
                 "pint_unit": [larger_pint_unit, second_pint_unit],
             }
-        )
-
-        larger_pint_unit_str = UnitFormatter().get_unit_as_abbreviated_str(
-            larger_pint_unit
         )
 
         result = grocery_list._get_group_in_same_pint_unit(group)
         assert np.all(result.quantity.values == expected_quantity)
         assert np.all(result.pint_unit.values == [larger_pint_unit] * 2)
-        assert np.all(result.unit.values == [larger_pint_unit_str] * 2)
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -363,7 +353,6 @@ class TestGroceryList:
         row = create_grocery_list_row(
             quantity=1,
             item=item,
-            unit="can",
             pint_unit=unit_registry.can,
             plural_ending="",
         )
@@ -375,7 +364,6 @@ class TestGroceryList:
                 quantity=(1 + 1) * 105,
                 item=f"dried {item}",
                 food_group="Beans",
-                unit="g",
                 pint_unit=unit_registry.g,
                 plural_ending="",
             ),
@@ -393,7 +381,7 @@ class TestGroceryList:
     def test__override_can_to_dried_bean_skip_not_bean_can(
         grocery_list, item, unit, pint_unit
     ):
-        row = create_grocery_list_row(item=item, unit=unit, pint_unit=pint_unit)
+        row = create_grocery_list_row(item=item, pint_unit=pint_unit)
         assert_equal_series(grocery_list._override_can_to_dried_bean(row), row)
 
     @staticmethod

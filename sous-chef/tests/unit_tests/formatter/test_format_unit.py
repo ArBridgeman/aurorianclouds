@@ -5,12 +5,12 @@ from sous_chef.formatter.format_unit import UnitExtractionError, unit_registry
 class TestUnitFormatter:
     @staticmethod
     @pytest.mark.parametrize(
-        "quantity,pint_unit,desired_pint_unit,expected_quantity,expected_unit",
+        "quantity,pint_unit,desired_pint_unit,expected_quantity",
         [
-            (3, unit_registry.tsp, unit_registry.tbsp, 1, "tbsp"),
-            (4, unit_registry.tbsp, unit_registry.cup, 0.25, "cup"),
-            (400, unit_registry.gram, unit_registry.kg, 0.4, "kg"),
-            (16, unit_registry.ounce, unit_registry.g, 453.59, "g"),
+            (3, unit_registry.tsp, unit_registry.tbsp, 1),
+            (4, unit_registry.tbsp, unit_registry.cup, 0.25),
+            (400, unit_registry.gram, unit_registry.kg, 0.4),
+            (16, unit_registry.ounce, unit_registry.g, 453.59),
         ],
     )
     def test_convert_to_desired_unit(
@@ -19,11 +19,10 @@ class TestUnitFormatter:
         pint_unit,
         desired_pint_unit,
         expected_quantity,
-        expected_unit,
     ):
         assert unit_formatter.convert_to_desired_unit(
             quantity, pint_unit, desired_pint_unit
-        ) == (expected_quantity, expected_unit, desired_pint_unit)
+        ) == (expected_quantity, desired_pint_unit)
 
     @staticmethod
     @pytest.mark.parametrize(

@@ -25,17 +25,17 @@ class UnitExtractionError(Exception):
 
 @dataclass
 class UnitFormatter:
+    @staticmethod
     def convert_to_desired_unit(
-        self, quantity: float, pint_unit: Unit, desired_pint_unit: Unit
-    ) -> (float, str, Unit):
+        quantity: float, pint_unit: Unit, desired_pint_unit: Unit
+    ) -> (float, Unit):
         original_value = quantity * pint_unit
         converted_value = original_value.to(desired_pint_unit)
 
         # round to significant digits per defined unit_registry
         converted_quantity = round(converted_value.magnitude, 2)
         converted_pint_unit = converted_value.units
-        converted_unit = self.get_unit_as_abbreviated_str(converted_value.units)
-        return converted_quantity, converted_unit, converted_pint_unit
+        return converted_quantity, converted_pint_unit
 
     def get_unit_str(self, quantity: float, unit: Unit) -> str:
         # TODO more robust way to do? e.g. inflection or define

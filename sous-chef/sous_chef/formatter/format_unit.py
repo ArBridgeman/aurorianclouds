@@ -37,25 +37,24 @@ class UnitFormatter:
         converted_pint_unit = converted_value.units
         return converted_quantity, converted_pint_unit
 
-    def get_unit_str(self, quantity: float, unit: Unit) -> str:
-        # TODO more robust way to do? e.g. inflection or define
-        if quantity > 1 and unit in not_abbreviated:
-            return f"{unit}s"
-        return self.get_unit_as_abbreviated_str(unit)
-
     @staticmethod
-    def get_pint_unit(text_unit: str) -> Unit:
-        return get_pint_repr(text_unit).units
-
-    @staticmethod
-    def get_unit_as_abbreviated_str(pint_unit: Unit) -> str:
+    def get_unit_str(quantity: float, pint_unit: Unit) -> str:
         if pint_unit == unit_registry.dimensionless:
             return ""
 
         if pint_unit in not_abbreviated:
-            return str(pint_unit)
+            # TODO more robust way to do? e.g. inflection or define
+            if quantity > 1:
+                return f"{pint_unit}s"
+
+            if pint_unit in not_abbreviated:
+                return str(pint_unit)
 
         return "{:~}".format(pint_unit)
+
+    @staticmethod
+    def get_pint_unit(text_unit: str) -> Unit:
+        return get_pint_repr(text_unit).units
 
 
 def get_pint_repr(text_with_unit: str) -> Quantity:

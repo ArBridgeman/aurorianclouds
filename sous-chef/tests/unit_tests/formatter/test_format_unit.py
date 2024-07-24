@@ -59,6 +59,24 @@ class TestUnitFormatter:
         assert unit_formatter.get_unit_str(quantity, unit) == expected_str
 
     @staticmethod
+    @pytest.mark.parametrize(
+        "unit, expected_result",
+        [
+            (unit_registry.centimeter, "cm"),
+            (unit_registry.cup, "cup"),
+            (unit_registry.gram, "g"),
+            (unit_registry.ball, "ball"),
+        ],
+    )
+    def test_get_unit_str_works_for_abbreviated(
+        unit_formatter, unit, expected_result
+    ):
+        assert (
+            unit_formatter.get_unit_str(quantity=1, pint_unit=unit)
+            == expected_result
+        )
+
+    @staticmethod
     def test_get_pint_unit_raise_error_for_not_unit(unit_formatter, log):
         with pytest.raises(UnitExtractionError) as error:
             unit_formatter.get_pint_unit("not-a-unit")
@@ -136,18 +154,3 @@ class TestUnitFormatter:
         unit_formatter, text_unit, expected_unit
     ):
         assert unit_formatter.get_pint_unit(text_unit) == expected_unit
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "unit, expected_result",
-        [
-            (unit_registry.centimeter, "cm"),
-            (unit_registry.cup, "cup"),
-            (unit_registry.gram, "g"),
-            (unit_registry.ball, "ball"),
-        ],
-    )
-    def test_get_unit_as_abbreviated_str(unit_formatter, unit, expected_result):
-        assert (
-            unit_formatter.get_unit_as_abbreviated_str(unit) == expected_result
-        )

@@ -25,6 +25,9 @@ unit_registry.define("slice = 1")
 unit_registry.define("roll = 2 slices")
 unit_registry.define("square = 1")
 unit_registry.define("strip = 1")
+# used to indicate yield number when unit is recipe item
+# i.e. 10 waffles -> 10 units waffle
+unit_registry.define("unit = 1")
 
 custom_list = [
     unit_registry.dimensionless,
@@ -44,6 +47,7 @@ custom_list = [
     unit_registry.slice,
     unit_registry.square,
     unit_registry.strip,
+    unit_registry.unit,
 ]
 
 custom_list_abbr = [unit_registry.package, unit_registry.packet]

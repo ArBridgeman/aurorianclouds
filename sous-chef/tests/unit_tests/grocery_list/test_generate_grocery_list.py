@@ -440,7 +440,7 @@ class TestGroceryList:
         )
         config_grocery_list.run_mode.with_todoist = True
 
-        with mock.patch.object(builtins, "input", lambda _: "Y"):
+        with mock.patch.object(builtins, "input", lambda _: "P"):
             grocery_list._parse_ingredient_from_recipe(menu_recipe)
 
         expected_menu_recipe = create_menu_recipe(
@@ -532,7 +532,7 @@ class TestAddReferencedRecipeToQueue:
     ):
         config_grocery_list.run_mode.with_todoist = True
 
-        with patch("builtins.input", side_effect=["y", "n"]):
+        with patch("builtins.input", side_effect=["p", "n"]):
             grocery_list._add_referenced_recipe_to_queue(
                 self.menu_recipe_base, [self.menu_recipe_ref]
             )
@@ -566,7 +566,7 @@ class TestAddReferencedRecipeToQueue:
     ):
         config_grocery_list.run_mode.with_todoist = True
 
-        with patch("builtins.input", side_effect=["y", "y", "1", "1"]):
+        with patch("builtins.input", side_effect=["p", "y", "1", "1"]):
             grocery_list._add_referenced_recipe_to_queue(
                 self.menu_recipe_base, [self.menu_recipe_ref]
             )

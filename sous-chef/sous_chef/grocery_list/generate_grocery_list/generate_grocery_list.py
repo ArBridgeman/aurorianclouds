@@ -90,6 +90,10 @@ class GroceryList:
         self._add_menu_recipe_to_queue(menu_recipe_list)
         self._process_recipe_queue()
         self._aggregate_grocery_list()
+
+        if self.has_errors:
+            cprint("\n[ERROR] 1 or more recipes had parsing errors", "red")
+
         return self.grocery_list
 
     def upload_grocery_list_to_todoist(self, todoist_helper: TodoistHelper):
@@ -261,7 +265,12 @@ class GroceryList:
     def _add_referenced_recipe_to_queue(
         self, menu_recipe: MenuRecipe, recipe_list: List[Recipe]
     ):
-        def _check_yes_defrost_skip(text: str) -> str:
+        debug_mode = not self.config.run_mode.with_todoist
+
+        def _check_make_defrost_skip(text: str) -> str:
+            if debug_mode:
+                return "p"
+
             response = None
             while response not in ["p", "w", "d", "s"]:
                 response = input(
@@ -269,7 +278,10 @@ class GroceryList:
                 ).lower()
             return response
 
-        def _check_yes_no(text: str) -> str:
+        def _check_change_schedule_yes_no(text: str) -> str:
+            if debug_mode:
+                return "n"
+
             response = None
             while response not in ["y", "n"]:
                 response = input(f"\n{text} [y]es, [n]o: ").lower()
@@ -325,12 +337,9 @@ class GroceryList:
         for recipe in recipe_list:
             from_recipe = f"{recipe.title}_{menu_recipe.recipe.title}"
 
-            if (
-                self.config.run_mode.with_todoist
-                and self.config.run_mode.check_referenced_recipe
-            ):
+            if self.config.run_mode.check_referenced_recipe:
                 _give_referenced_recipe_details()
-                sub_recipe_response = _check_yes_defrost_skip(
+                sub_recipe_response = _check_make_defrost_skip(
                     f"Make '{recipe.title}'?"
                 )
                 if sub_recipe_response == "d":
@@ -365,7 +374,12 @@ class GroceryList:
                             if recipe.time_total is not None
                             else timedelta(minutes=30)
                         )
-                        if _check_yes_no("...separately schedule?") == "y":
+                        if (
+                            _check_change_schedule_yes_no(
+                                "...separately schedule?"
+                            )
+                            == "y"
+                        ):
                             schedule_datetime = _get_schedule_day_hour_minute()
                             if schedule_datetime > menu_recipe.for_day:
                                 schedule_datetime -= timedelta(days=7)

@@ -174,7 +174,6 @@ class GroceryList:
         quantity: float,
         pint_unit: Unit,
         item: str,
-        is_staple: bool,
         is_optional: bool,
         food_group: str,
         item_plural: str,
@@ -191,7 +190,6 @@ class GroceryList:
                 "quantity": quantity,
                 "pint_unit": pint_unit,
                 "item": item,
-                "is_staple": is_staple,
                 "is_optional": is_optional,
                 "food_group": food_group,
                 "item_plural": item_plural,
@@ -222,7 +220,6 @@ class GroceryList:
                 quantity=x.quantity,
                 pint_unit=x.pint_unit,
                 item=x.item,
-                is_staple=x.is_staple,
                 is_optional=x.is_optional,
                 food_group=x.group,
                 item_plural=x.item_plural,
@@ -439,7 +436,6 @@ class GroceryList:
             group.groupby(groupby_columns, as_index=False, dropna=False)
             .agg(
                 quantity=("quantity", "sum"),
-                is_staple=("is_staple", "first"),
                 food_group=("food_group", "first"),
                 item_plural=("item_plural", "first"),
                 store=("store", "first"),
@@ -449,7 +445,7 @@ class GroceryList:
                 for_day_str=("for_day_str", lambda x: sorted(list(set(x)))),
                 shopping_date=("shopping_date", "first"),
             )
-            .astype({"is_staple": bool, "barcode": str})
+            .astype({"barcode": str})
         )
         if self.config.ingredient_replacement.can_to_dried_bean.is_active:
             agg = agg.apply(self._override_can_to_dried_bean, axis=1)
@@ -604,7 +600,6 @@ class GroceryList:
                 * (menu_recipe.eat_factor + menu_recipe.freeze_factor),
                 pint_unit=ingredient.pint_unit,
                 item=ingredient.item,
-                is_staple=ingredient.is_staple,
                 is_optional=ingredient.is_optional,
                 food_group=ingredient.group,
                 item_plural=ingredient.item_plural,

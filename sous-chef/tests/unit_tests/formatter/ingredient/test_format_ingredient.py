@@ -256,7 +256,6 @@ class TestIngredientFormatter:
         ingredient_formatter._enrich_with_pantry_detail(ingredient)
 
         assert ingredient.item == item
-        assert not ingredient.is_staple
         assert ingredient.group == pantry_entry.group
         assert ingredient.item_plural == pantry_entry.item_plural
         assert ingredient.store == pantry_entry.store

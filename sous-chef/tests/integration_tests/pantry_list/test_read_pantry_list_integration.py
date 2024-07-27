@@ -4,7 +4,6 @@ from numpy import array_equal
 PANTRY_COLUMNS = [
     "ingredient",
     "plural_ending",
-    "is_staple",
     "group",
     "store",
     "recipe_uuid",

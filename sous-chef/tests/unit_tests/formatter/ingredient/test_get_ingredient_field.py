@@ -52,7 +52,6 @@ def assert_ingredient(
             pint_unit=pint_unit,
             factor=factor,
             is_optional=is_in_optional_group,
-            is_staple=pantry_entry.is_staple,
             group=pantry_entry.group,
             item_plural=pantry_entry.item_plural,
             store=pantry_entry.store,

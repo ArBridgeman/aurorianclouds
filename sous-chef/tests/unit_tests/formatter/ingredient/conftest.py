@@ -35,7 +35,6 @@ def pantry_entry(
     return pd.Series(
         {
             "true_ingredient": item,
-            "is_staple": False,
             "ingredient": item,
             "group": "Canned",
             "item_plural": "s",

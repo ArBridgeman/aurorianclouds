@@ -25,7 +25,6 @@ class Ingredient:
     item: str
     factor: float = 1.0
     is_optional: bool = False
-    is_staple: bool = False
     group: str = None
     item_plural: str = None
     store: str = None
@@ -34,7 +33,6 @@ class Ingredient:
 
     def set_pantry_info(self, pantry_item: pd.Series):
         self.item = pantry_item.true_ingredient
-        self.is_staple = pantry_item.is_staple
         self.group = pantry_item.group
         self.item_plural = pantry_item.item_plural
         self.store = pantry_item.store

@@ -8,6 +8,8 @@ PANTRY_COLUMNS = [
     "store",
     "recipe_uuid",
     "barcode",
+    "initial_size",
+    "special_storage",
     "item_plural",
 ]
 

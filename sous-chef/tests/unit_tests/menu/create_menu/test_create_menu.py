@@ -3,6 +3,7 @@ import pandas as pd
 import pytest
 from freezegun import freeze_time
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
+from sous_chef.formatter.units import unit_registry
 from sous_chef.menu.create_menu._for_grocery_list import (
     MenuIngredient,
     MenuRecipe,
@@ -26,7 +27,7 @@ def menu_default(menu_builder):
                 item="manual ingredient",
                 item_type="ingredient",
                 eat_factor=1.0,
-                eat_unit="pkg",
+                eat_unit=unit_registry.package,
             ),
         ]
     )
@@ -219,19 +220,21 @@ class TestMenu:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "quantity,unit,item", [(1.0, "cup", "frozen broccoli")]
+        "quantity,pint_unit,item", [(1.0, unit_registry.cup, "frozen broccoli")]
     )
     def test__retrieve_manual_menu_ingredient(
-        menu, menu_builder, mock_ingredient_formatter, quantity, unit, item
+        menu, menu_builder, mock_ingredient_formatter, quantity, pint_unit, item
     ):
         row = menu_builder.create_loaded_menu_row(
             eat_factor=quantity,
-            eat_unit=unit,
+            eat_unit=pint_unit,
             item=item,
             item_type="ingredient",
         ).squeeze()
 
-        ingredient = Ingredient(quantity=quantity, unit=unit, item=item)
+        ingredient = Ingredient(
+            quantity=quantity, pint_unit=pint_unit, item=item
+        )
         mock_ingredient_formatter.format_manual_ingredient.return_value = (
             ingredient
         )

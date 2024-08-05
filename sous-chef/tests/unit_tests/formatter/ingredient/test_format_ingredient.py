@@ -86,23 +86,21 @@ class TestIngredientLine:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "str_unit_with_item,expected_unit,expected_pint_unit,expected_item",
+        "str_unit_with_item,expected_pint_unit,expected_item",
         [
-            ("cup sugar", "cup", unit_registry.cup, "sugar"),
-            ("no unit flour", None, None, "no unit flour"),
+            ("cup sugar", unit_registry.cup, "sugar"),
+            ("no unit flour", unit_registry.dimensionless, "no unit flour"),
         ],
     )
     def test__split_item_and_unit(
         ingredient_line,
         str_unit_with_item,
-        expected_unit,
         expected_pint_unit,
         expected_item,
     ):
         result = ingredient_line("dummy string")
         result.item = str_unit_with_item
         result._split_item_and_unit()
-        assert result.unit == expected_unit
         assert result.pint_unit == expected_pint_unit
         assert result.item == expected_item
 
@@ -128,26 +126,35 @@ class TestIngredientLine:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "line,quantity_float,unit,item",
+        "line,quantity_float,pint_unit,item",
         [
-            ("avocado", 1.0, None, "avocado"),
-            ("1 apple", 1.0, None, "apple"),
-            ("1 cup sugar", 1.0, "cup", "sugar"),
-            ("1/2 tsp vanilla extract", 0.5, "tsp", "vanilla extract"),
-            ("1 1/2 cup flour", 1.5, "cup", "flour"),
-            ("12.5 ml 15% fat cream", 12.5, "ml", "15% fat cream"),
-            ("1 quart half-and-half", 1.0, "qt", "half-and-half"),
-            ("100 g gruyère", 100, "g", "gruyère"),
+            ("avocado", 1.0, unit_registry.dimensionless, "avocado"),
+            ("1 apple", 1.0, unit_registry.dimensionless, "apple"),
+            ("1 cup sugar", 1.0, unit_registry.cup, "sugar"),
+            (
+                "1/2 tsp vanilla extract",
+                0.5,
+                unit_registry.teaspoon,
+                "vanilla extract",
+            ),
+            ("1 1/2 cup flour", 1.5, unit_registry.cup, "flour"),
+            ("12.5 ml 15% fat cream", 12.5, unit_registry.ml, "15% fat cream"),
+            (
+                "1 quart half-and-half",
+                1.0,
+                unit_registry.quart,
+                "half-and-half",
+            ),
+            ("100 g gruyère", 100, unit_registry.gram, "gruyère"),
         ],
     )
     def test_convert_to_ingredient(
-        ingredient_line, line, quantity_float, unit, item
+        ingredient_line, line, quantity_float, pint_unit, item
     ):
         result = ingredient_line(line)
         ingredient = result.convert_to_ingredient()
-        pint_unit = unit_registry[unit] if unit is not None else None
         assert ingredient == Ingredient(
-            quantity=quantity_float, unit=unit, pint_unit=pint_unit, item=item
+            quantity=quantity_float, pint_unit=pint_unit, item=item
         )
 
     @staticmethod
@@ -242,12 +249,13 @@ class TestIngredientFormatter:
     def test__enrich_with_pantry_information(
         ingredient_formatter, mock_pantry_list, pantry_entry, item
     ):
-        ingredient = Ingredient(quantity=1, item=item)
+        ingredient = Ingredient(
+            quantity=1, pint_unit=unit_registry.dimensionless, item=item
+        )
         mock_pantry_list.retrieve_match.return_value = pantry_entry
         ingredient_formatter._enrich_with_pantry_detail(ingredient)
 
         assert ingredient.item == item
-        assert not ingredient.is_staple
         assert ingredient.group == pantry_entry.group
         assert ingredient.item_plural == pantry_entry.item_plural
         assert ingredient.store == pantry_entry.store
@@ -271,17 +279,21 @@ class TestIngredientFormatter:
     def test__enrich_with_pantry_information_raise_pantry_search_error(
         ingredient_formatter, mock_pantry_list, item, error_arg
     ):
-        ingredient = Ingredient(quantity=1, item=item)
+        ingredient = Ingredient(
+            quantity=1, pint_unit=unit_registry.dimensionless, item=item
+        )
         mock_pantry_list.retrieve_match.side_effect = error_arg
         with pytest.raises(PantrySearchError):
             ingredient_formatter._enrich_with_pantry_detail(ingredient)
 
     @staticmethod
-    @pytest.mark.parametrize("item", "celery")
+    @pytest.mark.parametrize("item", ["celery"])
     def test__enrich_with_pantry_information_raise_bad_ingredient_error(
         ingredient_formatter, mock_pantry_list, pantry_entry, item
     ):
-        ingredient = Ingredient(quantity=1, item=item)
+        ingredient = Ingredient(
+            quantity=1, pint_unit=unit_registry.dimensionless, item=item
+        )
         pantry_entry.label = "bad_ingredient"
         mock_pantry_list.retrieve_match.return_value = pantry_entry
         with pytest.raises(BadIngredientError):
@@ -289,14 +301,14 @@ class TestIngredientFormatter:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "quantity,unit,item",
+        "quantity,pint_unit,item",
         [
             (
                 2.0,
-                None,
+                unit_registry.dimensionless,
                 "avocado",
             ),
-            (1.0, "cup", "sugar"),
+            (1.0, unit_registry.cup, "sugar"),
         ],
     )
     def test_format_ingredient_line(
@@ -304,15 +316,14 @@ class TestIngredientFormatter:
         mock_pantry_list,
         pantry_entry,
         quantity,
-        unit,
+        pint_unit,
         item,
     ):
-        pint_unit = unit_registry[unit] if unit is not None else None
-        line_str = create_ingredient_line(item, quantity, unit)
+        line_str = create_ingredient_line(item, quantity, pint_unit)
         mock_pantry_list.retrieve_match.return_value = pantry_entry
 
         expected_ingredient = Ingredient(
-            quantity=quantity, unit=unit, pint_unit=pint_unit, item=item
+            quantity=quantity, pint_unit=pint_unit, item=item
         )
         expected_ingredient.set_pantry_info(pantry_entry)
         assert (
@@ -322,11 +333,11 @@ class TestIngredientFormatter:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "quantity,unit,item",
+        "quantity,pint_unit,item",
         [
-            (1, "cup", "rice"),
-            (0.5, "head", "salad"),
-            (4, "", "bread rolls"),
+            (1, unit_registry.cup, "rice"),
+            (0.5, unit_registry.head, "salad"),
+            (4, unit_registry.dimensionless, "bread rolls"),
         ],
     )
     def test_format_manual_ingredient(
@@ -334,37 +345,45 @@ class TestIngredientFormatter:
         mock_pantry_list,
         pantry_entry,
         quantity,
-        unit,
+        pint_unit,
         item,
     ):
         ingredient = Ingredient(
-            quantity=quantity,
-            unit=unit if unit != "" else None,
-            pint_unit=unit_registry[unit] if unit else None,
-            item=item,
+            quantity=quantity, pint_unit=pint_unit, item=item
         )
         mock_pantry_list.retrieve_match.return_value = pantry_entry
 
         ingredient.set_pantry_info(pantry_entry)
         assert (
-            ingredient_formatter.format_manual_ingredient(quantity, unit, item)
+            ingredient_formatter.format_manual_ingredient(
+                quantity, str(pint_unit), item
+            )
             == ingredient
         )
 
     @staticmethod
     @pytest.mark.parametrize(
-        "line,quantity_float,title",
+        "line,quantity_float,pint_unit,title",
         [
-            ("# garlic aioli", 1, "garlic aioli"),
-            ("# 0.5 baguette", 0.5, "baguette"),
-            ("# 1 cup french onion soup", 1, "french onion soup"),
-            # recipe factor with unit not yet implemented
-            ("# 2 cups salsa brava", 1, "salsa brava"),
+            ("# garlic aioli", 1, unit_registry.dimensionless, "garlic aioli"),
+            ("# 0.5 baguette", 0.5, unit_registry.dimensionless, "baguette"),
+            (
+                "# 1 cup french onion soup",
+                1,
+                unit_registry.cup,
+                "french onion soup",
+            ),
+            ("# 2 cups salsa brava", 2, unit_registry.cup, "salsa brava"),
         ],
     )
     def test_format_referenced_recipe(
-        ingredient_formatter, line, quantity_float, title
+        ingredient_formatter, line, quantity_float, pint_unit, title
     ):
         assert ingredient_formatter.format_referenced_recipe(
             line
-        ) == ReferencedRecipe(quantity=quantity_float, title=title, amount=line)
+        ) == ReferencedRecipe(
+            quantity=quantity_float,
+            pint_unit=pint_unit,
+            title=title,
+            amount=line,
+        )

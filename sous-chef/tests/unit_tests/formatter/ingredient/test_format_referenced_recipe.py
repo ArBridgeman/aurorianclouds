@@ -71,72 +71,54 @@ class TestReferencedRecipeLine:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "str_unit_with_item,expected_unit,expected_pint_unit,expected_item",
+        "str_unit_with_item,expected_pint_unit,expected_item",
         [
-            ("cup salsa brava", "cup", unit_registry.cup, "salsa brava"),
-            ("no unit garlic aioli", None, None, "no unit garlic aioli"),
+            ("cup salsa brava", unit_registry.cup, "salsa brava"),
+            (
+                "no unit garlic aioli",
+                unit_registry.dimensionless,
+                "no unit garlic aioli",
+            ),
         ],
     )
     def test__split_item_and_unit(
         referenced_recipe_line,
         str_unit_with_item,
-        expected_unit,
         expected_pint_unit,
         expected_item,
     ):
         result = referenced_recipe_line("# dummy string")
         result.item = str_unit_with_item
         result._split_item_and_unit()
-        assert result.unit == expected_unit
         assert result.pint_unit == expected_pint_unit
         assert result.item == expected_item
 
     @staticmethod
     @pytest.mark.parametrize(
-        "quantity_float,unit,expected_quantity",
+        "line,quantity,pint_unit,title",
         [
-            (2, None, 2),
-            (2, "cups", 1),
-            (1, "cup", 1),
-        ],
-    )
-    def test__remove_unit_override_quantity(
-        log, referenced_recipe_line, quantity_float, unit, expected_quantity
-    ):
-        result = referenced_recipe_line("# dummy string")
-        result.quantity_float = quantity_float
-        result.unit = unit
-        result._remove_unit_override_quantity()
-
-        if unit is not None:
-            assert log.events == [
-                {
-                    "event": "[not implemented] reference recipes with units",
-                    "action": "drop unit; change factor to 1",
-                    "item": "dummy string",
-                    "level": "warning",
-                    "unit": unit,
-                }
-            ]
-        assert result.quantity_float == expected_quantity
-        assert result.unit is None
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "line,quantity,title",
-        [
-            ("# garlic aioli", 1.0, "garlic aioli"),
-            ("# 2 salsa brava", 2.0, "salsa brava"),
-            ("# 2 cups salsa brava", 1.0, "salsa brava"),
+            (
+                "# garlic aioli",
+                1.0,
+                unit_registry.dimensionless,
+                "garlic aioli",
+            ),
+            (
+                "# 2 salsa brava",
+                2.0,
+                unit_registry.dimensionless,
+                "salsa brava",
+            ),
+            ("# 2 cups salsa brava", 2.0, unit_registry.cup, "salsa brava"),
         ],
     )
     def test_convert_to_referenced_recipe(
-        referenced_recipe_line, line, quantity, title
+        referenced_recipe_line, line, quantity, pint_unit, title
     ):
         result = referenced_recipe_line(line)
         referenced_recipe = result.convert_to_referenced_recipe()
         assert referenced_recipe == ReferencedRecipe(
-            quantity=quantity, title=title, amount=line
+            quantity=quantity, pint_unit=pint_unit, title=title, amount=line
         )
 
     @staticmethod

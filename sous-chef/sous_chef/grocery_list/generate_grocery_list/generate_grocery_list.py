@@ -16,7 +16,7 @@ from sous_chef.menu.create_menu._for_grocery_list import (
     MenuIngredient,
     MenuRecipe,
 )
-from sous_chef.recipe_book.recipe_util import Recipe
+from sous_chef.recipe_book.recipe_util import RecipeSchema
 from structlog import get_logger
 from termcolor import cprint
 
@@ -90,6 +90,10 @@ class GroceryList:
         self._add_menu_recipe_to_queue(menu_recipe_list)
         self._process_recipe_queue()
         self._aggregate_grocery_list()
+
+        if self.has_errors:
+            cprint("\n[ERROR] 1 or more recipes had parsing errors", "red")
+
         return self.grocery_list
 
     def upload_grocery_list_to_todoist(self, todoist_helper: TodoistHelper):
@@ -168,10 +172,8 @@ class GroceryList:
     def _add_to_grocery_list_raw(
         self,
         quantity: float,
-        unit: str,
         pint_unit: Unit,
         item: str,
-        is_staple: bool,
         is_optional: bool,
         food_group: str,
         item_plural: str,
@@ -186,15 +188,8 @@ class GroceryList:
         new_entry = pd.DataFrame(
             {
                 "quantity": quantity,
-                # TODO do we need unit?
-                "unit": unit,
                 "pint_unit": pint_unit,
-                # TODO already add to Ingredient when first created?
-                "dimension": str(pint_unit.dimensionality)
-                if pint_unit
-                else None,
                 "item": item,
-                "is_staple": is_staple,
                 "is_optional": is_optional,
                 "food_group": food_group,
                 "item_plural": item_plural,
@@ -223,10 +218,8 @@ class GroceryList:
         [
             self._add_to_grocery_list_raw(
                 quantity=x.quantity,
-                unit=x.unit,
                 pint_unit=x.pint_unit,
                 item=x.item,
-                is_staple=x.is_staple,
                 is_optional=x.is_optional,
                 food_group=x.group,
                 item_plural=x.item_plural,
@@ -267,15 +260,25 @@ class GroceryList:
             )
 
     def _add_referenced_recipe_to_queue(
-        self, menu_recipe: MenuRecipe, recipe_list: List[Recipe]
+        self, menu_recipe: MenuRecipe, recipe_list: List[RecipeSchema]
     ):
-        def _check_yes_defrost_skip(text: str) -> str:
+        debug_mode = not self.config.run_mode.with_todoist
+
+        def _check_make_defrost_skip(text: str) -> str:
+            if debug_mode:
+                return "p"
+
             response = None
-            while response not in ["y", "d", "s"]:
-                response = input(f"\n{text} [y]es, [d]efrost, [s]kip: ").lower()
+            while response not in ["p", "w", "d", "s"]:
+                response = input(
+                    f"\n{text} [p]artial, [w]hole, [d]efrost, [s]kip: "
+                ).lower()
             return response
 
-        def _check_yes_no(text: str) -> str:
+        def _check_change_schedule_yes_no(text: str) -> str:
+            if debug_mode:
+                return "n"
+
             response = None
             while response not in ["y", "n"]:
                 response = input(f"\n{text} [y]es, [n]o: ").lower()
@@ -324,25 +327,16 @@ class GroceryList:
             print(f"-- total_factor: {total_factor}")
             print(f"-- for day: {menu_recipe.for_day.strftime('%a')}")
             print(f"- referenced recipe: {recipe.title}")
-            print(f"-- amount needed: {recipe.amount}")
+            print(f"-- factor (needed): {recipe.factor}")
+            print(f"-- amount (needed): {recipe.amount}")
             print(f"-- total time: {recipe.time_total}")
 
         for recipe in recipe_list:
             from_recipe = f"{recipe.title}_{menu_recipe.recipe.title}"
-            menu_sub_recipe = MenuRecipe(
-                from_recipe=from_recipe,
-                for_day=menu_recipe.for_day,
-                eat_factor=menu_recipe.eat_factor * recipe.factor,
-                freeze_factor=menu_recipe.freeze_factor * recipe.factor,
-                recipe=recipe,
-            )
 
-            if (
-                self.config.run_mode.with_todoist
-                and self.config.run_mode.check_referenced_recipe
-            ):
+            if self.config.run_mode.check_referenced_recipe:
                 _give_referenced_recipe_details()
-                sub_recipe_response = _check_yes_defrost_skip(
+                sub_recipe_response = _check_make_defrost_skip(
                     f"Make '{recipe.title}'?"
                 )
                 if sub_recipe_response == "d":
@@ -350,29 +344,42 @@ class GroceryList:
                         f"[DEFROST] {recipe.amount}",
                         due_date=menu_recipe.for_day - timedelta(days=1),
                         from_recipe=[from_recipe],
-                        for_day_str=[menu_sub_recipe.for_day.strftime("%a")],
+                        for_day_str=[menu_recipe.for_day.strftime("%a")],
                     )
-                elif sub_recipe_response == "y":
+                elif sub_recipe_response in ["p", "w"]:
+                    eat_factor = menu_recipe.eat_factor * recipe.factor
+                    freeze_factor = menu_recipe.freeze_factor * recipe.factor
+                    if sub_recipe_response == "w":
+                        eat_factor = recipe.factor
+                        freeze_factor = 1 - recipe.factor
+
+                    menu_sub_recipe = MenuRecipe(
+                        from_recipe=from_recipe,
+                        for_day=menu_recipe.for_day,
+                        eat_factor=eat_factor,
+                        freeze_factor=freeze_factor,
+                        recipe=recipe,
+                    )
                     self._add_menu_recipe_to_queue([menu_sub_recipe])
 
                     if (
                         recipe.time_total is None
                         or recipe.time_total > timedelta(minutes=15)
                     ):
-                        # TODO default make ahead date that could be overridden
                         schedule_datetime = (
                             menu_recipe.for_day - recipe.time_total
                             if recipe.time_total is not None
                             else timedelta(minutes=30)
                         )
-                        # todo: check if before or after lunch of day
-                        #  and "round" to either lunch or dessert day before
-
-                        if _check_yes_no("...separately schedule?") == "y":
+                        if (
+                            _check_change_schedule_yes_no(
+                                "...separately schedule?"
+                            )
+                            == "y"
+                        ):
                             schedule_datetime = _get_schedule_day_hour_minute()
                             if schedule_datetime > menu_recipe.for_day:
                                 schedule_datetime -= timedelta(days=7)
-
                         self._add_preparation_task_to_queue(
                             f"[PREP] {recipe.amount}",
                             due_date=schedule_datetime,
@@ -388,6 +395,11 @@ class GroceryList:
             self.grocery_list = pd.DataFrame()
 
         # TODO add for_day option
+        self.grocery_list_raw[
+            "dimension"
+        ] = self.grocery_list_raw.pint_unit.apply(
+            lambda x: str(x.dimensionality)
+        )
 
         # TODO fix pantry list to not do lidl for meats (real group instead)
         grouped = self.grocery_list_raw.groupby(
@@ -418,13 +430,12 @@ class GroceryList:
     def _aggregate_group_to_grocery_list(
         self, group: pd.DataFrame
     ) -> pd.DataFrame:
-        groupby_columns = ["unit", "pint_unit", "item", "is_optional"]
+        groupby_columns = ["pint_unit", "item", "is_optional"]
         # set dropna to false, as item may not have unit
         agg = (
             group.groupby(groupby_columns, as_index=False, dropna=False)
             .agg(
                 quantity=("quantity", "sum"),
-                is_staple=("is_staple", "first"),
                 food_group=("food_group", "first"),
                 item_plural=("item_plural", "first"),
                 store=("store", "first"),
@@ -434,7 +445,7 @@ class GroceryList:
                 for_day_str=("for_day_str", lambda x: sorted(list(set(x)))),
                 shopping_date=("shopping_date", "first"),
             )
-            .astype({"is_staple": bool, "barcode": str})
+            .astype({"barcode": str})
         )
         if self.config.ingredient_replacement.can_to_dried_bean.is_active:
             agg = agg.apply(self._override_can_to_dried_bean, axis=1)
@@ -470,7 +481,6 @@ class GroceryList:
             item=item, quantity=convert_number_to_str(entry.quantity)
         )
 
-        # TODO: do we need .unit anymore?
         if not pd.isnull(entry.pint_unit):
             unit_str = self.unit_formatter.get_unit_str(
                 entry["quantity"], entry["pint_unit"]
@@ -484,7 +494,7 @@ class GroceryList:
 
     def _get_group_in_same_pint_unit(self, group: pd.DataFrame) -> pd.DataFrame:
         largest_unit = max(group.pint_unit.unique())
-        group["quantity"], group["unit"], group["pint_unit"] = zip(
+        group["quantity"], group["pint_unit"] = zip(
             *group.apply(
                 lambda row: self.unit_formatter.convert_to_desired_unit(
                     row.quantity, row.pint_unit, largest_unit
@@ -516,7 +526,6 @@ class GroceryList:
         row["item"] = f"dried {row['item']}"
         row["item_plural"] = f"dried {row['item_plural']}"
         row["food_group"] = "Beans"
-        row["unit"] = "g"
         row["pint_unit"] = unit_registry.gram
         row["quantity"] = cans * config_bean.g_per_can
 
@@ -572,7 +581,7 @@ class GroceryList:
             ingredient_list,
             error_list,
         ) = self.ingredient_field.parse_ingredient_field(
-            ingredient_field=menu_recipe.recipe.ingredients
+            recipe=menu_recipe.recipe
         )
         self._add_referenced_recipe_to_queue(menu_recipe, recipe_list)
         self._process_ingredient_list(menu_recipe, ingredient_list)
@@ -589,10 +598,8 @@ class GroceryList:
             self._add_to_grocery_list_raw(
                 quantity=ingredient.quantity
                 * (menu_recipe.eat_factor + menu_recipe.freeze_factor),
-                unit=ingredient.unit,
                 pint_unit=ingredient.pint_unit,
                 item=ingredient.item,
-                is_staple=ingredient.is_staple,
                 is_optional=ingredient.is_optional,
                 food_group=ingredient.group,
                 item_plural=ingredient.item_plural,

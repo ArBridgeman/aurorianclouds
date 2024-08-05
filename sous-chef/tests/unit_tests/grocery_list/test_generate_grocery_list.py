@@ -9,13 +9,13 @@ import pandas as pd
 import pytest
 from pint import Unit
 from pytz import timezone
-from sous_chef.formatter.format_unit import UnitFormatter, unit_registry
+from sous_chef.formatter.format_unit import unit_registry
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
-from sous_chef.grocery_list.generate_grocery_list import (
+from sous_chef.grocery_list.generate_grocery_list.generate_grocery_list import (
     GroceryListIncompleteError,
 )
 from sous_chef.menu.create_menu._for_grocery_list import MenuRecipe
-from sous_chef.recipe_book.recipe_util import Recipe
+from sous_chef.recipe_book.recipe_util import RecipeSchema
 from tests.unit_tests.util import create_recipe
 
 from utilities.testing.pandas_util import (
@@ -26,11 +26,9 @@ from utilities.testing.pandas_util import (
 
 def create_grocery_list_row(
     item: str = "dummy ingredient",
-    unit: str = None,
     pint_unit: Unit = None,
     is_optional: bool = False,
     quantity: float = 1.0,
-    is_staple: bool = False,
     food_group: str = "Vegetables",
     store: str = "grocery store",
     plural_ending: str = "s",
@@ -43,11 +41,9 @@ def create_grocery_list_row(
     return pd.Series(
         {
             "item": item,
-            "unit": unit,
             "pint_unit": pint_unit,
             "is_optional": is_optional,
             "quantity": quantity,
-            "is_staple": is_staple,
             "food_group": food_group,
             "store": store,
             "item_plural": item + plural_ending,
@@ -63,8 +59,7 @@ def create_ingredient_and_grocery_entry_raw(
     quantity: float = 1.0,
     factor: float = 1.0,
     is_optional: bool = False,
-    is_staple: bool = False,
-    pint_unit: Unit = None,
+    pint_unit: Unit = unit_registry.dimensionless,
     group: str = "Vegetables",
     plural_ending: str = "s",
     store: str = "grocery store",
@@ -78,18 +73,12 @@ def create_ingredient_and_grocery_entry_raw(
     # frozen anchor date is Friday & second group includes vegetables
     shopping_date: datetime.date = datetime.date(year=2022, month=1, day=24),
 ) -> (Ingredient, pd.DataFrame):
-    unit = None
-    if pint_unit is not None:
-        unit = UnitFormatter._get_unit_as_abbreviated_str(pint_unit)
-
     ingredient = Ingredient(
         quantity=quantity,
-        unit=unit,
         pint_unit=pint_unit,
         item=item,
         factor=factor,
         is_optional=is_optional,
-        is_staple=is_staple,
         group=group,
         item_plural=item + plural_ending,
         store=store,
@@ -98,11 +87,8 @@ def create_ingredient_and_grocery_entry_raw(
     grocery_list_raw = pd.DataFrame(
         {
             "quantity": quantity * recipe_factor,
-            "unit": unit,
             "pint_unit": pint_unit,
-            "dimension": None,
             "item": item,
-            "is_staple": is_staple,
             "is_optional": is_optional,
             "food_group": group,
             "item_plural": item + plural_ending,
@@ -119,7 +105,7 @@ def create_ingredient_and_grocery_entry_raw(
 
 
 def create_menu_recipe(
-    recipe: Optional[Recipe] = None,
+    recipe: Optional[RecipeSchema] = None,
     from_recipe: str = "dummy recipe",
     eat_factor: float = 1.0,
     freeze_factor: float = 0.0,
@@ -280,19 +266,13 @@ class TestGroceryList:
         group = pd.DataFrame(
             {
                 "quantity": [1.0, 1.0],
-                "unit": ["dummy", "dummy"],
                 "pint_unit": [larger_pint_unit, second_pint_unit],
             }
-        )
-
-        larger_pint_unit_str = UnitFormatter()._get_unit_as_abbreviated_str(
-            larger_pint_unit
         )
 
         result = grocery_list._get_group_in_same_pint_unit(group)
         assert np.all(result.quantity.values == expected_quantity)
         assert np.all(result.pint_unit.values == [larger_pint_unit] * 2)
-        assert np.all(result.unit.values == [larger_pint_unit_str] * 2)
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -366,7 +346,6 @@ class TestGroceryList:
         row = create_grocery_list_row(
             quantity=1,
             item=item,
-            unit="can",
             pint_unit=unit_registry.can,
             plural_ending="",
         )
@@ -378,7 +357,6 @@ class TestGroceryList:
                 quantity=(1 + 1) * 105,
                 item=f"dried {item}",
                 food_group="Beans",
-                unit="g",
                 pint_unit=unit_registry.g,
                 plural_ending="",
             ),
@@ -396,7 +374,7 @@ class TestGroceryList:
     def test__override_can_to_dried_bean_skip_not_bean_can(
         grocery_list, item, unit, pint_unit
     ):
-        row = create_grocery_list_row(item=item, unit=unit, pint_unit=pint_unit)
+        row = create_grocery_list_row(item=item, pint_unit=pint_unit)
         assert_equal_series(grocery_list._override_can_to_dried_bean(row), row)
 
     @staticmethod
@@ -455,7 +433,7 @@ class TestGroceryList:
         )
         config_grocery_list.run_mode.with_todoist = True
 
-        with mock.patch.object(builtins, "input", lambda _: "Y"):
+        with mock.patch.object(builtins, "input", lambda _: "P"):
             grocery_list._parse_ingredient_from_recipe(menu_recipe)
 
         expected_menu_recipe = create_menu_recipe(
@@ -547,7 +525,7 @@ class TestAddReferencedRecipeToQueue:
     ):
         config_grocery_list.run_mode.with_todoist = True
 
-        with patch("builtins.input", side_effect=["y", "n"]):
+        with patch("builtins.input", side_effect=["p", "n"]):
             grocery_list._add_referenced_recipe_to_queue(
                 self.menu_recipe_base, [self.menu_recipe_ref]
             )
@@ -581,7 +559,7 @@ class TestAddReferencedRecipeToQueue:
     ):
         config_grocery_list.run_mode.with_todoist = True
 
-        with patch("builtins.input", side_effect=["y", "y", "1", "1"]):
+        with patch("builtins.input", side_effect=["p", "y", "1", "1"]):
             grocery_list._add_referenced_recipe_to_queue(
                 self.menu_recipe_base, [self.menu_recipe_ref]
             )

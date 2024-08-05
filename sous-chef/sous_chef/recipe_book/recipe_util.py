@@ -7,8 +7,10 @@ from sous_chef.abstract.extended_enum import ExtendedEnum
 from sous_chef.abstract.search_dataframe import DirectSearchError
 
 
-class Recipe(pa.SchemaModel):
+class RecipeSchema(pa.SchemaModel):
     title: Series[str] = pa.Field(nullable=False)
+    # TODO set to only timedelta (NaT)
+    # but needs to propagate & work with pandera
     time_preparation: Series[pd.Timedelta] = pa.Field(
         nullable=True, coerce=True
     )
@@ -21,7 +23,11 @@ class Recipe(pa.SchemaModel):
     rating: Series[float] = pa.Field(nullable=True, coerce=True)
     favorite: Series[bool] = pa.Field(nullable=False, coerce=True)
     categories: Series[object] = pa.Field(nullable=False)
-    quantity: Series[str] = pa.Field(nullable=True)
+    # Raw string indicating recipe yield
+    output: Series[str] = pa.Field(nullable=True)
+    # Parsed pint quantity from recipe yield
+    # TODO fix pandera issue with this
+    # quantity: Series[Quantity] = pa.Field(nullable=True)
     tags: Series[object] = pa.Field(nullable=False)
     uuid: Series[str] = pa.Field(unique=True)
     url: Series[str] = pa.Field(nullable=True)
@@ -30,7 +36,8 @@ class Recipe(pa.SchemaModel):
     amount: Series[str] = pa.Field(nullable=True)
 
     class Config:
-        strict = True
+        coerce = True
+        # strict = True
 
 
 @dataclass

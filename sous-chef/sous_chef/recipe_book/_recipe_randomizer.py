@@ -4,7 +4,7 @@ from datetime import timedelta
 from typing import List
 
 import pandas as pd
-from sous_chef.recipe_book._recipe_book import Recipe, RecipeBasic
+from sous_chef.recipe_book._recipe_book import RecipeBasic, RecipeSchema
 from sous_chef.recipe_book.recipe_util import (
     RecipeLabelNotFoundError,
     SelectRandomRecipeError,
@@ -23,7 +23,7 @@ class RecipeRandomizer(RecipeBasic):
         exclude_uuid_list: List = None,
         max_cook_active_minutes: float = None,
         min_rating: float = None,
-    ) -> Recipe:
+    ) -> RecipeSchema:
         if category.lower() not in self.category_tuple:
             raise RecipeLabelNotFoundError(
                 field="category", search_term=category
@@ -48,7 +48,7 @@ class RecipeRandomizer(RecipeBasic):
         exclude_uuid_list: List = None,
         max_cook_active_minutes: float = None,
         min_rating: float = None,
-    ) -> Recipe:
+    ) -> RecipeSchema:
         mask_label_selection = self.dataframe.apply(
             lambda row: self._construct_filter(row, filter_str), axis=1
         )
@@ -69,7 +69,7 @@ class RecipeRandomizer(RecipeBasic):
         exclude_uuid_list: List = None,
         max_cook_active_minutes: float = None,
         min_rating: float = None,
-    ) -> Recipe:
+    ) -> RecipeSchema:
         if tag.lower() not in self.tag_tuple:
             raise RecipeLabelNotFoundError(field="tag", search_term=tag)
 

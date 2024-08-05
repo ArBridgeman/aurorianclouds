@@ -18,6 +18,7 @@ formatter:
       no_ingredient_found_in_line: log
       pantry_ingredient_not_known: log
       ingredient_marked_as_bad: log
+      recipe_dimensionality_incompatibility: log
 
 menu:
   create_menu:
@@ -83,4 +84,4 @@ grocery_list:
     spices and herbs: Spices and herbs
     vegetables: Farmland pride
   store_to_specialty_list: [unknown, America, Food Oase,
-                            Kaufland, Lillehus, Waldstadt]
+                            Kaufland, Lillehus, Waldstadt, Alnatura]

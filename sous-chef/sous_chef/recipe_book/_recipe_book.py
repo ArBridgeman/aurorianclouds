@@ -160,11 +160,11 @@ class RecipeBasic(DataframeSearchable):
         self.dataframe = self.dataframe.drop_duplicates(["title"], keep="first")
 
 
-def create_timedelta(row_entry):
+def create_timedelta(row_entry) -> pd.Timedelta:
     from fractions import Fraction
 
     if row_entry == "" or row_entry is None:
-        return None
+        return pd.NaT
 
     row_entry = row_entry.lower().strip()
     if row_entry.isdecimal():
@@ -244,6 +244,7 @@ def read_recipe_book(
         dataframe["quantity"] = None
         dataframe = dataframe.replace("nan", pd.NA)
 
+        # TODO: can remove?
         dataframe.time_preparation = dataframe.time_preparation.astype(
             "object"
         ).replace(pd.NA, None)

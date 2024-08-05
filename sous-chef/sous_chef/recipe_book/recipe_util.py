@@ -37,6 +37,7 @@ class RecipeSchema(pa.SchemaModel):
 
     class Config:
         coerce = True
+        # strict = True
 
 
 @dataclass

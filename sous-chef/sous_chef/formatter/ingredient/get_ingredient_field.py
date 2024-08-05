@@ -133,7 +133,7 @@ class IngredientField(BaseWithExceptionHandling):
                     needed_ref_quantity * needed_ref_units / ref_recipe.quantity
                 )
 
-                ref_recipe.factor = factor_dimensionless.magnitude
+                ref_recipe.factor *= factor_dimensionless.magnitude
                 ref_recipe.amount = needed_ref_recipe.amount
                 self.referenced_recipe_list.append(ref_recipe)
                 return

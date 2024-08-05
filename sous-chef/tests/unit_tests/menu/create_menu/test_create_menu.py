@@ -27,7 +27,7 @@ def menu_default(menu_builder):
                 item="manual ingredient",
                 item_type="ingredient",
                 eat_factor=1.0,
-                eat_unit="pkg",
+                eat_unit=unit_registry.package,
             ),
         ]
     )

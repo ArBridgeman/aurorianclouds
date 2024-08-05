@@ -45,11 +45,16 @@ class ReferencedRecipeDimensionalityError(Exception):
         )
 
 
+class MapReferencedRecipeToException(ExtendedEnum):
+    recipe_dimensionality_incompatibility = ReferencedRecipeDimensionalityError
+
+
 @extend_enum(
     [
         MapIngredientErrorToException,
         MapLineErrorToException,
         MapRecipeErrorToException,
+        MapReferencedRecipeToException,
     ]
 )
 class MapIngredientFieldErrorToException(ExtendedEnum):

@@ -255,7 +255,7 @@ class MenuBasic(BaseWithExceptionHandling):
         row["uuid"] = recipe.uuid
         row["cook_datetime"], row["prep_datetime"] = _cook_prep_datetime()
 
-        if row.override_check == "N":
+        if row.override_check == "N" and row.defrost == "N":
             self._check_menu_quality(
                 weekday=row.prep_datetime.weekday(), recipe=recipe
             )

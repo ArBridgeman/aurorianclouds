@@ -7,11 +7,13 @@ defaults:
 
 plan_workouts:
   debug: True
+  clean_up: False
   todoist:
     project: Active tasks
     section: ariel_workouts
     task_priority: 2
     task_priority_optional: 1
+    task_label: workout-app
   gsheets:
     workbook: ariel_workout
     worksheet:

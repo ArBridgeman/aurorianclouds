@@ -66,7 +66,7 @@ class PlanExporter:
                 section=self.app_config.todoist.section,
                 description=description,
                 priority=priority,
-                label_list=["health_app"],
+                label_list=[self.app_config.todoist.task_label],
             )
 
             if self.app_config.debug:

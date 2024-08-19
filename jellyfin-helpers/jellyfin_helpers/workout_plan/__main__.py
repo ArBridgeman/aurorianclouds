@@ -1,20 +1,20 @@
 from typing import List
 
+import hydra
 from jellyfin_helpers.jellyfin_api import Jellyfin
-from jellyfin_helpers.utils import get_config
 from jellyfin_helpers.workout_plan.get_workouts import WorkoutVideos
 from jellyfin_helpers.workout_plan.plan_workouts import WorkoutPlanner
+from omegaconf import DictConfig
 from workout_plan.export_plan import PlanExporter
 
 from utilities.api.gsheets_api import GsheetsHelper
 from utilities.api.todoist_api import TodoistHelper
 from utilities.testing.todoist import DebugTodoistHelper, LocalTodoistConnection
 
-config = get_config(config_name="plan_workouts")
-workout_cfg = config.plan_workouts
 
+def get_todoist_helper(app_config: DictConfig):
+    workout_cfg = app_config.plan_workouts
 
-def get_todoist_helper():
     if workout_cfg.debug:
         connection = LocalTodoistConnection()
         project_id = connection.add_project(workout_cfg.todoist.project)
@@ -22,10 +22,10 @@ def get_todoist_helper():
             section_name=workout_cfg.todoist.section, project_id=project_id
         )
 
-        todoist_helper = DebugTodoistHelper(config.todoist)
+        todoist_helper = DebugTodoistHelper(app_config.todoist)
         todoist_helper.set_connection(connection=connection)
         return todoist_helper
-    return TodoistHelper(config=config.todoist)
+    return TodoistHelper(config=app_config.todoist)
 
 
 class MockJellyfin:
@@ -35,9 +35,14 @@ class MockJellyfin:
         print(f"... add item_ids: {item_ids}")
 
 
-if __name__ == "__main__":
-    jellyfin = Jellyfin(config=config.jellyfin)
-    gsheets_helper = GsheetsHelper(config=config.gsheets)
+@hydra.main(
+    config_path="../../config", config_name="plan_workouts", version_base=None
+)
+def main(app_config: DictConfig):
+    workout_cfg = app_config.plan_workouts
+
+    jellyfin = Jellyfin(config=app_config.jellyfin)
+    gsheets_helper = GsheetsHelper(config=app_config.gsheets)
 
     # load workout library videos
     workout_videos_df = WorkoutVideos(jellyfin=jellyfin).parse_workout_videos()
@@ -62,4 +67,10 @@ if __name__ == "__main__":
     else:
         plan_exporter.export_to_jellyfin_playlist(jellyfin=jellyfin)
 
-    plan_exporter.export_to_todoist(todoist_helper=get_todoist_helper())
+    plan_exporter.export_to_todoist(
+        todoist_helper=get_todoist_helper(app_config)
+    )
+
+
+if __name__ == "__main__":
+    main()

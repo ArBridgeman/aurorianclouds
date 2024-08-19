@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import List, Tuple
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -46,18 +46,15 @@ class WorkoutPlanner:
 
     def _search_for_workout(
         self, row: pd.Series, skip_ids: List[str]
-    ) -> Tuple[List[str], List[str], List[str]]:
+    ) -> pd.DataFrame:
         if row.search_type in SearchType.name_list():
             selected_workouts = self._select_exercise_by_key(
                 key=row.search_type,
                 value=row["values"],
-                duration_in_minutes=row.time_in_min,
+                duration_in_minutes=row.duration_in_min,
                 skip_ids=skip_ids,
             )
-            descriptions = selected_workouts.description.values
-            tools = selected_workouts.tool.values
-            item_ids = selected_workouts.id.values
-            return descriptions, tools, item_ids
+            return selected_workouts
         raise ValueError("Unknown SearchType")
 
     @staticmethod
@@ -195,7 +192,7 @@ class WorkoutPlanner:
                         "day": [days_from_now],
                         "source_type": ["reminder"],
                         "key": [key],
-                        "total_in_min": [row.total_in_min],
+                        "duration_in_min": [row.total_in_min],
                         "optional": [row.optional],
                         "time_of_day": [row.time_of_day],
                         "item_id": [""],
@@ -204,7 +201,7 @@ class WorkoutPlanner:
                     }
                 )
             else:
-                descriptions, tools, item_ids = self._search_for_workout(
+                selected_workouts = self._search_for_workout(
                     row=row,
                     skip_ids=all_skip_ids
                     # currently not enough entries for these filters
@@ -221,22 +218,25 @@ class WorkoutPlanner:
                     # as jellyfin does not add duplicates to playlist
                     else [],
                 )
+                item_ids = selected_workouts.id.values
                 in_month_skip_ids.extend(item_ids)
                 all_skip_ids.extend(item_ids)
 
-                num_entries = len(descriptions)
+                num_entries = selected_workouts.shape[0]
                 new_row = pd.DataFrame(
                     {
                         "week": [week] * num_entries,
                         "day": [days_from_now] * num_entries,
                         "source_type": ["video"] * num_entries,
                         "key": [key] * num_entries,
-                        "total_in_min": [row.total_in_min] * num_entries,
+                        "duration_in_min": selected_workouts.duration.apply(
+                            lambda x: x.seconds // 60
+                        ).values,
                         "optional": [row.optional] * num_entries,
                         "time_of_day": [row.time_of_day] * num_entries,
                         "item_id": item_ids,
-                        "description": descriptions,
-                        "tool": tools,
+                        "description": selected_workouts.description.values,
+                        "tool": selected_workouts.tool.values,
                     }
                 )
 

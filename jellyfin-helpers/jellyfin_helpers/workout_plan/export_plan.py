@@ -39,13 +39,13 @@ class PlanExporter:
             day,
             source_type,
             key,
-            total_in_min,
             optional,
         ), values in self.plan.groupby(
-            ["week", "day", "source_type", "key", "total_in_min", "optional"]
+            ["week", "day", "source_type", "key", "optional"]
         ):
 
-            task = f"[wk {week}] {key} ({total_in_min} min)"
+            duration_in_min = values.duration_in_min.astype(int).sum()
+            task = f"[wk {week}] {key} ({duration_in_min} min)"
             priority = self.app_config.todoist.task_priority
             if optional == "Y":
                 task += " (optional)"

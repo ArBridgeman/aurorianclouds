@@ -60,7 +60,7 @@ class WorkoutVideoSchema(pa.SchemaModel):
 
 
 week_field = pa.Field(ge=1, le=4, nullable=False, coerce=True)
-total_in_min_field = pa.Field(gt=0, le=75, nullable=False, coerce=True)
+duration_in_min_field = pa.Field(gt=0, le=75, nullable=False, coerce=True)
 optional_field = pa.Field(
     isin=["Y", "N"], nullable=False, default="N", coerce=True
 )
@@ -72,7 +72,9 @@ time_of_day_field = pa.Field(
 class TimePlanSchema(pa.SchemaModel):
     week: Series[int] = week_field
     day: Series[str]
-    total_in_min: Series[int] = total_in_min_field
+    total_in_min: Series[int] = pa.Field(
+        gt=0, le=75, nullable=False, coerce=True
+    )
     entry_type: Series[str] = pa.Field(isin=EntryType.name_list("lower"))
     key: Series[str]
     optional: Series[str] = optional_field
@@ -87,7 +89,7 @@ class SetSchema(pa.SchemaModel):
     search_type: Series[str] = pa.Field(isin=SearchType.name_list("lower"))
     values: Series[str]
     order: Series[int] = pa.Field(ge=1, le=4, nullable=False, coerce=True)
-    time_in_min: Series[int] = pa.Field(
+    duration_in_min: Series[int] = pa.Field(
         ge=5, le=40, nullable=False, coerce=True
     )
 
@@ -99,7 +101,7 @@ class WorkoutPlan(pa.SchemaModel):
         isin=["reminder", "video"], nullable=False
     )
     key: Series[str]
-    total_in_min: Series[int] = total_in_min_field
+    duration_in_min: Series[int] = duration_in_min_field
     optional: Series[str] = optional_field
     time_of_day: Series[str] = time_of_day_field
     item_id: Series[str] = pa.Field(nullable=True)

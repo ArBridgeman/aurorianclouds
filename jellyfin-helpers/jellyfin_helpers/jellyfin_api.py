@@ -8,8 +8,11 @@ from numpy import ndarray
 from omegaconf import DictConfig
 from pydantic import HttpUrl
 from pydantic.tools import parse_obj_as
+from structlog import get_logger
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
+
+LOGGER = get_logger(__name__)
 
 
 def _build_url(server_url: HttpUrl, path: str, kwargs: OrderedDict) -> str:
@@ -58,6 +61,13 @@ class Jellyfin:
         if parameters:
             kwargs.update(parameters)
         return _build_url(server_url=self.server_url, path=path, kwargs=kwargs)
+
+    def _send_delete_request(
+        self, path: str, parameters: Optional[Dict] = None
+    ) -> None:
+        url = self._prepare_request_url(path=path, parameters=parameters)
+        response = requests.delete(url, headers={"X-Emby-Token": self.token})
+        response.raise_for_status()
 
     def _send_get_request(
         self, path: str, parameters: Optional[Dict] = None
@@ -132,10 +142,17 @@ class Jellyfin:
                 "recursive": True,
                 "fields": extra_fields,
             },
-        )["Items"]
+        )
         if len(items) < 1:
             raise ValueError(f"no items found for genre_id={genre_id}")
-        return [_extract_item(source_dict=item) for item in items]
+        return [_extract_item(source_dict=item) for item in items["Items"]]
+
+    def get_items_per_playlist(self, playlist_name: str) -> List[str]:
+        playlist_id = self._get_item_id(item_name=playlist_name)
+        items = self._send_get_request(path=f"Playlists/{playlist_id}/Items")[
+            "Items"
+        ]
+        return [item["Id"] for item in items]
 
     def post_add_to_playlist(self, playlist_name: str, item_ids: List[str]):
         playlist_id = self._get_item_id(item_name=playlist_name)
@@ -143,6 +160,28 @@ class Jellyfin:
             path=f"Playlists/{playlist_id}/Items",
             parameters={
                 "ids": item_ids,
+            },
+        )
+
+    def remove_item_from_playlist(
+        self, playlist_name: str, entry_ids: List[str]
+    ) -> None:
+        num_entries = len(entry_ids)
+        LOGGER.info(
+            "[jellyfin delete]",
+            action="remove items from playlist",
+            num_entries=num_entries,
+            playlist_name=playlist_name,
+        )
+
+        if num_entries < 1:
+            return
+
+        playlist_id = self._get_item_id(item_name=playlist_name)
+        self._send_delete_request(
+            path=f"Playlists/{playlist_id}/Items",
+            parameters={
+                "entryIds": entry_ids,
             },
         )
 

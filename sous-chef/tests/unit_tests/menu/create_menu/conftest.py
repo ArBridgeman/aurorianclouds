@@ -12,6 +12,7 @@ from sous_chef.formatter.units import unit_registry
 from sous_chef.menu.create_menu._menu_basic import (
     AllMenuSchema,
     LoadedMenuSchema,
+    Season,
     TmpMenuSchema,
     validate_menu_schema,
 )
@@ -63,6 +64,7 @@ class MenuBuilder:
     @staticmethod
     def create_all_menu_row(
         prep_day: int = 0,
+        season: Season = Season.fall,
         meal_time: str = "dinner",
         item_type: str = "recipe",
         eat_factor: float = 1.0,
@@ -71,7 +73,6 @@ class MenuBuilder:
         freeze_factor: float = 0.0,
         defrost: str = "N",
         item: str = "dummy",
-        **kwargs,
     ) -> DataFrameBase[AllMenuSchema]:
 
         eat_unit = str(eat_unit)
@@ -82,6 +83,7 @@ class MenuBuilder:
             pd.DataFrame(
                 {
                     "menu": 1,
+                    "season": season.value,
                     "weekday": "Friday",
                     "prep_day": prep_day,
                     "meal_time": meal_time,

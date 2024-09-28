@@ -52,6 +52,14 @@ class RandomSelectType(ExtendedEnum):
     either = "either"
 
 
+class Season(ExtendedEnum):
+    any = "0_any"
+    winter = "1_winter"
+    spring = "2_spring"
+    summer = "3_summer"
+    fall = "4_fall"
+
+
 # TODO method to scale recipe to desired servings? maybe in recipe checker?
 @dataclass
 class MenuIncompleteError(Exception):
@@ -157,6 +165,7 @@ class InProgressSchema(BasicMenuSchema):
 
 class AllMenuSchema(InProgressSchema):
     menu: Series[int] = pa.Field(ge=0, nullable=False)
+    season: Series[str] = pa.Field(isin=Season.value_list(), nullable=False)
 
 
 class TimeSchema(pa.SchemaModel):

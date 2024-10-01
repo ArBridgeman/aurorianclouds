@@ -94,8 +94,8 @@ class Test(Base):
             return_value=frozen_due_datetime_formatter.anchor_datetime,
         ):
             with patch.object(RecipeBook, "__post_init__", return_value=None):
-
-                assert_equal_dataframe(self._run_menu(), get_final_menu())
+                final_menu = self._run_menu()
+                assert_equal_dataframe(final_menu, get_final_menu())
 
                 menu_history._load_history()
                 assert_equal_dataframe(

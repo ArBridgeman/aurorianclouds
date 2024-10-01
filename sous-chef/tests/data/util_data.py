@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from pandera.typing.common import DataFrameBase
 from sous_chef.menu.create_menu._menu_basic import (
@@ -71,6 +72,7 @@ def get_tasks_menu() -> pd.DataFrame:
     tasks_menu.labels = tasks_menu.labels.apply(
         lambda cell: cell[1:-1].split(", ")
     )
+    tasks_menu.due = tasks_menu.due.replace({np.nan: "None"})
     return tasks_menu.sort_values("content").reset_index(drop=True)
 
 

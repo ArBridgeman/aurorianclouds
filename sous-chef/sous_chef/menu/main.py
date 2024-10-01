@@ -59,6 +59,8 @@ def run_menu(config: DictConfig):
             todoist_helper = TodoistHelper(config.api.todoist)
             menu.upload_menu_to_todoist(todoist_helper)
 
+    return menu.dataframe
+
 
 @hydra.main(
     config_path="../../config/", config_name="menu_main", version_base=None

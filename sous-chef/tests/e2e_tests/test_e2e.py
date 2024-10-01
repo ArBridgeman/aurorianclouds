@@ -93,28 +93,32 @@ class Test(Base):
             new_callable=PropertyMock,
             return_value=frozen_due_datetime_formatter.anchor_datetime,
         ):
-            with patch.object(RecipeBook, "__post_init__", return_value=None):
-                final_menu = self._run_menu()
-                assert_equal_dataframe(final_menu, get_final_menu())
+            final_menu = self._run_menu()
 
-                menu_history._load_history()
-                assert_equal_dataframe(
-                    menu_history.dataframe, get_menu_history()
-                )
+        assert_equal_dataframe(final_menu, get_final_menu())
 
-                tasks_menu = self._convert_task_list_to_df(
-                    todoist_helper=todoist_helper
-                )
-                assert_equal_dataframe(tasks_menu, get_tasks_menu())
+        menu_history._load_history()
+        assert_equal_dataframe(menu_history.dataframe, get_menu_history())
 
-                final_grocery_list = self._run_grocery_list()
-                assert_equal_dataframe(
-                    final_grocery_list, get_final_grocery_list()
-                )
+        tasks_menu = self._convert_task_list_to_df(
+            todoist_helper=todoist_helper
+        )
+        assert_equal_dataframe(tasks_menu, get_tasks_menu())
 
-                tasks_grocery_list = self._convert_task_list_to_df(
-                    todoist_helper=todoist_helper
-                )
-                assert_equal_dataframe(
-                    tasks_grocery_list, get_tasks_grocery_list()
-                )
+        #     with patch.object(RecipeBook, "__post_init__", return_value=None):
+        with patch.object(
+            DueDatetimeFormatter,
+            "anchor_datetime",
+            new_callable=PropertyMock,
+            return_value=frozen_due_datetime_formatter.anchor_datetime,
+        ):
+            final_grocery_list = self._run_grocery_list()
+        final_grocery_list.pint_unit = final_grocery_list.pint_unit.apply(
+            lambda x: str(x)
+        )
+        assert_equal_dataframe(final_grocery_list, get_final_grocery_list())
+
+        tasks_grocery_list = self._convert_task_list_to_df(
+            todoist_helper=todoist_helper
+        )
+        assert_equal_dataframe(tasks_grocery_list, get_tasks_grocery_list())

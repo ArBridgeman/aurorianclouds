@@ -1,19 +1,19 @@
 content,due,labels,priority
 Baked Oatmeal Bars (4.0),None,"[app, app-week-3]",3
-edit recipes from week #3,"Due(date='2022-01-27', is_recurring=False, string='on 2022-01-27', datetime=None, timezone=None)","[app, app-week-3]",3
-baguette (x eat: 1.0) [20 min],"Due(date='2022-01-21', is_recurring=False, string='on 2022-01-21 at 16:10', datetime='2022-01-21T16:10:00', timezone=None)","[app, app-week-3]",3
-[PREP] Spanish Deluxe Potatoes (x eat: 1.0) [35 min],"Due(date='2022-01-23', is_recurring=False, string='on 2022-01-23 at 16:30', datetime='2022-01-23T16:30:00', timezone=None)","[app, app-week-3]",3
-[PREP] Holiday cheesecake (x eat: 1.0) [405 min],"Due(date='2022-01-23', is_recurring=False, string='on 2022-01-23 at 09:45', datetime='2022-01-23T09:45:00', timezone=None)","[app, app-week-3]",3
-[PREP] Baked Oatmeal Bars (x eat: 1.0) [40 min],"Due(date='2022-01-23', is_recurring=False, string='on 2022-01-23 at 16:30', datetime='2022-01-23T16:30:00', timezone=None)","[app, app-week-3]",3
-[DEFROST] Italian baked meatballs,"Due(date='2022-01-21', is_recurring=False, string='on 2022-01-21 at 16:30', datetime='2022-01-21T16:30:00', timezone=None)","[app, app-week-3]",3
-Spanish Deluxe Potatoes (x eat: 1.0) [35 min],"Due(date='2022-01-24', is_recurring=False, string='on 2022-01-24 at 14:25', datetime='2022-01-24T14:25:00', timezone=None)","[app, app-week-3]",3
-Spanish Deluxe Potatoes (4.0),None,"[app, app-week-3]",3
-"Lasagna (x eat: 0.25, x freeze: 0.25) [60 min]","Due(date='2022-01-25', is_recurring=False, string='on 2022-01-25 at 15:30', datetime='2022-01-25T15:30:00', timezone=None)","[app, app-week-3]",3
-Lasagna (4.5),None,"[app, app-week-3]",3
-Italian baked meatballs (4.5),None,"[app, app-week-3]",3
-Italian baked meatballs,"Due(date='2022-01-22', is_recurring=False, string='on 2022-01-22 at 16:30', datetime='2022-01-22T16:30:00', timezone=None)","[app, app-week-3]",3
-Holiday cheesecake (x eat: 1.0) [405 min],"Due(date='2022-01-23', is_recurring=False, string='on 2022-01-23 at 14:45', datetime='2022-01-23T14:45:00', timezone=None)","[app, app-week-3]",3
-Holiday cheesecake (4.0),None,"[app, app-week-3]",3
 Baked Oatmeal Bars (x eat: 1.0) [40 min],"Due(date='2022-01-24', is_recurring=False, string='on 2022-01-24 at 07:50', datetime='2022-01-24T07:50:00', timezone=None)","[app, app-week-3]",3
+Holiday cheesecake (4.0),None,"[app, app-week-3]",3
+Holiday cheesecake (x eat: 1.0) [405 min],"Due(date='2022-01-23', is_recurring=False, string='on 2022-01-23 at 14:45', datetime='2022-01-23T14:45:00', timezone=None)","[app, app-week-3]",3
+Italian baked meatballs,"Due(date='2022-01-22', is_recurring=False, string='on 2022-01-22 at 16:30', datetime='2022-01-22T16:30:00', timezone=None)","[app, app-week-3]",3
+Italian baked meatballs (4.5),None,"[app, app-week-3]",3
+Lasagna (4.5),None,"[app, app-week-3]",3
+"Lasagna (x eat: 0.25, x freeze: 0.25) [60 min]","Due(date='2022-01-25', is_recurring=False, string='on 2022-01-25 at 15:30', datetime='2022-01-25T15:30:00', timezone=None)","[app, app-week-3]",3
+Spanish Deluxe Potatoes (4.0),None,"[app, app-week-3]",3
+Spanish Deluxe Potatoes (x eat: 1.0) [35 min],"Due(date='2022-01-24', is_recurring=False, string='on 2022-01-24 at 14:25', datetime='2022-01-24T14:25:00', timezone=None)","[app, app-week-3]",3
+[DEFROST] Italian baked meatballs,"Due(date='2022-01-21', is_recurring=False, string='on 2022-01-21 at 16:30', datetime='2022-01-21T16:30:00', timezone=None)","[app, app-week-3]",3
+[PREP] Baked Oatmeal Bars (x eat: 1.0) [40 min],"Due(date='2022-01-23', is_recurring=False, string='on 2022-01-23 at 16:30', datetime='2022-01-23T16:30:00', timezone=None)","[app, app-week-3]",3
+[PREP] Holiday cheesecake (x eat: 1.0) [405 min],"Due(date='2022-01-23', is_recurring=False, string='on 2022-01-23 at 09:45', datetime='2022-01-23T09:45:00', timezone=None)","[app, app-week-3]",3
+[PREP] Spanish Deluxe Potatoes (x eat: 1.0) [35 min],"Due(date='2022-01-23', is_recurring=False, string='on 2022-01-23 at 16:30', datetime='2022-01-23T16:30:00', timezone=None)","[app, app-week-3]",3
+baguette (x eat: 1.0) [20 min],"Due(date='2022-01-21', is_recurring=False, string='on 2022-01-21 at 16:10', datetime='2022-01-21T16:10:00', timezone=None)","[app, app-week-3]",3
+edit recipes from week #3,"Due(date='2022-01-27', is_recurring=False, string='on 2022-01-27', datetime=None, timezone=None)","[app, app-week-3]",3
 frisée (x eat: 1.0) [20 min],"Due(date='2022-01-26', is_recurring=False, string='on 2022-01-26 at 16:10', datetime='2022-01-26T16:10:00', timezone=None)","[app, app-week-3]",3
 rice (x eat: 1.0) [20 min],"Due(date='2022-01-22', is_recurring=False, string='on 2022-01-22 at 16:10', datetime='2022-01-22T16:10:00', timezone=None)","[app, app-week-3]",3

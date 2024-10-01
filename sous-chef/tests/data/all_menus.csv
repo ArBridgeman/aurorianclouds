@@ -1,18 +1,20 @@
 menu,season,weekday,prep_day,meal_time,type,selection,eat_factor,eat_unit,freeze_factor,defrost,override_check,item
-0,4_fall,Friday,0.0,dinner,ingredient,,1.0,cup,0.0,N,N,rice
-1,4_fall,Friday,0.0,dinner,ingredient,,1.0,cup,0.0,N,N,rice
-2,4_fall,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Harissa Honey Chicken Bowl
-3,4_fall,Friday,0.0,dinner,filter,either,0.5,,0.0,N,N,t.entree/burger & t.protein/beef
-4,4_fall,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Creamy Ramen Noodles
-5,4_fall,Friday,0.0,dinner,recipe,,1.0,,0.0,N,Y,Beef Bulgogi & Lotus Bowl
-6,4_fall,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Volcano Salmon Bowl
-7,4_fall,Friday,0.0,dinner,ingredient,,2.0,,0.0,N,N,steaks
-8,4_fall,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Beef pan-fried noodles
-9,4_fall,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Barbie Pink Pasta
-10,4_fall,Friday,0.0,dinner,filter,rated,1.0,,0.0,N,N,t.side/veggies-european
-11,4_fall,Friday,0.0,dinner,recipe,,1.0,,0.0,Y,N,Cali burgers
-11,4_fall,Friday,0.0,dinner,ingredient,,450.0,g,0.0,N,N,steak fries
-12,4_fall,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Southwest Chile Lime Ranch Salad
-13,4_fall,Friday,0.0,dinner,recipe,,1.0,,0.0,Y,N,Gigi Hadid Pasta
-14,4_fall,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Tex Mex Fries
-15,4_fall,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Pad Thai
+0,0_any,Friday,0.0,dinner,ingredient,,1.0,cup,0.0,N,N,rice
+1,0_any,Friday,0.0,dinner,ingredient,,1.0,cup,0.0,N,N,rice
+2,1_winter,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Pad Thai
+2,2_spring,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Pad Thai
+2,3_summer,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Pad Thai
+2,4_fall,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Pad Thai
+3,0_any,Friday,0.0,dinner,filter,either,0.5,,0.0,N,N,t.entree/burger & t.protein/beef
+4,0_any,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Creamy Ramen Noodles
+5,0_any,Friday,0.0,dinner,recipe,,1.0,,0.0,N,Y,Beef Bulgogi & Lotus Bowl
+6,0_any,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Volcano Salmon Bowl
+7,0_any,Friday,0.0,dinner,ingredient,,2.0,,0.0,N,N,steaks
+8,0_any,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Beef pan-fried noodles
+9,0_any,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Barbie Pink Pasta
+10,0_any,Friday,0.0,dinner,filter,rated,1.0,,0.0,N,N,t.side/veggies-european
+11,0_any,Friday,0.0,dinner,recipe,,1.0,,0.0,Y,N,Cali burgers
+11,0_any,Friday,0.0,dinner,ingredient,,450.0,g,0.0,N,N,steak fries
+12,0_any,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Southwest Chile Lime Ranch Salad
+13,0_any,Friday,0.0,dinner,recipe,,1.0,,0.0,Y,N,Gigi Hadid Pasta
+13,0_any,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Tex Mex Fries

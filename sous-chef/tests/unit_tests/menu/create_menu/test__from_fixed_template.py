@@ -6,7 +6,7 @@ from freezegun import freeze_time
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.formatter.units import unit_registry
 from sous_chef.menu.create_menu._from_fixed_template import FixedTemplates
-from sous_chef.menu.create_menu._menu_basic import MenuFutureError
+from sous_chef.menu.create_menu._menu_basic import MenuFutureError, Season
 from sous_chef.menu.record_menu_history import MenuHistoryError
 from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
@@ -20,6 +20,7 @@ def fixed_templates(
     menu_config, mock_gsheets, frozen_due_datetime_formatter, mock_all_menus_df
 ):
     menu_config.fixed.menu_number = 2
+    menu_config.fixed.selected_season = Season.fall.value
     with patch.object(FixedTemplates, "__post_init__"):
         fixed_templates = FixedTemplates(
             config=menu_config.fixed,
@@ -63,10 +64,41 @@ class TestFixedTemplates:
         assert str(error.value) == "fixed menu number (100) is not found"
 
     @staticmethod
-    def test_load_fixed_menu(fixed_templates):
+    @pytest.mark.parametrize("season", Season.value_list())
+    def test__check_season_expected_passes(fixed_templates, season):
+        fixed_templates._check_season(season)
+
+    @staticmethod
+    @pytest.mark.parametrize("season", ["not-a-season"])
+    def test__check_season_not_allowed_values_raise_value_error(
+        fixed_templates, season
+    ):
+        with pytest.raises(ValueError) as error:
+            fixed_templates._check_season(season)
+        assert "season" in str(error.value)
+
+    @staticmethod
+    def test_load_fixed_menu(fixed_templates, menu_config):
+        # ensure that some rows are not unique & multiple seasons
+        assert fixed_templates.all_menus_df.shape[0] == 19
+        assert fixed_templates.all_menus_df.menu.nunique() == 14
+        assert fixed_templates.all_menus_df.season.nunique() == len(
+            Season.value_list()
+        )
+
+        mask_menu = fixed_templates.all_menus_df.menu.isin(
+            [menu_config.fixed.basic_number, menu_config.fixed.menu_number]
+        )
+        mask_season = fixed_templates.all_menus_df.season.isin(
+            [menu_config.fixed.selected_season, Season.any.value]
+        )
+        masks = mask_menu & mask_season
+        # menu selection > than when season also included
+        assert sum(mask_menu) > sum(masks)
+
         result = fixed_templates.load_fixed_menu()
-        # from basic + 2
-        assert result.shape[0] == 2
+        # from basic + 2, 0_any + 4_fall
+        assert result.shape[0] == sum(masks)
 
     @staticmethod
     def test_select_upcoming_menus(fixed_templates):
@@ -80,7 +112,7 @@ class TestFixedTemplates:
     def test_select_upcoming_menus_start_from_min_when_over(
         fixed_templates, menu_config
     ):
-        menu_config.fixed.menu_number = 15
+        menu_config.fixed.menu_number = 13
         num_weeks = 4
         result = fixed_templates.select_upcoming_menus(
             num_weeks_in_future=num_weeks

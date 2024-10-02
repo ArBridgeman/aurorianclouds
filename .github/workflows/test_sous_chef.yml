@@ -5,6 +5,12 @@ on:
       - sous-chef/**
       - .github/workflows/test_sous_chef.yml
       - utilities/utilities/** # since dependent on without version atm
+    branches-ignore:
+      - main
+  workflow_call:
+    secrets:
+      token:
+        required: true
 
 concurrency:
   group: ${{ github.ref }}-sous-chef

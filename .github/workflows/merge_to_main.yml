@@ -1,0 +1,14 @@
+name: merge to main
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.ref }}-main
+  cancel-in-progress: true
+
+jobs:
+  call-sous-chef-tests:
+    uses: ./.github/workflows/test_sous_chef.yml
+    secrets: inherit

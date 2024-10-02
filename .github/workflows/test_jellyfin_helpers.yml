@@ -5,6 +5,8 @@ on:
       - jellyfin-helpers/**
       - .github/workflows/test_jellyfin_helpers.yml
       - utilities/utilities/** # since dependent on without version atm
+    branches-ignore:
+      - main
 
 concurrency:
   group: ${{ github.ref }}-jellyfin

@@ -21,7 +21,9 @@ class TestGSheetsHelper:
         fake_df = pd.DataFrame({"Vars": ["a", "b"], "Vals": ["1.1", "2.4"]})
 
         gsheets_helper.write_worksheet(fake_df, workbook_name, worksheet_name)
-        worksheet = gsheets_helper.get_worksheet(workbook_name, worksheet_name)
+
+        workbook = gsheets_helper.get_workbook(workbook_name=workbook_name)
+        worksheet = workbook.get_worksheet(worksheet_name=worksheet_name)
         # clean-up
         workbook_id = gsheets_helper._get_workbook(workbook_name).id
         gsheets_helper._delete_item(workbook_id)

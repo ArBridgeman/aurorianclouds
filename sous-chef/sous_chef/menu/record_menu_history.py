@@ -58,9 +58,10 @@ class MenuHistorian:
 
     def _load_history(self):
         save_loc = self.config.save_loc
-        menu_history = self.gsheets_helper.get_worksheet(
-            save_loc.workbook, save_loc.worksheet
+        workbook = self.gsheets_helper.get_workbook(
+            workbook_name=save_loc.workbook
         )
+        menu_history = workbook.get_worksheet(worksheet_name=save_loc.worksheet)
         if menu_history.shape == (0, 0):
             menu_history = pd.DataFrame(columns=self.columns)
 

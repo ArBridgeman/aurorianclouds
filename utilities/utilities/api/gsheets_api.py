@@ -24,6 +24,23 @@ class MimeType(Enum):
 
 
 @dataclass
+class WorkBook:
+    data: Spreadsheet
+
+    def get_worksheet(
+        self, worksheet_name: str, numerize: bool = False
+    ) -> pd.DataFrame:
+        FILE_LOGGER.info(
+            "[get_worksheet]",
+            worksheet_name=worksheet_name,
+        )
+        # TODO catch & raise specific exception here when resource not found
+        return get_worksheet(
+            self.data, worksheet_name=worksheet_name, numerize=numerize
+        )
+
+
+@dataclass
 class GsheetsHelper:
     config: DictConfig
 
@@ -33,19 +50,13 @@ class GsheetsHelper:
             service_account_file=token_file, retries=3
         )
 
-    def get_worksheet(
-        self, workbook_name: str, worksheet_name: str, numerize: bool = False
-    ) -> pd.DataFrame:
+    def get_workbook(self, workbook_name: str) -> WorkBook:
         FILE_LOGGER.info(
-            "[get_worksheet]",
+            "[get_workbook]",
             workbook_name=workbook_name,
-            worksheet_name=worksheet_name,
         )
-        # TODO catch & raise specific exception here when resource not found
         workbook = self.connection.open(workbook_name)
-        return get_worksheet(
-            workbook, worksheet_name=worksheet_name, numerize=numerize
-        )
+        return WorkBook(data=workbook)
 
     def write_worksheet(
         self,

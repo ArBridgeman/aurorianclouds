@@ -16,7 +16,7 @@ from omegaconf import DictConfig
 from pandera.typing.common import DataFrameBase
 from structlog import get_logger
 
-from utilities.api.gsheets_api import GsheetsHelper
+from utilities.api.gsheets_api import GsheetsHelper, WorkBook
 
 LOGGER = get_logger(__name__)
 
@@ -126,14 +126,12 @@ class WorkoutPlanner:
         return mask & ~self.workout_videos.id.isin(skip_ids)
 
     def _load_time_plan(
-        self, gsheets_helper: GsheetsHelper
+        self, workbook: WorkBook
     ) -> DataFrameBase[TimePlanSchema]:
-        weekly = gsheets_helper.get_worksheet(
-            workbook_name=self.app_config.gsheets.workbook,
+        weekly = workbook.get_worksheet(
             worksheet_name=self.app_config.gsheets.worksheet.weekly,
         )
-        sleep = gsheets_helper.get_worksheet(
-            workbook_name=self.app_config.gsheets.workbook,
+        sleep = workbook.get_worksheet(
             worksheet_name=self.app_config.gsheets.worksheet.sleep,
         )
         plan_template = pd.concat([weekly, sleep])
@@ -143,24 +141,20 @@ class WorkoutPlanner:
         plan_template["active"] = plan_template["active"].replace("", None)
         return TimePlanSchema.validate(plan_template)
 
-    def _load_sets(self, gsheets_helper: GsheetsHelper):
-        sets = gsheets_helper.get_worksheet(
-            workbook_name=self.app_config.gsheets.workbook,
+    def _load_sets(self, workbook: WorkBook) -> DataFrameBase[SetSchema]:
+        sets = workbook.get_worksheet(
             worksheet_name=self.app_config.gsheets.worksheet.sets,
         )
         return SetSchema.validate(sets)
 
-    def _load_weekly_plan(self, gsheets_helper: GsheetsHelper):
-        time_plan = self._load_time_plan(gsheets_helper)
-        sets = self._load_sets(gsheets_helper)
+    def _load_weekly_plan(self, workbook: WorkBook) -> pd.DataFrame:
+        time_plan = self._load_time_plan(workbook)
+        sets = self._load_sets(workbook)
         weekly_plan = pd.merge(left=time_plan, right=sets, on="key", how="left")
         return weekly_plan.sort_values(by=["day", "time_of_day", "order"])
 
-    def _load_last_plan(
-        self, gsheets_helper: GsheetsHelper
-    ) -> DataFrameBase[WorkoutPlan]:
-        df = gsheets_helper.get_worksheet(
-            workbook_name=self.app_config.gsheets.workbook,
+    def _load_last_plan(self, workbook: WorkBook) -> DataFrameBase[WorkoutPlan]:
+        df = workbook.get_worksheet(
             worksheet_name=self.app_config.gsheets.worksheet.plan,
         )
         return WorkoutPlan.validate(df)
@@ -168,8 +162,11 @@ class WorkoutPlanner:
     def create_workout_plan(
         self, gsheets_helper: GsheetsHelper
     ) -> DataFrameBase[WorkoutPlan]:
-        weekly_plan = self._load_weekly_plan(gsheets_helper=gsheets_helper)
-        last_plan = self._load_last_plan(gsheets_helper=gsheets_helper)
+        workbook = gsheets_helper.get_workbook(
+            workbook_name=self.app_config.gsheets.workbook,
+        )
+        weekly_plan = self._load_weekly_plan(workbook=workbook)
+        last_plan = self._load_last_plan(workbook=workbook)
 
         all_skip_ids = list(last_plan.item_id.values)
         in_month_skip_ids = list()

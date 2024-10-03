@@ -31,7 +31,7 @@ class InnerJoinError(Exception):
 class PantryList(DataframeSearchable):
     def __init__(self, config: DictConfig, gsheets_helper: GsheetsHelper):
         super().__init__(config)
-        self.gsheets_helper = gsheets_helper
+        self.workbook = gsheets_helper.get_workbook(self.config.workbook_name)
         self.basic_pantry_list = self._retrieve_basic_pantry_list()
         self.replacement_pantry_list = self._retrieve_replacement_pantry_list()
         self.dataframe = self._load_complex_pantry_list_for_search()
@@ -114,9 +114,8 @@ class PantryList(DataframeSearchable):
         )
 
     def _retrieve_basic_pantry_list(self) -> DataFrame:
-        dataframe = self.gsheets_helper.get_worksheet(
-            self.config.workbook_name,
-            self.config.ingredient_sheet_name,
+        dataframe = self.workbook.get_worksheet(
+            worksheet_name=self.config.ingredient_sheet_name,
             numerize=False,
         )
         dataframe["ingredient"] = dataframe.ingredient.str.strip()
@@ -127,17 +126,17 @@ class PantryList(DataframeSearchable):
         return dataframe
 
     def _retrieve_bad_pantry_list(self) -> DataFrame:
-        bad_list = self.gsheets_helper.get_worksheet(
-            self.config.workbook_name, self.config.bad_sheet_name, numerize=True
+        bad_list = self.workbook.get_worksheet(
+            worksheet_name=self.config.bad_sheet_name,
+            numerize=True,
         )[["ingredient"]]
         bad_list["plural_ending"] = ""
         bad_list["label"] = "bad_ingredient"
         return bad_list
 
     def _retrieve_misspelled_pantry_list(self) -> DataFrame:
-        misspelled_list = self.gsheets_helper.get_worksheet(
-            self.config.workbook_name,
-            self.config.misspelling_sheet_name,
+        misspelled_list = self.workbook.get_worksheet(
+            worksheet_name=self.config.misspelling_sheet_name,
             numerize=False,
         )
 
@@ -209,9 +208,8 @@ class PantryList(DataframeSearchable):
         return misspelled_list.drop(columns=["misspelled_ingredient", "_merge"])
 
     def _retrieve_replacement_pantry_list(self) -> DataFrame:
-        dataframe = self.gsheets_helper.get_worksheet(
-            self.config.workbook_name,
-            self.config.replacement_sheet_name,
+        dataframe = self.workbook.get_worksheet(
+            worksheet_name=self.config.replacement_sheet_name,
             numerize=True,
         )
         dataframe["item_plural"] = dataframe.apply(

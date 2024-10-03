@@ -217,10 +217,11 @@ class FixedTemplates:
             "dessert": "dessert",
         }
         all_menus = pd.DataFrame()
+        workbook = self.gsheets_helper.get_workbook(
+            workbook_name=self.config.workbook
+        )
         for sheet, meal_time in sheet_to_mealtime.items():
-            sheet_pd = self.gsheets_helper.get_worksheet(
-                self.config.workbook, worksheet_name=sheet
-            )
+            sheet_pd = workbook.get_worksheet(worksheet_name=sheet)
             sheet_pd["meal_time"] = meal_time
             all_menus = pd.concat([all_menus, sheet_pd])
 

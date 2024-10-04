@@ -520,7 +520,7 @@ class TestAddReferencedRecipeToQueue:
             }
         )
 
-    def test__make_yes_schedule_separately_no(
+    def test__make_partial_change_schedule_no(
         self, grocery_list, config_grocery_list
     ):
         config_grocery_list.run_mode.with_todoist = True
@@ -539,11 +539,14 @@ class TestAddReferencedRecipeToQueue:
         assert result.from_recipe == added_recipe.from_recipe
         assert_equal_series(result.recipe, added_recipe.recipe)
 
-        assert_equal_dataframe(
-            grocery_list.queue_preparation,
-            self._get_preparation_queue(
-                task_str=f"[PREP] {self.menu_recipe_ref.amount}",
-                due_date=datetime.datetime(
+        assert grocery_list.queue_preparation is None
+
+    @pytest.mark.parametrize(
+        "change_schedule, expected_date",
+        [
+            (
+                "n",
+                datetime.datetime(
                     year=2022,
                     month=1,
                     day=26,
@@ -552,9 +555,44 @@ class TestAddReferencedRecipeToQueue:
                     tzinfo=timezone("UTC"),
                 ),
             ),
+            (
+                "y",
+                datetime.datetime(
+                    year=2022, month=1, day=25, hour=12, tzinfo=timezone("UTC")
+                ),
+            ),
+        ],
+    )
+    def test__make_whole_change_schedule(
+        self, grocery_list, config_grocery_list, change_schedule, expected_date
+    ):
+        config_grocery_list.run_mode.with_todoist = True
+
+        with patch(
+            "builtins.input", side_effect=["w", change_schedule, "1", "1"]
+        ):
+            grocery_list._add_referenced_recipe_to_queue(
+                self.menu_recipe_base, [self.menu_recipe_ref]
+            )
+
+        result = grocery_list.queue_menu_recipe[0]
+
+        added_recipe = self._get_added_recipe()
+        assert result.eat_factor == added_recipe.eat_factor
+        assert result.for_day == added_recipe.for_day
+        assert result.freeze_factor == added_recipe.freeze_factor
+        assert result.from_recipe == added_recipe.from_recipe
+        assert_equal_series(result.recipe, added_recipe.recipe)
+
+        assert_equal_dataframe(
+            grocery_list.queue_preparation,
+            self._get_preparation_queue(
+                task_str="[PREP] 1.0x referenced",
+                due_date=expected_date,
+            ),
         )
 
-    def test__make_yes_schedule_separately_yes(
+    def test__make_partial_change_schedule_yes(
         self, grocery_list, config_grocery_list
     ):
         config_grocery_list.run_mode.with_todoist = True

@@ -1,4 +1,3 @@
-import re
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import List, Tuple
@@ -22,16 +21,6 @@ DEFAULT_TIME = timedelta(minutes=-100)
 class WorkoutVideos:
     def __init__(self, jellyfin: Jellyfin):
         self.jellyfin = jellyfin
-
-    @staticmethod
-    def get_duration_from_tags(tags: List[str]) -> timedelta:
-        """Returns the average value first time tag range"""
-        time_tag = list(filter(lambda x: " min" in x, tags))
-        if len(time_tag) < 1:
-            return DEFAULT_TIME
-        times = re.search(r"(\d+)-(\d+) min", time_tag[0])
-        average_time = (int(times.group(1)) + int(times.group(2))) / 2
-        return timedelta(minutes=average_time)
 
     @staticmethod
     def get_tool_from_tags(tags: List[str]) -> str:

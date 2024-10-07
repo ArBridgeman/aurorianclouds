@@ -35,5 +35,8 @@ def gsheets_helper(config):
 @pytest.mark.gsheets
 class TestLoadLastPlan:
     @staticmethod
-    def test_works_as_expected(workout_planner, gsheets_helper):
-        workout_planner._load_weekly_plan(gsheets_helper=gsheets_helper)
+    def test_works_as_expected(workout_planner, gsheets_helper, config):
+        workbook = gsheets_helper.get_workbook(
+            workbook_name=workout_planner.app_config.gsheets.workbook,
+        )
+        workout_planner._load_weekly_plan(workbook=workbook)

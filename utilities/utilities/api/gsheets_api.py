@@ -1,3 +1,4 @@
+import hashlib
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -5,16 +6,38 @@ from typing import Optional
 
 import pandas as pd
 import pygsheets
+from joblib import Memory
 from omegaconf import DictConfig
+from pygsheets import Spreadsheet
 from structlog import get_logger
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
 
 FILE_LOGGER = get_logger(__name__)
 
+# initialize disk cache
+CACHE_DIR = ABS_FILE_PATH / "diskcache"
+
 
 class MimeType(Enum):
     folder = "application/vnd.google-apps.folder"
+
+
+@dataclass
+class WorkBook:
+    data: Spreadsheet
+
+    def get_worksheet(
+        self, worksheet_name: str, numerize: bool = False
+    ) -> pd.DataFrame:
+        FILE_LOGGER.info(
+            "[get_worksheet]",
+            worksheet_name=worksheet_name,
+        )
+        # TODO catch & raise specific exception here when resource not found
+        return get_worksheet(
+            self.data, worksheet_name=worksheet_name, numerize=numerize
+        )
 
 
 @dataclass
@@ -27,18 +50,13 @@ class GsheetsHelper:
             service_account_file=token_file, retries=3
         )
 
-    def get_worksheet(
-        self, workbook_name: str, worksheet_name: str, numerize: bool = False
-    ) -> pd.DataFrame:
+    def get_workbook(self, workbook_name: str) -> WorkBook:
         FILE_LOGGER.info(
-            "[get_worksheet]",
+            "[get_workbook]",
             workbook_name=workbook_name,
-            worksheet_name=worksheet_name,
         )
-        # TODO catch & raise specific exception here when resource not found
         workbook = self.connection.open(workbook_name)
-        worksheet = workbook.worksheet_by_title(worksheet_name)
-        return worksheet.get_as_df(numerize=numerize)
+        return WorkBook(data=workbook)
 
     def write_worksheet(
         self,
@@ -109,3 +127,30 @@ class GsheetsHelper:
         query = f"name='{file_name}'"
         query += f" and mimeType='{MimeType[mimetype_name].value}'"
         return self.connection.drive.list(q=query)
+
+
+def get_worksheet(
+    workbook: Spreadsheet, worksheet_name: str, numerize: bool
+) -> pd.DataFrame:
+    encoded_source_path = str(workbook.title + worksheet_name).encode()
+    hash_obj = hashlib.sha256(encoded_source_path)
+    hex_dig = hash_obj.hexdigest()
+
+    cache = Memory(CACHE_DIR / hex_dig, mmap_mode="r")
+
+    def is_cache_valid(metadata) -> bool:
+        time_cache = metadata["time"]
+
+        time_workbook = pd.to_datetime(workbook.updated).timestamp()
+
+        if time_workbook > time_cache:
+            return False
+
+        return True
+
+    @cache.cache(cache_validation_callback=is_cache_valid)
+    def _get_worksheet() -> pd.DataFrame:
+        worksheet = workbook.worksheet_by_title(worksheet_name)
+        return worksheet.get_as_df(numerize=numerize)
+
+    return _get_worksheet()

@@ -14,6 +14,7 @@ from sous_chef.menu.create_menu._menu_basic import (
     LoadedMenuSchema,
     MenuBasic,
     MenuIncompleteError,
+    Season,
     TmpMenuSchema,
     get_weekday_from_short,
     validate_menu_schema,
@@ -176,6 +177,11 @@ class FixedTemplates:
             raise ValueError(f"fixed menu number ({menu_number}) is not found")
 
     @staticmethod
+    def _check_season(season: str):
+        if season not in Season.value_list():
+            raise ValueError(f"season ({season}) not in {Season.value_list()}")
+
+    @staticmethod
     def _convert_fixed_menu_to_all_menu_schemas(
         all_menus: pd.DataFrame,
     ) -> DataFrameBase[AllMenuSchema]:
@@ -211,10 +217,11 @@ class FixedTemplates:
             "dessert": "dessert",
         }
         all_menus = pd.DataFrame()
+        workbook = self.gsheets_helper.get_workbook(
+            workbook_name=self.config.workbook
+        )
         for sheet, meal_time in sheet_to_mealtime.items():
-            sheet_pd = self.gsheets_helper.get_worksheet(
-                self.config.workbook, worksheet_name=sheet
-            )
+            sheet_pd = workbook.get_worksheet(worksheet_name=sheet)
             sheet_pd["meal_time"] = meal_time
             all_menus = pd.concat([all_menus, sheet_pd])
 
@@ -231,13 +238,20 @@ class FixedTemplates:
     def load_fixed_menu(self) -> DataFrameBase[LoadedMenuSchema]:
         FILE_LOGGER.info("[load_fixed_menu]")
         basic_number = self.config.basic_number
-        menu_number = self.config.menu_number
         self._check_fixed_menu_number(basic_number)
+        menu_number = self.config.menu_number
         self._check_fixed_menu_number(menu_number)
-
         fixed_menu = self.all_menus_df[
             self.all_menus_df.menu.isin([basic_number, menu_number])
         ].copy()
+
+        basic_season = self.config.basic_season.casefold()
+        self._check_season(basic_season)
+        selected_season = self.config.selected_season.casefold()
+        self._check_season(selected_season)
+        fixed_menu = fixed_menu[
+            fixed_menu.season.isin([basic_season, selected_season])
+        ]
 
         fixed_menu["cook_datetime"] = fixed_menu.apply(
             lambda row: self.due_date_formatter.get_due_datetime_with_meal_time(

@@ -52,6 +52,14 @@ class RandomSelectType(ExtendedEnum):
     either = "either"
 
 
+class Season(ExtendedEnum):
+    any = "0_any"
+    winter = "1_winter"
+    spring = "2_spring"
+    summer = "3_summer"
+    fall = "4_fall"
+
+
 # TODO method to scale recipe to desired servings? maybe in recipe checker?
 @dataclass
 class MenuIncompleteError(Exception):
@@ -157,6 +165,7 @@ class InProgressSchema(BasicMenuSchema):
 
 class AllMenuSchema(InProgressSchema):
     menu: Series[int] = pa.Field(ge=0, nullable=False)
+    season: Series[str] = pa.Field(isin=Season.value_list(), nullable=False)
 
 
 class TimeSchema(pa.SchemaModel):
@@ -210,11 +219,12 @@ class MenuBasic(BaseWithExceptionHandling):
         self.menu_history_uuid_list = self._set_menu_history_uuid_list()
 
     def load_final_menu(self):
-        workbook = self.config.final_menu.workbook
         worksheet = self.config.final_menu.worksheet
-        self.dataframe = self.gsheets_helper.get_worksheet(
-            workbook_name=workbook, worksheet_name=worksheet
+
+        workbook = self.gsheets_helper.get_workbook(
+            self.config.final_menu.workbook
         )
+        self.dataframe = workbook.get_worksheet(worksheet_name=worksheet)
         self.dataframe.time_total = pd.to_timedelta(self.dataframe.time_total)
         self.dataframe = validate_menu_schema(
             dataframe=self.dataframe, model=TmpMenuSchema

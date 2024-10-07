@@ -362,26 +362,32 @@ class GroceryList:
                     )
                     self._add_menu_recipe_to_queue([menu_sub_recipe])
 
+                    # TODO move hard-coded values to config
+                    change_schedule = "n"
+                    prep_item = f"{eat_factor + freeze_factor}x {recipe.title}"
+                    schedule_datetime = (
+                        menu_recipe.for_day - recipe.time_total
+                        if recipe.time_total is not None
+                        else timedelta(minutes=30)
+                    )
                     if (
                         recipe.time_total is None
                         or recipe.time_total > timedelta(minutes=15)
                     ):
-                        schedule_datetime = (
-                            menu_recipe.for_day - recipe.time_total
-                            if recipe.time_total is not None
-                            else timedelta(minutes=30)
+                        change_schedule = _check_change_schedule_yes_no(
+                            "...separately schedule?"
                         )
-                        if (
-                            _check_change_schedule_yes_no(
-                                "...separately schedule?"
-                            )
-                            == "y"
-                        ):
+
+                        if change_schedule == "y":
                             schedule_datetime = _get_schedule_day_hour_minute()
                             if schedule_datetime > menu_recipe.for_day:
                                 schedule_datetime -= timedelta(days=7)
+                            if sub_recipe_response != "w":
+                                prep_item = recipe.amount
+
+                    if change_schedule == "y" or sub_recipe_response == "w":
                         self._add_preparation_task_to_queue(
-                            f"[PREP] {recipe.amount}",
+                            f"[PREP] {prep_item}",
                             due_date=schedule_datetime,
                             from_recipe=[from_recipe],
                             for_day_str=[

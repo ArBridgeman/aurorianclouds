@@ -50,6 +50,7 @@ class LocalTodoistConnection:
             parent_id=None,
             url="https://not-real",
             view_style="list",
+            can_assign_tasks=False,
         )
         self.projects.append(project)
         return project.id

@@ -5,6 +5,7 @@ class TestNutritionist:
     @staticmethod
     @pytest.mark.gsheets
     @pytest.mark.openfoodfacts
+    @pytest.mark.skip("API very slow; we don't use yet in main product")
     def test_sync_pantry_nutrition_to_gsheets(
         nutritionist, pantry_list, gsheets_helper
     ):

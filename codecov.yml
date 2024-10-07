@@ -8,3 +8,23 @@ coverage:
       default:
         target: 80%
         threshold: 1%  # the leniency in hitting the target
+
+comment:
+  layout: "header, diff, flags, components"
+
+component_management:
+  default_rules:  # default rules that will be inherited by all components
+    statuses:
+      - type: project
+        target: auto
+        branches:
+          - "!main"
+  individual_components:
+    - component_id: module_sous_chef
+      name: sous_chef
+      paths:
+        - sous-chef/**
+    - component_id: module_jellyfin_helpers
+      name: jellyfin_helpers
+      paths:
+        - jellyfin-helpers/**

@@ -1,10 +1,8 @@
 content,due,labels,priority
-"[Lillehus] baguette, 1","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Fri, app, app-week-3, manual]",1
-"[Waldstadt] pumpkin puree, 100 g","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
+"baguettes, 1","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Fri, app, app-week-3, manual]",1
 "baking soda, 0.5 tsp","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Baked_Oatmeal_Bars, Sun, app, app-week-3]",1
 "basmati rice, 1 cup","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Sat, app, app-week-3, manual]",1
 "buckwheat flakes, 0.5 cup","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Baked_Oatmeal_Bars, Sun, app, app-week-3]",1
-"chili powder, 0.75 tsp","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Lasagna, Tue, app, app-week-3]",1
 "chocolate, 130 g","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Baked_Oatmeal_Bars, Holiday_cheesecake, Sun, app, app-week-3]",1
 "cinnamon powder, 1 tbsp","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Baked_Oatmeal_Bars, Sun, app, app-week-3]",1
 "cream cheese, 880 g","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
@@ -12,7 +10,7 @@ content,due,labels,priority
 "dried parsley, 1 tsp","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Spanish_Deluxe_Potatoes, Sun, app, app-week-3]",1
 "eggs, 4","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Holiday_cheesecake, Lasagna, Sun, Tue, app, app-week-3]",1
 "flour, 0.5 cup","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Baked_Oatmeal_Bars, Sun, app, app-week-3]",1
-"frisée, 1 head","Due(date=2022-01-24, is_recurring=False, string=on 2022-01-24, datetime=None, timezone=None)","[Wed, app, app-week-3, manual]",2
+"frisée, 1 head","Due(date='2022-01-24', is_recurring=False, string='on 2022-01-24', datetime=None, timezone=None)","[Wed, app, app-week-3, manual]",2
 "garlic paste, 1 tbsp","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Lasagna, Spanish_Deluxe_Potatoes, Sun, Tue, app, app-week-3]",1
 "garlic powder, 2 tbsp","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Lasagna, Spanish_Deluxe_Potatoes, Sun, Tue, app, app-week-3]",1
 "ginger powder, 2 tsp","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
@@ -28,12 +26,13 @@ content,due,labels,priority
 "nutmeg powder, 0.25 tsp","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
 "olive oil, 3 tbsp","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Spanish_Deluxe_Potatoes, Sun, app, app-week-3]",1
 "onion powder, 1 tbsp","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Lasagna, Spanish_Deluxe_Potatoes, Sun, Tue, app, app-week-3]",1
-"onion, 0.5","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Lasagna, Tue, app, app-week-3]",1
-"paprika powder, 0.5 tbsp","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Spanish_Deluxe_Potatoes, Sun, app, app-week-3]",1
+"onions, 0.5","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Lasagna, Tue, app, app-week-3]",1
+"paprika powder, 0.75 tbsp","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Lasagna, Spanish_Deluxe_Potatoes, Sun, Tue, app, app-week-3]",1
 "passata, 350 ml","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Lasagna, Tue, app, app-week-3]",1
 "pepper, 1.4 tsp","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Lasagna, Spanish_Deluxe_Potatoes, Sun, Tue, app, app-week-3]",1
 "potatoes, 2","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Lasagna, Tue, app, app-week-3]",1
 "potatoes, 500 g","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Spanish_Deluxe_Potatoes, Sun, app, app-week-3]",1
+"pumpkin puree, 100 g","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
 "rapseed oil, 2.5 tbsp","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Baked_Oatmeal_Bars, Spanish_Deluxe_Potatoes, Sun, app, app-week-3]",1
 "red wine vinegar, 0.5 tbsp","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Lasagna, Tue, app, app-week-3]",1
 "rice flakes, 0.75 cup","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Baked_Oatmeal_Bars, Sun, app, app-week-3]",1

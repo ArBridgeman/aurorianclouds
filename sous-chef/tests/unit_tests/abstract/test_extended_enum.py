@@ -50,6 +50,19 @@ def test_extended_enum(string_method, expected_result):
 @pytest.mark.parametrize(
     "string_method,expected_result",
     [
+        ("lower", ["late", "important", "date"]),
+        ("capitalize", ["Late", "Important", "Date"]),
+        ("casefold", ["late", "important", "date"]),
+        ("upper", ["LATE", "IMPORTANT", "DATE"]),
+    ],
+)
+def test_extended_enum_values(string_method, expected_result):
+    assert WhiteRabbitSays.value_list(string_method) == expected_result
+
+
+@pytest.mark.parametrize(
+    "string_method,expected_result",
+    [
         ("lower", ["months", "weeks", "days"]),
         ("capitalize", ["Months", "Weeks", "Days"]),
         ("casefold", ["months", "weeks", "days"]),

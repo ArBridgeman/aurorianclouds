@@ -4,6 +4,8 @@ on:
     paths:
       - utilities/**
       - .github/workflows/test_utilities.yml
+    branches-ignore:
+      - main
 
 concurrency:
   group: ${{ github.ref }}-utilities

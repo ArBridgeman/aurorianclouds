@@ -20,6 +20,10 @@ class ExtendedEnum(Enum):
     def name_list(cls, string_method: str = "casefold"):
         return list(map(lambda c: getattr(c.name, string_method)(), cls))
 
+    @classmethod
+    def value_list(cls, string_method: str = "casefold"):
+        return list(map(lambda c: getattr(c.value, string_method)(), cls))
+
 
 class ExtendedIntEnum(IntEnum):
     @classmethod

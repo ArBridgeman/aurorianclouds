@@ -6,6 +6,7 @@ import pandas as pd
 from jellyfin_helpers.jellyfin_api import Jellyfin
 from jellyfin_helpers.workout_plan.date_util import RelativeDate
 from jellyfin_helpers.workout_plan.models import (
+    Difficulty,
     SearchType,
     SetSchema,
     TimePlanSchema,
@@ -51,6 +52,7 @@ class WorkoutPlanner:
             selected_workouts = self._select_exercise_by_key(
                 key=row.search_type,
                 value=row["values"],
+                highest_difficulty_str=row["highest_difficulty"],
                 duration_in_minutes=row.duration_in_min,
                 skip_ids=skip_ids,
             )
@@ -65,13 +67,13 @@ class WorkoutPlanner:
         selected_exercises = pd.DataFrame()
 
         while data.shape[0] > 0 & (remaining_duration > timedelta(minutes=0)):
-            # add 1 min to avoid division by 0
-            time_diff = (
-                remaining_duration + timedelta(minutes=1) - data.duration
-            ).dt.total_seconds() / 60
+            duration = data.duration.dt.total_seconds() // 60
+            tool = data.tool != ""
+            difficulty = np.maximum(data.difficulty, tool)
+            weights = duration + data.rating * 2 + difficulty * 2
 
             # select exercise
-            exercise = data.sample(n=1, weights=1 / time_diff.values)
+            exercise = data.sample(n=1, weights=weights)
             exercise["description"] = (
                 f"{exercise.name.values[0]}"
                 f" ({convert_timedelta_to_min(exercise.duration)} min)"
@@ -88,12 +90,15 @@ class WorkoutPlanner:
         self,
         key: str,
         value: str,
+        highest_difficulty_str: str,
         duration_in_minutes: int,
         skip_ids: List[str],
     ) -> pd.DataFrame:
         duration_timedelta = pd.to_timedelta(f"{duration_in_minutes} minutes")
 
         mask = np.ones(self.workout_videos.shape[0], dtype=bool)
+        highest_difficulty = Difficulty[highest_difficulty_str].value
+        mask &= self.workout_videos.difficulty_num <= highest_difficulty
         if key == "genre":
             mask &= (
                 self.workout_videos.genre.str.strip().str.lower()
@@ -204,12 +209,14 @@ class WorkoutPlanner:
                     # currently not enough entries for these filters
                     if row["values"]
                     not in [
+                        "arms",
                         "tennis",
                         "mobility",
                         "calves",
                         "stretching",
                         "stretch/back",
                         "dance single",
+                        "thighs",
                     ]
                     # TODO would ideally not want the same one in a week
                     # as jellyfin does not add duplicates to playlist

@@ -94,6 +94,9 @@ class TimePlanSchema(pa.SchemaModel):
     )
     entry_type: Series[str] = pa.Field(isin=EntryType.name_list("lower"))
     key: Series[str]
+    highest_difficulty: Series[str] = pa.Field(
+        isin=Difficulty.name_list("lower")
+    )
     optional: Series[str] = optional_field
     active: Series[str] = pa.Field(
         isin=["Y", "N"], nullable=False, default="Y", coerce=True

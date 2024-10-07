@@ -105,7 +105,6 @@ class Test(Base):
         )
         assert_equal_dataframe(tasks_menu, get_tasks_menu())
 
-        #     with patch.object(RecipeBook, "__post_init__", return_value=None):
         with patch.object(
             DueDatetimeFormatter,
             "anchor_datetime",

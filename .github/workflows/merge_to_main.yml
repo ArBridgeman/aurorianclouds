@@ -9,6 +9,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  call-utilities:
+    uses: ./.github/workflows/test_utilities.yml
+    secrets: inherit
+  call-jellyfin-helpers:
+    uses: ./.github/workflows/test_jellyfin_helpers.yml
+    secrets: inherit
   call-sous-chef-tests:
     uses: ./.github/workflows/test_sous_chef.yml
     secrets: inherit

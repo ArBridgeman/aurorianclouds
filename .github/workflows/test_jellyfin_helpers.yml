@@ -7,6 +7,14 @@ on:
       - utilities/utilities/** # since dependent on without version atm
     branches-ignore:
       - main
+  workflow_call:
+    secrets:
+      GSHEETS_SERVICE_TOKEN:
+        required: true
+      TODOIST_TOKEN:
+        required: true
+      CODECOV_TOKEN:
+        required: true
 
 concurrency:
   group: ${{ github.ref }}-jellyfin

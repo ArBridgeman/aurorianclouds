@@ -6,6 +6,14 @@ on:
       - .github/workflows/test_utilities.yml
     branches-ignore:
       - main
+  workflow_call:
+    secrets:
+      GSHEETS_SERVICE_TOKEN:
+        required: true
+      TODOIST_TOKEN:
+        required: true
+      CODECOV_TOKEN:
+        required: true
 
 concurrency:
   group: ${{ github.ref }}-utilities

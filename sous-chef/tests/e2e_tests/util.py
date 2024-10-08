@@ -24,6 +24,7 @@ class Base:
             # TODO see if something else using & move
             recipe_book.recipe_book_path = get_local_recipe_book_path()
             recipe_book._read_recipe_book()
+            recipe_book._load_pint_quantity()
             return recipe_book.dataframe
 
     @staticmethod

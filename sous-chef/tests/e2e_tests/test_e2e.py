@@ -50,18 +50,18 @@ class Test(Base):
         config = self._get_config("menu_main")
         self._set_config_menu(config)
         config.menu.record_menu_history.save_loc.worksheet = "tmp-menu-history"
+        with patch.object(RecipeBook, "__post_init__", lambda x: None):
+            with patch.object(
+                RecipeBook,
+                "dataframe",
+                new_callable=PropertyMock,
+                return_value=self._get_local_recipe_book(config.recipe_book),
+            ):
+                config.menu.create_menu.input_method = "fixed"
+                run_menu(config)
 
-        with patch.object(
-            RecipeBook,
-            "dataframe",
-            new_callable=PropertyMock,
-            return_value=self._get_local_recipe_book(config.recipe_book),
-        ):
-            config.menu.create_menu.input_method = "fixed"
-            run_menu(config)
-
-            config.menu.create_menu.input_method = "final"
-            return run_menu(config)
+                config.menu.create_menu.input_method = "final"
+                return run_menu(config)
 
     def _run_grocery_list(self):
         config = self._get_config("grocery_list")
@@ -70,13 +70,14 @@ class Test(Base):
         config.grocery_list.todoist.project_name = PROJECT
         config.grocery_list.run_mode.with_todoist = True
         config.grocery_list.run_mode.check_referenced_recipe = False
-        with patch.object(
-            RecipeBook,
-            "dataframe",
-            new_callable=PropertyMock,
-            return_value=self._get_local_recipe_book(config.recipe_book),
-        ):
-            return run_grocery_list(config)
+        with patch.object(RecipeBook, "__post_init__", lambda x: None):
+            with patch.object(
+                RecipeBook,
+                "dataframe",
+                new_callable=PropertyMock,
+                return_value=self._get_local_recipe_book(config.recipe_book),
+            ):
+                return run_grocery_list(config)
 
     # TODO modify so that uses rtk & opened recipe json
     @patch("sous_chef.rtk.read_write_rtk.RtkService.unzip")

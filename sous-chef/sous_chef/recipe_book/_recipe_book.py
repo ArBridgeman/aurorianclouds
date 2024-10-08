@@ -67,6 +67,12 @@ class RecipeBasic(DataframeSearchable):
         # load basic recipe book to self.dataframe
         self._read_recipe_book()
 
+        self._load_pint_quantity()
+
+        if self.config.deduplicate:
+            self._select_highest_rated_when_duplicated_name()
+
+    def _load_pint_quantity(self):
         # cannot pickle pint quantities in cache
         quantity_cfg = self.config.quantity
         quantity_patterns = [
@@ -78,9 +84,6 @@ class RecipeBasic(DataframeSearchable):
                 quantity_patterns=quantity_patterns, recipe_output=x
             )
         )
-
-        if self.config.deduplicate:
-            self._select_highest_rated_when_duplicated_name()
 
     def get_recipe_by_title(self, title) -> pd.Series:
         try:

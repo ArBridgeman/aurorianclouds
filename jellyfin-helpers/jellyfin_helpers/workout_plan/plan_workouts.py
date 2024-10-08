@@ -95,7 +95,7 @@ class WorkoutPlanner:
         while data.shape[0] > 0 & (remaining_duration > timedelta(minutes=0)):
             duration = data.duration.dt.total_seconds() // 60
             tool = data.tool != ""
-            difficulty = np.maximum(data.difficulty, tool)
+            difficulty = np.maximum(data.difficulty_num, tool.astype(int))
             weights = duration + data.rating * 2 + difficulty * 2
 
             # select exercise
@@ -236,23 +236,7 @@ class WorkoutPlanner:
             else:
                 try:
                     selected_workouts = self._search_for_workout(
-                        row=row,
-                        skip_ids=all_skip_ids
-                        # currently not enough entries for these filters
-                        if row["values"]
-                        not in [
-                            "arms",
-                            "tennis",
-                            "mobility",
-                            "calves",
-                            "stretching",
-                            "stretch/back",
-                            "dance single",
-                            "thighs",
-                        ]
-                        # TODO would ideally not want the same one in a week
-                        # as jellyfin does not add duplicates to playlist
-                        else [],
+                        row=row, skip_ids=all_skip_ids
                     )
                     item_ids = selected_workouts.id.values
                     in_month_skip_ids.extend(item_ids)

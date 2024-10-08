@@ -98,6 +98,12 @@ def main(app_config: DictConfig):
 
     plan_exporter.export_to_todoist(todoist_helper)
 
+    if workout_planner.error_count > 0:
+        LOGGER.warning(
+            "Manually select exercises for "
+            f"{workout_planner.error_count} failed searches"
+        )
+
 
 if __name__ == "__main__":
     main()

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import List
 
@@ -6,6 +7,7 @@ import pandas as pd
 from jellyfin_helpers.jellyfin_api import Jellyfin
 from jellyfin_helpers.workout_plan.date_util import RelativeDate
 from jellyfin_helpers.workout_plan.models import (
+    Difficulty,
     SearchType,
     SetSchema,
     TimePlanSchema,
@@ -29,6 +31,23 @@ def convert_timedelta_to_min(time_delta: pd.Series) -> int:
     return int(time_delta.dt.total_seconds().values[0] // 60)
 
 
+@dataclass
+class SearchError(Exception):
+    key: str
+    value: str
+    message: str = "[search failed]"
+
+    def __post_init__(self):
+        super().__init__(self.message)
+
+    def __str__(self):
+        values = {
+            "key": self.key,
+            "value": self.value,
+        }
+        return f"{self.message}: {values}"
+
+
 class WorkoutPlanner:
     def __init__(
         self,
@@ -39,6 +58,7 @@ class WorkoutPlanner:
         self.app_config = app_config
         self.jellyfin = jellyfin
         self.workout_videos = workout_videos
+        self.error_count = 0
 
     @staticmethod
     def _is_value_in_list(row: pd.Series, search_term: str):
@@ -47,10 +67,18 @@ class WorkoutPlanner:
     def _search_for_workout(
         self, row: pd.Series, skip_ids: List[str]
     ) -> pd.DataFrame:
+        LOGGER.info(
+            "[search_for_workout]",
+            type=row["values"],
+            highest_difficulty=row.highest_difficulty,
+            duration_in_min=row.duration_in_min,
+            day=row.day,
+        )
         if row.search_type in SearchType.name_list():
             selected_workouts = self._select_exercise_by_key(
                 key=row.search_type,
                 value=row["values"],
+                highest_difficulty_str=row["highest_difficulty"],
                 duration_in_minutes=row.duration_in_min,
                 skip_ids=skip_ids,
             )
@@ -65,13 +93,13 @@ class WorkoutPlanner:
         selected_exercises = pd.DataFrame()
 
         while data.shape[0] > 0 & (remaining_duration > timedelta(minutes=0)):
-            # add 1 min to avoid division by 0
-            time_diff = (
-                remaining_duration + timedelta(minutes=1) - data.duration
-            ).dt.total_seconds() / 60
+            duration = data.duration.dt.total_seconds() // 60
+            tool = data.tool != ""
+            difficulty = np.maximum(data.difficulty_num, tool.astype(int))
+            weights = duration + data.rating * 2 + difficulty * 2
 
             # select exercise
-            exercise = data.sample(n=1, weights=1 / time_diff.values)
+            exercise = data.sample(n=1, weights=weights)
             exercise["description"] = (
                 f"{exercise.name.values[0]}"
                 f" ({convert_timedelta_to_min(exercise.duration)} min)"
@@ -88,12 +116,15 @@ class WorkoutPlanner:
         self,
         key: str,
         value: str,
+        highest_difficulty_str: str,
         duration_in_minutes: int,
         skip_ids: List[str],
     ) -> pd.DataFrame:
         duration_timedelta = pd.to_timedelta(f"{duration_in_minutes} minutes")
 
         mask = np.ones(self.workout_videos.shape[0], dtype=bool)
+        highest_difficulty = Difficulty[highest_difficulty_str].value
+        mask &= self.workout_videos.difficulty_num <= highest_difficulty
         if key == "genre":
             mask &= (
                 self.workout_videos.genre.str.strip().str.lower()
@@ -107,7 +138,11 @@ class WorkoutPlanner:
         mask = self._add_skip_ids_to_mask(mask, skip_ids)
 
         if (total_found := sum(mask)) == 0:
-            raise ValueError(f"no entries found for {key}={value}")
+            raise SearchError(
+                key=key,
+                value=value,
+                message="[select_exercise_by_key] no entries found",
+            )
         print(f"({key}={value}, {duration_in_minutes} min): {total_found}")
 
         return self._select_exercise(
@@ -197,46 +232,38 @@ class WorkoutPlanner:
                         "tool": [""],
                     }
                 )
+                plan = pd.concat([plan, new_row])
             else:
-                selected_workouts = self._search_for_workout(
-                    row=row,
-                    skip_ids=all_skip_ids
-                    # currently not enough entries for these filters
-                    if row["values"]
-                    not in [
-                        "tennis",
-                        "mobility",
-                        "calves",
-                        "stretching",
-                        "stretch/back",
-                        "dance single",
-                    ]
-                    # TODO would ideally not want the same one in a week
-                    # as jellyfin does not add duplicates to playlist
-                    else [],
-                )
-                item_ids = selected_workouts.id.values
-                in_month_skip_ids.extend(item_ids)
-                all_skip_ids.extend(item_ids)
+                try:
+                    selected_workouts = self._search_for_workout(
+                        row=row, skip_ids=all_skip_ids
+                    )
+                    item_ids = selected_workouts.id.values
+                    in_month_skip_ids.extend(item_ids)
+                    all_skip_ids.extend(item_ids)
 
-                num_entries = selected_workouts.shape[0]
-                new_row = pd.DataFrame(
-                    {
-                        "week": [week] * num_entries,
-                        "day": [days_from_now] * num_entries,
-                        "source_type": ["video"] * num_entries,
-                        "key": [key] * num_entries,
-                        "duration_in_min": selected_workouts.duration.apply(
-                            lambda x: x.seconds // 60
-                        ).values,
-                        "optional": [row.optional] * num_entries,
-                        "time_of_day": [row.time_of_day] * num_entries,
-                        "item_id": item_ids,
-                        "description": selected_workouts.description.values,
-                        "tool": selected_workouts.tool.values,
-                    }
-                )
-
-            plan = pd.concat([plan, new_row])
+                    num_entries = selected_workouts.shape[0]
+                    new_row = pd.DataFrame(
+                        {
+                            "week": [week] * num_entries,
+                            "day": [days_from_now] * num_entries,
+                            "source_type": ["video"] * num_entries,
+                            "key": [key] * num_entries,
+                            "duration_in_min": selected_workouts.duration.apply(
+                                lambda x: x.seconds // 60
+                            ).values,
+                            "optional": [row.optional] * num_entries,
+                            "time_of_day": [row.time_of_day] * num_entries,
+                            "item_id": item_ids,
+                            "description": selected_workouts.description.values,
+                            "tool": selected_workouts.tool.values,
+                        }
+                    )
+                    plan = pd.concat([plan, new_row])
+                except SearchError:
+                    self.error_count += 1
+                    LOGGER.warning(
+                        "...failed to find workout matching this criteria"
+                    )
 
         return WorkoutPlan.validate(plan)

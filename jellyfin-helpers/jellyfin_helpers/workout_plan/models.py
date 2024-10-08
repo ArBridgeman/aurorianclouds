@@ -45,6 +45,20 @@ class SearchType(Enum):
         return list(map(lambda c: getattr(c.name, string_method)(), cls))
 
 
+class Difficulty(IntEnum):
+    minus = -1
+    normal = 0
+    plus = 1
+
+    @classmethod
+    def name_list(cls, string_method: str = "casefold"):
+        return list(map(lambda c: getattr(c.name, string_method)(), cls))
+
+    @classmethod
+    def value_list(cls):
+        return list(map(lambda c: c.value, cls))
+
+
 class WorkoutVideoSchema(pa.SchemaModel):
     name: Series[str]
     id: Series[str]
@@ -53,6 +67,9 @@ class WorkoutVideoSchema(pa.SchemaModel):
     )
     genre: Series[str]
     tags: Series[List[str]]
+    difficulty: Series[str] = pa.Field(isin=Difficulty.name_list("lower"))
+    difficulty_num: Series[int] = pa.Field(isin=Difficulty.value_list())
+    rating: Series[float]
     tool: Series[str]
 
     class Config:
@@ -77,6 +94,9 @@ class TimePlanSchema(pa.SchemaModel):
     )
     entry_type: Series[str] = pa.Field(isin=EntryType.name_list("lower"))
     key: Series[str]
+    highest_difficulty: Series[str] = pa.Field(
+        isin=Difficulty.name_list("lower")
+    )
     optional: Series[str] = optional_field
     active: Series[str] = pa.Field(
         isin=["Y", "N"], nullable=False, default="Y", coerce=True

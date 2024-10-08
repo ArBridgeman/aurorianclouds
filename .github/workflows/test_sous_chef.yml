@@ -9,7 +9,11 @@ on:
       - main
   workflow_call:
     secrets:
-      token:
+      GSHEETS_SERVICE_TOKEN:
+        required: true
+      TODOIST_TOKEN:
+        required: true
+      CODECOV_TOKEN:
         required: true
 
 concurrency:

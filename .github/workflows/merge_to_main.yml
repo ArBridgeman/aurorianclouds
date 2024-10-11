@@ -18,3 +18,19 @@ jobs:
   call-sous-chef-tests:
     uses: ./.github/workflows/test_sous_chef.yml
     secrets: inherit
+  send_code_coverage:
+    runs-on: ubuntu-latest
+    needs: [call-utilities, call-jellyfin-helpers, call-sous-chef-tests]
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+      - name: Display structure of downloaded files
+        run: ls -R
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./cov_sous_chef/sous_chef_unit_tests.xml,./cov_sous_chef/sous_chef_integration_tests.xml,./cov_jellyfin_helpers/jellyfin_helpers_unit_tests.xml,./cov_jellyfin_helpers/jellyfin_helpers_integration_tests.xml,./cov_utilities/utilities_tests.xml
+          fail_ci_if_error: true
+          verbose: false
+

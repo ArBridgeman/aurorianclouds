@@ -39,12 +39,20 @@ jobs:
         working-directory: ./sous-chef
         run: poetry run pytest --cov=sous_chef --cov-report=xml:sous_chef_integration_tests.xml -k "not dropbox and not openfoodfacts" ./tests/integration_tests
       - name: Upload coverage to Codecov
+        if: github.ref != 'refs/heads/main'
         uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./sous-chef/sous_chef_unit_tests.xml,./sous-chef/sous_chef_integration_tests.xml
           fail_ci_if_error: true
           verbose: false
+      - name: Archive code coverage results
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cov_sous_chef
+          path: ./sous-chef/*.xml
+          retention-days: 5
       - name: Run e2e tests
         if: github.ref == 'refs/heads/main'
         working-directory: ./sous-chef

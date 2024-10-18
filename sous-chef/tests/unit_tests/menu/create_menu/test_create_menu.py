@@ -295,6 +295,4 @@ class TestGetWeekdayFromShort:
         # derived exception MenuConfigError
         with pytest.raises(Exception) as error:
             get_weekday_from_short("not-a-day")
-        assert (
-            str(error.value) == "[menu config error] not-a-day unknown weekday!"
-        )
+        assert str(error.value) == "[menu config error] not-a-day unknown day!"

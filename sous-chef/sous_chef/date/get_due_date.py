@@ -17,9 +17,9 @@ class Day(NamedTuple):
 
 class Weekday(ExtendedEnum):
     monday = Day(index=0, workday=True, abbreviation="mon")
-    tuesday = Day(index=1, workday=True, abbreviation="tue")
+    tuesday = Day(index=1, workday=True, abbreviation="tues")
     wednesday = Day(index=2, workday=True, abbreviation="wed")
-    thursday = Day(index=3, workday=True, abbreviation="thur")
+    thursday = Day(index=3, workday=True, abbreviation="thu")
     friday = Day(index=4, workday=True, abbreviation="fri")
     saturday = Day(index=5, workday=False, abbreviation="sat")
     sunday = Day(index=6, workday=False, abbreviation="sun")
@@ -27,6 +27,13 @@ class Weekday(ExtendedEnum):
     @classmethod
     def indices(cls) -> Tuple[int]:
         return tuple(member.value.index for member in cls)
+
+    @classmethod
+    def get_by_abbreviation(cls, abbreviation: str) -> Union["Weekday", None]:
+        for member in cls:
+            if abbreviation.lower() == member.value.abbreviation:
+                return member
+        return None
 
     @classmethod
     def get_by_index(cls, index: int) -> Union["Weekday", None]:

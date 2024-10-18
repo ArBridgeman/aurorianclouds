@@ -468,17 +468,7 @@ def validate_menu_schema(
 
 
 def get_weekday_from_short(short_week_day: str):
-    # TODO move to config
-    day_mapping = {
-        "mon": "Monday",
-        "tue": "Tuesday",
-        "tues": "Tuesday",
-        "wed": "Wednesday",
-        "thu": "Thursday",
-        "fri": "Friday",
-        "sat": "Saturday",
-        "sun": "Sunday",
-    }
-    if short_week_day.lower() in day_mapping:
-        return day_mapping[short_week_day.lower()]
-    raise MenuConfigError(f"{short_week_day} unknown weekday!")
+    weekday = Weekday.get_by_abbreviation(short_week_day)
+    if not weekday:
+        raise MenuConfigError(f"{short_week_day} unknown day!")
+    return weekday.name.capitalize()

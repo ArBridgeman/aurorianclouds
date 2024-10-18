@@ -5,6 +5,7 @@ from freezegun import freeze_time
 from hydra import compose, initialize
 from pytz import timezone
 from sous_chef.date.get_due_date import (
+    DEFAULT_TIMEZONE,
     DueDatetimeFormatter,
     MealTime,
     get_weekday_index,
@@ -133,12 +134,14 @@ class TestDueDatetimeFormatter:
         ) == create_datetime(day=24, hour=16, minute=30)
 
     @staticmethod
-    def test_get_due_datetime_with_hour_minute(
+    def test_get_due_datetime_with_time(
         frozen_due_datetime_formatter,
     ):
         assert frozen_due_datetime_formatter.get_due_datetime_with_time(
-            "monday", hour=14, minute=15
-        ) == create_datetime(day=24, hour=14, minute=15)
+            "monday", time=MealTime.dinner.value
+        ) == create_datetime(
+            day=24, hour=16, minute=30, tzinfo=DEFAULT_TIMEZONE
+        )
 
     @staticmethod
     @freeze_time(FROZEN_DATE)
@@ -218,30 +221,21 @@ class TestDueDatetimeFormatter:
         ) == create_datetime(day=day)
 
     @staticmethod
-    @pytest.mark.parametrize(
-        "meal_time,hour,minute",
-        [("breakfast", 8, 30), ("lunch", 12, 00), ("dinner", 16, 30)],
-    )
-    def test__get_meal_time_hour_minute(
-        frozen_due_datetime_formatter, meal_time, hour, minute
-    ):
-        assert frozen_due_datetime_formatter._get_meal_time_hour_minute(
-            meal_time
-        ) == (
-            hour,
-            minute,
+    @pytest.mark.parametrize("meal_time", MealTime)
+    def test__get_meal_time(frozen_due_datetime_formatter, meal_time):
+        assert (
+            frozen_due_datetime_formatter._get_meal_time(meal_time.name)
+            == meal_time.value
         )
 
     @staticmethod
     @pytest.mark.parametrize("meal_time", ["Dinner", "diNNeR", "DINNER"])
-    def test__get_meal_time_hour_minute_alternate_capitalization(
+    def test__get_meal_time_alternate_capitalization(
         frozen_due_datetime_formatter, meal_time
     ):
-        assert frozen_due_datetime_formatter._get_meal_time_hour_minute(
-            meal_time
-        ) == (
-            16,
-            30,
+        assert (
+            frozen_due_datetime_formatter._get_meal_time(meal_time)
+            == MealTime.dinner.value
         )
 
     @staticmethod
@@ -252,5 +246,6 @@ class TestDueDatetimeFormatter:
         assert initial_datetime.minute == 0
 
         assert frozen_due_datetime_formatter._set_specified_time(
-            initial_datetime, hour, minute
+            initial_datetime,
+            datetime.time(hour=hour, minute=minute, tzinfo=DEFAULT_TIMEZONE),
         ) == create_datetime(day=17, hour=hour, minute=minute)

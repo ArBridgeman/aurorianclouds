@@ -317,7 +317,7 @@ class GroceryList:
             meal_time = MealTime[meal_times[int(meal_time)]].value
 
             return self.due_date_formatter.get_due_datetime_with_time(
-                weekday=day, hour=meal_time["hour"], minute=meal_time["minute"]
+                weekday=day, time=meal_time
             )
 
         def _give_referenced_recipe_details():

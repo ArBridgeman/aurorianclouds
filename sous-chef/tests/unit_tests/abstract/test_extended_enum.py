@@ -71,3 +71,7 @@ def test_extended_enum_values(string_method, expected_result):
 )
 def test_extended_int_enum(string_method, expected_result):
     assert WhiteRabbitCounts.name_list(string_method) == expected_result
+
+
+def test_extended_enum_cap():
+    assert WhiteRabbitSays("LATE") == WhiteRabbitSays.late

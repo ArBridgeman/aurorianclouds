@@ -35,9 +35,23 @@ class Weekday(ExtendedEnum):
                 return member
         return None
 
+    @property
+    def index(self) -> int:
+        return self.value.index
+
+    @property
+    def is_workday(self) -> bool:
+        return self.value.workday
+
+    @property
+    def day_type(self) -> str:
+        if self.is_workday:
+            return "workday"
+        return "weekend"
+
 
 def get_weekday_index(weekday: str) -> int:
-    return Weekday(weekday).value.index
+    return Weekday(weekday).index
 
 
 class MealTime(ExtendedEnum):

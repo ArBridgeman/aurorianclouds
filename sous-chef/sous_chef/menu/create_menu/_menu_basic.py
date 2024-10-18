@@ -267,7 +267,7 @@ class MenuBasic(BaseWithExceptionHandling):
 
         if row.override_check == "N" and row.defrost == "N":
             self._check_menu_quality(
-                weekday=row.prep_datetime.weekday(), recipe=recipe
+                weekday_index=row.prep_datetime.weekday(), recipe=recipe
             )
 
         self._inspect_unrated_recipe(recipe)
@@ -281,7 +281,7 @@ class MenuBasic(BaseWithExceptionHandling):
             item=row["item"],
         )
 
-    def _check_menu_quality(self, weekday: int, recipe: pd.Series):
+    def _check_menu_quality(self, weekday_index: int, recipe: pd.Series):
         quality_check_config = self.config.quality_check
 
         self._ensure_rating_exceed_min(
@@ -290,8 +290,8 @@ class MenuBasic(BaseWithExceptionHandling):
         )
 
         day_type = "workday"
-        if weekday >= 5:
-            day_type = "weekend"
+        if isinstance(weekday_index, int):
+            day_type = Weekday.get_by_index(index=weekday_index).day_type
 
         if not quality_check_config[day_type].recipe_unrated_allowed:
             self._ensure_not_unrated_recipe(recipe=recipe, day_type=day_type)

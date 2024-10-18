@@ -221,24 +221,6 @@ class TestDueDatetimeFormatter:
         ) == create_datetime(day=day)
 
     @staticmethod
-    @pytest.mark.parametrize("meal_time", MealTime)
-    def test__get_meal_time(frozen_due_datetime_formatter, meal_time):
-        assert (
-            frozen_due_datetime_formatter._get_meal_time(meal_time.name)
-            == meal_time.value
-        )
-
-    @staticmethod
-    @pytest.mark.parametrize("meal_time", ["Dinner", "diNNeR", "DINNER"])
-    def test__get_meal_time_alternate_capitalization(
-        frozen_due_datetime_formatter, meal_time
-    ):
-        assert (
-            frozen_due_datetime_formatter._get_meal_time(meal_time)
-            == MealTime.dinner.value
-        )
-
-    @staticmethod
     @pytest.mark.parametrize("hour,minute", [(0, 0), (1, 31), (23, 59)])
     def test__set_specified_time(frozen_due_datetime_formatter, hour, minute):
         initial_datetime = create_datetime(day=17)

@@ -1,25 +1,43 @@
 import datetime
 from dataclasses import dataclass, field
+from typing import NamedTuple, Tuple, Union
 
 from omegaconf import DictConfig
 from pytz import timezone
-from sous_chef.abstract.extended_enum import ExtendedEnum, ExtendedIntEnum
+from sous_chef.abstract.extended_enum import ExtendedEnum
 
 DEFAULT_TIMEZONE = timezone("UTC")
 
 
-class Weekday(ExtendedIntEnum):
-    monday = 0
-    tuesday = 1
-    wednesday = 2
-    thursday = 3
-    friday = 4
-    saturday = 5
-    sunday = 6
+class Day(NamedTuple):
+    index: int
+    workday: bool
+    abbreviation: str
+
+
+class Weekday(ExtendedEnum):
+    monday = Day(index=0, workday=True, abbreviation="mon")
+    tuesday = Day(index=1, workday=True, abbreviation="tue")
+    wednesday = Day(index=2, workday=True, abbreviation="wed")
+    thursday = Day(index=3, workday=True, abbreviation="thur")
+    friday = Day(index=4, workday=True, abbreviation="fri")
+    saturday = Day(index=5, workday=False, abbreviation="sat")
+    sunday = Day(index=6, workday=False, abbreviation="sun")
+
+    @classmethod
+    def indices(cls) -> Tuple[int]:
+        return tuple(member.value.index for member in cls)
+
+    @classmethod
+    def get_by_index(cls, index: int) -> Union["Weekday", None]:
+        for member in cls:
+            if index == member.value.index:
+                return member
+        return None
 
 
 def get_weekday_index(weekday: str) -> int:
-    return Weekday[weekday.casefold()]
+    return Weekday(weekday).value.index
 
 
 class MealTime(ExtendedEnum):
@@ -77,7 +95,7 @@ class DueDatetimeFormatter:
     def replace_time_with_meal_time(
         self, due_date: datetime.datetime, meal_time: str
     ) -> datetime.datetime:
-        meal_time = self._get_meal_time(meal_time)
+        meal_time = MealTime(meal_time).value
         return self._set_specified_time(due_date, meal_time)
 
     def _get_anchor_date_at_midnight(self) -> datetime.datetime:
@@ -103,10 +121,6 @@ class DueDatetimeFormatter:
         return datetime.datetime.combine(
             anchor_date, datetime.datetime.min.time(), tzinfo=DEFAULT_TIMEZONE
         )
-
-    @staticmethod
-    def _get_meal_time(meal_time: str) -> datetime.time:
-        return MealTime[meal_time.casefold()].value
 
     @staticmethod
     def _set_specified_time(

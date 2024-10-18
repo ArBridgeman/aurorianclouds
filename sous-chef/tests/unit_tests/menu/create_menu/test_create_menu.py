@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from freezegun import freeze_time
+from sous_chef.date.get_due_date import Weekday
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.formatter.units import unit_registry
 from sous_chef.menu.create_menu._for_grocery_list import (
@@ -11,6 +12,10 @@ from sous_chef.menu.create_menu._for_grocery_list import (
 from sous_chef.menu.create_menu._menu_basic import get_weekday_from_short
 from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
+
+WEEKDAY_INT = [
+    pytest.param(member.value.index, id=member.name) for member in Weekday
+]
 
 
 @pytest.fixture
@@ -57,7 +62,7 @@ class TestMenu:
         assert result["time_total"] is pd.NaT
 
     @staticmethod
-    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4, 5, 6])
+    @pytest.mark.parametrize("weekday", WEEKDAY_INT)
     def test__check_menu_quality(menu, menu_config, weekday):
         menu_config.quality_check.recipe_rating_min = 3.0
         menu_config.quality_check.workday.recipe_unrated_allowed = True
@@ -71,7 +76,7 @@ class TestMenu:
         )
 
     @staticmethod
-    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4, 5, 6])
+    @pytest.mark.parametrize("weekday", WEEKDAY_INT)
     def test__check_menu_quality_ensure_rating_exceed_min(
         menu, menu_config, weekday
     ):
@@ -87,7 +92,7 @@ class TestMenu:
         )
 
     @staticmethod
-    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4, 5, 6])
+    @pytest.mark.parametrize("weekday", WEEKDAY_INT)
     def test__check_menu_quality_ensure_workday_not_unrated_recipe(
         menu, menu_config, weekday
     ):
@@ -107,7 +112,7 @@ class TestMenu:
         )
 
     @staticmethod
-    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4, 5, 6])
+    @pytest.mark.parametrize("weekday", WEEKDAY_INT)
     def test__check_menu_quality_ensure_workday_not_exceed_active_cook_time(
         menu, menu_config, weekday
     ):

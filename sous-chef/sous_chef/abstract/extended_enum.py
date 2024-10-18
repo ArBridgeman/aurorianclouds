@@ -17,6 +17,15 @@ def extend_enum(inherited_enums: List):
 
 class ExtendedEnum(Enum):
     @classmethod
+    def _missing_(cls, value):
+        if isinstance(value, str):
+            value_lower = value.lower()
+            for member in cls:
+                if member.name.lower() == value_lower:
+                    return member
+        return None
+
+    @classmethod
     def name_list(cls, string_method: str = "casefold"):
         return list(map(lambda c: getattr(c.name, string_method)(), cls))
 

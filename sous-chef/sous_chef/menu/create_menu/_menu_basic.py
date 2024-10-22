@@ -398,14 +398,12 @@ class MenuBasic(BaseWithExceptionHandling):
     ) -> DataFrameBase[TmpMenuSchema]:
         max_cook_active_minutes = None
         if row.override_check == "N":
-            if row.prep_datetime.weekday() < 5:
-                max_cook_active_minutes = float(
-                    self.config.quality_check.workday.cook_active_minutes_max
-                )
-            elif row.prep_datetime.weekday() >= 5:
-                max_cook_active_minutes = float(
-                    self.config.quality_check.weekend.cook_active_minutes_max
-                )
+            weekday = Weekday.get_by_index(row.prep_datetime.weekday())
+            max_cook_active_minutes = float(
+                self.config.quality_check[
+                    weekday.day_type
+                ].cook_active_minutes_max
+            )
 
         exclude_uuid_list = self.menu_history_uuid_list
         if processed_uuid_list:

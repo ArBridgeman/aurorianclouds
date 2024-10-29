@@ -1,8 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
-from enum import Enum
 from itertools import chain
-from typing import List, Tuple
+from typing import List, Tuple, Type
 
 import pandas as pd
 from omegaconf import DictConfig
@@ -284,8 +283,8 @@ class GroceryList:
                 response = input(f"\n{text} [y]es, [n]o: ").lower()
             return response
 
-        def _print_enum(eprint: Enum) -> str:
-            return ", ".join(f"{e.name} [{e.value}]" for e in eprint)
+        def _print_week_day_enum(eprint: Type[Weekday]) -> str:
+            return ", ".join(f"{e.name} [{e.value.index}]" for e in eprint)
 
         def _print_list(lprint: list[str]) -> str:
             return ", ".join(
@@ -294,11 +293,16 @@ class GroceryList:
 
         def _get_schedule_day_hour_minute() -> datetime:
             day = None
+            weekday_indices = Weekday.indices()
             while (
-                not day or not day.isnumeric() or int(day) not in iter(Weekday)
+                not day
+                or not day.isnumeric()
+                or int(day) not in weekday_indices
             ):
-                day = input(f"\nWeekday ({_print_enum(Weekday)}): ") or "-1"
-            day = Weekday(int(day)).name.capitalize()
+                day = (
+                    input(f"\nWeekday ({_print_week_day_enum(Weekday)}): ")
+                    or "-1"
+                )
 
             meal_time = None
             meal_times = MealTime.name_list("lower")
@@ -314,10 +318,11 @@ class GroceryList:
                     )
                     or "4"
                 )
-            meal_time = MealTime[meal_times[int(meal_time)]].value
+            meal_time = meal_times[int(meal_time)]
 
             return self.due_date_formatter.get_due_datetime_with_time(
-                weekday=day, hour=meal_time["hour"], minute=meal_time["minute"]
+                weekday=Weekday.get_by_index(int(day)).name,
+                time=MealTime[meal_time].value,
             )
 
         def _give_referenced_recipe_details():

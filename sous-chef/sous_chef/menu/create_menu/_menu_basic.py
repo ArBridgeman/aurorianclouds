@@ -267,7 +267,7 @@ class MenuBasic(BaseWithExceptionHandling):
 
         if row.override_check == "N" and row.defrost == "N":
             self._check_menu_quality(
-                weekday=row.prep_datetime.weekday(), recipe=recipe
+                weekday_index=row.prep_datetime.weekday(), recipe=recipe
             )
 
         self._inspect_unrated_recipe(recipe)
@@ -281,7 +281,7 @@ class MenuBasic(BaseWithExceptionHandling):
             item=row["item"],
         )
 
-    def _check_menu_quality(self, weekday: int, recipe: pd.Series):
+    def _check_menu_quality(self, weekday_index: int, recipe: pd.Series):
         quality_check_config = self.config.quality_check
 
         self._ensure_rating_exceed_min(
@@ -290,8 +290,8 @@ class MenuBasic(BaseWithExceptionHandling):
         )
 
         day_type = "workday"
-        if weekday >= 5:
-            day_type = "weekend"
+        if isinstance(weekday_index, int):
+            day_type = Weekday.get_by_index(index=weekday_index).day_type
 
         if not quality_check_config[day_type].recipe_unrated_allowed:
             self._ensure_not_unrated_recipe(recipe=recipe, day_type=day_type)
@@ -398,14 +398,12 @@ class MenuBasic(BaseWithExceptionHandling):
     ) -> DataFrameBase[TmpMenuSchema]:
         max_cook_active_minutes = None
         if row.override_check == "N":
-            if row.prep_datetime.weekday() < 5:
-                max_cook_active_minutes = float(
-                    self.config.quality_check.workday.cook_active_minutes_max
-                )
-            elif row.prep_datetime.weekday() >= 5:
-                max_cook_active_minutes = float(
-                    self.config.quality_check.weekend.cook_active_minutes_max
-                )
+            weekday = Weekday.get_by_index(row.prep_datetime.weekday())
+            max_cook_active_minutes = float(
+                self.config.quality_check[
+                    weekday.day_type
+                ].cook_active_minutes_max
+            )
 
         exclude_uuid_list = self.menu_history_uuid_list
         if processed_uuid_list:
@@ -468,17 +466,7 @@ def validate_menu_schema(
 
 
 def get_weekday_from_short(short_week_day: str):
-    # TODO move to config
-    day_mapping = {
-        "mon": "Monday",
-        "tue": "Tuesday",
-        "tues": "Tuesday",
-        "wed": "Wednesday",
-        "thu": "Thursday",
-        "fri": "Friday",
-        "sat": "Saturday",
-        "sun": "Sunday",
-    }
-    if short_week_day.lower() in day_mapping:
-        return day_mapping[short_week_day.lower()]
-    raise MenuConfigError(f"{short_week_day} unknown weekday!")
+    weekday = Weekday.get_by_abbreviation(short_week_day)
+    if not weekday:
+        raise MenuConfigError(f"{short_week_day} unknown day!")
+    return weekday.name.capitalize()

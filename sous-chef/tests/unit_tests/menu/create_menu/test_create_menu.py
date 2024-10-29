@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from freezegun import freeze_time
+from sous_chef.date.get_due_date import Weekday
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.formatter.units import unit_registry
 from sous_chef.menu.create_menu._for_grocery_list import (
@@ -11,6 +12,8 @@ from sous_chef.menu.create_menu._for_grocery_list import (
 from sous_chef.menu.create_menu._menu_basic import get_weekday_from_short
 from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
+
+WEEKDAY = [pytest.param(member, id=member.name) for member in Weekday]
 
 
 @pytest.fixture
@@ -57,21 +60,21 @@ class TestMenu:
         assert result["time_total"] is pd.NaT
 
     @staticmethod
-    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4, 5, 6])
+    @pytest.mark.parametrize("weekday", WEEKDAY)
     def test__check_menu_quality(menu, menu_config, weekday):
         menu_config.quality_check.recipe_rating_min = 3.0
         menu_config.quality_check.workday.recipe_unrated_allowed = True
         menu._check_menu_quality(
-            weekday=weekday, recipe=create_recipe(rating=np.nan)
+            weekday_index=weekday.index, recipe=create_recipe(rating=np.nan)
         )
         menu_config.quality_check.workday.recipe_unrated_allowed = False
         menu._check_menu_quality(
-            weekday=weekday,
+            weekday_index=weekday.index,
             recipe=create_recipe(rating=3.0, time_inactive_str="1 min"),
         )
 
     @staticmethod
-    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4, 5, 6])
+    @pytest.mark.parametrize("weekday", WEEKDAY)
     def test__check_menu_quality_ensure_rating_exceed_min(
         menu, menu_config, weekday
     ):
@@ -79,7 +82,7 @@ class TestMenu:
         # derived exception MenuQualityError
         with pytest.raises(Exception) as error:
             menu._check_menu_quality(
-                weekday=weekday, recipe=create_recipe(rating=2.5)
+                weekday_index=weekday, recipe=create_recipe(rating=2.5)
             )
         assert (
             str(error.value)
@@ -87,19 +90,17 @@ class TestMenu:
         )
 
     @staticmethod
-    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4, 5, 6])
+    @pytest.mark.parametrize("weekday", WEEKDAY)
     def test__check_menu_quality_ensure_workday_not_unrated_recipe(
         menu, menu_config, weekday
     ):
-        day_type = "workday"
-        if weekday >= 5:
-            day_type = "weekend"
+        day_type = weekday.day_type
 
         menu_config.quality_check[day_type].recipe_unrated_allowed = False
         # derived exception MenuQualityError
         with pytest.raises(Exception) as error:
             menu._check_menu_quality(
-                weekday=weekday, recipe=create_recipe(rating=np.nan)
+                weekday_index=weekday.index, recipe=create_recipe(rating=np.nan)
             )
         assert str(error.value) == (
             "[menu quality] recipe=dummy_title "
@@ -107,19 +108,17 @@ class TestMenu:
         )
 
     @staticmethod
-    @pytest.mark.parametrize("weekday", [0, 1, 2, 3, 4, 5, 6])
+    @pytest.mark.parametrize("weekday", WEEKDAY)
     def test__check_menu_quality_ensure_workday_not_exceed_active_cook_time(
         menu, menu_config, weekday
     ):
-        day_type = "workday"
-        if weekday >= 5:
-            day_type = "weekend"
+        day_type = weekday.day_type
 
         menu_config.quality_check[day_type].cook_active_minutes_max = 10
         # derived exception MenuQualityError
         with pytest.raises(Exception) as error:
             menu._check_menu_quality(
-                weekday=weekday,
+                weekday_index=weekday.index,
                 recipe=create_recipe(time_total_str="15 minutes"),
             )
         assert str(error.value) == (
@@ -296,6 +295,4 @@ class TestGetWeekdayFromShort:
         # derived exception MenuConfigError
         with pytest.raises(Exception) as error:
             get_weekday_from_short("not-a-day")
-        assert (
-            str(error.value) == "[menu config error] not-a-day unknown weekday!"
-        )
+        assert str(error.value) == "[menu config error] not-a-day unknown day!"

@@ -6,7 +6,7 @@ from sous_chef.abstract.extended_enum import ExtendedEnum
 
 
 @dataclass
-class BaseWithExceptionHandling(object):
+class BaseWithExceptionHandling:
     # needed since dataclass predetermines the kwarg order
     record_exception: List = field(default=None, init=False)
     tuple_log_exception: Tuple = field(default=(), init=False)
@@ -31,7 +31,7 @@ class BaseWithExceptionHandling(object):
         self.tuple_log_exception = tuple(tuple_log_exception)
         self.tuple_skip_exception = tuple(tuple_skip_exception)
 
-    class ExceptionHandler(object):
+    class ExceptionHandler:
         @classmethod
         def handle_exception(cls, func: Callable) -> Callable:
             def inner_function(*args, **kwargs):

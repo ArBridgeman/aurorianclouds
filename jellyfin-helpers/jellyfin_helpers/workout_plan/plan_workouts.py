@@ -95,7 +95,9 @@ class WorkoutPlanner:
         while data.shape[0] > 0 & (remaining_duration > timedelta(minutes=0)):
             duration = data.duration.dt.total_seconds() // 60
             tool = data.tool != ""
-            difficulty = np.maximum(data.difficulty_num, tool.astype(int))
+            difficulty = np.maximum(
+                np.abs(data.difficulty_num), tool.astype(int)
+            )
             weights = duration + data.rating * 2 + difficulty * 2
 
             # select exercise
@@ -124,7 +126,10 @@ class WorkoutPlanner:
 
         mask = np.ones(self.workout_videos.shape[0], dtype=bool)
         highest_difficulty = Difficulty[highest_difficulty_str].value
-        mask &= self.workout_videos.difficulty_num <= highest_difficulty
+        mask &= np.logical_or(
+            self.workout_videos.difficulty_num == highest_difficulty,
+            self.workout_videos.difficulty_num == Difficulty.normal.value,
+        )
         if key == "genre":
             mask &= (
                 self.workout_videos.genre.str.strip().str.lower()

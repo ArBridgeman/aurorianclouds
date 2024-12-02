@@ -1,9 +1,6 @@
 import pytest
-from sous_chef.abstract.extended_enum import (
-    ExtendedEnum,
-    ExtendedIntEnum,
-    extend_enum,
-)
+
+from utilities.extended_enum import ExtendedEnum, ExtendedIntEnum, extend_enum
 
 
 class TweedleTwins(ExtendedEnum):

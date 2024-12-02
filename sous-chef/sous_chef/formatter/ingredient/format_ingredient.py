@@ -4,7 +4,6 @@ import pandas as pd
 import regex
 from omegaconf import DictConfig
 from pint import Unit
-from sous_chef.abstract.extended_enum import ExtendedEnum
 from sous_chef.abstract.search_dataframe import FuzzySearchError
 from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_line_abstract import LineFormatter
@@ -14,6 +13,8 @@ from sous_chef.formatter.ingredient.format_referenced_recipe import (
 )
 from sous_chef.pantry_list.read_pantry_list import PantryList
 from structlog import get_logger
+
+from utilities.extended_enum import ExtendedEnum
 
 FILE_LOGGER = get_logger(__name__)
 

@@ -2,8 +2,9 @@ from dataclasses import dataclass
 from typing import Dict
 
 import pytest
-from sous_chef.abstract.extended_enum import ExtendedEnum
 from sous_chef.abstract.handle_exception import BaseWithExceptionHandling
+
+from utilities.extended_enum import ExtendedEnum
 
 CUSTOM_MESSAGE = "Dummy Exception Custom Message"
 

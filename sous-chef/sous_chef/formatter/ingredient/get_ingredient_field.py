@@ -3,7 +3,6 @@ from typing import List, Tuple
 
 from omegaconf import DictConfig
 from pint import Unit
-from sous_chef.abstract.extended_enum import ExtendedEnum, extend_enum
 from sous_chef.abstract.handle_exception import BaseWithExceptionHandling
 from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import (
@@ -21,6 +20,8 @@ from sous_chef.recipe_book.recipe_util import (
     RecipeSchema,
 )
 from structlog import get_logger
+
+from utilities.extended_enum import ExtendedEnum, extend_enum
 
 FILE_LOGGER = get_logger(__name__)
 

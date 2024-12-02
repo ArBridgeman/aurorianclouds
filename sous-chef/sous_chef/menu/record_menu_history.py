@@ -6,12 +6,12 @@ import pandas as pd
 import pandera as pa
 from omegaconf import DictConfig
 from pandera.typing import DataFrame, Series
-
-# from sous_chef.menu.create_menu import FinalizedMenuSchema
-from sous_chef.abstract.extended_enum import ExtendedEnum
 from structlog import get_logger
 
 from utilities.api.gsheets_api import GsheetsHelper
+
+# from sous_chef.menu.create_menu import FinalizedMenuSchema
+from utilities.extended_enum import ExtendedEnum
 
 FILE_LOGGER = get_logger(__name__)
 

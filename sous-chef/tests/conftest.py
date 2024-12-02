@@ -7,7 +7,6 @@ import pytest
 from freezegun import freeze_time
 from hydra import compose, initialize
 from pytz import UTC
-from sous_chef.abstract.extended_enum import ExtendedEnum
 from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
@@ -17,6 +16,8 @@ from sous_chef.grocery_list.generate_grocery_list.generate_grocery_list import (
 )
 from sous_chef.nutrition.provide_nutritional_info import Nutritionist
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
+
+from utilities.extended_enum import ExtendedEnum
 
 FROZEN_DATE = "2022-01-14"
 FROZEN_DATETIME = datetime.strptime(FROZEN_DATE, "%Y-%m-%d").replace(tzinfo=UTC)

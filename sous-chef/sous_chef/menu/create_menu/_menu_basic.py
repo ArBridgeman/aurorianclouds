@@ -9,11 +9,6 @@ import pandera as pa
 from omegaconf import DictConfig
 from pandera.typing import Series
 from pandera.typing.common import DataFrameBase
-from sous_chef.abstract.extended_enum import (
-    ExtendedEnum,
-    ExtendedIntEnum,
-    extend_enum,
-)
 from sous_chef.abstract.handle_exception import BaseWithExceptionHandling
 from sous_chef.date.get_due_date import DueDatetimeFormatter, MealTime, Weekday
 from sous_chef.formatter.ingredient.format_ingredient import (
@@ -33,6 +28,7 @@ from sous_chef.recipe_book.recipe_util import MapRecipeErrorToException
 from structlog import get_logger
 
 from utilities.api.gsheets_api import GsheetsHelper
+from utilities.extended_enum import ExtendedEnum, ExtendedIntEnum, extend_enum
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
 FILE_LOGGER = get_logger(__name__)

@@ -118,7 +118,7 @@ class WorkoutPlan(pa.SchemaModel):
     week: Series[int] = week_field
     day: Series[int] = pa.Field(ge=0, le=35, nullable=False, coerce=True)
     source_type: Series[str] = pa.Field(
-        isin=["reminder", "video"], nullable=False
+        isin=["reminder", "video", "missing_video"], nullable=False
     )
     key: Series[str]
     duration_in_min: Series[int] = duration_in_min_field

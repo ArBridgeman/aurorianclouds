@@ -95,7 +95,9 @@ class WorkoutPlanner:
         while data.shape[0] > 0 & (remaining_duration > timedelta(minutes=0)):
             duration = data.duration.dt.total_seconds() // 60
             tool = data.tool != ""
-            difficulty = np.maximum(data.difficulty_num, tool.astype(int))
+            difficulty = np.maximum(
+                np.abs(data.difficulty_num), tool.astype(int)
+            )
             weights = duration + data.rating * 2 + difficulty * 2
 
             # select exercise
@@ -124,7 +126,10 @@ class WorkoutPlanner:
 
         mask = np.ones(self.workout_videos.shape[0], dtype=bool)
         highest_difficulty = Difficulty[highest_difficulty_str].value
-        mask &= self.workout_videos.difficulty_num <= highest_difficulty
+        mask &= np.logical_or(
+            self.workout_videos.difficulty_num == highest_difficulty,
+            self.workout_videos.difficulty_num == Difficulty.normal.value,
+        )
         if key == "genre":
             mask &= (
                 self.workout_videos.genre.str.strip().str.lower()
@@ -159,6 +164,25 @@ class WorkoutPlanner:
         self, mask: pd.Series, skip_ids: List[str]
     ) -> pd.Series:
         return mask & ~self.workout_videos.id.isin(skip_ids)
+
+    @staticmethod
+    def _get_placeholder(
+        days_from_now: int, row: pd.Series, source_type: str
+    ) -> pd.DataFrame:
+        return pd.DataFrame(
+            {
+                "week": [row.week],
+                "day": [days_from_now],
+                "source_type": [source_type],
+                "key": [row.key],
+                "duration_in_min": [row.total_in_min],
+                "optional": [row.optional],
+                "time_of_day": [row.time_of_day],
+                "item_id": [""],
+                "description": [""],
+                "tool": [""],
+            }
+        )
 
     def _load_time_plan(
         self, workbook: WorkBook
@@ -213,26 +237,12 @@ class WorkoutPlanner:
 
             day_num = int(row.day.split("_")[0])
             days_from_now = relative_date.get_days_from_now(day_index=day_num)
-            week = row.week
 
-            key = row["key"]
             if row.entry_type == "reminder":
-                print(f"(reminder): {key}")
-                new_row = pd.DataFrame(
-                    {
-                        "week": [week],
-                        "day": [days_from_now],
-                        "source_type": ["reminder"],
-                        "key": [key],
-                        "duration_in_min": [row.total_in_min],
-                        "optional": [row.optional],
-                        "time_of_day": [row.time_of_day],
-                        "item_id": [""],
-                        "description": [""],
-                        "tool": [""],
-                    }
+                print(f"(reminder): {row.key}")
+                new_row = self._get_placeholder(
+                    days_from_now=days_from_now, row=row, source_type="reminder"
                 )
-                plan = pd.concat([plan, new_row])
             else:
                 try:
                     selected_workouts = self._search_for_workout(
@@ -245,10 +255,10 @@ class WorkoutPlanner:
                     num_entries = selected_workouts.shape[0]
                     new_row = pd.DataFrame(
                         {
-                            "week": [week] * num_entries,
+                            "week": [row.week] * num_entries,
                             "day": [days_from_now] * num_entries,
                             "source_type": ["video"] * num_entries,
-                            "key": [key] * num_entries,
+                            "key": [row.key] * num_entries,
                             "duration_in_min": selected_workouts.duration.apply(
                                 lambda x: x.seconds // 60
                             ).values,
@@ -259,11 +269,17 @@ class WorkoutPlanner:
                             "tool": selected_workouts.tool.values,
                         }
                     )
-                    plan = pd.concat([plan, new_row])
                 except SearchError:
                     self.error_count += 1
                     LOGGER.warning(
                         "...failed to find workout matching this criteria"
                     )
+                    new_row = self._get_placeholder(
+                        days_from_now=days_from_now,
+                        row=row,
+                        source_type="missing_video",
+                    )
+
+                plan = pd.concat([plan, new_row])
 
         return WorkoutPlan.validate(plan)

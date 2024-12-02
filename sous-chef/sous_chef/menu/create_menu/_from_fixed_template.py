@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 from omegaconf import DictConfig
 from pandera.typing.common import DataFrameBase
-from sous_chef.abstract.extended_enum import ExtendedIntEnum
 from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.menu.create_menu._menu_basic import (
     AllMenuSchema,
@@ -23,6 +22,7 @@ from structlog import get_logger
 from termcolor import cprint
 
 from utilities.api.gsheets_api import GsheetsHelper
+from utilities.extended_enum import ExtendedIntEnum
 
 FILE_LOGGER = get_logger(__name__)
 

@@ -3,9 +3,10 @@ from fractions import Fraction
 
 import regex
 from pint import Unit
-from sous_chef.abstract.extended_enum import ExtendedEnum
 from sous_chef.formatter.format_unit import UnitExtractionError, UnitFormatter
 from sous_chef.formatter.units import unit_registry
+
+from utilities.extended_enum import ExtendedEnum
 
 
 @dataclass

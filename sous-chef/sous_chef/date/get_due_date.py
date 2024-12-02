@@ -4,7 +4,8 @@ from typing import NamedTuple, Tuple, Union
 
 from omegaconf import DictConfig
 from pytz import timezone
-from sous_chef.abstract.extended_enum import ExtendedEnum
+
+from utilities.extended_enum import ExtendedEnum
 
 DEFAULT_TIMEZONE = timezone("UTC")
 

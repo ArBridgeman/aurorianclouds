@@ -3,8 +3,9 @@ from dataclasses import dataclass
 import pandas as pd
 import pandera as pa
 from pandera.typing import Series
-from sous_chef.abstract.extended_enum import ExtendedEnum
 from sous_chef.abstract.search_dataframe import DirectSearchError
+
+from utilities.extended_enum import ExtendedEnum
 
 
 class RecipeSchema(pa.SchemaModel):

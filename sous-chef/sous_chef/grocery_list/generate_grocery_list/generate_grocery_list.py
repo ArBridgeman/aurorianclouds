@@ -20,6 +20,7 @@ from structlog import get_logger
 from termcolor import cprint
 
 from utilities.api.todoist_api import TodoistHelper
+from utilities.validate_choice import YesNoChoices
 
 # TODO method to mark ingredients that can only be bought the day before
 
@@ -274,15 +275,6 @@ class GroceryList:
                 ).lower()
             return response
 
-        def _check_change_schedule_yes_no(text: str) -> str:
-            if debug_mode:
-                return "n"
-
-            response = None
-            while response not in ["y", "n"]:
-                response = input(f"\n{text} [y]es, [n]o: ").lower()
-            return response
-
         def _print_week_day_enum(eprint: Type[Weekday]) -> str:
             return ", ".join(f"{e.name} [{e.value.index}]" for e in eprint)
 
@@ -379,18 +371,21 @@ class GroceryList:
                         recipe.time_total is None
                         or recipe.time_total > timedelta(minutes=15)
                     ):
-                        change_schedule = _check_change_schedule_yes_no(
-                            "...separately schedule?"
+                        change_schedule = YesNoChoices.ask_yes_no(
+                            "...separately schedule?", debug_mode=debug_mode
                         )
 
-                        if change_schedule == "y":
+                        if change_schedule == YesNoChoices.yes:
                             schedule_datetime = _get_schedule_day_hour_minute()
                             if schedule_datetime > menu_recipe.for_day:
                                 schedule_datetime -= timedelta(days=7)
                             if sub_recipe_response != "w":
                                 prep_item = recipe.amount
 
-                    if change_schedule == "y" or sub_recipe_response == "w":
+                    if (
+                        change_schedule == YesNoChoices.yes
+                        or sub_recipe_response == "w"
+                    ):
                         self._add_preparation_task_to_queue(
                             f"[PREP] {prep_item}",
                             due_date=schedule_datetime,

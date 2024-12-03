@@ -22,6 +22,7 @@ from utilities.testing.pandas_util import (
     assert_equal_dataframe,
     assert_equal_series,
 )
+from utilities.validate_choice import YesNoChoices
 
 
 def create_grocery_list_row(
@@ -545,7 +546,7 @@ class TestAddReferencedRecipeToQueue:
         "change_schedule, expected_date",
         [
             (
-                "n",
+                YesNoChoices.no.value,
                 datetime.datetime(
                     year=2022,
                     month=1,
@@ -556,7 +557,7 @@ class TestAddReferencedRecipeToQueue:
                 ),
             ),
             (
-                "y",
+                YesNoChoices.yes.value,
                 datetime.datetime(
                     year=2022, month=1, day=25, hour=12, tzinfo=timezone("UTC")
                 ),

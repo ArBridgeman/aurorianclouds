@@ -1,7 +1,10 @@
 import datetime
+from unittest.mock import patch
 
 import pandas as pd
 import pytest
+
+from utilities.validate_choice import YesNoChoices
 
 
 class TestGroceryList:
@@ -27,4 +30,6 @@ class TestGroceryList:
             }
         )
         grocery_list.queue_preparation = prep_task_df
-        grocery_list.send_preparation_to_todoist(todoist_helper)
+
+        with patch("builtins.input", side_effect=[YesNoChoices.yes.value]):
+            grocery_list.send_preparation_to_todoist(todoist_helper)

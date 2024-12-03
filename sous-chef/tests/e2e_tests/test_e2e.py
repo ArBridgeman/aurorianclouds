@@ -16,6 +16,7 @@ from tests.data.util_data import (
 from tests.e2e_tests.util import PROJECT, Base
 
 from utilities.testing.pandas_util import assert_equal_dataframe
+from utilities.validate_choice import YesNoChoices
 
 
 @pytest.mark.gsheets
@@ -25,12 +26,14 @@ class Test(Base):
     @pytest.fixture(autouse=True)
     def run_before_and_after_tests(todoist_helper):
         """Fixture to execute asserts before and after a test is run"""
-        todoist_helper.delete_all_items_in_project(project=PROJECT)
+        with patch("builtins.input", side_effect=[YesNoChoices.yes.value]):
+            todoist_helper.delete_all_items_in_project(project=PROJECT)
 
         yield  # this is where the testing happens
 
         # Teardown : fill with any logic you want
-        todoist_helper.delete_all_items_in_project(project=PROJECT)
+        with patch("builtins.input", side_effect=[YesNoChoices.yes.value]):
+            todoist_helper.delete_all_items_in_project(project=PROJECT)
 
     @staticmethod
     def _convert_task_list_to_df(todoist_helper):
@@ -95,7 +98,6 @@ class Test(Base):
             return_value=frozen_due_datetime_formatter.anchor_datetime,
         ):
             final_menu = self._run_menu()
-
         assert_equal_dataframe(final_menu, get_final_menu())
 
         menu_history._load_history()
@@ -112,7 +114,8 @@ class Test(Base):
             new_callable=PropertyMock,
             return_value=frozen_due_datetime_formatter.anchor_datetime,
         ):
-            final_grocery_list = self._run_grocery_list()
+            with patch("builtins.input", side_effect=[YesNoChoices.yes.value]):
+                final_grocery_list = self._run_grocery_list()
         final_grocery_list.pint_unit = final_grocery_list.pint_unit.apply(
             lambda x: str(x)
         )

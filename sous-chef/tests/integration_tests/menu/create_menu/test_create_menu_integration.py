@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 from freezegun import freeze_time
 from hydra import compose, initialize
@@ -9,6 +11,7 @@ from tests.data.util_data import get_tmp_menu
 from tests.integration_tests.menu.create_menu.conftest import PROJECT
 
 from utilities.testing.pandas_util import assert_equal_dataframe
+from utilities.validate_choice import YesNoChoices
 
 
 @pytest.fixture
@@ -126,4 +129,5 @@ class TestMenu:
     def test_upload_menu_to_todoist(menu, todoist_helper):
         menu.load_final_menu()
         menu.upload_menu_to_todoist(todoist_helper)
-        todoist_helper.delete_all_items_in_project(project=PROJECT)
+        with patch("builtins.input", side_effect=[YesNoChoices.yes.value]):
+            todoist_helper.delete_all_items_in_project(project=PROJECT)

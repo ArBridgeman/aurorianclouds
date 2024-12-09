@@ -11,6 +11,8 @@ from structlog import get_logger
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Project, Section, Task
 
+from utilities.validate_choice import YesNoChoices
+
 ABS_FILE_PATH = Path(__file__).absolute().parent
 FILE_LOGGER = get_logger(__name__)
 
@@ -26,6 +28,21 @@ class TodoistKeyError(Exception):
 
     def __str__(self):
         return f"{self.message}: tag={self.tag} for value={self.value}"
+
+
+@dataclass
+class TodoistDeletionRejectedError(Exception):
+    number_tasks_to_be_deleted: int
+    message: str = "[todoist deletion rejected error]"
+
+    def __post_init__(self):
+        super().__init__(self.message)
+
+    def __str__(self):
+        return (
+            f"{self.message}: user rejected to delete "
+            f"number_tasks_to_be_deleted={self.number_tasks_to_be_deleted}"
+        )
 
 
 def get_due_datetime_str(due_datetime: datetime) -> str:
@@ -135,15 +152,10 @@ class AbstractTodoistHelper(ABC):
         only_delete_after_date: date = None,
         only_with_label: str = None,
     ) -> int:
-
-        FILE_LOGGER.info(
-            "[todoist delete]",
-            action="delete items in project",
-            project=project,
-        )
-
+        # TODO look into using the API query to reduce subsequent loops
+        # manually filtering tasks to decide what gets deleted or not
+        tasks_to_be_deleted = []
         project_id = self.get_project_id(project)
-        tasks_deleted = 0
         for task in self._get_tasks(project_id):
             if task.is_completed:
                 continue
@@ -160,14 +172,30 @@ class AbstractTodoistHelper(ABC):
                         continue
             if only_with_label and only_with_label not in task.labels:
                 continue
+            tasks_to_be_deleted.append(task)
 
-            self._delete_task(task_id=task.id)
-            tasks_deleted += 1
-
+        # checking if deletion desired & performing it
+        number_tasks_to_be_deleted = len(tasks_to_be_deleted)
         FILE_LOGGER.info(
-            "[todoist delete]", action=f"Deleted {tasks_deleted} tasks!"
+            "[todoist delete]",
+            action="Delete items in project",
+            project=project,
+            number_tasks_to_be_deleted=number_tasks_to_be_deleted,
         )
-        return tasks_deleted
+        if number_tasks_to_be_deleted > 0:
+            choice = YesNoChoices.ask_yes_no(
+                f"... delete {number_tasks_to_be_deleted} tasks?"
+            )
+            if choice == YesNoChoices.no:
+                raise TodoistDeletionRejectedError(
+                    number_tasks_to_be_deleted=number_tasks_to_be_deleted
+                )
+
+            for task in tasks_to_be_deleted:
+                self._delete_task(task_id=task.id)
+            FILE_LOGGER.info("[todoist delete]", action="Deleted tasks!")
+
+        return number_tasks_to_be_deleted
 
     def get_project_id(self, project_name: str) -> str:
         project_name = project_name.casefold()

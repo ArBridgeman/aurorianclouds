@@ -1,13 +1,16 @@
 from datetime import date, datetime
 from typing import Dict, List, Optional
+from unittest.mock import patch
 
 import pytest
 from tests.conftest import DEFAULT_PROJECT, DEFAULT_SECTION
 
 from utilities.api.base_classes.todoist import (
+    TodoistDeletionRejectedError,
     TodoistKeyError,
     get_due_datetime_str,
 )
+from utilities.validate_choice import YesNoChoices
 
 
 class TestTodoistHelper:
@@ -15,9 +18,10 @@ class TestTodoistHelper:
     @pytest.fixture
     def implementation(debug_todoist_helper, default_project):
         # clean up before test
-        debug_todoist_helper.delete_all_items_in_project(
-            project=default_project, skip_recurring=False
-        )
+        with patch("builtins.input", side_effect=[YesNoChoices.yes.value]):
+            debug_todoist_helper.delete_all_items_in_project(
+                project=default_project, skip_recurring=False
+            )
         # used to determine which fixture is being used
         yield debug_todoist_helper
 
@@ -120,6 +124,34 @@ class TestTodoistHelper:
 
         assert log.events == [self._log_add_task(**task_kwarg)]
 
+    def test_delete_all_items_in_project_user_rejects_deletion_raises_error(
+        self, implementation, pytest_area_project_id
+    ):
+        implementation.connection.add_task(
+            content="after_delete_date",
+            project_id=pytest_area_project_id,
+            due_string="2021-04-03",
+        )
+        assert (
+            self._get_task_count(
+                todoist_helper=implementation, project_id=pytest_area_project_id
+            )
+            == 1
+        )
+
+        with pytest.raises(TodoistDeletionRejectedError):
+            with patch("builtins.input", side_effect=[YesNoChoices.no.value]):
+                implementation.delete_all_items_in_project(
+                    project=DEFAULT_PROJECT,
+                    only_delete_after_date=date(year=2021, month=4, day=2),
+                )
+        assert (
+            self._get_task_count(
+                todoist_helper=implementation, project_id=pytest_area_project_id
+            )
+            == 1
+        )
+
     def test_delete_all_items_in_project_skip_recurring(
         self, implementation, pytest_area_project_id
     ):
@@ -136,9 +168,10 @@ class TestTodoistHelper:
             == 1
         )
 
-        implementation.delete_all_items_in_project(
-            project=DEFAULT_PROJECT, skip_recurring=True
-        )
+        with patch("builtins.input", side_effect=[YesNoChoices.yes.value]):
+            implementation.delete_all_items_in_project(
+                project=DEFAULT_PROJECT, skip_recurring=True
+            )
         assert (
             self._get_task_count(
                 todoist_helper=implementation, project_id=pytest_area_project_id
@@ -146,9 +179,10 @@ class TestTodoistHelper:
             == 1
         )
 
-        implementation.delete_all_items_in_project(
-            project=DEFAULT_PROJECT, skip_recurring=False
-        )
+        with patch("builtins.input", side_effect=[YesNoChoices.yes.value]):
+            implementation.delete_all_items_in_project(
+                project=DEFAULT_PROJECT, skip_recurring=False
+            )
         assert (
             self._get_task_count(
                 todoist_helper=implementation, project_id=pytest_area_project_id
@@ -186,10 +220,11 @@ class TestTodoistHelper:
             == 4
         )
 
-        implementation.delete_all_items_in_project(
-            project=DEFAULT_PROJECT,
-            only_delete_after_date=date(year=2021, month=4, day=2),
-        )
+        with patch("builtins.input", side_effect=[YesNoChoices.yes.value]):
+            implementation.delete_all_items_in_project(
+                project=DEFAULT_PROJECT,
+                only_delete_after_date=date(year=2021, month=4, day=2),
+            )
         assert (
             self._get_task_count(
                 todoist_helper=implementation, project_id=pytest_area_project_id
@@ -197,10 +232,11 @@ class TestTodoistHelper:
             == 3
         )
 
-        implementation.delete_all_items_in_project(
-            project=DEFAULT_PROJECT,
-            only_delete_after_date=date(year=2021, month=3, day=28),
-        )
+        with patch("builtins.input", side_effect=[YesNoChoices.yes.value]):
+            implementation.delete_all_items_in_project(
+                project=DEFAULT_PROJECT,
+                only_delete_after_date=date(year=2021, month=3, day=28),
+            )
         assert (
             self._get_task_count(
                 todoist_helper=implementation, project_id=pytest_area_project_id
@@ -229,9 +265,10 @@ class TestTodoistHelper:
             == 2
         )
 
-        implementation.delete_all_items_in_project(
-            project=DEFAULT_PROJECT, only_with_label="relevant-label"
-        )
+        with patch("builtins.input", side_effect=[YesNoChoices.yes.value]):
+            implementation.delete_all_items_in_project(
+                project=DEFAULT_PROJECT, only_with_label="relevant-label"
+            )
         assert (
             self._get_task_count(
                 todoist_helper=implementation, project_id=pytest_area_project_id
@@ -273,9 +310,10 @@ class TestTodoistHelperWithApi(TestTodoistHelper):
     @pytest.fixture
     def implementation(todoist_helper_with_api, default_project):
         # clean up before running test
-        todoist_helper_with_api.delete_all_items_in_project(
-            project=default_project, skip_recurring=False
-        )
+        with patch("builtins.input", side_effect=[YesNoChoices.yes.value]):
+            todoist_helper_with_api.delete_all_items_in_project(
+                project=default_project, skip_recurring=False
+            )
         # used to determine which fixture is being used
         yield todoist_helper_with_api
 

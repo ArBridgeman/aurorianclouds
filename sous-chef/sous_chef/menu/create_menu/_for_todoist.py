@@ -1,14 +1,23 @@
+from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import List, Union
 
 import pandas as pd
-from sous_chef.menu.create_menu._menu_basic import MenuBasic
+from omegaconf import DictConfig
+from pandera.typing.common import DataFrameBase
+from sous_chef.date.get_due_date import DueDatetimeFormatter
+from sous_chef.menu.create_menu._menu_basic import LoadedMenuSchema
 from todoist_api_python.models import Task
 
 from utilities.api.todoist_api import TodoistHelper
 
 
-class MenuForTodoist(MenuBasic):
+@dataclass
+class MenuForTodoist:
+    config: DictConfig
+    due_date_formatter: DueDatetimeFormatter
+    dataframe: DataFrameBase[LoadedMenuSchema] = None
+
     def upload_menu_to_todoist(
         self, todoist_helper: TodoistHelper
     ) -> List[Task]:

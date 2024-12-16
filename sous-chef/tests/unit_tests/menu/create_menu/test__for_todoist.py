@@ -8,12 +8,18 @@ from tests.conftest import FROZEN_DATE
 @pytest.fixture
 @freeze_time(FROZEN_DATE)
 def menu_for_todoist(
-    menu_config, frozen_due_datetime_formatter, mock_all_menus_df
+    menu_config,
+    frozen_due_datetime_formatter,
+    mock_all_menus_df,
+    mock_todoist_helper,
 ):
+    mock_todoist_helper.get_project_id = lambda x: "abcd"
+
     return MenuForTodoist(
-        config=menu_config.fixed,
-        due_date_formatter=frozen_due_datetime_formatter,
+        config=menu_config.todoist,
         dataframe=mock_all_menus_df,
+        due_date_formatter=frozen_due_datetime_formatter,
+        todoist_helper=mock_todoist_helper,
     )
 
 

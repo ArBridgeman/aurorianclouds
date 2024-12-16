@@ -18,9 +18,9 @@ FILE_LOGGER = get_logger(__name__)
 class Menu(MenuForGroceryList, MenuFromFixedTemplate):
     def upload_menu_to_todoist(self, todoist_helper: TodoistHelper):
         menu_for_todoist = MenuForTodoist(
-            config=self.config,
-            due_date_formatter=self.due_date_formatter,
+            config=self.config.todoist,
             dataframe=self.dataframe,
+            due_date_formatter=self.due_date_formatter,
+            todoist_helper=todoist_helper,
         )
-
-        menu_for_todoist.upload_menu_to_todoist(todoist_helper=todoist_helper)
+        menu_for_todoist.upload_menu_to_todoist()

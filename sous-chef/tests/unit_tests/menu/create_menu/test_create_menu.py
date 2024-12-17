@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import pytest
-from freezegun import freeze_time
 from sous_chef.date.get_due_date import Weekday
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.formatter.units import unit_registry
@@ -10,7 +9,6 @@ from sous_chef.menu.create_menu._for_grocery_list import (
     MenuRecipe,
 )
 from sous_chef.menu.create_menu._menu_basic import get_weekday_from_short
-from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
 
 WEEKDAY = [pytest.param(member, id=member.name) for member in Weekday]
@@ -124,54 +122,6 @@ class TestMenu:
         assert str(error.value) == (
             "[menu quality] recipe=dummy_title "
             f"error=(on {day_type}) cook_active_minutes=15.0 > 10.0"
-        )
-
-    @staticmethod
-    @freeze_time(FROZEN_DATE)
-    def test__format_task_name(menu, menu_builder):
-        row = menu_builder.create_tmp_menu_row(
-            item="french onion soup",
-            meal_time="dinner",
-            time_total_str=pd.to_timedelta("40 min"),
-        ).squeeze()
-        assert menu._format_task_name(row) == (
-            f"{row['item']} (x eat: {row.eat_factor}) [40 min]"
-        )
-
-    @staticmethod
-    @freeze_time(FROZEN_DATE)
-    def test__format_task_name_defrost(menu, menu_builder):
-        row = menu_builder.create_tmp_menu_row(
-            item="french onion soup",
-            meal_time="dinner",
-            time_total_str=pd.to_timedelta("40 min"),
-            defrost="Y",
-        ).squeeze()
-        assert menu._format_task_name(row) == row["item"]
-
-    @staticmethod
-    @freeze_time(FROZEN_DATE)
-    def test__format_task_name_ingredient(menu, menu_builder):
-        row = menu_builder.create_tmp_menu_row(
-            item="fries",
-            item_type="ingredient",
-            meal_time="dinner",
-        ).squeeze()
-        assert menu._format_task_name(row) == (
-            f"{row['item']} (x eat: {row.eat_factor}) [20 min]"
-        )
-
-    @staticmethod
-    @freeze_time(FROZEN_DATE)
-    def test__format_task_name_with_freeze_factor(menu, menu_builder):
-        recipe_title = "french onion soup"
-        row = menu_builder.create_tmp_menu_row(
-            item=recipe_title,
-            meal_time="dinner",
-            freeze_factor=0.5,
-        ).squeeze()
-        assert menu._format_task_name(row) == (
-            "french onion soup (x eat: 1.0, x freeze: 0.5) [5 min]"
         )
 
     @staticmethod

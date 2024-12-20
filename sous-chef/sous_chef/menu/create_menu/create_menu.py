@@ -16,6 +16,12 @@ FILE_LOGGER = get_logger(__name__)
 
 @dataclass
 class Menu(MenuForGroceryList, MenuFromFixedTemplate):
+    def temporarily_output_menu_for_review(self):
+        pass
+
+    def finalize_menu_to_external_services(self):
+        pass
+
     def upload_menu_to_todoist(self, todoist_helper: TodoistHelper):
         menu_for_todoist = MenuForTodoist(
             config=self.config.todoist,

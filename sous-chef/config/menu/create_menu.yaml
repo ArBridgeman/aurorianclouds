@@ -33,7 +33,7 @@ create_menu:
     basic_number: 0
     menu_number:
     basic_season: 0_any
-    selected_season: 4_fall
+    selected_season: 1_winter
     # if 0 is used as a basic menu, then change this to 1
     min_menu_number: 1
     # skips for random selections; gives error for hard-coded recipes

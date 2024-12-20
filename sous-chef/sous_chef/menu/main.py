@@ -40,7 +40,6 @@ def run_menu(config: DictConfig):
 
     recipe_book = RecipeBook(config.recipe_book)
 
-    # TODO move manual method here
     menu = Menu(
         config=config.menu.create_menu,
         due_date_formatter=due_date_formatter,

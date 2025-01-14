@@ -52,7 +52,7 @@ grocery_list:
     only_clean_todoist_mode: false
   ingredient_replacement:
     can_to_dried_bean:
-      is_active: true
+      is_active: false
       bean_list: [black beans, butter beans, chickpeas, kidney beans,
                   white beans, pinto beans]
       # conversion from can to dried grams

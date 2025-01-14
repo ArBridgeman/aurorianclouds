@@ -18,7 +18,7 @@ gram,ground beef,False,250.0,Meats,ground beef,Lidl,20304652,[Lasagna],2022-01-2
 cup,ground flaxseed,False,0.25,Nuts and seeds,ground flaxseed,grocery store,,[Baked Oatmeal Bars],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Bulk
 gram,hazelnuts,True,50.0,Nuts and seeds,hazelnuts,Amazon,5400606999763,[Baked Oatmeal Bars],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Amazon
 tablespoon,italian seasoning,False,1.0,Spices and herbs,italian seasoning,Amazon,,[Lasagna],2022-01-25 15:30:00+00:00,[Tue],2022-01-14,Amazon
-dimensionless,lasagna noodle,False,4.0,Pasta,lasagna noodles,Homemade,,[Lasagna],2022-01-25 15:30:00+00:00,[Tue],2022-01-14,Homemade
+dimensionless,lasagna noodle,False,4.0,Pasta,lasagna noodles,DM,,[Lasagna],2022-01-25 15:30:00+00:00,[Tue],2022-01-14,DM
 teaspoon,lemon juice,False,0.5,Juices,lemon juice,grocery store,4311501337745,[Spanish Deluxe Potatoes],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Juices and beverages
 tablespoon,mayo,False,2.0,Fats and oils,mayo,grocery store,4000339457823,[Spanish Deluxe Potatoes],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Sauces cans and oils
 tablespoon,milk,False,6.0,Dairy products,milk,Lidl,4311501688632,[Baked Oatmeal Bars],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Lidl

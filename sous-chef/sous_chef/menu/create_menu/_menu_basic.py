@@ -226,9 +226,6 @@ class MenuBasic(BaseWithExceptionHandling):
             dataframe=self.dataframe, model=TmpMenuSchema
         )
 
-    def save_with_menu_historian(self):
-        self.menu_historian.add_current_menu_to_history(self.dataframe)
-
     def _add_recipe_columns(
         self, row: pd.Series, recipe: pd.Series
     ) -> pd.Series:

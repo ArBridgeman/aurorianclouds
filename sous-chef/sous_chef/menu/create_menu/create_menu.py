@@ -26,7 +26,7 @@ class Menu(MenuFromFixedTemplate):
 
     def finalize_menu_to_external_services(self):
         self.load_final_menu()
-        self.save_with_menu_historian()
+        self.menu_historian.add_current_menu_to_history(self.dataframe)
 
         if self.config.menu.run_mode.with_todoist:
             todoist_helper = TodoistHelper(self.config.api.todoist)

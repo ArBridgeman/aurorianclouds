@@ -25,6 +25,7 @@ create_menu:
     menu_quality_check: raise
     menu_future_error: raise
   todoist:
+    is_active: false
     project_name: Menu
     remove_existing_task: false
     task_priority: 3

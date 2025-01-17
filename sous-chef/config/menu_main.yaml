@@ -25,5 +25,3 @@ menu:
       menu_future_error: log
     todoist:
       remove_existing_task: true
-  run_mode:
-    with_todoist: true

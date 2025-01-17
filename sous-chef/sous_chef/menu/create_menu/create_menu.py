@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import List
 
 import pandas as pd
+from omegaconf import DictConfig
 from pandera.typing.common import DataFrameBase
 from sous_chef.menu.create_menu._for_grocery_list import (
     MenuForGroceryList,
@@ -29,15 +30,15 @@ class Menu(MenuFromFixedTemplate):
         pass
 
     def finalize_menu_to_external_services(
-        self,
+        self, config_todoist: DictConfig
     ) -> DataFrameBase[TmpMenuSchema]:
         final_menu_df = self._load_final_menu()
         self.menu_historian.add_current_menu_to_history(
             current_menu=final_menu_df
         )
 
-        if self.config.menu.run_mode.with_todoist:
-            todoist_helper = TodoistHelper(self.config.api.todoist)
+        if self.config.todoist.is_active:
+            todoist_helper = TodoistHelper(config_todoist)
             self._upload_menu_to_todoist(
                 final_menu_df=final_menu_df, todoist_helper=todoist_helper
             )

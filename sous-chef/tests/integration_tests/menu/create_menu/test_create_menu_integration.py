@@ -127,8 +127,8 @@ class TestMenu:
 
     @staticmethod
     @pytest.mark.todoist
-    def test_upload_menu_to_todoist(menu, todoist_helper):
+    def test__upload_menu_to_todoist(menu, todoist_helper):
         menu.load_final_menu()
-        menu.upload_menu_to_todoist(todoist_helper)
+        menu._upload_menu_to_todoist(todoist_helper=todoist_helper)
         with patch("builtins.input", side_effect=[YesNoChoices.yes.value]):
             todoist_helper.delete_all_items_in_project(project=PROJECT)

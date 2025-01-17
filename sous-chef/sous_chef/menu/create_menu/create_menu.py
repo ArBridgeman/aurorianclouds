@@ -25,7 +25,12 @@ class Menu(MenuFromFixedTemplate):
         pass
 
     def finalize_menu_to_external_services(self):
-        pass
+        self.load_final_menu()
+        self.save_with_menu_historian()
+
+        if self.config.menu.run_mode.with_todoist:
+            todoist_helper = TodoistHelper(self.config.api.todoist)
+            self._upload_menu_to_todoist(todoist_helper)
 
     def get_menu_for_grocery_list(
         self,
@@ -39,7 +44,7 @@ class Menu(MenuFromFixedTemplate):
         )
         return menu_for_grocery_list.get_menu_for_grocery_list()
 
-    def upload_menu_to_todoist(self, todoist_helper: TodoistHelper):
+    def _upload_menu_to_todoist(self, todoist_helper: TodoistHelper):
         menu_for_todoist = MenuForTodoist(
             config=self.config.todoist,
             final_menu_df=self.dataframe,

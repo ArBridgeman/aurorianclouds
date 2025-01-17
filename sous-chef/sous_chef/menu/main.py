@@ -15,7 +15,6 @@ from sous_chef.rtk.read_write_rtk import RtkService
 from structlog import get_logger
 
 from utilities.api.gsheets_api import GsheetsHelper
-from utilities.api.todoist_api import TodoistHelper
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
 FILE_LOGGER = get_logger(__name__)
@@ -51,13 +50,7 @@ def run_menu(config: DictConfig):
     if config.menu.create_menu.input_method == "fixed":
         menu.finalize_fixed_menu()
     elif config.menu.create_menu.input_method == "final":
-        menu.load_final_menu()
-        menu.save_with_menu_historian()
-
-        if config.menu.run_mode.with_todoist:
-            todoist_helper = TodoistHelper(config.api.todoist)
-            menu.upload_menu_to_todoist(todoist_helper)
-
+        menu.finalize_menu_to_external_services()
     return menu.dataframe
 
 
@@ -65,7 +58,6 @@ def run_menu(config: DictConfig):
     config_path="../../config/", config_name="menu_main", version_base=None
 )
 def main(config: DictConfig):
-
     if config.random.seed is None:
         config.random.seed = datetime.now().timestamp()
     config.random.seed = int(config.random.seed)

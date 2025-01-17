@@ -17,7 +17,7 @@ def menu_for_todoist(
 
     return MenuForTodoist(
         config=menu_config.todoist,
-        dataframe=mock_all_menus_df,
+        final_menu_df=mock_all_menus_df,
         due_date_formatter=frozen_due_datetime_formatter,
         todoist_helper=mock_todoist_helper,
     )

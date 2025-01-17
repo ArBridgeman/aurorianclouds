@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from sous_chef.menu.create_menu._for_grocery_list import MenuForGroceryList
 from sous_chef.menu.create_menu._for_todoist import MenuForTodoist
 from sous_chef.menu.create_menu._from_fixed_template import (
     MenuFromFixedTemplate,
@@ -15,7 +14,7 @@ FILE_LOGGER = get_logger(__name__)
 
 
 @dataclass
-class Menu(MenuForGroceryList, MenuFromFixedTemplate):
+class Menu(MenuFromFixedTemplate):
     def temporarily_output_menu_for_review(self):
         pass
 
@@ -25,7 +24,7 @@ class Menu(MenuForGroceryList, MenuFromFixedTemplate):
     def upload_menu_to_todoist(self, todoist_helper: TodoistHelper):
         menu_for_todoist = MenuForTodoist(
             config=self.config.todoist,
-            dataframe=self.dataframe,
+            final_menu_df=self.dataframe,
             due_date_formatter=self.due_date_formatter,
             todoist_helper=todoist_helper,
         )

@@ -14,13 +14,13 @@ class MenuForTodoist:
     def __init__(
         self,
         config: DictConfig,
-        dataframe: DataFrameBase[LoadedMenuSchema],
+        final_menu_df: DataFrameBase[LoadedMenuSchema],
         due_date_formatter: DueDatetimeFormatter,
         todoist_helper: TodoistHelper,
     ):
         # data classes
         self.due_date_formatter = due_date_formatter
-        self.dataframe = dataframe
+        self.dataframe = final_menu_df
         self.todoist_helper = todoist_helper
         # settings
         self.project_name = config.project_name

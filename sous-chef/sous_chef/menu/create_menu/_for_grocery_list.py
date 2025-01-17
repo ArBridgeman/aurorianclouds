@@ -10,15 +10,20 @@ from sous_chef.abstract.handle_exception import BaseWithExceptionHandling
 from sous_chef.formatter.ingredient.format_ingredient import (
     Ingredient,
     IngredientFormatter,
+    MapIngredientErrorToException,
 )
 from sous_chef.menu.create_menu._menu_basic import (
     LoadedMenuSchema,
-    MapMenuErrorToException,
     MenuIncompleteError,
 )
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
-from sous_chef.recipe_book.recipe_util import RecipeSchema
+from sous_chef.recipe_book.recipe_util import (
+    MapRecipeErrorToException,
+    RecipeSchema,
+)
 from termcolor import cprint
+
+from utilities.extended_enum import ExtendedEnum, extend_enum
 
 
 @dataclass
@@ -37,6 +42,16 @@ class MenuRecipe:
     from_recipe: str
 
 
+@extend_enum(
+    [
+        MapIngredientErrorToException,
+        MapRecipeErrorToException,
+    ]
+)
+class MapMenuForGroceryListErrorToException(ExtendedEnum):
+    pass
+
+
 class MenuForGroceryList(BaseWithExceptionHandling):
     def __init__(
         self,
@@ -51,7 +66,7 @@ class MenuForGroceryList(BaseWithExceptionHandling):
 
         self.set_tuple_log_and_skip_exception_from_config(
             config_errors=config_errors,
-            exception_mapper=MapMenuErrorToException,
+            exception_mapper=MapMenuForGroceryListErrorToException,
         )
 
     def get_menu_for_grocery_list(

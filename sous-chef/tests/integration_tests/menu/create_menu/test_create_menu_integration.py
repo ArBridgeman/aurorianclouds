@@ -105,9 +105,9 @@ class TestMenu:
 
     @staticmethod
     def test_get_menu_for_grocery_list_fails_for_record_exception(
-        menu, mock_recipe_book
+        menu, menu_config, mock_recipe_book, capsys
     ):
-        menu.tuple_log_exception = (RecipeNotFoundError,)
+        menu_config.errors["recipe_not_found"] = "log"
         mock_recipe_book.get_recipe_by_title.side_effect = RecipeNotFoundError(
             recipe_title="dummy", search_results="dummy"
         )
@@ -120,9 +120,10 @@ class TestMenu:
             str(error.value)
             == "[menu had errors] will not send to grocery list until fixed"
         )
-        assert set(menu.record_exception) == {
+        assert (
             "[recipe not found] recipe=dummy search_results=[dummy]"
-        }
+            in capsys.readouterr().out
+        )
 
     @staticmethod
     @pytest.mark.todoist

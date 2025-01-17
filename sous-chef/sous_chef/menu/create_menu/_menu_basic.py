@@ -269,14 +269,6 @@ class MenuBasic(BaseWithExceptionHandling):
         self._inspect_unrated_recipe(recipe)
         return row
 
-    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
-    def _check_manual_ingredient(self, row: pd.Series):
-        return self.ingredient_formatter.format_manual_ingredient(
-            quantity=float(row["eat_factor"]),
-            unit=row["eat_unit"],
-            item=row["item"],
-        )
-
     def _check_menu_quality(self, weekday_index: int, recipe: pd.Series):
         quality_check_config = self.config.quality_check
 

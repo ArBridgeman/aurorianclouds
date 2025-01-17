@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from omegaconf import DictConfig
 from pandera.typing.common import DataFrameBase
+from sous_chef.abstract.handle_exception import BaseWithExceptionHandling
 from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.menu.create_menu._menu_basic import (
     AllMenuSchema,
@@ -125,11 +126,16 @@ class MenuFromFixedTemplate(MenuBasic):
             future_uuid_tuple=future_uuid_tuple,
         )
 
+    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _process_ingredient(
         self, row: pd.Series
     ) -> DataFrameBase[TmpMenuSchema]:
         # do NOT need returned, as just ensuring exists
-        self._check_manual_ingredient(row=row)
+        self.ingredient_formatter.format_manual_ingredient(
+            quantity=float(row["eat_factor"]),
+            unit=row["eat_unit"],
+            item=row["item"],
+        )
 
         row["time_total"] = timedelta(
             minutes=int(self.config.ingredient.default_cook_minutes)

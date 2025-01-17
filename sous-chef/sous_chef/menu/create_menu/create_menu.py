@@ -30,10 +30,10 @@ class Menu(MenuFromFixedTemplate):
     def get_menu_for_grocery_list(
         self,
     ) -> (List[MenuIngredient], List[MenuRecipe]):
-        final_menu_df = self.load_final_menu()
+        self.load_final_menu()
         menu_for_grocery_list = MenuForGroceryList(
             config_errors=self.config.errors,
-            final_menu_df=final_menu_df,
+            final_menu_df=self.dataframe,
             ingredient_formatter=self.ingredient_formatter,
             recipe_book=self.recipe_book,
         )

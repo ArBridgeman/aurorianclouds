@@ -13,10 +13,8 @@ from sous_chef.menu.create_menu._for_todoist import MenuForTodoist
 from sous_chef.menu.create_menu._from_fixed_template import (
     MenuFromFixedTemplate,
 )
-from sous_chef.menu.create_menu._menu_basic import (
-    TmpMenuSchema,
-    validate_menu_schema,
-)
+from sous_chef.menu.create_menu._menu_basic import validate_menu_schema
+from sous_chef.menu.create_menu.models import TmpMenuSchema
 from structlog import get_logger
 
 from utilities.api.todoist_api import TodoistHelper
@@ -30,7 +28,9 @@ class Menu(MenuFromFixedTemplate):
     def temporarily_output_menu_for_review(self):
         pass
 
-    def finalize_menu_to_external_services(self):
+    def finalize_menu_to_external_services(
+        self,
+    ) -> DataFrameBase[TmpMenuSchema]:
         final_menu_df = self._load_final_menu()
         self.menu_historian.add_current_menu_to_history(
             current_menu=final_menu_df
@@ -41,6 +41,7 @@ class Menu(MenuFromFixedTemplate):
             self._upload_menu_to_todoist(
                 final_menu_df=final_menu_df, todoist_helper=todoist_helper
             )
+        return final_menu_df
 
     def get_menu_for_grocery_list(
         self,

@@ -4,10 +4,10 @@ from typing import List
 
 import pandas as pd
 import pandera as pa
-from menu.create_menu._menu_basic import TmpMenuSchema
 from omegaconf import DictConfig
 from pandera.typing import DataFrame, Series
 from pandera.typing.common import DataFrameBase
+from sous_chef.menu.create_menu.models import TmpMenuSchema
 from structlog import get_logger
 
 from utilities.api.gsheets_api import GsheetsHelper

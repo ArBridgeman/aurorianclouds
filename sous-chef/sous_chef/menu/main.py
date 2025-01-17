@@ -49,9 +49,9 @@ def run_menu(config: DictConfig):
     )
     if config.menu.create_menu.input_method == "fixed":
         menu.finalize_fixed_menu()
+        return menu.dataframe
     elif config.menu.create_menu.input_method == "final":
-        menu.finalize_menu_to_external_services()
-    return menu.dataframe
+        return menu.finalize_menu_to_external_services()
 
 
 @hydra.main(

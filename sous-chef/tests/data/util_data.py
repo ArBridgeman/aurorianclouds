@@ -3,11 +3,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from pandera.typing.common import DataFrameBase
-from sous_chef.menu.create_menu._menu_basic import (
-    AllMenuSchema,
-    TmpMenuSchema,
-    validate_menu_schema,
-)
+from sous_chef.menu.create_menu._menu_basic import validate_menu_schema
+from sous_chef.menu.create_menu.models import AllMenuSchema, TmpMenuSchema
 
 abs_path = Path(__file__).parent.absolute()
 

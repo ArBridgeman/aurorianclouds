@@ -5,7 +5,7 @@ import pandas as pd
 from omegaconf import DictConfig
 from pandera.typing.common import DataFrameBase
 from sous_chef.date.get_due_date import DueDatetimeFormatter
-from sous_chef.menu.create_menu._menu_basic import TmpMenuSchema
+from sous_chef.menu.create_menu.models import TmpMenuSchema
 
 from utilities.api.todoist_api import TodoistHelper
 

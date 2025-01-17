@@ -4,8 +4,10 @@ from typing import List
 
 import pandas as pd
 import pandera as pa
+from menu.create_menu._menu_basic import TmpMenuSchema
 from omegaconf import DictConfig
 from pandera.typing import DataFrame, Series
+from pandera.typing.common import DataFrameBase
 from structlog import get_logger
 
 from utilities.api.gsheets_api import GsheetsHelper
@@ -73,7 +75,9 @@ class MenuHistorian:
             self.dataframe.cook_datetime < self.current_menu_start_date
         ]
 
-    def add_current_menu_to_history(self, current_menu: DataFrame):
+    def add_current_menu_to_history(
+        self, current_menu: DataFrameBase[TmpMenuSchema]
+    ):
         menu_recipes = current_menu[current_menu["type"] == "recipe"][
             self.columns
         ]

@@ -73,8 +73,8 @@ class TestMenu:
     ):
         menu_config.fixed.menu_number = 1
         menu_with_recipe_book.finalize_fixed_menu()
-        menu_with_recipe_book.load_final_menu()
-        assert_equal_dataframe(menu_with_recipe_book.dataframe, get_tmp_menu())
+        final_menu_df = menu_with_recipe_book._load_final_menu()
+        assert_equal_dataframe(final_menu_df, get_tmp_menu())
 
     @staticmethod
     def test_finalize_fixed_menu_fails_for_record_exception(
@@ -128,7 +128,9 @@ class TestMenu:
     @staticmethod
     @pytest.mark.todoist
     def test__upload_menu_to_todoist(menu, todoist_helper):
-        menu.load_final_menu()
-        menu._upload_menu_to_todoist(todoist_helper=todoist_helper)
+        final_menu_df = menu._load_final_menu()
+        menu._upload_menu_to_todoist(
+            final_menu_df=final_menu_df, todoist_helper=todoist_helper
+        )
         with patch("builtins.input", side_effect=[YesNoChoices.yes.value]):
             todoist_helper.delete_all_items_in_project(project=PROJECT)

@@ -13,8 +13,8 @@ from sous_chef.formatter.ingredient.format_ingredient import (
     MapIngredientErrorToException,
 )
 from sous_chef.menu.create_menu._menu_basic import (
-    LoadedMenuSchema,
     MenuIncompleteError,
+    TmpMenuSchema,
 )
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
 from sous_chef.recipe_book.recipe_util import (
@@ -56,7 +56,7 @@ class MenuForGroceryList(BaseWithExceptionHandling):
     def __init__(
         self,
         config_errors: DictConfig,
-        final_menu_df: DataFrameBase[LoadedMenuSchema],
+        final_menu_df: DataFrameBase[TmpMenuSchema],
         ingredient_formatter: IngredientFormatter,
         recipe_book: RecipeBook,
     ):

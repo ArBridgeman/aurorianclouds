@@ -5,7 +5,7 @@ import pandas as pd
 from omegaconf import DictConfig
 from pandera.typing.common import DataFrameBase
 from sous_chef.date.get_due_date import DueDatetimeFormatter
-from sous_chef.menu.create_menu._menu_basic import LoadedMenuSchema
+from sous_chef.menu.create_menu._menu_basic import TmpMenuSchema
 
 from utilities.api.todoist_api import TodoistHelper
 
@@ -14,7 +14,7 @@ class MenuForTodoist:
     def __init__(
         self,
         config: DictConfig,
-        final_menu_df: DataFrameBase[LoadedMenuSchema],
+        final_menu_df: DataFrameBase[TmpMenuSchema],
         due_date_formatter: DueDatetimeFormatter,
         todoist_helper: TodoistHelper,
     ):

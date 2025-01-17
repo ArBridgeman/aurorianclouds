@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List
 
+import pandas as pd
+from pandera.typing.common import DataFrameBase
 from sous_chef.menu.create_menu._for_grocery_list import (
     MenuForGroceryList,
     MenuIngredient,
@@ -10,6 +12,10 @@ from sous_chef.menu.create_menu._for_grocery_list import (
 from sous_chef.menu.create_menu._for_todoist import MenuForTodoist
 from sous_chef.menu.create_menu._from_fixed_template import (
     MenuFromFixedTemplate,
+)
+from sous_chef.menu.create_menu._menu_basic import (
+    TmpMenuSchema,
+    validate_menu_schema,
 )
 from structlog import get_logger
 
@@ -25,29 +31,49 @@ class Menu(MenuFromFixedTemplate):
         pass
 
     def finalize_menu_to_external_services(self):
-        self.load_final_menu()
-        self.menu_historian.add_current_menu_to_history(self.dataframe)
+        final_menu_df = self._load_final_menu()
+        self.menu_historian.add_current_menu_to_history(
+            current_menu=final_menu_df
+        )
 
         if self.config.menu.run_mode.with_todoist:
             todoist_helper = TodoistHelper(self.config.api.todoist)
-            self._upload_menu_to_todoist(todoist_helper)
+            self._upload_menu_to_todoist(
+                final_menu_df=final_menu_df, todoist_helper=todoist_helper
+            )
 
     def get_menu_for_grocery_list(
         self,
     ) -> (List[MenuIngredient], List[MenuRecipe]):
-        self.load_final_menu()
+        final_menu_df = self._load_final_menu()
         menu_for_grocery_list = MenuForGroceryList(
             config_errors=self.config.errors,
-            final_menu_df=self.dataframe,
+            final_menu_df=final_menu_df,
             ingredient_formatter=self.ingredient_formatter,
             recipe_book=self.recipe_book,
         )
         return menu_for_grocery_list.get_menu_for_grocery_list()
 
-    def _upload_menu_to_todoist(self, todoist_helper: TodoistHelper):
+    def _load_final_menu(self) -> DataFrameBase[TmpMenuSchema]:
+        worksheet = self.config.final_menu.worksheet
+        workbook = self.gsheets_helper.get_workbook(
+            self.config.final_menu.workbook
+        )
+
+        final_menu_df = workbook.get_worksheet(worksheet_name=worksheet)
+        final_menu_df.time_total = pd.to_timedelta(final_menu_df.time_total)
+        return validate_menu_schema(
+            dataframe=final_menu_df, model=TmpMenuSchema
+        )
+
+    def _upload_menu_to_todoist(
+        self,
+        final_menu_df: DataFrameBase[TmpMenuSchema],
+        todoist_helper: TodoistHelper,
+    ):
         menu_for_todoist = MenuForTodoist(
             config=self.config.todoist,
-            final_menu_df=self.dataframe,
+            final_menu_df=final_menu_df,
             due_date_formatter=self.due_date_formatter,
             todoist_helper=todoist_helper,
         )

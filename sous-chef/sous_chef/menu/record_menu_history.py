@@ -6,6 +6,8 @@ import pandas as pd
 import pandera as pa
 from omegaconf import DictConfig
 from pandera.typing import DataFrame, Series
+from pandera.typing.common import DataFrameBase
+from sous_chef.menu.create_menu.models import TmpMenuSchema
 from structlog import get_logger
 
 from utilities.api.gsheets_api import GsheetsHelper
@@ -73,7 +75,9 @@ class MenuHistorian:
             self.dataframe.cook_datetime < self.current_menu_start_date
         ]
 
-    def add_current_menu_to_history(self, current_menu: DataFrame):
+    def add_current_menu_to_history(
+        self, current_menu: DataFrameBase[TmpMenuSchema]
+    ):
         menu_recipes = current_menu[current_menu["type"] == "recipe"][
             self.columns
         ]

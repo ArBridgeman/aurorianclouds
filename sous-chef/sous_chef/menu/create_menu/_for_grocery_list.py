@@ -4,14 +4,24 @@ from dataclasses import dataclass
 from typing import List
 
 import pandas as pd
+from omegaconf import DictConfig
+from pandera.typing.common import DataFrameBase
 from sous_chef.abstract.handle_exception import BaseWithExceptionHandling
-from sous_chef.formatter.ingredient.format_ingredient import Ingredient
-from sous_chef.menu.create_menu._menu_basic import (
-    MenuBasic,
-    MenuIncompleteError,
+from sous_chef.formatter.ingredient.format_ingredient import (
+    Ingredient,
+    IngredientFormatter,
+    MapIngredientErrorToException,
 )
-from sous_chef.recipe_book.recipe_util import RecipeSchema
+from sous_chef.menu.create_menu._menu_basic import MenuIncompleteError
+from sous_chef.menu.create_menu.models import TmpMenuSchema
+from sous_chef.recipe_book.read_recipe_book import RecipeBook
+from sous_chef.recipe_book.recipe_util import (
+    MapRecipeErrorToException,
+    RecipeSchema,
+)
 from termcolor import cprint
+
+from utilities.extended_enum import ExtendedEnum, extend_enum
 
 
 @dataclass
@@ -30,13 +40,37 @@ class MenuRecipe:
     from_recipe: str
 
 
-class MenuForGroceryList(MenuBasic):
+@extend_enum(
+    [
+        MapIngredientErrorToException,
+        MapRecipeErrorToException,
+    ]
+)
+class MapMenuForGroceryListErrorToException(ExtendedEnum):
+    pass
+
+
+class MenuForGroceryList(BaseWithExceptionHandling):
+    def __init__(
+        self,
+        config_errors: DictConfig,
+        final_menu_df: DataFrameBase[TmpMenuSchema],
+        ingredient_formatter: IngredientFormatter,
+        recipe_book: RecipeBook,
+    ):
+        self.dataframe = final_menu_df
+        self.ingredient_formatter = ingredient_formatter
+        self.recipe_book = recipe_book
+
+        self.set_tuple_log_and_skip_exception_from_config(
+            config_errors=config_errors,
+            exception_mapper=MapMenuForGroceryListErrorToException,
+        )
+
     def get_menu_for_grocery_list(
         self,
     ) -> (List[MenuIngredient], List[MenuRecipe]):
         self.record_exception = []
-
-        self.load_final_menu()
 
         entry_funcs = {
             "ingredient": self._retrieve_manual_menu_ingredient,
@@ -62,8 +96,13 @@ class MenuForGroceryList(MenuBasic):
     def _retrieve_manual_menu_ingredient(
         self, row: pd.Series
     ) -> MenuIngredient:
+        ingredient = self.ingredient_formatter.format_manual_ingredient(
+            quantity=float(row["eat_factor"]),
+            unit=row["eat_unit"],
+            item=row["item"],
+        )
         return MenuIngredient(
-            ingredient=self._check_manual_ingredient(row),
+            ingredient=ingredient,
             from_recipe="manual",
             for_day=row["prep_datetime"],
         )

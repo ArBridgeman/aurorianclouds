@@ -73,8 +73,8 @@ class TestMenu:
     ):
         menu_config.fixed.menu_number = 1
         menu_with_recipe_book.finalize_fixed_menu()
-        menu_with_recipe_book.load_final_menu()
-        assert_equal_dataframe(menu_with_recipe_book.dataframe, get_tmp_menu())
+        final_menu_df = menu_with_recipe_book._load_final_menu()
+        assert_equal_dataframe(final_menu_df, get_tmp_menu())
 
     @staticmethod
     def test_finalize_fixed_menu_fails_for_record_exception(
@@ -105,9 +105,9 @@ class TestMenu:
 
     @staticmethod
     def test_get_menu_for_grocery_list_fails_for_record_exception(
-        menu, mock_recipe_book
+        menu, menu_config, mock_recipe_book, capsys
     ):
-        menu.tuple_log_exception = (RecipeNotFoundError,)
+        menu_config.errors["recipe_not_found"] = "log"
         mock_recipe_book.get_recipe_by_title.side_effect = RecipeNotFoundError(
             recipe_title="dummy", search_results="dummy"
         )
@@ -120,14 +120,17 @@ class TestMenu:
             str(error.value)
             == "[menu had errors] will not send to grocery list until fixed"
         )
-        assert set(menu.record_exception) == {
+        assert (
             "[recipe not found] recipe=dummy search_results=[dummy]"
-        }
+            in capsys.readouterr().out
+        )
 
     @staticmethod
     @pytest.mark.todoist
-    def test_upload_menu_to_todoist(menu, todoist_helper):
-        menu.load_final_menu()
-        menu.upload_menu_to_todoist(todoist_helper)
+    def test__upload_menu_to_todoist(menu, todoist_helper):
+        final_menu_df = menu._load_final_menu()
+        menu._upload_menu_to_todoist(
+            final_menu_df=final_menu_df, todoist_helper=todoist_helper
+        )
         with patch("builtins.input", side_effect=[YesNoChoices.yes.value]):
             todoist_helper.delete_all_items_in_project(project=PROJECT)

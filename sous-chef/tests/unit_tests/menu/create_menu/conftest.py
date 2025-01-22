@@ -9,14 +9,14 @@ from hydra import compose, initialize
 from pandera.typing.common import DataFrameBase
 from pint import Unit
 from sous_chef.formatter.units import unit_registry
-from sous_chef.menu.create_menu._menu_basic import (
+from sous_chef.menu.create_menu._menu_basic import validate_menu_schema
+from sous_chef.menu.create_menu.create_menu import Menu
+from sous_chef.menu.create_menu.models import (
     AllMenuSchema,
     LoadedMenuSchema,
     Season,
     TmpMenuSchema,
-    validate_menu_schema,
 )
-from sous_chef.menu.create_menu.create_menu import Menu
 from tests.conftest import FROZEN_DATE
 
 

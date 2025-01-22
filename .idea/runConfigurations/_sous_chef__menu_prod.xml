@@ -29,7 +29,7 @@
       <option name="useCurrentConnection" value="false" />
     </EXTENSION>
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/sous-chef/sous_chef/menu/main.py" />
-    <option name="PARAMETERS" value="menu.create_menu.input_method=&quot;final&quot;" />
+    <option name="PARAMETERS" value="menu.create_menu.input_method=&quot;final&quot; menu.create_menu.todoist.is_active=true" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="true" />
     <option name="MODULE_MODE" value="false" />

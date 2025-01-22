@@ -35,4 +35,4 @@ class Base:
         create_menu.fixed.basic_number = 0
         create_menu.fixed.menu_number = 1
         create_menu.todoist.project_name = PROJECT
-        create_menu["todoist"]["is_active"] = True
+        create_menu.todoist.is_active = True

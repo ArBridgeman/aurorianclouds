@@ -43,7 +43,7 @@ class MenuFromFixedTemplate(MenuBasic):
         self.record_exception = []
 
         fixed_templates = FixedTemplates(
-            config=self.config.fixed,
+            config=self.menu_config.fixed,
             due_date_formatter=self.due_date_formatter,
             gsheets_helper=self.gsheets_helper,
         )
@@ -62,10 +62,10 @@ class MenuFromFixedTemplate(MenuBasic):
         ).drop(columns=["process_order", "is_unrated"])
 
         future_uuid_tuple = ()
-        if self.config.fixed.already_in_future_menus.active:
+        if self.menu_config.fixed.already_in_future_menus.active:
             future_uuid_tuple = self._get_future_menu_uuids(
                 future_menus=fixed_templates.select_upcoming_menus(
-                    num_weeks_in_future=self.config.fixed.already_in_future_menus.num_weeks  # noqa: E501
+                    num_weeks_in_future=self.menu_config.fixed.already_in_future_menus.num_weeks  # noqa: E501
                 )
             )
 
@@ -140,7 +140,7 @@ class MenuFromFixedTemplate(MenuBasic):
         )
 
         row["time_total"] = timedelta(
-            minutes=int(self.config.ingredient.default_cook_minutes)
+            minutes=int(self.menu_config.ingredient.default_cook_minutes)
         )
         row["rating"] = np.NaN
         row["uuid"] = np.NaN

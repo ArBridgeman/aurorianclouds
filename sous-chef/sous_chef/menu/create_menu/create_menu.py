@@ -38,7 +38,7 @@ class Menu(MenuFromFixedTemplate):
             current_menu=final_menu_df
         )
 
-        if self.config.todoist.is_active:
+        if self.menu_config.todoist.is_active:
             todoist_helper = TodoistHelper(config_todoist)
             self._upload_menu_to_todoist(
                 final_menu_df=final_menu_df, todoist_helper=todoist_helper
@@ -50,7 +50,7 @@ class Menu(MenuFromFixedTemplate):
     ) -> (List[MenuIngredient], List[MenuRecipe]):
         final_menu_df = self._load_final_menu()
         menu_for_grocery_list = MenuForGroceryList(
-            config_errors=self.config.errors,
+            config_errors=self.menu_config.errors,
             final_menu_df=final_menu_df,
             ingredient_formatter=self.ingredient_formatter,
             recipe_book=self.recipe_book,
@@ -58,9 +58,9 @@ class Menu(MenuFromFixedTemplate):
         return menu_for_grocery_list.get_menu_for_grocery_list()
 
     def _load_final_menu(self) -> DataFrameBase[TmpMenuSchema]:
-        worksheet = self.config.final_menu.worksheet
+        worksheet = self.menu_config.final_menu.worksheet
         workbook = self.gsheets_helper.get_workbook(
-            self.config.final_menu.workbook
+            self.menu_config.final_menu.workbook
         )
 
         final_menu_df = workbook.get_worksheet(worksheet_name=worksheet)
@@ -75,7 +75,7 @@ class Menu(MenuFromFixedTemplate):
         todoist_helper: TodoistHelper,
     ):
         menu_for_todoist = MenuForTodoist(
-            config=self.config.todoist,
+            config=self.menu_config.todoist,
             final_menu_df=final_menu_df,
             due_date_formatter=self.due_date_formatter,
             todoist_helper=todoist_helper,

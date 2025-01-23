@@ -37,7 +37,7 @@ def menu(
     frozen_due_datetime_formatter,
 ):
     return Menu(
-        config=menu_config,
+        menu_config=menu_config,
         due_date_formatter=frozen_due_datetime_formatter,
         gsheets_helper=mock_gsheets,
         ingredient_formatter=mock_ingredient_formatter,

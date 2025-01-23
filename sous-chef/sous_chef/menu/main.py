@@ -40,7 +40,7 @@ def run_menu(config: DictConfig):
     recipe_book = RecipeBook(config.recipe_book)
 
     menu = Menu(
-        config=config.menu.create_menu,
+        menu_config=config.menu.create_menu,
         due_date_formatter=due_date_formatter,
         gsheets_helper=gsheets_helper,
         ingredient_formatter=ingredient_formatter,

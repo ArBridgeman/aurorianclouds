@@ -37,7 +37,7 @@ def menu_with_recipe_book(
     frozen_due_datetime_formatter,
 ):
     menu = Menu(
-        config=menu_config,
+        menu_config=menu_config,
         due_date_formatter=frozen_due_datetime_formatter,
         gsheets_helper=gsheets_helper,
         ingredient_formatter=ingredient_formatter,
@@ -56,7 +56,7 @@ def menu(
     frozen_due_datetime_formatter,
 ):
     menu = Menu(
-        config=menu_config,
+        menu_config=menu_config,
         due_date_formatter=frozen_due_datetime_formatter,
         gsheets_helper=gsheets_helper,
         ingredient_formatter=mock_ingredient_formatter,

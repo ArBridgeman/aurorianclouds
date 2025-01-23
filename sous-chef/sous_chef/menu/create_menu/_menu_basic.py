@@ -103,7 +103,7 @@ class MapMenuErrorToException(ExtendedEnum):
 
 @dataclass
 class MenuBasic(BaseWithExceptionHandling):
-    config: DictConfig
+    menu_config: DictConfig
     due_date_formatter: DueDatetimeFormatter
     gsheets_helper: GsheetsHelper
     ingredient_formatter: IngredientFormatter
@@ -120,7 +120,7 @@ class MenuBasic(BaseWithExceptionHandling):
 
     def __post_init__(self):
         self.set_tuple_log_and_skip_exception_from_config(
-            config_errors=self.config.errors,
+            config_errors=self.menu_config.errors,
             exception_mapper=MapMenuErrorToException,
         )
         self.menu_history_uuid_list = self._set_menu_history_uuid_list()
@@ -128,7 +128,7 @@ class MenuBasic(BaseWithExceptionHandling):
     def _add_recipe_columns(
         self, row: pd.Series, recipe: pd.Series
     ) -> pd.Series:
-        prep_config = self.config.prep_separate
+        prep_config = self.menu_config.prep_separate
 
         def _cook_prep_datetime() -> (datetime.timedelta, datetime.timedelta):
             if row.defrost == "Y":
@@ -166,7 +166,7 @@ class MenuBasic(BaseWithExceptionHandling):
         return row
 
     def _check_menu_quality(self, weekday_index: int, recipe: pd.Series):
-        quality_check_config = self.config.quality_check
+        quality_check_config = self.menu_config.quality_check
 
         self._ensure_rating_exceed_min(
             recipe=recipe,
@@ -227,7 +227,7 @@ class MenuBasic(BaseWithExceptionHandling):
         if pd.isna(recipe.rating):
             self.number_of_unrated_recipes += 1
             # TODO unneeded if in UI
-            if self.config.run_mode.with_inspect_unrated_recipe:
+            if self.menu_config.run_mode.with_inspect_unrated_recipe:
                 FILE_LOGGER.warning(
                     "[unrated recipe]",
                     action="print out ingredients",
@@ -237,7 +237,7 @@ class MenuBasic(BaseWithExceptionHandling):
 
         if (
             self.number_of_unrated_recipes
-            == self.config.max_number_of_unrated_recipes
+            == self.menu_config.max_number_of_unrated_recipes
             and self.min_random_recipe_rating is None
         ):
             FILE_LOGGER.warning(
@@ -245,7 +245,7 @@ class MenuBasic(BaseWithExceptionHandling):
                 action="will limit to rated recipes for further randomization",
             )
             self.min_random_recipe_rating = (
-                self.config.quality_check.recipe_rating_min
+                self.menu_config.quality_check.recipe_rating_min
             )
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
@@ -284,7 +284,7 @@ class MenuBasic(BaseWithExceptionHandling):
         if row.override_check == "N":
             weekday = Weekday.get_by_index(row.prep_datetime.weekday())
             max_cook_active_minutes = float(
-                self.config.quality_check[
+                self.menu_config.quality_check[
                     weekday.day_type
                 ].cook_active_minutes_max
             )
@@ -308,7 +308,7 @@ class MenuBasic(BaseWithExceptionHandling):
         return validate_menu_schema(dataframe=row, model=TmpMenuSchema)
 
     def _save_menu(self):
-        save_loc = self.config.final_menu
+        save_loc = self.menu_config.final_menu
         FILE_LOGGER.info(
             "[save menu]",
             workbook=save_loc.workbook,
@@ -328,7 +328,7 @@ class MenuBasic(BaseWithExceptionHandling):
     def _set_menu_history_uuid_list(self) -> List:
         if self.menu_historian is not None:
             menu_history_recent_df = self.menu_historian.get_history_from(
-                days_ago=self.config.menu_history_recent_days
+                days_ago=self.menu_config.menu_history_recent_days
             )
             if not menu_history_recent_df.empty:
                 return list(menu_history_recent_df.uuid.values)

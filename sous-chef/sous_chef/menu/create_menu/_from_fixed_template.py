@@ -39,7 +39,7 @@ class TypeProcessOrder(ExtendedIntEnum):
 
 
 class MenuFromFixedTemplate(MenuBasic):
-    def finalize_fixed_menu(self):
+    def finalize_fixed_menu(self) -> DataFrameBase[TmpMenuSchema]:
         self.record_exception = []
 
         fixed_templates = FixedTemplates(
@@ -95,6 +95,7 @@ class MenuFromFixedTemplate(MenuBasic):
                 custom_message="will not send to finalize until fixed"
             )
         self._save_menu()
+        return self.dataframe
 
     def _get_future_menu_uuids(
         self, future_menus: DataFrameBase[AllMenuSchema]

@@ -94,7 +94,17 @@ class MenuFromFixedTemplate(MenuBasic):
             raise MenuIncompleteError(
                 custom_message="will not send to finalize until fixed"
             )
+
+        self.dataframe = self.dataframe.sort_values(
+            by=["cook_datetime"], ignore_index=True
+        )
+        self.dataframe.uuid = self.dataframe.uuid.replace(np.nan, "NaN")
+        self.dataframe = validate_menu_schema(
+            dataframe=self.dataframe, model=TmpMenuSchema
+        )
+
         self._save_menu()
+
         return self.dataframe
 
     def _get_future_menu_uuids(

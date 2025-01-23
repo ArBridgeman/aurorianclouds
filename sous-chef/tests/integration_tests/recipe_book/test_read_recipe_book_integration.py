@@ -5,18 +5,25 @@ from typing import List, Tuple, Union
 import numpy as np
 import pandas as pd
 import pytest
-from hydra import compose, initialize
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
+from tests.data.util_data import get_local_recipe_book_path
 
 LABEL_PATTERN = re.compile(r"^[\w\-/]+$")
 
 
-@pytest.fixture
-def recipe_book():
-    with initialize(version_base=None, config_path="../../../config"):
-        config = compose(config_name="recipe_book").recipe_book
-        config.deduplicate = False
-        return RecipeBook(config)
+@pytest.fixture(scope="module")
+def recipe_book(config_recipe_book):
+    config_recipe_book.deduplicate = False
+    return RecipeBook(config_recipe_book)
+
+
+@pytest.fixture(scope="module")
+def local_recipe_book(config_recipe_book):
+    from copy import deepcopy
+
+    mod_config_recipe_book = deepcopy(config_recipe_book)
+    mod_config_recipe_book.path = get_local_recipe_book_path()
+    return RecipeBook(mod_config_recipe_book)
 
 
 class TestRecipeBook:

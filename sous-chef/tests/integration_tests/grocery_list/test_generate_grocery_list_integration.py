@@ -3,8 +3,31 @@ from unittest.mock import patch
 
 import pandas as pd
 import pytest
+from freezegun import freeze_time
+from sous_chef.grocery_list.generate_grocery_list.generate_grocery_list import (
+    GroceryList,
+)
+from tests.conftest import FROZEN_DATE
 
 from utilities.validate_choice import YesNoChoices
+
+
+@pytest.fixture
+@freeze_time(FROZEN_DATE)
+def grocery_list(
+    fixed_grocery_config,
+    unit_formatter,
+    mock_ingredient_field,
+    frozen_due_datetime_formatter,
+):
+    grocery_list = GroceryList(
+        config=fixed_grocery_config.grocery_list,
+        due_date_formatter=frozen_due_datetime_formatter,
+        unit_formatter=unit_formatter,
+        ingredient_field=mock_ingredient_field,
+    )
+    grocery_list.second_shopping_day_group = ["vegetables"]
+    return grocery_list
 
 
 class TestGroceryList:
@@ -12,13 +35,10 @@ class TestGroceryList:
     @pytest.mark.todoist
     def test__send_preparation_to_todoist(
         frozen_due_datetime_formatter,
-        config_grocery_list,
+        fixed_grocery_config,
         grocery_list,
         todoist_helper,
     ):
-        config_grocery_list.preparation.project_name = "Pytest-area"
-        config_grocery_list.todoist.remove_existing_prep_task = True
-
         prep_task_df = pd.DataFrame(
             {
                 "task": ["test task"],

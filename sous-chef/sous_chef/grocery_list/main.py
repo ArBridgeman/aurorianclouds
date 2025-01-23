@@ -52,6 +52,7 @@ def run_grocery_list(config: DictConfig) -> pd.DataFrame:
 
         # get menu for grocery list
         menu = Menu(
+            config=config,
             menu_config=config.menu.create_menu,
             due_date_formatter=due_date_formatter,
             gsheets_helper=gsheets_helper,

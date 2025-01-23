@@ -12,7 +12,10 @@ from sous_chef.formatter.ingredient.format_ingredient import (
     IngredientFormatter,
     MapIngredientErrorToException,
 )
-from sous_chef.menu.create_menu._menu_basic import MenuIncompleteError
+from sous_chef.menu.create_menu._menu_basic import (
+    MapMenuErrorToException,
+    MenuIncompleteError,
+)
 from sous_chef.menu.create_menu.models import TmpMenuSchema
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
 from sous_chef.recipe_book.recipe_util import (
@@ -64,7 +67,10 @@ class MenuForGroceryList(BaseWithExceptionHandling):
 
         self.set_tuple_log_and_skip_exception_from_config(
             config_errors=config_errors,
-            exception_mapper=MapMenuForGroceryListErrorToException,
+            # TODO resolve if use general errors or per sub-service
+            # with MapMenuForGroceryListErrorToException
+            # could skip unknown ones in handle_exception...meh
+            exception_mapper=MapMenuErrorToException,
         )
 
     def get_menu_for_grocery_list(

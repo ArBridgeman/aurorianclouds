@@ -30,6 +30,7 @@ def ingredient_formatter(pantry_list, unit_formatter):
 @pytest.fixture
 @freeze_time(FROZEN_DATE)
 def menu_with_recipe_book(
+    config,
     menu_config,
     gsheets_helper,
     ingredient_formatter,
@@ -37,6 +38,7 @@ def menu_with_recipe_book(
     frozen_due_datetime_formatter,
 ):
     menu = Menu(
+        config=config,
         menu_config=menu_config,
         due_date_formatter=frozen_due_datetime_formatter,
         gsheets_helper=gsheets_helper,
@@ -49,6 +51,7 @@ def menu_with_recipe_book(
 @pytest.fixture
 @freeze_time(FROZEN_DATE)
 def menu(
+    config,
     menu_config,
     gsheets_helper,
     mock_ingredient_formatter,
@@ -56,6 +59,7 @@ def menu(
     frozen_due_datetime_formatter,
 ):
     menu = Menu(
+        config=config,
         menu_config=menu_config,
         due_date_formatter=frozen_due_datetime_formatter,
         gsheets_helper=gsheets_helper,

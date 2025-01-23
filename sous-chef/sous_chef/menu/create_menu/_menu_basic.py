@@ -103,6 +103,7 @@ class MapMenuErrorToException(ExtendedEnum):
 
 @dataclass
 class MenuBasic(BaseWithExceptionHandling):
+    config: DictConfig
     menu_config: DictConfig
     due_date_formatter: DueDatetimeFormatter
     gsheets_helper: GsheetsHelper

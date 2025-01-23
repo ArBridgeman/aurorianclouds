@@ -26,8 +26,9 @@ FILE_LOGGER = get_logger(__name__)
 
 @dataclass
 class Menu(MenuFromFixedTemplate):
-    def temporarily_output_menu_for_review(self):
-        pass
+    def fill_menu_template(self) -> DataFrameBase[TmpMenuSchema]:
+        self.finalize_fixed_menu()
+        return self.dataframe
 
     def finalize_menu_to_external_services(
         self, config_todoist: DictConfig

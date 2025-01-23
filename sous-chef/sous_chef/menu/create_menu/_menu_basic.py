@@ -308,20 +308,15 @@ class MenuBasic(BaseWithExceptionHandling):
         row = self._add_recipe_columns(row=row, recipe=recipe)
         return validate_menu_schema(dataframe=row, model=TmpMenuSchema)
 
-    def _save_menu(self):
+    def _save_menu(self) -> None:
         save_loc = self.menu_config.final_menu
         FILE_LOGGER.info(
             "[save menu]",
             workbook=save_loc.workbook,
             worksheet=save_loc.worksheet,
         )
-        self.dataframe = validate_menu_schema(
-            dataframe=self.dataframe, model=TmpMenuSchema
-        )
         self.gsheets_helper.write_worksheet(
-            df=self.dataframe.sort_values(by=["cook_datetime"]).reindex(
-                sorted(self.dataframe.columns), axis=1
-            ),
+            df=self.dataframe,
             workbook_name=save_loc.workbook,
             worksheet_name=save_loc.worksheet,
         )

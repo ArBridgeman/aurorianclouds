@@ -24,7 +24,7 @@ FROZEN_DATETIME = datetime.strptime(FROZEN_DATE, "%Y-%m-%d").replace(tzinfo=UTC)
 FROZEN_DAY = pd.to_datetime(FROZEN_DATE).day_name()
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def config_recipe_book():
     with initialize(version_base=None, config_path="../config"):
         return compose(config_name="recipe_book").recipe_book
@@ -47,19 +47,6 @@ class Recipe:
     is_favorite: bool
     rating: int
     tags: list
-
-
-recipe1 = Recipe(
-    "Bourbon Chicken",
-    10,
-    30,
-    "4 servings",
-    False,
-    0,
-    ["poultry", "American", "BBQ"],
-)
-
-RECIPES = pd.DataFrame([recipe1])
 
 
 @pytest.fixture
@@ -132,6 +119,6 @@ def nutritionist():
         return Nutritionist(config=config)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def unit_formatter():
     return UnitFormatter()

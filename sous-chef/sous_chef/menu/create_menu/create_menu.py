@@ -113,7 +113,9 @@ class Menu:
         self, gsheets_helper: GsheetsHelper
     ) -> DataFrameBase[TmpMenuSchema]:
         worksheet = self.menu_config.final_menu.worksheet
-        workbook = gsheets_helper.get_workbook(self.config.final_menu.workbook)
+        workbook = gsheets_helper.get_workbook(
+            self.menu_config.final_menu.workbook
+        )
 
         final_menu_df = workbook.get_worksheet(worksheet_name=worksheet)
         final_menu_df.time_total = pd.to_timedelta(final_menu_df.time_total)

@@ -21,14 +21,32 @@ from tests.conftest import FROZEN_DATE
 
 
 @pytest.fixture
-def menu_config():
-    with initialize(version_base=None, config_path="../../../../config/menu"):
-        return compose(config_name="create_menu").create_menu
+def config():
+    with initialize(version_base=None, config_path="../../../../config/"):
+        config = compose(config_name="menu_main")
+
+        error_config = config.menu.create_menu.errors
+        error_config.recipe_not_found = "raise"
+        error_config.random_recipe_selection_failed = "raise"
+        error_config.recipe_total_time_undefined = "raise"
+        error_config.recipe_in_recent_menu_history = "raise"
+        error_config.pantry_ingredient_not_known = "raise"
+        error_config.ingredient_marked_as_bad = "raise"
+        error_config.menu_quality_check = "raise"
+        error_config.menu_future_error = "raise"
+
+        return config
+
+
+@pytest.fixture
+def menu_config(config):
+    return config.menu.create_menu
 
 
 @pytest.fixture
 @freeze_time(FROZEN_DATE)
 def menu(
+    config,
     menu_config,
     mock_gsheets,
     mock_ingredient_formatter,
@@ -37,6 +55,7 @@ def menu(
     frozen_due_datetime_formatter,
 ):
     return Menu(
+        config=config,
         menu_config=menu_config,
         due_date_formatter=frozen_due_datetime_formatter,
         gsheets_helper=mock_gsheets,

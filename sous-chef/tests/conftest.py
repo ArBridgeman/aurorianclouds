@@ -53,13 +53,15 @@ class Recipe:
 @pytest.fixture
 def config_grocery_list():
     with initialize(version_base=None, config_path="../config"):
-        return compose(config_name="grocery_list").grocery_list
+        config = compose(config_name="grocery_list").grocery_list
+    return config
 
 
 @pytest.fixture
 def config_due_date():
     with initialize(version_base=None, config_path="../config"):
-        return compose(config_name="grocery_list").date.due_date
+        config = compose(config_name="grocery_list").date.due_date
+    return config
 
 
 @pytest.fixture
@@ -94,30 +96,30 @@ def grocery_list(
 def mock_ingredient_field():
     with initialize(version_base=None, config_path="../config/formatter"):
         config = compose(config_name="get_ingredient_field")
-        return Mock(IngredientField(config.get_ingredient_field, None, None))
+    return Mock(IngredientField(config.get_ingredient_field, None, None))
 
 
 @pytest.fixture
 def mock_ingredient_formatter():
     with initialize(version_base=None, config_path="../config/formatter"):
         config = compose(config_name="format_ingredient")
-        return Mock(IngredientFormatter(config, None, None))
+    return Mock(IngredientFormatter(config, None, None))
 
 
 @pytest.fixture
 def mock_recipe_book():
     with initialize(version_base=None, config_path="../config"):
         config = compose(config_name="recipe_book")
-        with patch.object(RecipeBook, "__post_init__", lambda x: None):
-            return Mock(RecipeBook(config, None))
+    with patch.object(RecipeBook, "__post_init__", lambda x: None):
+        return Mock(RecipeBook(config, None))
 
 
 @pytest.fixture
 def nutritionist():
     with initialize(version_base=None, config_path="../config/"):
         config = compose(config_name="nutrition").nutrition
-        config.sheet_name = "nutrition-test"
-        return Nutritionist(config=config)
+    config.sheet_name = "nutrition-test"
+    return Nutritionist(config=config)
 
 
 @pytest.fixture(scope="session")

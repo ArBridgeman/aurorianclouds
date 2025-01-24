@@ -1,9 +1,5 @@
 cook_datetime,defrost,eat_factor,eat_unit,freeze_factor,item,meal_time,prep_datetime,rating,time_total,type,uuid,weekday
-2022-01-21 16:10:00+00:00,N,1.0,,0.0,baguette,dinner,2022-01-21 16:10:00+00:00,,0 days 00:20:00,ingredient,NaN,Friday
 2022-01-22 16:10:00+00:00,N,1.0,cup,0.0,rice,dinner,2022-01-22 16:10:00+00:00,,0 days 00:20:00,ingredient,NaN,Saturday
 2022-01-22 16:30:00+00:00,Y,0.5,,0.5,Italian baked meatballs,dinner,2022-01-22 16:30:00+00:00,4.5,0 days 01:00:00,recipe,1201506955,Saturday
 2022-01-23 14:45:00+00:00,N,1.0,,0.0,Holiday cheesecake,dinner,2022-01-23 09:45:00+00:00,4.0,0 days 06:45:00,recipe,-433156169,Sunday
-2022-01-24 07:50:00+00:00,N,1.0,,0.0,Baked Oatmeal Bars,breakfast,2022-01-23 16:30:00+00:00,4.0,0 days 00:40:00,recipe,1666465307206,Monday
-2022-01-24 14:25:00+00:00,N,1.0,,0.0,Spanish Deluxe Potatoes,snack,2022-01-23 16:30:00+00:00,4.0,0 days 00:35:00,recipe,1661144648294,Monday
-2022-01-25 15:30:00+00:00,N,0.25,,0.25,Lasagna,dinner,2022-01-25 15:30:00+00:00,4.5,0 days 01:00:00,recipe,1739761097,Tuesday
 2022-01-26 16:10:00+00:00,N,1.0,head,0.0,frisée,dinner,2022-01-26 16:10:00+00:00,,0 days 00:20:00,ingredient,NaN,Wednesday

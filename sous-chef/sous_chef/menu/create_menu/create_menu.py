@@ -65,30 +65,30 @@ class Menu:
         return menu_from_fixed_template.finalize_fixed_menu()
 
     def finalize_menu_to_external_services(
-        self, config_todoist: DictConfig
+        self,
     ) -> DataFrameBase[TmpMenuSchema]:
         due_date_formatter = DueDatetimeFormatter(
             config=self.config.date.due_date
         )
         gsheets_helper = GsheetsHelper(self.config.api.gsheets)
-
-        final_menu_df = self._load_final_menu(gsheets_helper=gsheets_helper)
-
         menu_historian = MenuHistorian(
             config=self.config.menu.record_menu_history,
             current_menu_start_date=due_date_formatter.get_anchor_datetime()
             + timedelta(days=1),
             gsheets_helper=gsheets_helper,
         )
-        menu_historian.add_current_menu_to_history(current_menu=final_menu_df)
 
+        final_menu_df = self.load_final_menu(gsheets_helper=gsheets_helper)
+        # send to external services
+        menu_historian.add_current_menu_to_history(current_menu=final_menu_df)
         if self.menu_config.todoist.is_active:
-            todoist_helper = TodoistHelper(config_todoist)
-            self._upload_menu_to_todoist(
+            menu_for_todoist = MenuForTodoist(
+                config=self.menu_config.todoist,
                 final_menu_df=final_menu_df,
                 due_date_formatter=due_date_formatter,
-                todoist_helper=todoist_helper,
+                todoist_helper=TodoistHelper(self.config.api.todoist),
             )
+            menu_for_todoist.upload_menu_to_todoist()
         return final_menu_df
 
     def get_menu_for_grocery_list(
@@ -100,7 +100,7 @@ class Menu:
             config=self.config, gsheets_helper=gsheets_helper
         )
 
-        final_menu_df = self._load_final_menu(gsheets_helper=gsheets_helper)
+        final_menu_df = self.load_final_menu(gsheets_helper=gsheets_helper)
         menu_for_grocery_list = MenuForGroceryList(
             config_errors=self.menu_config.errors,
             final_menu_df=final_menu_df,
@@ -109,7 +109,7 @@ class Menu:
         )
         return menu_for_grocery_list.get_menu_for_grocery_list()
 
-    def _load_final_menu(
+    def load_final_menu(
         self, gsheets_helper: GsheetsHelper
     ) -> DataFrameBase[TmpMenuSchema]:
         worksheet = self.menu_config.final_menu.worksheet
@@ -122,20 +122,6 @@ class Menu:
         return validate_menu_schema(
             dataframe=final_menu_df, model=TmpMenuSchema
         )
-
-    def _upload_menu_to_todoist(
-        self,
-        final_menu_df: DataFrameBase[TmpMenuSchema],
-        due_date_formatter: DueDatetimeFormatter,
-        todoist_helper: TodoistHelper,
-    ):
-        menu_for_todoist = MenuForTodoist(
-            config=self.menu_config.todoist,
-            final_menu_df=final_menu_df,
-            due_date_formatter=due_date_formatter,
-            todoist_helper=todoist_helper,
-        )
-        menu_for_todoist.upload_menu_to_todoist()
 
 
 def _get_ingredient_formatter(

@@ -7,7 +7,6 @@ from sous_chef.grocery_list.main import run_grocery_list
 from sous_chef.menu.main import run_menu
 from tests.data.util_data import (
     get_final_grocery_list,
-    get_menu_history,
     get_tasks_grocery_list,
     get_tasks_menu,
 )
@@ -72,6 +71,7 @@ class Test(Base):
         menu_history,
         todoist_helper,
         fixed_final_menu,
+        fixed_menu_history,
     ):
         with patch.object(
             DueDatetimeFormatter,
@@ -83,7 +83,7 @@ class Test(Base):
         assert_equal_dataframe(final_menu, fixed_final_menu)
 
         menu_history._load_history()
-        assert_equal_dataframe(menu_history.dataframe, get_menu_history())
+        assert_equal_dataframe(menu_history.dataframe, fixed_menu_history)
 
         tasks_menu = self._convert_task_list_to_df(
             todoist_helper=todoist_helper

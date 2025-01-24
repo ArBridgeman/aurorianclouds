@@ -7,7 +7,6 @@ from sous_chef.menu.create_menu.create_menu import Menu
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
 from sous_chef.recipe_book.recipe_util import RecipeNotFoundError
 from tests.conftest import FROZEN_DATE
-from tests.data.util_data import get_tmp_menu
 from tests.integration_tests.menu.conftest import PROJECT
 
 from utilities.testing.pandas_util import assert_equal_dataframe
@@ -43,6 +42,7 @@ class TestMenu:
         menu_config,
         frozen_due_datetime_formatter,
         gsheets_helper,
+        fixed_final_menu,
     ):
         with patch.object(
             DueDatetimeFormatter,
@@ -52,13 +52,12 @@ class TestMenu:
         ):
             final_menu_df = menu_with_recipe_book.fill_menu_template()
 
-        expected_menu = get_tmp_menu()
-        assert_equal_dataframe(final_menu_df, expected_menu)
+        assert_equal_dataframe(final_menu_df, fixed_final_menu)
 
         final_menu_df = menu_with_recipe_book._load_final_menu(
             gsheets_helper=gsheets_helper
         )
-        assert_equal_dataframe(final_menu_df, expected_menu)
+        assert_equal_dataframe(final_menu_df, fixed_final_menu)
 
     @staticmethod
     def test_fill_menu_template_fails_for_record_exception(

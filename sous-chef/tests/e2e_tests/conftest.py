@@ -11,23 +11,23 @@ from utilities.api.todoist_api import TodoistHelper
 def gsheets_helper():
     with initialize(version_base=None, config_path="../../config/api"):
         config = compose(config_name="gsheets_api")
-        return GsheetsHelper(config.gsheets)
+    return GsheetsHelper(config.gsheets)
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def menu_history(gsheets_helper):
     with initialize(version_base=None, config_path="../../config/menu"):
         config = compose(config_name="record_menu_history").record_menu_history
-        config.save_loc.worksheet = "tmp-menu-history"
-        return MenuHistorian(
-            config,
-            gsheets_helper=gsheets_helper,
-            current_menu_start_date=FROZEN_DATETIME,
-        )
+    config.save_loc.worksheet = "tmp-menu-history"
+    return MenuHistorian(
+        config,
+        gsheets_helper=gsheets_helper,
+        current_menu_start_date=FROZEN_DATETIME,
+    )
 
 
 @pytest.fixture(scope="module")
 def todoist_helper():
     with initialize(version_base=None, config_path="../../config/api"):
         config = compose(config_name="todoist_api")
-        return TodoistHelper(config.todoist)
+    return TodoistHelper(config.todoist)

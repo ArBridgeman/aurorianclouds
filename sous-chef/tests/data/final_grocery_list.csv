@@ -1,48 +1,12 @@
 pint_unit,item,is_optional,quantity,food_group,item_plural,store,barcode,from_recipe,for_day,for_day_str,shopping_date,aisle_group
-dimensionless,baguette,False,1.0,Prepared,baguettes,Homemade,,[manual],2022-01-21 16:10:00+00:00,[Fri],2022-01-14,Homemade
-teaspoon,baking soda,False,0.5,Baking,baking soda,Amazon,,[Baked Oatmeal Bars],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Amazon
 cup,basmati rice,False,1.0,Grains,basmati rice,grocery store,4104420218574,[manual],2022-01-22 16:10:00+00:00,[Sat],2022-01-14,Bulk
-cup,buckwheat flakes,False,0.5,Grains,buckwheat flakes,Amazon,,[Baked Oatmeal Bars],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Amazon
-gram,chocolate,False,130.0,Baking,chocolate,grocery store,4013320081426,"[Baked Oatmeal Bars, Holiday cheesecake]",2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Sweet carolina
-tablespoon,cinnamon powder,False,1.0,Spices and herbs,cinnamon powder,Amazon,,[Baked Oatmeal Bars],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Amazon
+gram,chocolate,False,80.0,Baking,chocolate,grocery store,4013320081426,[Holiday cheesecake],2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Sweet carolina
 gram,cream cheese,False,875.0,Dairy products,cream cheese,grocery store,7622300315733,[Holiday cheesecake],2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Dairy force
-teaspoon,dried oregano,False,1.0,Spices and herbs,dried oregano,grocery store,,[Spanish Deluxe Potatoes],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Spices and herbs
-teaspoon,dried parsley,False,1.0,Spices and herbs,dried parsley,grocery store,,[Spanish Deluxe Potatoes],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Spices and herbs
-dimensionless,egg,False,4.0,Egg,eggs,Lidl,,"[Holiday cheesecake, Lasagna]",2022-01-23 09:45:00+00:00,"[Sun, Tue]",2022-01-14,Lidl
-cup,flour,False,0.5,Prepared,flour,Homemade,,[Baked Oatmeal Bars],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Homemade
+dimensionless,egg,False,3.0,Egg,eggs,Lidl,,[Holiday cheesecake],2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Lidl
 head,frisée,False,1.0,Lettuce,frisée,grocery store,,[manual],2022-01-26 16:10:00+00:00,[Wed],2022-01-24,Farmland pride
-tablespoon,garlic paste,False,1.0,Sauces,garlic paste,Asian store,0608171040131,"[Lasagna, Spanish Deluxe Potatoes]",2022-01-23 16:30:00+00:00,"[Sun, Tue]",2022-01-14,Asian store
-tablespoon,garlic powder,False,2.0,Spices and herbs,garlic powder,Amazon,,"[Lasagna, Spanish Deluxe Potatoes]",2022-01-23 16:30:00+00:00,"[Sun, Tue]",2022-01-14,Amazon
 teaspoon,ginger powder,False,2.0,Spices and herbs,ginger powder,Asian store,,[Holiday cheesecake],2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Asian store
-gram,ground beef,False,250.0,Meats,ground beef,Lidl,20304652,[Lasagna],2022-01-25 15:30:00+00:00,[Tue],2022-01-14,Lidl
-cup,ground flaxseed,False,0.25,Nuts and seeds,ground flaxseed,grocery store,,[Baked Oatmeal Bars],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Bulk
-gram,hazelnuts,True,50.0,Nuts and seeds,hazelnuts,Amazon,5400606999763,[Baked Oatmeal Bars],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Amazon
-tablespoon,italian seasoning,False,1.0,Spices and herbs,italian seasoning,Amazon,,[Lasagna],2022-01-25 15:30:00+00:00,[Tue],2022-01-14,Amazon
-dimensionless,lasagna noodle,False,4.0,Pasta,lasagna noodles,DM,,[Lasagna],2022-01-25 15:30:00+00:00,[Tue],2022-01-14,DM
-teaspoon,lemon juice,False,0.5,Juices,lemon juice,grocery store,4311501337745,[Spanish Deluxe Potatoes],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Juices and beverages
-tablespoon,mayo,False,2.0,Fats and oils,mayo,grocery store,4000339457823,[Spanish Deluxe Potatoes],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Sauces cans and oils
-tablespoon,milk,False,6.0,Dairy products,milk,Lidl,4311501688632,[Baked Oatmeal Bars],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Lidl
-ball,mozzarella,False,1.0,Dairy products,mozzarella,grocery store,4311501497326,[Lasagna],2022-01-25 15:30:00+00:00,[Tue],2022-01-14,Dairy force
 teaspoon,nutmeg powder,False,0.25,Spices and herbs,nutmeg powder,grocery store,,[Holiday cheesecake],2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Spices and herbs
-tablespoon,olive oil,False,3.0,Fats and oils,olive oil,grocery store,4104420031050,[Spanish Deluxe Potatoes],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Sauces cans and oils
-dimensionless,onion,False,0.5,Vegetables,onions,grocery store,,[Lasagna],2022-01-25 15:30:00+00:00,[Tue],2022-01-14,Farmland pride
-tablespoon,onion powder,False,1.0,Spices and herbs,onion powder,Amazon,,"[Lasagna, Spanish Deluxe Potatoes]",2022-01-23 16:30:00+00:00,"[Sun, Tue]",2022-01-14,Amazon
-tablespoon,paprika powder,False,0.75,Spices and herbs,paprika powder,Amazon,,"[Lasagna, Spanish Deluxe Potatoes]",2022-01-23 16:30:00+00:00,"[Sun, Tue]",2022-01-14,Amazon
-milliliter,passata,False,350.0,Sauces,passata,grocery store,4311501650578,[Lasagna],2022-01-25 15:30:00+00:00,[Tue],2022-01-14,Sauces cans and oils
-teaspoon,pepper,False,1.35,Spices and herbs,pepper,Asian store,,"[Lasagna, Spanish Deluxe Potatoes]",2022-01-23 16:30:00+00:00,"[Sun, Tue]",2022-01-14,Asian store
-gram,potato,False,500.0,Vegetables,potatoes,grocery store,,[Spanish Deluxe Potatoes],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Farmland pride
-dimensionless,potato,False,2.0,Vegetables,potatoes,grocery store,,[Lasagna],2022-01-25 15:30:00+00:00,[Tue],2022-01-14,Farmland pride
 gram,pumpkin puree,False,100.0,Canned,pumpkin puree,grocery store,4260181088037,[Holiday cheesecake],2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Sauces cans and oils
-tablespoon,rapseed oil,False,2.5,Fats and oils,rapseed oil,grocery store,,"[Baked Oatmeal Bars, Spanish Deluxe Potatoes]",2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Sauces cans and oils
-tablespoon,red wine vinegar,False,0.5,Sauces,red wine vinegar,grocery store,4008100120068,[Lasagna],2022-01-25 15:30:00+00:00,[Tue],2022-01-14,Sauces cans and oils
-cup,rice flakes,False,0.75,Grains,rice flakes,grocery store,,[Baked Oatmeal Bars],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Bulk
-gram,ricotta,False,125.0,Dairy products,ricotta,grocery store,,[Lasagna],2022-01-25 15:30:00+00:00,[Tue],2022-01-14,Dairy force
-dimensionless,ripe banana,False,3.0,Fruits,ripe bananas,grocery store,,[Baked Oatmeal Bars],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Farmland pride
-teaspoon,salt,False,0.75,Spices and herbs,salt,grocery store,,"[Baked Oatmeal Bars, Spanish Deluxe Potatoes]",2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Spices and herbs
-cup,shredded gratin cheese,False,0.25,Dairy products,shredded gratin cheese,grocery store,5760466896467,[Lasagna],2022-01-25 15:30:00+00:00,[Tue],2022-01-14,Dairy force
 cup,sour cream,False,0.3,Dairy products,sour cream,grocery store,4046700014301,[Holiday cheesecake],2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Dairy force
 cup,sugar,False,0.5,Baking,sugar,grocery store,4006544205006,[Holiday cheesecake],2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Sweet carolina
-teaspoon,vanilla extract,False,2.0,Baking,vanilla extract,Homemade,,"[Baked Oatmeal Bars, Holiday cheesecake]",2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Homemade
-cup,whey protein powder,False,0.25,Spices and herbs,whey protein powder,Amazon,683442920,[Baked Oatmeal Bars],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Amazon
-can,whole tomatoes,False,1.0,Canned,whole tomatoes,grocery store,4311596062621,[Lasagna],2022-01-25 15:30:00+00:00,[Tue],2022-01-14,Sauces cans and oils
-tablespoon,yogurt,False,2.0,Dairy products,yogurt,grocery store,4062800016151,[Spanish Deluxe Potatoes],2022-01-23 16:30:00+00:00,[Sun],2022-01-14,Dairy force
+teaspoon,vanilla extract,False,1.0,Baking,vanilla extract,Homemade,,[Holiday cheesecake],2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Homemade

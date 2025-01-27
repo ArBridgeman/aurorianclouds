@@ -1,29 +1,21 @@
-from dataclasses import dataclass
 from datetime import timedelta
 from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from omegaconf import DictConfig
 from pandera.typing.common import DataFrameBase
 from sous_chef.abstract.handle_exception import BaseWithExceptionHandling
-from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.menu.create_menu._menu_basic import MenuBasic
+from sous_chef.menu.create_menu._select_menu_template import MenuTemplates
 from sous_chef.menu.create_menu.exceptions import MenuIncompleteError
 from sous_chef.menu.create_menu.models import (
     AllMenuSchema,
-    BasicMenuSchema,
-    LoadedMenuSchema,
-    Season,
     TmpMenuSchema,
     TypeProcessOrder,
-    get_weekday_from_short,
     validate_menu_schema,
 )
 from structlog import get_logger
 from termcolor import cprint
-
-from utilities.api.gsheets_api import GsheetsHelper
 
 FILE_LOGGER = get_logger(__name__)
 
@@ -32,12 +24,12 @@ class MenuFromFixedTemplate(MenuBasic):
     def finalize_fixed_menu(self) -> DataFrameBase[TmpMenuSchema]:
         self.record_exception = []
 
-        fixed_templates = FixedTemplates(
+        fixed_templates = MenuTemplates(
             config=self.menu_config.fixed,
             due_date_formatter=self.due_date_formatter,
             gsheets_helper=self.gsheets_helper,
         )
-        self.dataframe = fixed_templates.load_fixed_menu()
+        self.dataframe = fixed_templates.load_template_menu()
 
         # sort by desired order to be processed
         self.dataframe["process_order"] = self.dataframe["type"].apply(
@@ -167,139 +159,3 @@ class MenuFromFixedTemplate(MenuBasic):
             processed_uuid_list=processed_uuid_list,
             future_uuid_tuple=future_uuid_tuple,
         )
-
-
-@dataclass
-class FixedTemplates:
-    config: DictConfig
-    due_date_formatter: DueDatetimeFormatter
-    gsheets_helper: GsheetsHelper
-    all_menus_df: DataFrameBase[AllMenuSchema] = None
-
-    def __post_init__(self):
-        self.all_menus_df = self._get_all_fixed_menus()
-
-    def _check_fixed_menu_number(self, menu_number: int):
-        if not isinstance(menu_number, int):
-            raise ValueError(f"fixed menu number ({menu_number}) not an int")
-        elif menu_number not in self.all_menus_df.menu.values:
-            raise ValueError(f"fixed menu number ({menu_number}) is not found")
-
-    @staticmethod
-    def _check_season(season: str):
-        if season not in Season.value_list():
-            raise ValueError(f"season ({season}) not in {Season.value_list()}")
-
-    @staticmethod
-    def _convert_fixed_menu_to_all_menu_schemas(
-        all_menus: pd.DataFrame,
-    ) -> DataFrameBase[AllMenuSchema]:
-        # need already converted to default for "prep_datetime" calculation
-        all_menus["prep_day"] = all_menus.prep_day.replace("", 0)
-
-        # pandera does not support replacing "" with default values, only NAs
-        nan_columns = [
-            "selection",
-            "freeze_factor",
-            "defrost",
-            "override_check",
-        ]
-        all_menus[nan_columns] = all_menus[nan_columns].replace("", np.NaN)
-
-        # unravel short form for weekday values
-        all_menus["weekday"] = (
-            all_menus.day.str.split("_").str[1].apply(get_weekday_from_short)
-        )
-        return (
-            validate_menu_schema(dataframe=all_menus, model=AllMenuSchema)
-            .sort_values(by=["menu", "season", "weekday", "meal_time"])
-            .reset_index(drop=True)
-        )
-
-    def _get_all_fixed_menus(self) -> DataFrameBase[AllMenuSchema]:
-        FILE_LOGGER.info("[_get_all_fixed_menus]")
-        # TODO move to config
-        sheet_to_mealtime = {
-            "breakfast": "breakfast",
-            "snack": "snack",
-            "dinner": "dinner",
-            "dessert": "dessert",
-        }
-        all_menus = pd.DataFrame()
-        workbook = self.gsheets_helper.get_workbook(
-            workbook_name=self.config.workbook
-        )
-        for sheet, meal_time in sheet_to_mealtime.items():
-            sheet_pd = workbook.get_worksheet(worksheet_name=sheet)
-            sheet_pd["meal_time"] = meal_time
-            all_menus = pd.concat([all_menus, sheet_pd])
-
-        # remove inactives as not part of active menus
-        all_menus = all_menus.loc[~(all_menus.inactive.str.upper() == "Y")]
-        return self._convert_fixed_menu_to_all_menu_schemas(all_menus)
-
-    def _get_default_prep_datetime(self, row: pd.Series):
-        return self.due_date_formatter.replace_time_with_meal_time(
-            due_date=row.cook_datetime - timedelta(days=int(row.prep_day)),
-            meal_time=self.config.default_time,
-        )
-
-    def load_fixed_menu(self) -> DataFrameBase[LoadedMenuSchema]:
-        FILE_LOGGER.info("[load_fixed_menu]")
-        basic_number = self.config.basic_number
-        self._check_fixed_menu_number(basic_number)
-        menu_number = self.config.menu_number
-        self._check_fixed_menu_number(menu_number)
-        fixed_menu = self.all_menus_df[
-            self.all_menus_df.menu.isin([basic_number, menu_number])
-        ].copy()
-
-        basic_season = self.config.basic_season.casefold()
-        self._check_season(basic_season)
-        selected_season = self.config.selected_season.casefold()
-        self._check_season(selected_season)
-        fixed_menu = fixed_menu[
-            fixed_menu.season.isin([basic_season, selected_season])
-        ]
-
-        fixed_menu["cook_datetime"] = fixed_menu.apply(
-            lambda row: self.due_date_formatter.get_due_datetime_with_meal_time(
-                weekday=row.weekday, meal_time=row.meal_time
-            ),
-            axis=1,
-        )
-        fixed_menu["prep_datetime"] = fixed_menu.apply(
-            self._get_default_prep_datetime, axis=1
-        )
-        return validate_menu_schema(
-            dataframe=fixed_menu, model=LoadedMenuSchema
-        )
-
-    def select_upcoming_menus(
-        self, num_weeks_in_future: int
-    ) -> DataFrameBase[BasicMenuSchema]:
-        FILE_LOGGER.info("[select_upcoming_menus]")
-
-        menu_number = self.config.menu_number
-        self._check_fixed_menu_number(menu_number)
-
-        if not isinstance(num_weeks_in_future, int) or num_weeks_in_future <= 0:
-            raise ValueError(
-                "fixed.already_in_future_menus.num_weeks "
-                f"({num_weeks_in_future}) must be int>0"
-            )
-
-        max_num_menu = self.all_menus_df.menu.max()
-
-        num_current_menu = menu_number
-        num_future_menus = []
-        for x in range(num_weeks_in_future):
-            num_current_menu += 1
-            if num_current_menu > max_num_menu:
-                num_current_menu = max(
-                    self.all_menus_df.menu.min(), self.config.min_menu_number
-                )
-            num_future_menus.append(num_current_menu)
-
-        mask_num_future_menus = self.all_menus_df.menu.isin(num_future_menus)
-        return self.all_menus_df[mask_num_future_menus].copy()

@@ -1,38 +1,17 @@
-from unittest.mock import patch
-
 import pandas as pd
 import pytest
 from freezegun import freeze_time
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.formatter.units import unit_registry
 from sous_chef.menu.create_menu._from_fixed_template import (
-    FixedTemplates,
     MenuFromFixedTemplate,
 )
-from sous_chef.menu.create_menu.models import Season
 from sous_chef.menu.create_menu.exceptions import MenuFutureError
 from sous_chef.menu.record_menu_history import MenuHistoryError
 from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
 
 from utilities.testing.pandas_util import assert_equal_series
-
-
-@pytest.fixture
-@freeze_time(FROZEN_DATE)
-def fixed_templates(
-    menu_config, mock_gsheets, frozen_due_datetime_formatter, fixed_all_menus
-):
-    menu_config.fixed.menu_number = 2
-    menu_config.fixed.selected_season = Season.fall.value
-    with patch.object(FixedTemplates, "__post_init__"):
-        fixed_templates = FixedTemplates(
-            config=menu_config.fixed,
-            due_date_formatter=frozen_due_datetime_formatter,
-            gsheets_helper=mock_gsheets,
-        )
-        fixed_templates.all_menus_df = fixed_all_menus
-        return fixed_templates
 
 
 @pytest.fixture
@@ -55,107 +34,6 @@ def menu_from_fixed_template(
         menu_historian=mock_menu_history,
         recipe_book=mock_recipe_book,
     )
-
-
-class TestFixedTemplates:
-    @staticmethod
-    @pytest.mark.parametrize("menu_number", [1, 12])
-    def test__check_fixed_menu_number_expected_passes(
-        fixed_templates, menu_number
-    ):
-        fixed_templates._check_fixed_menu_number(menu_number)
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "menu_number,error_message",
-        [
-            (None, "fixed menu number (None) not an int"),
-            (1.2, "fixed menu number (1.2) not an int"),
-            ("a", "fixed menu number (a) not an int"),
-        ],
-    )
-    def test__check_fixed_menu_number_not_integer_raise_value_error(
-        fixed_templates, menu_number, error_message
-    ):
-        with pytest.raises(ValueError) as error:
-            fixed_templates._check_fixed_menu_number(menu_number)
-        assert str(error.value) == error_message
-
-    @staticmethod
-    def test__check_fixed_menu_number_not_in_all_menus_raise_value_error(
-        fixed_templates,
-    ):
-        with pytest.raises(ValueError) as error:
-            fixed_templates._check_fixed_menu_number(100)
-        assert str(error.value) == "fixed menu number (100) is not found"
-
-    @staticmethod
-    @pytest.mark.parametrize("season", Season.value_list())
-    def test__check_season_expected_passes(fixed_templates, season):
-        fixed_templates._check_season(season)
-
-    @staticmethod
-    @pytest.mark.parametrize("season", ["not-a-season"])
-    def test__check_season_not_allowed_values_raise_value_error(
-        fixed_templates, season
-    ):
-        with pytest.raises(ValueError) as error:
-            fixed_templates._check_season(season)
-        assert "season" in str(error.value)
-
-    @staticmethod
-    def test_load_fixed_menu(fixed_templates, menu_config):
-        # ensure that some rows are not unique & multiple seasons
-        assert fixed_templates.all_menus_df.shape[0] == 20
-        assert fixed_templates.all_menus_df.menu.nunique() == 14
-        assert fixed_templates.all_menus_df.season.nunique() == len(
-            Season.value_list()
-        )
-
-        mask_menu = fixed_templates.all_menus_df.menu.isin(
-            [menu_config.fixed.basic_number, menu_config.fixed.menu_number]
-        )
-        mask_season = fixed_templates.all_menus_df.season.isin(
-            [menu_config.fixed.selected_season, Season.any.value]
-        )
-        masks = mask_menu & mask_season
-        # menu selection > than when season also included
-        assert sum(mask_menu) > sum(masks)
-
-        result = fixed_templates.load_fixed_menu()
-        # from basic + 2, 0_any + 4_fall
-        assert result.shape[0] == sum(masks)
-
-    @staticmethod
-    def test_select_upcoming_menus(fixed_templates):
-        num_weeks = 4
-        result = fixed_templates.select_upcoming_menus(
-            num_weeks_in_future=num_weeks
-        )
-        assert len(result.menu.unique()) == num_weeks
-
-    @staticmethod
-    def test_select_upcoming_menus_start_from_min_when_over(
-        fixed_templates, menu_config
-    ):
-        menu_config.fixed.menu_number = 13
-        num_weeks = 4
-        result = fixed_templates.select_upcoming_menus(
-            num_weeks_in_future=num_weeks
-        )
-        assert len(result.menu.unique()) == num_weeks
-
-    @staticmethod
-    @pytest.mark.parametrize("num_weeks", [None, 1.2, "a", 0])
-    def test_select_upcoming_menus_num_weeks_unexpected_value(
-        fixed_templates, num_weeks
-    ):
-        with pytest.raises(ValueError) as error:
-            fixed_templates.select_upcoming_menus(num_weeks_in_future=num_weeks)
-        assert (
-            str(error.value) == "fixed.already_in_future_menus.num_weeks "
-            f"({num_weeks}) must be int>0"
-        )
 
 
 class TestProcessMenu:

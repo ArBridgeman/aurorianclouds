@@ -35,6 +35,11 @@ create_menu:
     menu_number:
     basic_season: 0_any
     selected_season: 1_winter
+    sheet_to_mealtime:
+      breakfast: breakfast
+      snack: snack
+      dinner: dinner
+      dessert: dessert
     # if 0 is used as a basic menu, then change this to 1
     min_menu_number: 1
     # skips for random selections; gives error for hard-coded recipes

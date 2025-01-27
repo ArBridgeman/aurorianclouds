@@ -20,22 +20,14 @@ from sous_chef.menu.create_menu.models import (
     LoadedMenuSchema,
     Season,
     TmpMenuSchema,
+    TypeProcessOrder,
 )
 from structlog import get_logger
 from termcolor import cprint
 
 from utilities.api.gsheets_api import GsheetsHelper
-from utilities.extended_enum import ExtendedIntEnum
 
 FILE_LOGGER = get_logger(__name__)
-
-
-class TypeProcessOrder(ExtendedIntEnum):
-    recipe = 0
-    ingredient = 1
-    filter = 2
-    tag = 3
-    category = 4
 
 
 class MenuFromFixedTemplate(MenuBasic):

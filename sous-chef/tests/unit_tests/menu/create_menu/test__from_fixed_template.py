@@ -21,7 +21,7 @@ from utilities.testing.pandas_util import assert_equal_series
 @pytest.fixture
 @freeze_time(FROZEN_DATE)
 def fixed_templates(
-    menu_config, mock_gsheets, frozen_due_datetime_formatter, mock_all_menus_df
+    menu_config, mock_gsheets, frozen_due_datetime_formatter, fixed_all_menus
 ):
     menu_config.fixed.menu_number = 2
     menu_config.fixed.selected_season = Season.fall.value
@@ -31,7 +31,7 @@ def fixed_templates(
             due_date_formatter=frozen_due_datetime_formatter,
             gsheets_helper=mock_gsheets,
         )
-        fixed_templates.all_menus_df = mock_all_menus_df
+        fixed_templates.all_menus_df = fixed_all_menus
         return fixed_templates
 
 
@@ -106,7 +106,7 @@ class TestFixedTemplates:
     @staticmethod
     def test_load_fixed_menu(fixed_templates, menu_config):
         # ensure that some rows are not unique & multiple seasons
-        assert fixed_templates.all_menus_df.shape[0] == 19
+        assert fixed_templates.all_menus_df.shape[0] == 20
         assert fixed_templates.all_menus_df.menu.nunique() == 14
         assert fixed_templates.all_menus_df.season.nunique() == len(
             Season.value_list()

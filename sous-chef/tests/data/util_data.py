@@ -77,4 +77,5 @@ def get_tasks_grocery_list() -> pd.DataFrame:
 
 def get_all_menus() -> DataFrameBase[AllMenuSchema]:
     all_menus_df = pd.read_csv(abs_path / "all_menus.csv", header=0)
+    all_menus_df.eat_unit.fillna("", inplace=True)
     return validate_menu_schema(dataframe=all_menus_df, model=AllMenuSchema)

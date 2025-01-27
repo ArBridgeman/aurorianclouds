@@ -214,7 +214,7 @@ class FixedTemplates:
         )
         return (
             validate_menu_schema(dataframe=all_menus, model=AllMenuSchema)
-            .sort_values(by=["weekday", "meal_time"])
+            .sort_values(by=["menu", "season", "weekday", "meal_time"])
             .reset_index(drop=True)
         )
 

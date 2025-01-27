@@ -9,8 +9,8 @@ from sous_chef.menu.create_menu._from_fixed_template import (
     FixedTemplates,
     MenuFromFixedTemplate,
 )
-from sous_chef.menu.create_menu._menu_basic import MenuFutureError
 from sous_chef.menu.create_menu.models import Season
+from sous_chef.menu.create_menu.exceptions import MenuFutureError
 from sous_chef.menu.record_menu_history import MenuHistoryError
 from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe

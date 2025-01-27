@@ -12,13 +12,15 @@ from sous_chef.menu.create_menu._export_to_todoist import MenuForTodoist
 from sous_chef.menu.create_menu._from_fixed_template import (
     MenuFromFixedTemplate,
 )
-from sous_chef.menu.create_menu._menu_basic import validate_menu_schema
 from sous_chef.menu.create_menu._output_for_grocery_list import (
     MenuForGroceryList,
     MenuIngredient,
     MenuRecipe,
 )
-from sous_chef.menu.create_menu.models import TmpMenuSchema
+from sous_chef.menu.create_menu.models import (
+    TmpMenuSchema,
+    validate_menu_schema,
+)
 from sous_chef.menu.record_menu_history import MenuHistorian
 from sous_chef.pantry_list.read_pantry_list import PantryList
 from sous_chef.recipe_book.read_recipe_book import RecipeBook

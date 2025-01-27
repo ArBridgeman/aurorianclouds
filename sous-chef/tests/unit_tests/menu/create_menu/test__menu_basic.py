@@ -4,10 +4,7 @@ import pytest
 from freezegun import freeze_time
 from sous_chef.date.get_due_date import Weekday
 from sous_chef.formatter.units import unit_registry
-from sous_chef.menu.create_menu._menu_basic import (
-    MenuBasic,
-    get_weekday_from_short,
-)
+from sous_chef.menu.create_menu._menu_basic import MenuBasic
 from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
 
@@ -190,20 +187,3 @@ class TestMenu:
         assert log.events == []
         assert out == ""
         assert err == ""
-
-
-class TestGetWeekdayFromShort:
-    @staticmethod
-    @pytest.mark.parametrize(
-        "short_day,expected_week_day",
-        [("sat", "Saturday"), ("Mon", "Monday"), ("THU", "Thursday")],
-    )
-    def test_expected_values_succeed(short_day, expected_week_day):
-        assert get_weekday_from_short(short_day) == expected_week_day
-
-    @staticmethod
-    def test__unknown_date_raise_error():
-        # derived exception MenuConfigError
-        with pytest.raises(Exception) as error:
-            get_weekday_from_short("not-a-day")
-        assert str(error.value) == "[menu config error] not-a-day unknown day!"

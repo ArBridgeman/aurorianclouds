@@ -33,7 +33,6 @@ ABS_FILE_PATH = Path(__file__).absolute().parent
 FILE_LOGGER = get_logger(__name__)
 
 
-# TODO method to scale recipe to desired servings? maybe in recipe checker?
 @dataclass
 class MenuIncompleteError(Exception):
     custom_message: str
@@ -227,7 +226,6 @@ class MenuBasic(BaseWithExceptionHandling):
     def _inspect_unrated_recipe(self, recipe: pd.Series):
         if pd.isna(recipe.rating):
             self.number_of_unrated_recipes += 1
-            # TODO unneeded if in UI
             if self.menu_config.run_mode.with_inspect_unrated_recipe:
                 FILE_LOGGER.warning(
                     "[unrated recipe]",

@@ -8,16 +8,16 @@ from pandera.typing.common import DataFrameBase
 from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
-from sous_chef.menu.create_menu._for_grocery_list import (
-    MenuForGroceryList,
-    MenuIngredient,
-    MenuRecipe,
-)
 from sous_chef.menu.create_menu._for_todoist import MenuForTodoist
 from sous_chef.menu.create_menu._from_fixed_template import (
     MenuFromFixedTemplate,
 )
 from sous_chef.menu.create_menu._menu_basic import validate_menu_schema
+from sous_chef.menu.create_menu._output_for_grocery_list import (
+    MenuForGroceryList,
+    MenuIngredient,
+    MenuRecipe,
+)
 from sous_chef.menu.create_menu.models import TmpMenuSchema
 from sous_chef.menu.record_menu_history import MenuHistorian
 from sous_chef.pantry_list.read_pantry_list import PantryList

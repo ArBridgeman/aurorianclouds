@@ -11,7 +11,7 @@ from sous_chef.formatter.format_str import convert_number_to_str
 from sous_chef.formatter.format_unit import UnitFormatter, unit_registry
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.formatter.ingredient.get_ingredient_field import IngredientField
-from sous_chef.menu.create_menu._for_grocery_list import (
+from sous_chef.menu.create_menu._output_for_grocery_list import (
     MenuIngredient,
     MenuRecipe,
 )

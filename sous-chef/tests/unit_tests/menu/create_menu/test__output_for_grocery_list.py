@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.formatter.units import unit_registry
-from sous_chef.menu.create_menu._for_grocery_list import (
+from sous_chef.menu.create_menu._output_for_grocery_list import (
     MenuForGroceryList,
     MenuIngredient,
     MenuRecipe,

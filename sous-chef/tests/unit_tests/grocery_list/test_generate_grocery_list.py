@@ -14,7 +14,7 @@ from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.grocery_list.generate_grocery_list.generate_grocery_list import (
     GroceryListIncompleteError,
 )
-from sous_chef.menu.create_menu._for_grocery_list import MenuRecipe
+from sous_chef.menu.create_menu._output_for_grocery_list import MenuRecipe
 from sous_chef.recipe_book.recipe_util import RecipeSchema
 from tests.unit_tests.util import create_recipe
 

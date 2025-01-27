@@ -16,7 +16,15 @@ from sous_chef.formatter.ingredient.format_ingredient import (
 from sous_chef.formatter.ingredient.format_line_abstract import (
     MapLineErrorToException,
 )
-from sous_chef.menu.create_menu.models import LoadedMenuSchema, TmpMenuSchema
+from sous_chef.menu.create_menu.exceptions import (
+    MenuFutureError,
+    MenuQualityError,
+)
+from sous_chef.menu.create_menu.models import (
+    LoadedMenuSchema,
+    TmpMenuSchema,
+    validate_menu_schema,
+)
 from sous_chef.menu.record_menu_history import (
     MapMenuHistoryErrorToException,
     MenuHistorian,
@@ -31,60 +39,6 @@ from utilities.extended_enum import ExtendedEnum, extend_enum
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
 FILE_LOGGER = get_logger(__name__)
-
-
-@dataclass
-class MenuIncompleteError(Exception):
-    custom_message: str
-    message: str = "[menu had errors]"
-
-    def __post_init__(self):
-        super().__init__(self.message)
-
-    def __str__(self):
-        return f"{self.message} {self.custom_message}"
-
-
-@dataclass
-class MenuConfigError(Exception):
-    custom_message: str
-    message: str = "[menu config error]"
-
-    def __post_init__(self):
-        super().__init__(self.message)
-
-    def __str__(self):
-        return f"{self.message} {self.custom_message}"
-
-
-@dataclass
-class MenuQualityError(Exception):
-    error_text: str
-    recipe_title: str
-    message: str = "[menu quality]"
-
-    def __post_init__(self):
-        super().__init__(self.message)
-
-    def __str__(self):
-        return (
-            f"{self.message} recipe={self.recipe_title} error={self.error_text}"
-        )
-
-
-@dataclass
-class MenuFutureError(Exception):
-    error_text: str
-    recipe_title: str
-    message: str = "[future menu]"
-
-    def __post_init__(self):
-        super().__init__(self.message)
-
-    def __str__(self):
-        return (
-            f"{self.message} recipe={self.recipe_title} error={self.error_text}"
-        )
 
 
 @extend_enum(
@@ -327,24 +281,3 @@ class MenuBasic(BaseWithExceptionHandling):
             if not menu_history_recent_df.empty:
                 return list(menu_history_recent_df.uuid.values)
         return []
-
-
-def validate_menu_schema(
-    dataframe: Union[DataFrameBase, pd.DataFrame, pd.Series], model
-) -> Union[DataFrameBase, pd.Series]:
-    def validate_schema(tmp_df: pd.DataFrame):
-        selected_cols = model._collect_fields().keys()
-        return model.validate(tmp_df[selected_cols].copy())
-
-    if isinstance(dataframe, pd.DataFrame):
-        return validate_schema(tmp_df=dataframe)
-    elif isinstance(dataframe, pd.Series):
-        tmp_df = validate_schema(tmp_df=dataframe.to_frame().T)
-        return tmp_df.squeeze()
-
-
-def get_weekday_from_short(short_week_day: str):
-    weekday = Weekday.get_by_abbreviation(short_week_day)
-    if not weekday:
-        raise MenuConfigError(f"{short_week_day} unknown day!")
-    return weekday.name.capitalize()

@@ -8,7 +8,7 @@ from pandera.typing.common import DataFrameBase
 from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
-from sous_chef.menu.create_menu._for_todoist import MenuForTodoist
+from sous_chef.menu.create_menu._export_to_todoist import MenuForTodoist
 from sous_chef.menu.create_menu._from_fixed_template import (
     MenuFromFixedTemplate,
 )

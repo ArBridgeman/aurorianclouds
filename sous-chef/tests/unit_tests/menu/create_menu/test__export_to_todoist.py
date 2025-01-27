@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 from freezegun import freeze_time
-from sous_chef.menu.create_menu._for_todoist import MenuForTodoist
+from sous_chef.menu.create_menu._export_to_todoist import MenuForTodoist
 from tests.conftest import FROZEN_DATE
 
 

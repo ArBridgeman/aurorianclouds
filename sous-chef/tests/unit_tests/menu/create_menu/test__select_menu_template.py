@@ -1,34 +1,5 @@
 import pytest
-from freezegun import freeze_time
-from sous_chef.menu.create_menu._select_menu_template import MenuTemplates
 from sous_chef.menu.create_menu.models import Season
-from tests.conftest import FROZEN_DATE
-
-
-@pytest.fixture
-@freeze_time(FROZEN_DATE)
-def menu_templates(
-    menu_config,
-    mock_gsheets,
-    frozen_due_datetime_formatter,
-    monkeypatch,
-    fixed_all_menus,
-):
-    menu_config.fixed.menu_number = 2
-    menu_config.fixed.selected_season = Season.fall.value
-
-    def mock__get_all_menu_templates(self, **kwargs):
-        return fixed_all_menus
-
-    monkeypatch.setattr(
-        MenuTemplates, "_get_all_menu_templates", mock__get_all_menu_templates
-    )
-
-    return MenuTemplates(
-        config=menu_config.fixed,
-        due_date_formatter=frozen_due_datetime_formatter,
-        gsheets_helper=mock_gsheets,
-    )
 
 
 class TestMenuTemplates:

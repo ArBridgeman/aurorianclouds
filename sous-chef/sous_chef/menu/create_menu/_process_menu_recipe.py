@@ -1,7 +1,7 @@
 import datetime
 from datetime import timedelta
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import List, Union
 
 import pandas as pd
 from omegaconf import DictConfig
@@ -14,6 +14,7 @@ from sous_chef.formatter.ingredient.format_ingredient import (
 from sous_chef.formatter.ingredient.format_line_abstract import (
     MapLineErrorToException,
 )
+from sous_chef.menu.create_menu._select_menu_template import MenuTemplates
 from sous_chef.menu.create_menu.exceptions import (
     MenuFutureError,
     MenuQualityError,
@@ -24,6 +25,7 @@ from sous_chef.menu.create_menu.models import (
 )
 from sous_chef.menu.record_menu_history import (
     MapMenuHistoryErrorToException,
+    MenuHistorian,
     MenuHistoryError,
 )
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
@@ -53,13 +55,14 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
     def __init__(
         self,
         menu_config: DictConfig,
-        menu_history_uuids: Tuple,
         recipe_book: RecipeBook,
     ):
         self.menu_config = menu_config
         self.recipe_book = recipe_book
 
-        self.menu_history_uuids: Tuple = menu_history_uuids
+        self.menu_history_uuids = ()
+        self.future_menu_uuids = ()
+
         self.number_of_unrated_recipes: int = 0
         self.min_random_recipe_rating: Union[int, None] = None
 
@@ -195,7 +198,6 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
         self,
         row: pd.Series,
         processed_uuid_list: List,
-        future_uuid_tuple: Optional[Tuple] = (),
     ) -> DataFrameBase[TmpMenuSchema]:
         recipe = self.recipe_book.get_recipe_by_title(row["item"])
         if row.override_check == "N":
@@ -206,7 +208,7 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
                 )
             if recipe.uuid in self.menu_history_uuids:
                 raise MenuHistoryError(recipe_title=recipe.title)
-            if recipe.uuid in future_uuid_tuple:
+            if recipe.uuid in self.future_menu_uuids:
                 raise MenuFutureError(
                     recipe_title=recipe.title,
                     error_text="recipe is in an upcoming menu",
@@ -220,7 +222,6 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
         row: pd.Series,
         entry_type: str,
         processed_uuid_list: List,
-        future_uuid_tuple: Optional[Tuple],
     ) -> DataFrameBase[TmpMenuSchema]:
         max_cook_active_minutes = None
         if row.override_check == "N":
@@ -233,7 +234,9 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
 
         exclude_uuid_list = self.menu_history_uuids
         if processed_uuid_list:
-            exclude_uuid_list += processed_uuid_list + list(future_uuid_tuple)
+            exclude_uuid_list += processed_uuid_list + list(
+                self.future_menu_uuids
+            )
 
         recipe = getattr(
             self.recipe_book, f"get_random_recipe_by_{entry_type}"
@@ -248,3 +251,22 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
         row["type"] = "recipe"
         row = self._add_recipe_columns(row=row, recipe=recipe)
         return validate_menu_schema(dataframe=row, model=TmpMenuSchema)
+
+    def set_future_menu_uuids(self, menu_templates: MenuTemplates) -> None:
+        future_menus = menu_templates.select_upcoming_menus(
+            num_weeks_in_future=self.menu_config.fixed.already_in_future_menus.num_weeks  # noqa: E501
+        )
+        mask_recipe = future_menus["type"] == "recipe"
+
+        if sum(mask_recipe) > 0:
+            self.future_menu_uuids = tuple(
+                self.recipe_book.get_recipe_by_title(recipe).uuid
+                for recipe in future_menus[mask_recipe]["item"].values
+            )
+
+    def set_menu_history_uuids(self, menu_historian: MenuHistorian) -> None:
+        menu_history_recent_df = menu_historian.get_history_from(
+            days_ago=self.menu_config.menu_history_recent_days
+        )
+        if not menu_history_recent_df.empty:
+            self.menu_history_uuids = tuple(menu_history_recent_df.uuid.values)

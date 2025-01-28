@@ -1,32 +1,15 @@
 import numpy as np
 import pandas as pd
 import pytest
-from freezegun import freeze_time
 from sous_chef.date.get_due_date import Weekday
 from sous_chef.formatter.units import unit_registry
-from sous_chef.menu.create_menu._process_menu_recipe import MenuRecipeProcessor
 from sous_chef.menu.create_menu.exceptions import (
     MenuFutureError,
     MenuQualityError,
 )
-from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
 
 WEEKDAY = [pytest.param(member, id=member.name) for member in Weekday]
-
-
-@pytest.fixture
-@freeze_time(FROZEN_DATE)
-def menu_recipe_processor(
-    menu_config,
-    mock_menu_history,
-    mock_recipe_book,
-):
-    return MenuRecipeProcessor(
-        menu_config=menu_config,
-        menu_history_uuids=tuple(mock_menu_history.dataframe.uuid.values),
-        recipe_book=mock_recipe_book,
-    )
 
 
 @pytest.fixture
@@ -195,11 +178,11 @@ class TestRetrieveRecipe:
         menu_row.override_check = "Y"
         list_used_uuids = [recipe.uuid]
         menu_recipe_processor.menu_history_uuids = tuple(list_used_uuids)
+        menu_recipe_processor.future_menu_uuids = tuple(list_used_uuids)
 
         menu_recipe_row = menu_recipe_processor.retrieve_recipe(
             row=menu_row,
             processed_uuid_list=list_used_uuids,
-            future_uuid_tuple=tuple(list_used_uuids),
         )
 
         assert menu_recipe_row.shape[0] == 13
@@ -238,12 +221,12 @@ class TestRetrieveRecipe:
         menu_recipe_processor, default_menu_row_recipe_pair
     ):
         menu_row, recipe = default_menu_row_recipe_pair
+        menu_recipe_processor.future_menu_uuids = tuple([recipe.uuid])
 
         with pytest.raises(MenuFutureError) as error:
             menu_recipe_processor.retrieve_recipe(
                 row=menu_row,
                 processed_uuid_list=[],
-                future_uuid_tuple=tuple([recipe.uuid]),
             )
 
         assert "[future menu]" in str(error.value)

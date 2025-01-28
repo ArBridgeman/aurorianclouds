@@ -56,7 +56,6 @@ class Menu:
 
         # fill out & save final menu
         menu_from_fixed_template = MenuFromFixedTemplate(
-            config=self.config,
             menu_config=self.config.menu.create_menu,
             due_date_formatter=due_date_formatter,
             gsheets_helper=gsheets_helper,

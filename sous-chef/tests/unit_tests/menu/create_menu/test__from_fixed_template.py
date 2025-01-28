@@ -6,8 +6,6 @@ from sous_chef.formatter.units import unit_registry
 from sous_chef.menu.create_menu._from_fixed_template import (
     MenuFromFixedTemplate,
 )
-from sous_chef.menu.create_menu.exceptions import MenuFutureError
-from sous_chef.menu.record_menu_history import MenuHistoryError
 from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
 
@@ -17,7 +15,6 @@ from utilities.testing.pandas_util import assert_equal_series
 @pytest.fixture
 @freeze_time(FROZEN_DATE)
 def menu_from_fixed_template(
-    config,
     menu_config,
     mock_gsheets,
     mock_ingredient_formatter,
@@ -26,7 +23,6 @@ def menu_from_fixed_template(
     frozen_due_datetime_formatter,
 ):
     return MenuFromFixedTemplate(
-        config=config,
         menu_config=menu_config,
         due_date_formatter=frozen_due_datetime_formatter,
         gsheets_helper=mock_gsheets,
@@ -127,26 +123,15 @@ class TestProcessMenu:
 
 
 class TestCreateMenuProcessMenuRecipe:
-    recipe_title = "garlic aioli"
-    time_total_str = "5 minutes"
-
-    def _set_up_recipe(self, menu_builder, mock_recipe_book):
-        row = menu_builder.create_loaded_menu_row(
-            item=self.recipe_title, item_type="recipe"
-        ).squeeze()
-
-        recipe_with_time_total = create_recipe(
-            title=self.recipe_title, time_total_str=self.time_total_str
-        )
-        mock_recipe_book.get_recipe_by_title.return_value = (
-            recipe_with_time_total
-        )
-        return row, recipe_with_time_total.uuid
-
-    def test__normal(
-        self, menu_from_fixed_template, menu_builder, mock_recipe_book
+    def test_works_for_expected_usecase(
+        self,
+        menu_from_fixed_template,
+        menu_builder,
+        mock_recipe_book,
+        default_menu_row_recipe_pair,
     ):
-        menu_row, _ = self._set_up_recipe(menu_builder, mock_recipe_book)
+
+        menu_row, recipe = default_menu_row_recipe_pair
 
         result = menu_from_fixed_template._process_menu(
             menu_row.copy(deep=True), processed_uuid_list=[]
@@ -155,58 +140,8 @@ class TestCreateMenuProcessMenuRecipe:
         assert_equal_series(
             result,
             menu_builder.create_tmp_menu_row(
-                item=self.recipe_title,
+                item=recipe.title,
                 item_type="recipe",
-                time_total_str=pd.to_timedelta(self.time_total_str),
+                time_total_str=pd.to_timedelta(recipe.time_total),
             ).squeeze(),
-        )
-
-    def test__error_when_in_processed_uuid_list(
-        self, menu_from_fixed_template, menu_builder, mock_recipe_book
-    ):
-        menu_row, recipe_uuid = self._set_up_recipe(
-            menu_builder, mock_recipe_book
-        )
-
-        # derived exception MenuQualityError
-        with pytest.raises(Exception) as error:
-            menu_from_fixed_template._process_menu(
-                menu_row, processed_uuid_list=[recipe_uuid]
-            )
-        assert (
-            str(error.value) == "[menu quality] recipe=garlic aioli "
-            "error=recipe already processed in menu"
-        )
-
-    def test__error_when_in_menu_history_uuid_list(
-        self, menu_from_fixed_template, menu_builder, mock_recipe_book
-    ):
-        menu_row, recipe_uuid = self._set_up_recipe(
-            menu_builder, mock_recipe_book
-        )
-
-        menu_from_fixed_template.menu_history_uuid_list = [recipe_uuid]
-
-        with pytest.raises(MenuHistoryError) as error:
-            menu_from_fixed_template._process_menu(
-                menu_row, processed_uuid_list=[]
-            )
-        assert (
-            str(error.value) == "[in recent menu history] recipe=garlic aioli"
-        )
-
-    def test__error_when_in_future_menu_history_uuid_list(
-        self, menu_from_fixed_template, menu_builder, mock_recipe_book
-    ):
-        menu_row, recipe_uuid = self._set_up_recipe(
-            menu_builder, mock_recipe_book
-        )
-
-        with pytest.raises(MenuFutureError) as error:
-            menu_from_fixed_template._process_menu(
-                menu_row, processed_uuid_list=[], future_uuid_tuple=recipe_uuid
-            )
-        assert str(error.value) == (
-            "[future menu] recipe=garlic aioli "
-            "error=recipe is in an upcoming menu"
         )

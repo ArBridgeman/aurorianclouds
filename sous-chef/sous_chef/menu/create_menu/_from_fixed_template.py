@@ -3,9 +3,12 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
+from omegaconf import DictConfig
 from pandera.typing.common import DataFrameBase
 from sous_chef.abstract.handle_exception import BaseWithExceptionHandling
-from sous_chef.menu.create_menu._menu_basic import MenuBasic
+from sous_chef.date.get_due_date import DueDatetimeFormatter
+from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
+from sous_chef.menu.create_menu._process_menu_recipe import MenuRecipeProcessor
 from sous_chef.menu.create_menu._select_menu_template import MenuTemplates
 from sous_chef.menu.create_menu.exceptions import MenuIncompleteError
 from sous_chef.menu.create_menu.models import (
@@ -14,13 +17,36 @@ from sous_chef.menu.create_menu.models import (
     TypeProcessOrder,
     validate_menu_schema,
 )
+from sous_chef.menu.record_menu_history import MenuHistorian
+from sous_chef.recipe_book.read_recipe_book import RecipeBook
 from structlog import get_logger
 from termcolor import cprint
+
+from utilities.api.gsheets_api import GsheetsHelper
 
 FILE_LOGGER = get_logger(__name__)
 
 
-class MenuFromFixedTemplate(MenuBasic):
+class MenuFromFixedTemplate(BaseWithExceptionHandling):
+    def __init__(
+        self,
+        menu_config: DictConfig,
+        due_date_formatter: DueDatetimeFormatter,
+        gsheets_helper: GsheetsHelper,
+        ingredient_formatter: IngredientFormatter,
+        menu_historian: MenuHistorian,
+        recipe_book: RecipeBook,
+    ):
+        self.menu_config = menu_config
+        self.due_date_formatter = due_date_formatter
+        self.gsheets_helper = gsheets_helper
+        self.ingredient_formatter = ingredient_formatter
+        self.recipe_book = recipe_book
+
+        self.menu_recipe_processor = self._get_menu_recipe_processor(
+            menu_historian=menu_historian
+        )
+
     def fill_menu_template(self) -> DataFrameBase[TmpMenuSchema]:
         self.record_exception = []
 
@@ -84,6 +110,21 @@ class MenuFromFixedTemplate(MenuBasic):
             model=TmpMenuSchema,
         )
 
+    def _get_menu_recipe_processor(
+        self, menu_historian: MenuHistorian
+    ) -> MenuRecipeProcessor:
+        menu_history_recent_df = menu_historian.get_history_from(
+            days_ago=self.menu_config.menu_history_recent_days
+        )
+        menu_history_uuids = ()
+        if not menu_history_recent_df.empty:
+            menu_history_uuids = tuple(menu_history_recent_df.uuid.values)
+        return MenuRecipeProcessor(
+            menu_config=self.menu_config,
+            menu_history_uuids=menu_history_uuids,
+            recipe_book=self.recipe_book,
+        )
+
     def _get_future_menu_uuids(
         self, future_menus: DataFrameBase[AllMenuSchema]
     ) -> Tuple:
@@ -143,13 +184,13 @@ class MenuFromFixedTemplate(MenuBasic):
         future_uuid_tuple: Optional[Tuple] = (),
     ) -> DataFrameBase[TmpMenuSchema]:
         if row["type"] in ["category", "tag", "filter"]:
-            return self._select_random_recipe(
+            return self.menu_recipe_processor.select_random_recipe(
                 row=row,
                 entry_type=row["type"],
                 processed_uuid_list=processed_uuid_list,
                 future_uuid_tuple=future_uuid_tuple,
             )
-        return self._retrieve_recipe(
+        return self.menu_recipe_processor.retrieve_recipe(
             row,
             processed_uuid_list=processed_uuid_list,
             future_uuid_tuple=future_uuid_tuple,

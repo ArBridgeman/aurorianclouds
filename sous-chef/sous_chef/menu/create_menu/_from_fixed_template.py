@@ -29,17 +29,17 @@ class MenuFromFixedTemplate(MenuBasic):
             due_date_formatter=self.due_date_formatter,
             gsheets_helper=self.gsheets_helper,
         )
-        self.dataframe = fixed_templates.load_template_menu()
+        menu_template_df = fixed_templates.load_template_menu()
 
         # sort by desired order to be processed
-        self.dataframe["process_order"] = self.dataframe["type"].apply(
+        menu_template_df["process_order"] = menu_template_df["type"].apply(
             lambda x: TypeProcessOrder[x].value
         )
-        self.dataframe["is_unrated"] = (
-            self.dataframe.selection == "unrated"
+        menu_template_df["is_unrated"] = (
+            menu_template_df.selection == "unrated"
         ).astype(int)
 
-        self.dataframe = self.dataframe.sort_values(
+        menu_template_df = menu_template_df.sort_values(
             by=["is_unrated", "process_order"], ascending=[False, True]
         ).drop(columns=["process_order", "is_unrated"])
 
@@ -51,9 +51,9 @@ class MenuFromFixedTemplate(MenuBasic):
                 )
             )
 
-        holder_dataframe = pd.DataFrame()
+        final_menu_df = pd.DataFrame()
         processed_uuid_list = []
-        for _, entry in self.dataframe.iterrows():
+        for _, entry in menu_template_df.iterrows():
             processed_entry = self._process_menu(
                 row=entry,
                 processed_uuid_list=processed_uuid_list,
@@ -68,8 +68,7 @@ class MenuFromFixedTemplate(MenuBasic):
                 processed_uuid_list.append(processed_entry.uuid)
 
             processed_df = pd.DataFrame([processed_entry])
-            holder_dataframe = pd.concat([processed_df, holder_dataframe])
-        self.dataframe = holder_dataframe
+            final_menu_df = pd.concat([processed_df, final_menu_df])
 
         if len(self.record_exception) > 0:
             cprint("\t" + "\n\t".join(self.record_exception), "green")
@@ -77,12 +76,12 @@ class MenuFromFixedTemplate(MenuBasic):
                 custom_message="will not send to finalize until fixed"
             )
 
-        self.dataframe = self.dataframe.sort_values(
-            by=["cook_datetime"], ignore_index=True
-        )
-        self.dataframe.uuid = self.dataframe.uuid.replace(np.nan, "NaN")
+        final_menu_df.uuid = final_menu_df.uuid.replace(np.nan, "NaN")
         return validate_menu_schema(
-            dataframe=self.dataframe, model=TmpMenuSchema
+            dataframe=final_menu_df.sort_values(
+                by=["cook_datetime"], ignore_index=True
+            ),
+            model=TmpMenuSchema,
         )
 
     def _get_future_menu_uuids(

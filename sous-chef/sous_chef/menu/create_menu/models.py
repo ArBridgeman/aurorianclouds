@@ -1,9 +1,11 @@
-from typing import Optional
+from typing import Optional, Union
 
 import pandas as pd
 import pandera as pa
 from pandera.typing import Series
+from pandera.typing.common import DataFrameBase
 from sous_chef.date.get_due_date import MealTime, Weekday
+from sous_chef.menu.create_menu.exceptions import MenuConfigError
 
 from utilities.extended_enum import ExtendedEnum, ExtendedIntEnum
 
@@ -94,3 +96,27 @@ class TmpMenuSchema(BasicMenuSchema, TimeSchema):
     class Config:
         strict = True
         coerce = True
+
+
+def validate_menu_schema(
+    dataframe: Union[DataFrameBase, pd.DataFrame, pd.Series], model
+) -> Union[DataFrameBase, pd.Series]:
+    def validate_schema(tmp_df: pd.DataFrame):
+        selected_cols = model._collect_fields().keys()
+        return model.validate(tmp_df[selected_cols].copy())
+
+    if isinstance(dataframe, pd.DataFrame):
+        return validate_schema(tmp_df=dataframe)
+
+    if isinstance(dataframe, pd.Series):
+        tmp_df = validate_schema(tmp_df=dataframe.to_frame().T)
+        return tmp_df.squeeze()
+
+    raise ValueError(f"dataframe is of type {type(dataframe)}")
+
+
+def get_weekday_from_short(short_week_day: str):
+    weekday = Weekday.get_by_abbreviation(short_week_day)
+    if not weekday:
+        raise MenuConfigError(f"{short_week_day} unknown day!")
+    return weekday.name.capitalize()

@@ -1,22 +1,28 @@
 import datetime
-from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import List, Union
 
 import pandas as pd
 from omegaconf import DictConfig
 from pandera.typing.common import DataFrameBase
 from sous_chef.abstract.handle_exception import BaseWithExceptionHandling
-from sous_chef.date.get_due_date import DueDatetimeFormatter, Weekday
+from sous_chef.date.get_due_date import Weekday
 from sous_chef.formatter.ingredient.format_ingredient import (
-    IngredientFormatter,
     MapIngredientErrorToException,
 )
 from sous_chef.formatter.ingredient.format_line_abstract import (
     MapLineErrorToException,
 )
-from sous_chef.menu.create_menu.models import LoadedMenuSchema, TmpMenuSchema
+from sous_chef.menu.create_menu._select_menu_template import MenuTemplates
+from sous_chef.menu.create_menu.exceptions import (
+    MenuFutureError,
+    MenuQualityError,
+)
+from sous_chef.menu.create_menu.models import (
+    TmpMenuSchema,
+    validate_menu_schema,
+)
 from sous_chef.menu.record_menu_history import (
     MapMenuHistoryErrorToException,
     MenuHistorian,
@@ -26,66 +32,10 @@ from sous_chef.recipe_book.read_recipe_book import RecipeBook
 from sous_chef.recipe_book.recipe_util import MapRecipeErrorToException
 from structlog import get_logger
 
-from utilities.api.gsheets_api import GsheetsHelper
 from utilities.extended_enum import ExtendedEnum, extend_enum
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
 FILE_LOGGER = get_logger(__name__)
-
-
-# TODO method to scale recipe to desired servings? maybe in recipe checker?
-@dataclass
-class MenuIncompleteError(Exception):
-    custom_message: str
-    message: str = "[menu had errors]"
-
-    def __post_init__(self):
-        super().__init__(self.message)
-
-    def __str__(self):
-        return f"{self.message} {self.custom_message}"
-
-
-@dataclass
-class MenuConfigError(Exception):
-    custom_message: str
-    message: str = "[menu config error]"
-
-    def __post_init__(self):
-        super().__init__(self.message)
-
-    def __str__(self):
-        return f"{self.message} {self.custom_message}"
-
-
-@dataclass
-class MenuQualityError(Exception):
-    error_text: str
-    recipe_title: str
-    message: str = "[menu quality]"
-
-    def __post_init__(self):
-        super().__init__(self.message)
-
-    def __str__(self):
-        return (
-            f"{self.message} recipe={self.recipe_title} error={self.error_text}"
-        )
-
-
-@dataclass
-class MenuFutureError(Exception):
-    error_text: str
-    recipe_title: str
-    message: str = "[future menu]"
-
-    def __post_init__(self):
-        super().__init__(self.message)
-
-    def __str__(self):
-        return (
-            f"{self.message} recipe={self.recipe_title} error={self.error_text}"
-        )
 
 
 @extend_enum(
@@ -101,30 +51,25 @@ class MapMenuErrorToException(ExtendedEnum):
     menu_future_error = MenuFutureError
 
 
-@dataclass
-class MenuBasic(BaseWithExceptionHandling):
-    config: DictConfig
-    menu_config: DictConfig
-    due_date_formatter: DueDatetimeFormatter
-    gsheets_helper: GsheetsHelper
-    ingredient_formatter: IngredientFormatter
-    recipe_book: RecipeBook
-    menu_historian: MenuHistorian = None
-    dataframe: Union[
-        pd.DataFrame,
-        DataFrameBase[LoadedMenuSchema],
-        DataFrameBase[TmpMenuSchema],
-    ] = None
-    menu_history_uuid_list: List = field(init=False)
-    number_of_unrated_recipes: int = 0
-    min_random_recipe_rating: int = None
+class MenuRecipeProcessor(BaseWithExceptionHandling):
+    def __init__(
+        self,
+        menu_config: DictConfig,
+        recipe_book: RecipeBook,
+    ):
+        self.menu_config = menu_config
+        self.recipe_book = recipe_book
 
-    def __post_init__(self):
+        self.menu_history_uuids = ()
+        self.future_menu_uuids = ()
+
+        self.number_of_unrated_recipes: int = 0
+        self.min_random_recipe_rating: Union[int, None] = None
+
         self.set_tuple_log_and_skip_exception_from_config(
             config_errors=self.menu_config.errors,
             exception_mapper=MapMenuErrorToException,
         )
-        self.menu_history_uuid_list = self._set_menu_history_uuid_list()
 
     def _add_recipe_columns(
         self, row: pd.Series, recipe: pd.Series
@@ -227,7 +172,6 @@ class MenuBasic(BaseWithExceptionHandling):
     def _inspect_unrated_recipe(self, recipe: pd.Series):
         if pd.isna(recipe.rating):
             self.number_of_unrated_recipes += 1
-            # TODO unneeded if in UI
             if self.menu_config.run_mode.with_inspect_unrated_recipe:
                 FILE_LOGGER.warning(
                     "[unrated recipe]",
@@ -250,11 +194,10 @@ class MenuBasic(BaseWithExceptionHandling):
             )
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
-    def _retrieve_recipe(
+    def retrieve_recipe(
         self,
         row: pd.Series,
         processed_uuid_list: List,
-        future_uuid_tuple: Optional[Tuple] = (),
     ) -> DataFrameBase[TmpMenuSchema]:
         recipe = self.recipe_book.get_recipe_by_title(row["item"])
         if row.override_check == "N":
@@ -263,9 +206,9 @@ class MenuBasic(BaseWithExceptionHandling):
                     recipe_title=recipe.title,
                     error_text="recipe already processed in menu",
                 )
-            elif recipe.uuid in self.menu_history_uuid_list:
+            if recipe.uuid in self.menu_history_uuids:
                 raise MenuHistoryError(recipe_title=recipe.title)
-            elif recipe.uuid in future_uuid_tuple:
+            if recipe.uuid in self.future_menu_uuids:
                 raise MenuFutureError(
                     recipe_title=recipe.title,
                     error_text="recipe is in an upcoming menu",
@@ -274,12 +217,11 @@ class MenuBasic(BaseWithExceptionHandling):
         return validate_menu_schema(dataframe=row, model=TmpMenuSchema)
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
-    def _select_random_recipe(
+    def select_random_recipe(
         self,
         row: pd.Series,
         entry_type: str,
         processed_uuid_list: List,
-        future_uuid_tuple: Optional[Tuple],
     ) -> DataFrameBase[TmpMenuSchema]:
         max_cook_active_minutes = None
         if row.override_check == "N":
@@ -290,9 +232,11 @@ class MenuBasic(BaseWithExceptionHandling):
                 ].cook_active_minutes_max
             )
 
-        exclude_uuid_list = self.menu_history_uuid_list
+        exclude_uuid_list = self.menu_history_uuids
         if processed_uuid_list:
-            exclude_uuid_list += processed_uuid_list + list(future_uuid_tuple)
+            exclude_uuid_list += processed_uuid_list + list(
+                self.future_menu_uuids
+            )
 
         recipe = getattr(
             self.recipe_book, f"get_random_recipe_by_{entry_type}"
@@ -308,45 +252,21 @@ class MenuBasic(BaseWithExceptionHandling):
         row = self._add_recipe_columns(row=row, recipe=recipe)
         return validate_menu_schema(dataframe=row, model=TmpMenuSchema)
 
-    def _save_menu(self) -> None:
-        save_loc = self.menu_config.final_menu
-        FILE_LOGGER.info(
-            "[save menu]",
-            workbook=save_loc.workbook,
-            worksheet=save_loc.worksheet,
+    def set_future_menu_uuids(self, menu_templates: MenuTemplates) -> None:
+        future_menus = menu_templates.select_upcoming_menus(
+            num_weeks_in_future=self.menu_config.fixed.already_in_future_menus.num_weeks  # noqa: E501
         )
-        self.gsheets_helper.write_worksheet(
-            df=self.dataframe,
-            workbook_name=save_loc.workbook,
-            worksheet_name=save_loc.worksheet,
-        )
+        mask_recipe = future_menus["type"] == "recipe"
 
-    def _set_menu_history_uuid_list(self) -> List:
-        if self.menu_historian is not None:
-            menu_history_recent_df = self.menu_historian.get_history_from(
-                days_ago=self.menu_config.menu_history_recent_days
+        if sum(mask_recipe) > 0:
+            self.future_menu_uuids = tuple(
+                self.recipe_book.get_recipe_by_title(recipe).uuid
+                for recipe in future_menus[mask_recipe]["item"].values
             )
-            if not menu_history_recent_df.empty:
-                return list(menu_history_recent_df.uuid.values)
-        return []
 
-
-def validate_menu_schema(
-    dataframe: Union[DataFrameBase, pd.DataFrame, pd.Series], model
-) -> Union[DataFrameBase, pd.Series]:
-    def validate_schema(tmp_df: pd.DataFrame):
-        selected_cols = model._collect_fields().keys()
-        return model.validate(tmp_df[selected_cols].copy())
-
-    if isinstance(dataframe, pd.DataFrame):
-        return validate_schema(tmp_df=dataframe)
-    elif isinstance(dataframe, pd.Series):
-        tmp_df = validate_schema(tmp_df=dataframe.to_frame().T)
-        return tmp_df.squeeze()
-
-
-def get_weekday_from_short(short_week_day: str):
-    weekday = Weekday.get_by_abbreviation(short_week_day)
-    if not weekday:
-        raise MenuConfigError(f"{short_week_day} unknown day!")
-    return weekday.name.capitalize()
+    def set_menu_history_uuids(self, menu_historian: MenuHistorian) -> None:
+        menu_history_recent_df = menu_historian.get_history_from(
+            days_ago=self.menu_config.menu_history_recent_days
+        )
+        if not menu_history_recent_df.empty:
+            self.menu_history_uuids = tuple(menu_history_recent_df.uuid.values)

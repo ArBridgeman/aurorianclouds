@@ -1,39 +1,15 @@
 import numpy as np
 import pandas as pd
 import pytest
-from freezegun import freeze_time
 from sous_chef.date.get_due_date import Weekday
 from sous_chef.formatter.units import unit_registry
-from sous_chef.menu.create_menu._menu_basic import (
-    MenuBasic,
-    get_weekday_from_short,
+from sous_chef.menu.create_menu.exceptions import (
+    MenuFutureError,
+    MenuQualityError,
 )
-from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
 
 WEEKDAY = [pytest.param(member, id=member.name) for member in Weekday]
-
-
-@pytest.fixture
-@freeze_time(FROZEN_DATE)
-def menu_basic(
-    config,
-    menu_config,
-    mock_gsheets,
-    mock_ingredient_formatter,
-    mock_menu_history,
-    mock_recipe_book,
-    frozen_due_datetime_formatter,
-):
-    return MenuBasic(
-        config=config,
-        menu_config=menu_config,
-        due_date_formatter=frozen_due_datetime_formatter,
-        gsheets_helper=mock_gsheets,
-        ingredient_formatter=mock_ingredient_formatter,
-        menu_historian=mock_menu_history,
-        recipe_book=mock_recipe_book,
-    )
 
 
 @pytest.fixture
@@ -57,10 +33,10 @@ def menu_default(menu_builder):
     return menu_builder.get_menu()
 
 
-class TestMenu:
+class TestMenuRecipeProcessor:
     @staticmethod
     def test__add_recipe_columns_nat(
-        menu_basic, menu_builder, mock_recipe_book
+        menu_recipe_processor, menu_builder, mock_recipe_book
     ):
         recipe_title = "recipe_without_cook_time"
         row = menu_builder.create_loaded_menu_row(
@@ -74,7 +50,7 @@ class TestMenu:
             recipe_without_time_total
         )
 
-        result = menu_basic._add_recipe_columns(
+        result = menu_recipe_processor._add_recipe_columns(
             row.copy(deep=True), recipe_without_time_total
         )
 
@@ -83,14 +59,14 @@ class TestMenu:
 
     @staticmethod
     @pytest.mark.parametrize("weekday", WEEKDAY)
-    def test__check_menu_quality(menu_basic, menu_config, weekday):
+    def test__check_menu_quality(menu_recipe_processor, menu_config, weekday):
         menu_config.quality_check.recipe_rating_min = 3.0
         menu_config.quality_check.workday.recipe_unrated_allowed = True
-        menu_basic._check_menu_quality(
+        menu_recipe_processor._check_menu_quality(
             weekday_index=weekday.index, recipe=create_recipe(rating=np.nan)
         )
         menu_config.quality_check.workday.recipe_unrated_allowed = False
-        menu_basic._check_menu_quality(
+        menu_recipe_processor._check_menu_quality(
             weekday_index=weekday.index,
             recipe=create_recipe(rating=3.0, time_inactive_str="1 min"),
         )
@@ -98,12 +74,11 @@ class TestMenu:
     @staticmethod
     @pytest.mark.parametrize("weekday", WEEKDAY)
     def test__check_menu_quality_ensure_rating_exceed_min(
-        menu_basic, menu_config, weekday
+        menu_recipe_processor, menu_config, weekday
     ):
         menu_config.quality_check.recipe_rating_min = 3.0
-        # derived exception MenuQualityError
-        with pytest.raises(Exception) as error:
-            menu_basic._check_menu_quality(
+        with pytest.raises(MenuQualityError) as error:
+            menu_recipe_processor._check_menu_quality(
                 weekday_index=weekday, recipe=create_recipe(rating=2.5)
             )
         assert (
@@ -114,14 +89,13 @@ class TestMenu:
     @staticmethod
     @pytest.mark.parametrize("weekday", WEEKDAY)
     def test__check_menu_quality_ensure_workday_not_unrated_recipe(
-        menu_basic, menu_config, weekday
+        menu_recipe_processor, menu_config, weekday
     ):
         day_type = weekday.day_type
 
         menu_config.quality_check[day_type].recipe_unrated_allowed = False
-        # derived exception MenuQualityError
-        with pytest.raises(Exception) as error:
-            menu_basic._check_menu_quality(
+        with pytest.raises(MenuQualityError) as error:
+            menu_recipe_processor._check_menu_quality(
                 weekday_index=weekday.index, recipe=create_recipe(rating=np.nan)
             )
         assert str(error.value) == (
@@ -132,14 +106,13 @@ class TestMenu:
     @staticmethod
     @pytest.mark.parametrize("weekday", WEEKDAY)
     def test__check_menu_quality_ensure_workday_not_exceed_active_cook_time(
-        menu_basic, menu_config, weekday
+        menu_recipe_processor, menu_config, weekday
     ):
         day_type = weekday.day_type
 
         menu_config.quality_check[day_type].cook_active_minutes_max = 10
-        # derived exception MenuQualityError
-        with pytest.raises(Exception) as error:
-            menu_basic._check_menu_quality(
+        with pytest.raises(MenuQualityError) as error:
+            menu_recipe_processor._check_menu_quality(
                 weekday_index=weekday.index,
                 recipe=create_recipe(time_total_str="15 minutes"),
             )
@@ -154,12 +127,14 @@ class TestMenu:
         capsys,
         log,
         menu_config,
-        menu_basic,
+        menu_recipe_processor,
         rating,
     ):
         menu_config.run_mode.with_inspect_unrated_recipe = True
 
-        menu_basic._inspect_unrated_recipe(create_recipe(rating=rating))
+        menu_recipe_processor._inspect_unrated_recipe(
+            create_recipe(rating=rating)
+        )
         out, err = capsys.readouterr()
 
         assert log.events == [
@@ -179,12 +154,14 @@ class TestMenu:
         capsys,
         log,
         menu_config,
-        menu_basic,
+        menu_recipe_processor,
         rating,
     ):
         menu_config.run_mode.with_inspect_unrated_recipe = False
 
-        menu_basic._inspect_unrated_recipe(create_recipe(rating=rating))
+        menu_recipe_processor._inspect_unrated_recipe(
+            create_recipe(rating=rating)
+        )
         out, err = capsys.readouterr()
 
         assert log.events == []
@@ -192,18 +169,64 @@ class TestMenu:
         assert err == ""
 
 
-class TestGetWeekdayFromShort:
+class TestRetrieveRecipe:
     @staticmethod
-    @pytest.mark.parametrize(
-        "short_day,expected_week_day",
-        [("sat", "Saturday"), ("Mon", "Monday"), ("THU", "Thursday")],
-    )
-    def test_expected_values_succeed(short_day, expected_week_day):
-        assert get_weekday_from_short(short_day) == expected_week_day
+    def test_passes_through_if_override_active(
+        menu_recipe_processor, default_menu_row_recipe_pair
+    ):
+        menu_row, recipe = default_menu_row_recipe_pair
+        menu_row.override_check = "Y"
+        list_used_uuids = [recipe.uuid]
+        menu_recipe_processor.menu_history_uuids = tuple(list_used_uuids)
+        menu_recipe_processor.future_menu_uuids = tuple(list_used_uuids)
+
+        menu_recipe_row = menu_recipe_processor.retrieve_recipe(
+            row=menu_row,
+            processed_uuid_list=list_used_uuids,
+        )
+
+        assert menu_recipe_row.shape[0] == 13
 
     @staticmethod
-    def test__unknown_date_raise_error():
-        # derived exception MenuConfigError
+    def test_when_recipe_in_processed_uuid_list_toss_error(
+        menu_recipe_processor, default_menu_row_recipe_pair
+    ):
+        menu_row, recipe = default_menu_row_recipe_pair
+
+        with pytest.raises(MenuQualityError) as error:
+            menu_recipe_processor.retrieve_recipe(
+                row=menu_row,
+                processed_uuid_list=[recipe.uuid],
+            )
+
+        assert "recipe already processed in menu" in str(error.value)
+
+    @staticmethod
+    def test_when_recipe_in_menu_history_uuids_toss_error(
+        menu_recipe_processor, default_menu_row_recipe_pair
+    ):
+        menu_row, recipe = default_menu_row_recipe_pair
+        menu_recipe_processor.menu_history_uuids = tuple([recipe.uuid])
+
         with pytest.raises(Exception) as error:
-            get_weekday_from_short("not-a-day")
-        assert str(error.value) == "[menu config error] not-a-day unknown day!"
+            menu_recipe_processor.retrieve_recipe(
+                row=menu_row,
+                processed_uuid_list=[],
+            )
+
+        assert "[in recent menu history]" in str(error.value)
+
+    @staticmethod
+    def test_when_recipe_in_future_uuids_toss_error(
+        menu_recipe_processor, default_menu_row_recipe_pair
+    ):
+        menu_row, recipe = default_menu_row_recipe_pair
+        menu_recipe_processor.future_menu_uuids = tuple([recipe.uuid])
+
+        with pytest.raises(MenuFutureError) as error:
+            menu_recipe_processor.retrieve_recipe(
+                row=menu_row,
+                processed_uuid_list=[],
+            )
+
+        assert "[future menu]" in str(error.value)

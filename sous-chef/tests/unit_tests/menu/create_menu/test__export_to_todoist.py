@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 from freezegun import freeze_time
-from sous_chef.menu.create_menu._for_todoist import MenuForTodoist
+from sous_chef.menu.create_menu._export_to_todoist import MenuForTodoist
 from tests.conftest import FROZEN_DATE
 
 
@@ -10,14 +10,14 @@ from tests.conftest import FROZEN_DATE
 def menu_for_todoist(
     menu_config,
     frozen_due_datetime_formatter,
-    mock_all_menus_df,
+    fixed_all_menus,
     mock_todoist_helper,
 ):
     mock_todoist_helper.get_project_id = lambda x: "abcd"
 
     return MenuForTodoist(
         config=menu_config.todoist,
-        final_menu_df=mock_all_menus_df,
+        final_menu_df=fixed_all_menus,
         due_date_formatter=frozen_due_datetime_formatter,
         todoist_helper=mock_todoist_helper,
     )

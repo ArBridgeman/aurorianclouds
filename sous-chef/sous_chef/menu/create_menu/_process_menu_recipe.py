@@ -122,7 +122,6 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
         day_type = "workday"
         if isinstance(weekday_index, int):
             day_type = Weekday.get_by_index(index=weekday_index).day_type
-
         if not quality_check_config[day_type].recipe_unrated_allowed:
             self._ensure_not_unrated_recipe(recipe=recipe, day_type=day_type)
         self._ensure_does_not_exceed_max_active_cook_time(
@@ -158,15 +157,17 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
         time_total = recipe.time_total
         if recipe.time_inactive is not pd.NaT:
             time_total -= recipe.time_inactive
-        cook_active_minutes = time_total.total_seconds() / 60
-        if cook_active_minutes > max_cook_active_minutes:
-            error_text = (
-                f"(on {day_type}) "
-                f"cook_active_minutes={cook_active_minutes} > "
-                f"{max_cook_active_minutes}"
-            )
+
+        if (
+            cook_active_minutes := time_total.total_seconds() / 60
+        ) > max_cook_active_minutes:
             raise MenuQualityError(
-                recipe_title=recipe.title, error_text=error_text
+                recipe_title=recipe.title,
+                error_text=(
+                    f"(on {day_type}) "
+                    f"cook_active_minutes={cook_active_minutes} > "
+                    f"{max_cook_active_minutes}"
+                ),
             )
 
     def _inspect_unrated_recipe(self, recipe: pd.Series):

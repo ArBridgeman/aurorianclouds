@@ -18,6 +18,7 @@ from sous_chef.menu.create_menu.models import (
     validate_menu_schema,
 )
 from tests.conftest import FROZEN_DATE
+from tests.unit_tests.util import create_recipe
 
 
 @pytest.fixture
@@ -171,3 +172,16 @@ class MenuBuilder:
 @pytest.fixture
 def menu_builder():
     return MenuBuilder()
+
+
+@pytest.fixture
+def default_menu_row_recipe_pair(menu_builder, mock_recipe_book):
+    recipe_title = "garlic aioli"
+
+    menu_row = menu_builder.create_loaded_menu_row(
+        item=recipe_title, item_type="recipe"
+    ).squeeze()
+
+    recipe = create_recipe(title=recipe_title, time_total_str="5 minutes")
+    mock_recipe_book.get_recipe_by_title.return_value = recipe
+    return menu_row, recipe

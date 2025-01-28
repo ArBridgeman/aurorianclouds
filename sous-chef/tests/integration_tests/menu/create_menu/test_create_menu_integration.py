@@ -48,7 +48,7 @@ class TestMenuGsheets:
             new_callable=PropertyMock,
             return_value=frozen_due_datetime_formatter.anchor_datetime,
         ):
-            final_menu_df = menu_with_recipe_book.fill_menu_template()
+            final_menu_df = menu_with_recipe_book.fill_menu_template_and_save()
 
         assert_equal_dataframe(final_menu_df, fixed_final_menu)
 

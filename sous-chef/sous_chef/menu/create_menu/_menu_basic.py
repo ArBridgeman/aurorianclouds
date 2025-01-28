@@ -2,7 +2,7 @@ import datetime
 from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple
 
 import pandas as pd
 from omegaconf import DictConfig
@@ -21,7 +21,6 @@ from sous_chef.menu.create_menu.exceptions import (
     MenuQualityError,
 )
 from sous_chef.menu.create_menu.models import (
-    LoadedMenuSchema,
     TmpMenuSchema,
     validate_menu_schema,
 )
@@ -63,11 +62,6 @@ class MenuBasic(BaseWithExceptionHandling):
     ingredient_formatter: IngredientFormatter
     recipe_book: RecipeBook
     menu_historian: MenuHistorian = None
-    dataframe: Union[
-        pd.DataFrame,
-        DataFrameBase[LoadedMenuSchema],
-        DataFrameBase[TmpMenuSchema],
-    ] = None
     menu_history_uuid_list: List = field(init=False)
     number_of_unrated_recipes: int = 0
     min_random_recipe_rating: int = None

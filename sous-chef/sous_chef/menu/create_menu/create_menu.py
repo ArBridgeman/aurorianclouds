@@ -17,6 +17,8 @@ from sous_chef.menu.create_menu._output_for_grocery_list import (
     MenuIngredient,
     MenuRecipe,
 )
+from sous_chef.menu.create_menu._process_menu_recipe import MenuRecipeProcessor
+from sous_chef.menu.create_menu._select_menu_template import MenuTemplates
 from sous_chef.menu.create_menu.models import (
     TmpMenuSchema,
     validate_menu_schema,
@@ -38,32 +40,69 @@ class Menu:
         self.config = config
         self.menu_config = config.menu.create_menu
 
-    def fill_menu_template_and_save(self) -> DataFrameBase[TmpMenuSchema]:
-        due_date_formatter = DueDatetimeFormatter(
-            config=self.config.date.due_date
+    def _get_menu_recipe_processor(
+        self,
+        due_date_formatter: DueDatetimeFormatter,
+        gsheets_helper: GsheetsHelper,
+        menu_templates: MenuTemplates,
+    ) -> MenuRecipeProcessor:
+        menu_recipe_processor = MenuRecipeProcessor(
+            menu_config=self.menu_config,
+            recipe_book=RecipeBook(self.config.recipe_book),
         )
-        gsheets_helper = GsheetsHelper(self.config.api.gsheets)
-        ingredient_formatter = _get_ingredient_formatter(
-            config=self.config, gsheets_helper=gsheets_helper
-        )
-        recipe_book = RecipeBook(self.config.recipe_book)
+
         menu_historian = MenuHistorian(
             config=self.config.menu.record_menu_history,
             current_menu_start_date=due_date_formatter.get_anchor_datetime()
             + timedelta(days=1),
             gsheets_helper=gsheets_helper,
         )
+        menu_recipe_processor.set_menu_history_uuids(
+            menu_historian=menu_historian
+        )
 
-        # fill out & save final menu
-        menu_from_fixed_template = MenuFromFixedTemplate(
-            menu_config=self.config.menu.create_menu,
+        if self.menu_config.fixed.already_in_future_menus.active:
+            menu_recipe_processor.set_future_menu_uuids(
+                menu_templates=menu_templates
+            )
+
+        return menu_recipe_processor
+
+    def fill_menu_template_and_save(self) -> DataFrameBase[TmpMenuSchema]:
+        due_date_formatter = DueDatetimeFormatter(
+            config=self.config.date.due_date
+        )
+        gsheets_helper = GsheetsHelper(self.config.api.gsheets)
+
+        # load and use menu templates
+        menu_templates = MenuTemplates(
+            config=self.menu_config.fixed,
             due_date_formatter=due_date_formatter,
             gsheets_helper=gsheets_helper,
-            ingredient_formatter=ingredient_formatter,
-            menu_historian=menu_historian,
-            recipe_book=recipe_book,
         )
-        final_menu_df = menu_from_fixed_template.fill_menu_template()
+        menu_template_df = menu_templates.load_menu_template()
+
+        # set up key service for filling menu template
+        menu_from_fixed_template = MenuFromFixedTemplate(
+            menu_config=self.config.menu.create_menu,
+            ingredient_formatter=IngredientFormatter(
+                config=self.config.formatter.format_ingredient,
+                unit_formatter=UnitFormatter(),
+                pantry_list=PantryList(
+                    self.config.pantry_list, gsheets_helper=gsheets_helper
+                ),
+            ),
+            menu_recipe_processor=self._get_menu_recipe_processor(
+                due_date_formatter=due_date_formatter,
+                gsheets_helper=gsheets_helper,
+                menu_templates=menu_templates,
+            ),
+        )
+
+        # fill menu template & save
+        final_menu_df = menu_from_fixed_template.fill_menu_template(
+            menu_template_df=menu_template_df
+        )
         gsheets_helper.write_worksheet(
             df=final_menu_df,
             workbook_name=self.menu_config.final_menu.workbook,
@@ -103,8 +142,12 @@ class Menu:
     ) -> (List[MenuIngredient], List[MenuRecipe]):
         recipe_book = RecipeBook(self.config.recipe_book)
         gsheets_helper = GsheetsHelper(self.config.api.gsheets)
-        ingredient_formatter = _get_ingredient_formatter(
-            config=self.config, gsheets_helper=gsheets_helper
+        ingredient_formatter = IngredientFormatter(
+            config=self.config.formatter.format_ingredient,
+            unit_formatter=UnitFormatter(),
+            pantry_list=PantryList(
+                config=self.config.pantry_list, gsheets_helper=gsheets_helper
+            ),
         )
 
         final_menu_df = self.load_final_menu(gsheets_helper=gsheets_helper)
@@ -129,14 +172,3 @@ class Menu:
         return validate_menu_schema(
             dataframe=final_menu_df, model=TmpMenuSchema
         )
-
-
-def _get_ingredient_formatter(
-    config: DictConfig, gsheets_helper: GsheetsHelper
-):
-    pantry_list = PantryList(config.pantry_list, gsheets_helper=gsheets_helper)
-    return IngredientFormatter(
-        config.formatter.format_ingredient,
-        unit_formatter=UnitFormatter(),
-        pantry_list=pantry_list,
-    )

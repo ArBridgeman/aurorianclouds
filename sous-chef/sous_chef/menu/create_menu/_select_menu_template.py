@@ -7,7 +7,6 @@ from pandera.typing.common import DataFrameBase
 from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.menu.create_menu.models import (
     AllMenuSchema,
-    BasicMenuSchema,
     LoadedMenuSchema,
     Season,
     get_weekday_from_short,
@@ -130,7 +129,7 @@ class MenuTemplates:
 
     def select_upcoming_menus(
         self, num_weeks_in_future: int
-    ) -> DataFrameBase[BasicMenuSchema]:
+    ) -> DataFrameBase[AllMenuSchema]:
         FILE_LOGGER.info("[select_upcoming_menus]")
 
         menu_number = self.config.menu_number

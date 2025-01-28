@@ -9,6 +9,8 @@ from hydra import compose, initialize
 from pandera.typing.common import DataFrameBase
 from pint import Unit
 from sous_chef.formatter.units import unit_registry
+from sous_chef.menu.create_menu._process_menu_recipe import MenuRecipeProcessor
+from sous_chef.menu.create_menu._select_menu_template import MenuTemplates
 from sous_chef.menu.create_menu.create_menu import Menu
 from sous_chef.menu.create_menu.models import (
     AllMenuSchema,
@@ -42,6 +44,32 @@ def config():
 @pytest.fixture
 def menu_config(config):
     return config.menu.create_menu
+
+
+@pytest.fixture
+@freeze_time(FROZEN_DATE)
+def menu_templates(
+    menu_config,
+    mock_gsheets,
+    frozen_due_datetime_formatter,
+    monkeypatch,
+    fixed_all_menus,
+):
+    menu_config.fixed.menu_number = 2
+    menu_config.fixed.selected_season = Season.fall.value
+
+    def mock__get_all_menu_templates(self, **kwargs):
+        return fixed_all_menus
+
+    monkeypatch.setattr(
+        MenuTemplates, "_get_all_menu_templates", mock__get_all_menu_templates
+    )
+
+    return MenuTemplates(
+        config=menu_config.fixed,
+        due_date_formatter=frozen_due_datetime_formatter,
+        gsheets_helper=mock_gsheets,
+    )
 
 
 @pytest.fixture
@@ -185,3 +213,15 @@ def default_menu_row_recipe_pair(menu_builder, mock_recipe_book):
     recipe = create_recipe(title=recipe_title, time_total_str="5 minutes")
     mock_recipe_book.get_recipe_by_title.return_value = recipe
     return menu_row, recipe
+
+
+@pytest.fixture
+@freeze_time(FROZEN_DATE)
+def menu_recipe_processor(
+    menu_config,
+    mock_recipe_book,
+):
+    return MenuRecipeProcessor(
+        menu_config=menu_config,
+        recipe_book=mock_recipe_book,
+    )

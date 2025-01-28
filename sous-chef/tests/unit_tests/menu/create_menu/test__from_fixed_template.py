@@ -16,19 +16,13 @@ from utilities.testing.pandas_util import assert_equal_series
 @freeze_time(FROZEN_DATE)
 def menu_from_fixed_template(
     menu_config,
-    mock_gsheets,
     mock_ingredient_formatter,
-    mock_menu_history,
-    mock_recipe_book,
-    frozen_due_datetime_formatter,
+    menu_recipe_processor,
 ):
     return MenuFromFixedTemplate(
         menu_config=menu_config,
-        due_date_formatter=frozen_due_datetime_formatter,
-        gsheets_helper=mock_gsheets,
         ingredient_formatter=mock_ingredient_formatter,
-        menu_historian=mock_menu_history,
-        recipe_book=mock_recipe_book,
+        menu_recipe_processor=menu_recipe_processor,
     )
 
 
@@ -52,11 +46,8 @@ class TestProcessMenu:
             item_type="ingredient",
         ).squeeze()
 
-        ingredient = Ingredient(
-            quantity=quantity, pint_unit=pint_unit, item=item
-        )
         mock_ingredient_formatter.format_manual_ingredient.return_value = (
-            ingredient
+            Ingredient(quantity=quantity, pint_unit=pint_unit, item=item)
         )
 
         result = menu_from_fixed_template._process_menu(
@@ -130,7 +121,6 @@ class TestCreateMenuProcessMenuRecipe:
         mock_recipe_book,
         default_menu_row_recipe_pair,
     ):
-
         menu_row, recipe = default_menu_row_recipe_pair
 
         result = menu_from_fixed_template._process_menu(

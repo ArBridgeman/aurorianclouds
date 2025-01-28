@@ -38,7 +38,7 @@ class Menu:
         self.config = config
         self.menu_config = config.menu.create_menu
 
-    def fill_menu_template(self) -> DataFrameBase[TmpMenuSchema]:
+    def fill_menu_template_and_save(self) -> DataFrameBase[TmpMenuSchema]:
         due_date_formatter = DueDatetimeFormatter(
             config=self.config.date.due_date
         )
@@ -64,7 +64,7 @@ class Menu:
             menu_historian=menu_historian,
             recipe_book=recipe_book,
         )
-        final_menu_df = menu_from_fixed_template.finalize_fixed_menu()
+        final_menu_df = menu_from_fixed_template.fill_menu_template()
         gsheets_helper.write_worksheet(
             df=final_menu_df,
             workbook_name=self.menu_config.final_menu.workbook,

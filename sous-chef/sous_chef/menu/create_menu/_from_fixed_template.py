@@ -21,7 +21,7 @@ FILE_LOGGER = get_logger(__name__)
 
 
 class MenuFromFixedTemplate(MenuBasic):
-    def finalize_fixed_menu(self) -> DataFrameBase[TmpMenuSchema]:
+    def fill_menu_template(self) -> DataFrameBase[TmpMenuSchema]:
         self.record_exception = []
 
         fixed_templates = MenuTemplates(

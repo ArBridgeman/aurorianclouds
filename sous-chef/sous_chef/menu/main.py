@@ -20,7 +20,7 @@ def run_menu(config: DictConfig):
 
     menu = Menu(config=config)
     if config.menu.create_menu.input_method == "fixed":
-        return menu.fill_menu_template()
+        return menu.fill_menu_template_and_save()
     elif config.menu.create_menu.input_method == "final":
         return menu.finalize_menu_to_external_services()
 

@@ -81,13 +81,9 @@ class MenuFromFixedTemplate(MenuBasic):
             by=["cook_datetime"], ignore_index=True
         )
         self.dataframe.uuid = self.dataframe.uuid.replace(np.nan, "NaN")
-        self.dataframe = validate_menu_schema(
+        return validate_menu_schema(
             dataframe=self.dataframe, model=TmpMenuSchema
         )
-
-        self._save_menu()
-
-        return self.dataframe
 
     def _get_future_menu_uuids(
         self, future_menus: DataFrameBase[AllMenuSchema]

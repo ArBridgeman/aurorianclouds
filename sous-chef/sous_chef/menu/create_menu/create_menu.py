@@ -54,6 +54,7 @@ class Menu:
             gsheets_helper=gsheets_helper,
         )
 
+        # fill out & save final menu
         menu_from_fixed_template = MenuFromFixedTemplate(
             config=self.config,
             menu_config=self.config.menu.create_menu,
@@ -63,8 +64,13 @@ class Menu:
             menu_historian=menu_historian,
             recipe_book=recipe_book,
         )
-
-        return menu_from_fixed_template.finalize_fixed_menu()
+        final_menu_df = menu_from_fixed_template.finalize_fixed_menu()
+        gsheets_helper.write_worksheet(
+            df=final_menu_df,
+            workbook_name=self.menu_config.final_menu.workbook,
+            worksheet_name=self.menu_config.final_menu.worksheet,
+        )
+        return final_menu_df
 
     def finalize_menu_to_external_services(
         self,

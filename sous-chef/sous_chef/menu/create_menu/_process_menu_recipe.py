@@ -1,16 +1,14 @@
 import datetime
-from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import pandas as pd
 from omegaconf import DictConfig
 from pandera.typing.common import DataFrameBase
 from sous_chef.abstract.handle_exception import BaseWithExceptionHandling
-from sous_chef.date.get_due_date import DueDatetimeFormatter, Weekday
+from sous_chef.date.get_due_date import Weekday
 from sous_chef.formatter.ingredient.format_ingredient import (
-    IngredientFormatter,
     MapIngredientErrorToException,
 )
 from sous_chef.formatter.ingredient.format_line_abstract import (
@@ -26,14 +24,12 @@ from sous_chef.menu.create_menu.models import (
 )
 from sous_chef.menu.record_menu_history import (
     MapMenuHistoryErrorToException,
-    MenuHistorian,
     MenuHistoryError,
 )
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
 from sous_chef.recipe_book.recipe_util import MapRecipeErrorToException
 from structlog import get_logger
 
-from utilities.api.gsheets_api import GsheetsHelper
 from utilities.extended_enum import ExtendedEnum, extend_enum
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
@@ -53,25 +49,24 @@ class MapMenuErrorToException(ExtendedEnum):
     menu_future_error = MenuFutureError
 
 
-@dataclass
-class MenuBasic(BaseWithExceptionHandling):
-    config: DictConfig
-    menu_config: DictConfig
-    due_date_formatter: DueDatetimeFormatter
-    gsheets_helper: GsheetsHelper
-    ingredient_formatter: IngredientFormatter
-    recipe_book: RecipeBook
-    menu_historian: MenuHistorian = None
-    menu_history_uuid_list: List = field(init=False)
-    number_of_unrated_recipes: int = 0
-    min_random_recipe_rating: int = None
+class MenuRecipeProcessor(BaseWithExceptionHandling):
+    def __init__(
+        self,
+        menu_config: DictConfig,
+        menu_history_uuids: Tuple,
+        recipe_book: RecipeBook,
+    ):
+        self.menu_config = menu_config
+        self.recipe_book = recipe_book
 
-    def __post_init__(self):
+        self.menu_history_uuids: Tuple = menu_history_uuids
+        self.number_of_unrated_recipes: int = 0
+        self.min_random_recipe_rating: Union[int, None] = None
+
         self.set_tuple_log_and_skip_exception_from_config(
             config_errors=self.menu_config.errors,
             exception_mapper=MapMenuErrorToException,
         )
-        self.menu_history_uuid_list = self._set_menu_history_uuid_list()
 
     def _add_recipe_columns(
         self, row: pd.Series, recipe: pd.Series
@@ -196,7 +191,7 @@ class MenuBasic(BaseWithExceptionHandling):
             )
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
-    def _retrieve_recipe(
+    def retrieve_recipe(
         self,
         row: pd.Series,
         processed_uuid_list: List,
@@ -209,9 +204,9 @@ class MenuBasic(BaseWithExceptionHandling):
                     recipe_title=recipe.title,
                     error_text="recipe already processed in menu",
                 )
-            elif recipe.uuid in self.menu_history_uuid_list:
+            if recipe.uuid in self.menu_history_uuids:
                 raise MenuHistoryError(recipe_title=recipe.title)
-            elif recipe.uuid in future_uuid_tuple:
+            if recipe.uuid in future_uuid_tuple:
                 raise MenuFutureError(
                     recipe_title=recipe.title,
                     error_text="recipe is in an upcoming menu",
@@ -220,7 +215,7 @@ class MenuBasic(BaseWithExceptionHandling):
         return validate_menu_schema(dataframe=row, model=TmpMenuSchema)
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
-    def _select_random_recipe(
+    def select_random_recipe(
         self,
         row: pd.Series,
         entry_type: str,
@@ -236,7 +231,7 @@ class MenuBasic(BaseWithExceptionHandling):
                 ].cook_active_minutes_max
             )
 
-        exclude_uuid_list = self.menu_history_uuid_list
+        exclude_uuid_list = self.menu_history_uuids
         if processed_uuid_list:
             exclude_uuid_list += processed_uuid_list + list(future_uuid_tuple)
 
@@ -253,12 +248,3 @@ class MenuBasic(BaseWithExceptionHandling):
         row["type"] = "recipe"
         row = self._add_recipe_columns(row=row, recipe=recipe)
         return validate_menu_schema(dataframe=row, model=TmpMenuSchema)
-
-    def _set_menu_history_uuid_list(self) -> List:
-        if self.menu_historian is not None:
-            menu_history_recent_df = self.menu_historian.get_history_from(
-                days_ago=self.menu_config.menu_history_recent_days
-            )
-            if not menu_history_recent_df.empty:
-                return list(menu_history_recent_df.uuid.values)
-        return []

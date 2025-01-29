@@ -1,7 +1,7 @@
 import datetime
 from datetime import timedelta
 from pathlib import Path
-from typing import List, Union
+from typing import Union
 
 import pandas as pd
 from omegaconf import DictConfig
@@ -62,6 +62,7 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
 
         self.menu_history_uuids = ()
         self.future_menu_uuids = ()
+        self.processed_uuids = []
 
         self.number_of_unrated_recipes: int = 0
         self.min_random_recipe_rating: Union[int, None] = None
@@ -195,14 +196,10 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
             )
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
-    def retrieve_recipe(
-        self,
-        row: pd.Series,
-        processed_uuid_list: List,
-    ) -> DataFrameBase[TmpMenuSchema]:
+    def retrieve_recipe(self, row: pd.Series) -> DataFrameBase[TmpMenuSchema]:
         recipe = self.recipe_book.get_recipe_by_title(row["item"])
         if row.override_check == "N":
-            if recipe.uuid in processed_uuid_list:
+            if recipe.uuid in self.processed_uuids:
                 raise MenuQualityError(
                     recipe_title=recipe.title,
                     error_text="recipe already processed in menu",
@@ -215,6 +212,7 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
                     error_text="recipe is in an upcoming menu",
                 )
         row = self._add_recipe_columns(row=row, recipe=recipe)
+        self.processed_uuids.append(recipe.uuid)
         return validate_menu_schema(dataframe=row, model=TmpMenuSchema)
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
@@ -222,7 +220,6 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
         self,
         row: pd.Series,
         entry_type: str,
-        processed_uuid_list: List,
     ) -> DataFrameBase[TmpMenuSchema]:
         max_cook_active_minutes = None
         if row.override_check == "N":
@@ -233,11 +230,11 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
                 ].cook_active_minutes_max
             )
 
-        exclude_uuid_list = self.menu_history_uuids
-        if processed_uuid_list:
-            exclude_uuid_list += processed_uuid_list + list(
-                self.future_menu_uuids
-            )
+        exclude_uuid_list = (
+            list(self.menu_history_uuids)
+            + self.processed_uuids
+            + list(self.future_menu_uuids)
+        )
 
         recipe = getattr(
             self.recipe_book, f"get_random_recipe_by_{entry_type}"
@@ -250,7 +247,9 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
         )
         row["item"] = recipe.title
         row["type"] = "recipe"
+
         row = self._add_recipe_columns(row=row, recipe=recipe)
+        self.processed_uuids.append(recipe.uuid)
         return validate_menu_schema(dataframe=row, model=TmpMenuSchema)
 
     def set_future_menu_uuids(self, menu_templates: MenuTemplates) -> None:

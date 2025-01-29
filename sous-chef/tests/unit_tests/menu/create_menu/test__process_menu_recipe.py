@@ -177,13 +177,12 @@ class TestRetrieveRecipe:
         menu_row, recipe = default_menu_row_recipe_pair
         menu_row.override_check = "Y"
         list_used_uuids = [recipe.uuid]
+
         menu_recipe_processor.menu_history_uuids = tuple(list_used_uuids)
         menu_recipe_processor.future_menu_uuids = tuple(list_used_uuids)
+        menu_recipe_processor.processed_uuids = list_used_uuids
 
-        menu_recipe_row = menu_recipe_processor.retrieve_recipe(
-            row=menu_row,
-            processed_uuid_list=list_used_uuids,
-        )
+        menu_recipe_row = menu_recipe_processor.retrieve_recipe(row=menu_row)
 
         assert menu_recipe_row.shape[0] == 13
 
@@ -193,11 +192,10 @@ class TestRetrieveRecipe:
     ):
         menu_row, recipe = default_menu_row_recipe_pair
 
+        menu_recipe_processor.processed_uuids = [recipe.uuid]
+
         with pytest.raises(MenuQualityError) as error:
-            menu_recipe_processor.retrieve_recipe(
-                row=menu_row,
-                processed_uuid_list=[recipe.uuid],
-            )
+            menu_recipe_processor.retrieve_recipe(row=menu_row)
 
         assert "recipe already processed in menu" in str(error.value)
 
@@ -209,10 +207,7 @@ class TestRetrieveRecipe:
         menu_recipe_processor.menu_history_uuids = tuple([recipe.uuid])
 
         with pytest.raises(Exception) as error:
-            menu_recipe_processor.retrieve_recipe(
-                row=menu_row,
-                processed_uuid_list=[],
-            )
+            menu_recipe_processor.retrieve_recipe(row=menu_row)
 
         assert "[in recent menu history]" in str(error.value)
 
@@ -224,9 +219,6 @@ class TestRetrieveRecipe:
         menu_recipe_processor.future_menu_uuids = tuple([recipe.uuid])
 
         with pytest.raises(MenuFutureError) as error:
-            menu_recipe_processor.retrieve_recipe(
-                row=menu_row,
-                processed_uuid_list=[],
-            )
+            menu_recipe_processor.retrieve_recipe(row=menu_row)
 
         assert "[future menu]" in str(error.value)

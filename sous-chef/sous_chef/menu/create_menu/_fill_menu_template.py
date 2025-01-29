@@ -40,13 +40,12 @@ class MenuTemplateFiller(BaseWithExceptionHandling):
 
         final_menu_df = pd.DataFrame()
         for _, row in tmp_menu_template_df.iterrows():
-            processed_entry = self._process_menu(row=row)
+            processed_df = self._process_menu(row=row)
 
             # in cases where error is logged
-            if processed_entry is None:
+            if processed_df is None:
                 continue
 
-            processed_df = pd.DataFrame([processed_entry])
             final_menu_df = pd.concat([processed_df, final_menu_df])
 
         if len(self.record_exception) > 0:
@@ -114,11 +113,22 @@ class MenuTemplateFiller(BaseWithExceptionHandling):
             item=row["item"],
         )
 
-        row["time_total"] = timedelta(
-            minutes=int(self.menu_config.ingredient.default_cook_minutes)
+        entry_df = pd.DataFrame(
+            [
+                {
+                    **row.to_dict(),
+                    "time_total": timedelta(
+                        minutes=int(
+                            self.menu_config.ingredient.default_cook_minutes
+                        )
+                    ),
+                    "rating": np.NaN,
+                    "uuid": np.NaN,
+                }
+            ]
         )
-        row["rating"] = np.NaN
-        row["uuid"] = np.NaN
-        row["cook_datetime"] = row["cook_datetime"] - row["time_total"]
-        row["prep_datetime"] = row["cook_datetime"]
-        return validate_menu_schema(dataframe=row, model=TmpMenuSchema)
+        entry_df["cook_datetime"] = (
+            entry_df["cook_datetime"] - entry_df["time_total"]
+        )
+        entry_df["prep_datetime"] = entry_df["cook_datetime"]
+        return validate_menu_schema(dataframe=entry_df, model=TmpMenuSchema)

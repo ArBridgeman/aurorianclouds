@@ -35,9 +35,7 @@ def menu_default(menu_builder):
 
 class TestMenuRecipeProcessor:
     @staticmethod
-    def test__add_recipe_columns_nat(
-        menu_recipe_processor, menu_builder, mock_recipe_book
-    ):
+    def test__get_cook_prep_datetime_nat(menu_recipe_processor, menu_builder):
         recipe_title = "recipe_without_cook_time"
         row = menu_builder.create_loaded_menu_row(
             item=recipe_title, item_type="recipe"
@@ -46,16 +44,11 @@ class TestMenuRecipeProcessor:
         recipe_without_time_total = create_recipe(
             title=recipe_title, time_total_str=""
         )
-        mock_recipe_book.get_recipe_by_title.return_value = (
-            recipe_without_time_total
-        )
 
-        result = menu_recipe_processor._add_recipe_columns(
+        result = menu_recipe_processor._get_cook_prep_datetime(
             row.copy(deep=True), recipe_without_time_total
         )
-
-        assert result["item"] == recipe_without_time_total.title
-        assert result["time_total"] is pd.NaT
+        assert result == (pd.NaT, pd.NaT)
 
     @staticmethod
     @pytest.mark.parametrize("weekday", WEEKDAY)
@@ -162,11 +155,9 @@ class TestMenuRecipeProcessor:
         menu_recipe_processor._inspect_unrated_recipe(
             create_recipe(rating=rating)
         )
-        out, err = capsys.readouterr()
 
         assert log.events == []
-        assert out == ""
-        assert err == ""
+        assert capsys.readouterr() == ("", "")
 
 
 class TestRetrieveRecipe:
@@ -182,9 +173,9 @@ class TestRetrieveRecipe:
         menu_recipe_processor.future_menu_uuids = tuple(list_used_uuids)
         menu_recipe_processor.processed_uuids = list_used_uuids
 
-        menu_recipe_row = menu_recipe_processor.retrieve_recipe(row=menu_row)
+        entry = menu_recipe_processor.retrieve_recipe(row=menu_row)
 
-        assert menu_recipe_row.shape[0] == 13
+        assert entry.shape == (1, 13)
 
     @staticmethod
     def test_when_recipe_in_processed_uuid_list_toss_error(

@@ -7,7 +7,7 @@ from sous_chef.menu.create_menu._fill_menu_template import MenuTemplateFiller
 from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
 
-from utilities.testing.pandas_util import assert_equal_series
+from utilities.testing.pandas_util import assert_equal_dataframe
 
 
 @pytest.fixture
@@ -49,14 +49,14 @@ class TestProcessMenu:
         )
 
         result = menu_template_filler._process_menu(row)
-        assert_equal_series(
+        assert_equal_dataframe(
             result,
             menu_builder.create_tmp_menu_row(
                 eat_factor=quantity,
                 eat_unit=pint_unit,
                 item=item,
                 item_type="ingredient",
-            ).squeeze(),
+            ),
         )
 
     @staticmethod
@@ -86,14 +86,14 @@ class TestProcessMenu:
 
         result = menu_template_filler._process_menu(row)
 
-        assert_equal_series(
+        assert_equal_dataframe(
             result,
             menu_builder.create_tmp_menu_row(
                 item=recipe.title,
                 item_type="recipe",
                 time_total_str=recipe.time_total,
                 rating=recipe.rating,
-            ).squeeze(),
+            ),
         )
         assert log.events == [
             {
@@ -119,11 +119,11 @@ class TestCreateMenuProcessMenuRecipe:
 
         result = menu_template_filler._process_menu(menu_row)
 
-        assert_equal_series(
+        assert_equal_dataframe(
             result,
             menu_builder.create_tmp_menu_row(
                 item=recipe.title,
                 item_type="recipe",
                 time_total_str=pd.to_timedelta(recipe.time_total),
-            ).squeeze(),
+            ),
         )

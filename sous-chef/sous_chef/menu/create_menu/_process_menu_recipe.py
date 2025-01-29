@@ -1,7 +1,6 @@
-import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Union
+from typing import Tuple, Union
 
 import pandas as pd
 from omegaconf import DictConfig
@@ -72,45 +71,61 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
             exception_mapper=MapMenuErrorToException,
         )
 
-    def _add_recipe_columns(
+    def _get_cook_prep_datetime(
         self, row: pd.Series, recipe: pd.Series
-    ) -> pd.Series:
+    ) -> Tuple[datetime, datetime]:
         prep_config = self.menu_config.prep_separate
 
-        def _cook_prep_datetime() -> (datetime.timedelta, datetime.timedelta):
-            if row.defrost == "Y":
-                return row.cook_datetime, row.cook_datetime
+        if row.defrost == "Y":
+            return row.cook_datetime, row.cook_datetime
 
-            default_cook_datetime = row.cook_datetime - recipe.time_total
-            default_prep_datetime = default_cook_datetime
+        default_cook_datetime = row.cook_datetime - recipe.time_total
+        default_prep_datetime = default_cook_datetime
 
-            if (
-                recipe.time_inactive is not pd.NaT
-                and recipe.time_inactive
-                >= timedelta(minutes=int(prep_config.min_inactive_minutes))
-            ):
-                # inactive too great, so separately schedule prep
-                default_cook_datetime += recipe.time_inactive
+        if (
+            recipe.time_inactive is not pd.NaT
+            and recipe.time_inactive
+            >= timedelta(minutes=int(prep_config.min_inactive_minutes))
+        ):
+            # inactive too great, so separately schedule prep
+            default_cook_datetime += recipe.time_inactive
 
-            if row.prep_day == 0:
-                return default_cook_datetime, default_prep_datetime
-            # prep_day was set, so use prep_config default time; unsure
-            # how cook time altered, but assume large inactive times handled
-            return default_cook_datetime, row.prep_datetime
+        if row.prep_day == 0:
+            return default_cook_datetime, default_prep_datetime
+        # prep_day was set, so use prep_config default time; unsure
+        # how cook time altered, but assume large inactive times handled
+        return default_cook_datetime, row.prep_datetime
 
-        row["item"] = recipe.title
-        row["rating"] = recipe.rating
-        row["time_total"] = recipe.time_total
-        row["uuid"] = recipe.uuid
-        row["cook_datetime"], row["prep_datetime"] = _cook_prep_datetime()
+    def _get_entry_with_recipe_columns(
+        self, row: pd.Series, recipe: pd.Series
+    ) -> DataFrameBase[TmpMenuSchema]:
+        cook_datetime, prep_datetime = self._get_cook_prep_datetime(
+            row=row, recipe=recipe
+        )
 
         if row.override_check == "N" and row.defrost == "N":
             self._check_menu_quality(
-                weekday_index=row.prep_datetime.weekday(), recipe=recipe
+                weekday_index=prep_datetime.weekday(), recipe=recipe
             )
 
         self._inspect_unrated_recipe(recipe)
-        return row
+        self.processed_uuids.append(recipe.uuid)
+
+        entry_df = pd.DataFrame(
+            [
+                {
+                    **row.to_dict(),
+                    "item": recipe.title,
+                    "type": "recipe",
+                    "rating": recipe.rating,
+                    "time_total": recipe.time_total,
+                    "uuid": recipe.uuid,
+                    "cook_datetime": cook_datetime,
+                    "prep_datetime": prep_datetime,
+                }
+            ]
+        )
+        return validate_menu_schema(dataframe=entry_df, model=TmpMenuSchema)
 
     def _check_menu_quality(self, weekday_index: int, recipe: pd.Series):
         quality_check_config = self.menu_config.quality_check
@@ -211,9 +226,8 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
                     recipe_title=recipe.title,
                     error_text="recipe is in an upcoming menu",
                 )
-        row = self._add_recipe_columns(row=row, recipe=recipe)
-        self.processed_uuids.append(recipe.uuid)
-        return validate_menu_schema(dataframe=row, model=TmpMenuSchema)
+
+        return self._get_entry_with_recipe_columns(row=row, recipe=recipe)
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def select_random_recipe(
@@ -245,12 +259,8 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
             max_cook_active_minutes=max_cook_active_minutes,
             min_rating=self.min_random_recipe_rating,
         )
-        row["item"] = recipe.title
-        row["type"] = "recipe"
 
-        row = self._add_recipe_columns(row=row, recipe=recipe)
-        self.processed_uuids.append(recipe.uuid)
-        return validate_menu_schema(dataframe=row, model=TmpMenuSchema)
+        return self._get_entry_with_recipe_columns(row=row, recipe=recipe)
 
     def set_future_menu_uuids(self, menu_templates: MenuTemplates) -> None:
         future_menus = menu_templates.select_upcoming_menus(

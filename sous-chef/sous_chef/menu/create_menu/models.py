@@ -18,6 +18,11 @@ class TypeProcessOrder(ExtendedIntEnum):
     category = 4
 
 
+class Type(ExtendedEnum):
+    recipe = "recipe"
+    ingredient = "ingredient"
+
+
 class RandomSelectType(ExtendedEnum):
     rated = "rated"
     unrated = "unrated"
@@ -30,6 +35,11 @@ class Season(ExtendedEnum):
     spring = "2_spring"
     summer = "3_summer"
     fall = "4_fall"
+
+
+class YesNo(ExtendedEnum):
+    yes = "Y"
+    no = "N"
 
 
 class BasicMenuSchema(pa.SchemaModel):
@@ -46,7 +56,10 @@ class BasicMenuSchema(pa.SchemaModel):
         ge=0, default=0, nullable=False, coerce=True
     )
     defrost: Series[str] = pa.Field(
-        isin=["Y", "N"], default="N", nullable=False, coerce=True
+        isin=YesNo.value_list(string_method="upper"),
+        default=YesNo.no.value,
+        nullable=False,
+        coerce=True,
     )
     item: Series[str]
 
@@ -63,7 +76,10 @@ class InProgressSchema(BasicMenuSchema):
         ge=0, lt=7, default=0, nullable=False, coerce=True
     )
     override_check: Series[str] = pa.Field(
-        isin=["Y", "N"], default="N", nullable=False, coerce=True
+        isin=YesNo.value_list(string_method="upper"),
+        default=YesNo.no.value,
+        nullable=False,
+        coerce=True,
     )
 
 
@@ -87,7 +103,7 @@ class LoadedMenuSchema(InProgressSchema, TimeSchema):
 
 class TmpMenuSchema(BasicMenuSchema, TimeSchema):
     # override as should be replaced with one of these
-    type: Series[str] = pa.Field(isin=["ingredient", "recipe"])
+    type: Series[str] = pa.Field(isin=Type.value_list())
     time_total: Series[pd.Timedelta] = pa.Field(nullable=False, coerce=True)
     # manual ingredients lack these
     rating: Series[float] = pa.Field(nullable=True, coerce=True)

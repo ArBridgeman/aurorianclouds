@@ -9,6 +9,7 @@ from sous_chef.menu.create_menu.models import (
     AllMenuSchema,
     LoadedMenuSchema,
     Season,
+    YesNo,
     get_weekday_from_short,
     validate_menu_schema,
 )
@@ -87,7 +88,9 @@ class MenuTemplates:
             all_menus = pd.concat([all_menus, sheet_pd])
 
         # remove inactive entries as not part of active menus
-        all_menus = all_menus.loc[~(all_menus.inactive.str.upper() == "Y")]
+        all_menus = all_menus.loc[
+            ~(all_menus.inactive.str.upper() == YesNo.yes.value)
+        ]
         return self._convert_menu_templates_to_all_menu_schemas(all_menus)
 
     def _get_default_cook_datetime(self, row: pd.Series) -> datetime:

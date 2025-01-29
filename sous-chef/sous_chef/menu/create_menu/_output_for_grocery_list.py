@@ -16,7 +16,7 @@ from sous_chef.menu.create_menu._process_menu_recipe import (
     MapMenuErrorToException,
 )
 from sous_chef.menu.create_menu.exceptions import MenuIncompleteError
-from sous_chef.menu.create_menu.models import TmpMenuSchema
+from sous_chef.menu.create_menu.models import TmpMenuSchema, YesNo
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
 from sous_chef.recipe_book.recipe_util import (
     MapRecipeErrorToException,
@@ -83,7 +83,7 @@ class MenuForGroceryList(BaseWithExceptionHandling):
             "recipe": self._retrieve_menu_recipe,
         }
         result_dict = defaultdict(list)
-        mask_defrost = self.dataframe.defrost != "Y"
+        mask_defrost = self.dataframe.defrost != YesNo.yes.value
         for entry, entry_fct in entry_funcs.items():
             if (mask := self.dataframe["type"] == entry).sum() > 0:
                 result_dict[entry] = (

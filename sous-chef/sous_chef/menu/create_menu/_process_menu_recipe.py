@@ -20,6 +20,8 @@ from sous_chef.menu.create_menu.exceptions import (
 )
 from sous_chef.menu.create_menu.models import (
     TmpMenuSchema,
+    Type,
+    YesNo,
     validate_menu_schema,
 )
 from sous_chef.menu.record_menu_history import (
@@ -76,7 +78,7 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
     ) -> Tuple[datetime, datetime]:
         prep_config = self.menu_config.prep_separate
 
-        if row.defrost == "Y":
+        if row.defrost == YesNo.yes.value:
             return row.cook_datetime, row.cook_datetime
 
         default_cook_datetime = row.cook_datetime - recipe.time_total
@@ -116,7 +118,7 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
                 {
                     **row.to_dict(),
                     "item": recipe.title,
-                    "type": "recipe",
+                    "type": Type.recipe.value,
                     "rating": recipe.rating,
                     "time_total": recipe.time_total,
                     "uuid": recipe.uuid,
@@ -266,7 +268,7 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
         future_menus = menu_templates.select_upcoming_menus(
             num_weeks_in_future=self.menu_config.fixed.already_in_future_menus.num_weeks  # noqa: E501
         )
-        mask_recipe = future_menus["type"] == "recipe"
+        mask_recipe = future_menus["type"] == Type.recipe.value
 
         if sum(mask_recipe) > 0:
             self.future_menu_uuids = tuple(

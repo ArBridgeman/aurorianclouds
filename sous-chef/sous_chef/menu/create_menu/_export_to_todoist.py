@@ -5,7 +5,7 @@ import pandas as pd
 from omegaconf import DictConfig
 from pandera.typing.common import DataFrameBase
 from sous_chef.date.get_due_date import DueDatetimeFormatter
-from sous_chef.menu.create_menu.models import TmpMenuSchema
+from sous_chef.menu.create_menu.models import TmpMenuSchema, Type, YesNo
 
 from utilities.api.todoist_api import TodoistHelper
 
@@ -49,7 +49,7 @@ class MenuForTodoist:
             # task for when to cook
             self._add_task(task_name=task, task_due_date=row.cook_datetime)
             # task reminder to edit recipes
-            if row["type"] == "recipe":
+            if row["type"] == Type.recipe.value:
                 rating_label = "(unrated)"
                 if not pd.isnull(row["rating"]):
                     rating_label = f"({row['rating']})"
@@ -63,7 +63,7 @@ class MenuForTodoist:
                     task_name=f"[PREP] {task}", task_due_date=row.prep_datetime
                 )
             # task for defrosting
-            if row.defrost == "Y":
+            if row.defrost == YesNo.yes.value:
                 self._add_task(
                     task_name=f"[DEFROST] {task}",
                     task_due_date=row.cook_datetime - timedelta(days=1),
@@ -88,7 +88,7 @@ class MenuForTodoist:
 
     @staticmethod
     def _format_task_name(row: pd.Series) -> str:
-        if row.defrost == "Y":
+        if row.defrost == YesNo.yes.value:
             return row["item"]
 
         factor_str = f"x eat: {row.eat_factor}"

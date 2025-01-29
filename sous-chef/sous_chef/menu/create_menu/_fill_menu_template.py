@@ -10,6 +10,7 @@ from sous_chef.menu.create_menu._process_menu_recipe import MenuRecipeProcessor
 from sous_chef.menu.create_menu.exceptions import MenuIncompleteError
 from sous_chef.menu.create_menu.models import (
     LoadedMenuSchema,
+    RandomSelectType,
     TmpMenuSchema,
     TypeProcessOrder,
     validate_menu_schema,
@@ -73,7 +74,7 @@ class MenuTemplateFiller(BaseWithExceptionHandling):
             lambda x: TypeProcessOrder[x].value
         )
         menu_template_df["is_unrated"] = (
-            menu_template_df.selection == "unrated"
+            menu_template_df.selection == RandomSelectType.unrated.value
         ).astype(int)
 
         return menu_template_df.sort_values(
@@ -93,9 +94,13 @@ class MenuTemplateFiller(BaseWithExceptionHandling):
         )
         tmp_row = row.copy(deep=True)
 
-        if tmp_row["type"] == "ingredient":
+        if tmp_row["type"] == TypeProcessOrder.ingredient.name:
             return self._process_ingredient(tmp_row)
-        if tmp_row["type"] in ["category", "tag", "filter"]:
+        if tmp_row["type"] in [
+            TypeProcessOrder.category.name,
+            TypeProcessOrder.tag.name,
+            TypeProcessOrder.filter.name,
+        ]:
             return self.menu_recipe_processor.select_random_recipe(
                 row=tmp_row,
                 entry_type=tmp_row["type"],

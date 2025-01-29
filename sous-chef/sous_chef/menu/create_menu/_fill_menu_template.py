@@ -21,7 +21,7 @@ from termcolor import cprint
 FILE_LOGGER = get_logger(__name__)
 
 
-class MenuFromFixedTemplate(BaseWithExceptionHandling):
+class MenuTemplateFiller(BaseWithExceptionHandling):
     def __init__(
         self,
         menu_config: DictConfig,

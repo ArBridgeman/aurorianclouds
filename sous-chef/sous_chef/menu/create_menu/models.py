@@ -99,19 +99,12 @@ class TmpMenuSchema(BasicMenuSchema, TimeSchema):
 
 
 def validate_menu_schema(
-    dataframe: Union[DataFrameBase, pd.DataFrame, pd.Series], model
-) -> Union[DataFrameBase, pd.Series]:
-    def validate_schema(tmp_df: pd.DataFrame):
-        selected_cols = model._collect_fields().keys()
-        return model.validate(tmp_df[selected_cols].copy())
-
+    dataframe: Union[DataFrameBase, pd.DataFrame], model
+) -> Union[DataFrameBase]:
     if isinstance(dataframe, pd.DataFrame):
-        return validate_schema(tmp_df=dataframe)
-
-    if isinstance(dataframe, pd.Series):
-        tmp_df = validate_schema(tmp_df=dataframe.to_frame().T)
-        return tmp_df.squeeze()
-
+        # TODO consider if need sneaky access to hidden method
+        selected_cols = model._collect_fields().keys()
+        return model.validate(dataframe[selected_cols].copy())
     raise ValueError(f"dataframe is of type {type(dataframe)}")
 
 

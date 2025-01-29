@@ -48,9 +48,7 @@ class TestProcessMenu:
             Ingredient(quantity=quantity, pint_unit=pint_unit, item=item)
         )
 
-        result = menu_template_filler._process_menu(
-            row.copy(deep=True), processed_uuid_list=[]
-        )
+        result = menu_template_filler._process_menu(row)
         assert_equal_series(
             result,
             menu_builder.create_tmp_menu_row(
@@ -86,7 +84,7 @@ class TestProcessMenu:
         getattr(mock_recipe_book, method).return_value = recipe
         mock_recipe_book.get_recipe_by_title.return_value = recipe
 
-        result = menu_template_filler._process_menu(row, processed_uuid_list=[])
+        result = menu_template_filler._process_menu(row)
 
         assert_equal_series(
             result,
@@ -119,9 +117,7 @@ class TestCreateMenuProcessMenuRecipe:
     ):
         menu_row, recipe = default_menu_row_recipe_pair
 
-        result = menu_template_filler._process_menu(
-            menu_row.copy(deep=True), processed_uuid_list=[]
-        )
+        result = menu_template_filler._process_menu(menu_row)
 
         assert_equal_series(
             result,

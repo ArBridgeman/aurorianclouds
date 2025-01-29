@@ -1,5 +1,4 @@
 from datetime import timedelta
-from typing import List
 
 import numpy as np
 import pandas as pd
@@ -40,19 +39,12 @@ class MenuTemplateFiller(BaseWithExceptionHandling):
         tmp_menu_template_df = self._get_ordered_menu_template(menu_template_df)
 
         final_menu_df = pd.DataFrame()
-        processed_uuid_list = []
         for _, row in tmp_menu_template_df.iterrows():
-            processed_entry = self._process_menu(
-                row=row,
-                processed_uuid_list=processed_uuid_list,
-            )
+            processed_entry = self._process_menu(row=row)
 
             # in cases where error is logged
             if processed_entry is None:
                 continue
-
-            if processed_entry["type"] == "recipe":
-                processed_uuid_list.append(processed_entry.uuid)
 
             processed_df = pd.DataFrame([processed_entry])
             final_menu_df = pd.concat([processed_df, final_menu_df])
@@ -92,7 +84,6 @@ class MenuTemplateFiller(BaseWithExceptionHandling):
     def _process_menu(
         self,
         row: pd.Series,
-        processed_uuid_list: List,
     ) -> DataFrameBase[TmpMenuSchema]:
         FILE_LOGGER.info(
             "[process menu]",
@@ -109,10 +100,8 @@ class MenuTemplateFiller(BaseWithExceptionHandling):
             return self.menu_recipe_processor.select_random_recipe(
                 row=tmp_row,
                 entry_type=tmp_row["type"],
-                processed_uuid_list=processed_uuid_list,
             )
-        return self.menu_recipe_processor.retrieve_recipe(tmp_row,
-                                                          processed_uuid_list=processed_uuid_list,)
+        return self.menu_recipe_processor.retrieve_recipe(tmp_row)
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _process_ingredient(

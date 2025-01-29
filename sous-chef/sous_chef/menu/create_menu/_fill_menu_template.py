@@ -98,8 +98,8 @@ class MenuTemplateFiller(BaseWithExceptionHandling):
             return self._process_ingredient(tmp_row)
         if tmp_row["type"] in [
             TypeProcessOrder.category.name,
-            TypeProcessOrder.tag.name,
             TypeProcessOrder.filter.name,
+            TypeProcessOrder.tag.name,
         ]:
             return self.menu_recipe_processor.select_random_recipe(
                 row=tmp_row,

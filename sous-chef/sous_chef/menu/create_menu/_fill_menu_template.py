@@ -37,23 +37,13 @@ class MenuTemplateFiller(BaseWithExceptionHandling):
     ) -> DataFrameBase[TmpMenuSchema]:
         self.record_exception = []
 
-        # sort by desired order to be processed
-        menu_template_df["process_order"] = menu_template_df["type"].apply(
-            lambda x: TypeProcessOrder[x].value
-        )
-        menu_template_df["is_unrated"] = (
-            menu_template_df.selection == "unrated"
-        ).astype(int)
-
-        menu_template_df = menu_template_df.sort_values(
-            by=["is_unrated", "process_order"], ascending=[False, True]
-        ).drop(columns=["process_order", "is_unrated"])
+        tmp_menu_template_df = self._get_ordered_menu_template(menu_template_df)
 
         final_menu_df = pd.DataFrame()
         processed_uuid_list = []
-        for _, entry in menu_template_df.iterrows():
+        for _, row in tmp_menu_template_df.iterrows():
             processed_entry = self._process_menu(
-                row=entry,
+                row=row,
                 processed_uuid_list=processed_uuid_list,
             )
 
@@ -81,6 +71,24 @@ class MenuTemplateFiller(BaseWithExceptionHandling):
             model=TmpMenuSchema,
         )
 
+    @staticmethod
+    def _get_ordered_menu_template(
+        menu_template_df: DataFrameBase[LoadedMenuSchema],
+    ) -> DataFrameBase[LoadedMenuSchema]:
+        menu_template_df = menu_template_df.copy(deep=True)
+
+        # sort by desired order to be processed
+        menu_template_df["process_order"] = menu_template_df["type"].apply(
+            lambda x: TypeProcessOrder[x].value
+        )
+        menu_template_df["is_unrated"] = (
+            menu_template_df.selection == "unrated"
+        ).astype(int)
+
+        return menu_template_df.sort_values(
+            by=["is_unrated", "process_order"], ascending=[False, True]
+        ).drop(columns=["process_order", "is_unrated"])
+
     def _process_menu(
         self,
         row: pd.Series,
@@ -94,12 +102,17 @@ class MenuTemplateFiller(BaseWithExceptionHandling):
             type=row["type"],
         )
         tmp_row = row.copy(deep=True)
-        if row["type"] == "ingredient":
+
+        if tmp_row["type"] == "ingredient":
             return self._process_ingredient(tmp_row)
-        return self._process_menu_recipe(
-            tmp_row,
-            processed_uuid_list=processed_uuid_list,
-        )
+        if tmp_row["type"] in ["category", "tag", "filter"]:
+            return self.menu_recipe_processor.select_random_recipe(
+                row=tmp_row,
+                entry_type=tmp_row["type"],
+                processed_uuid_list=processed_uuid_list,
+            )
+        return self.menu_recipe_processor.retrieve_recipe(tmp_row,
+                                                          processed_uuid_list=processed_uuid_list,)
 
     @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _process_ingredient(
@@ -120,19 +133,3 @@ class MenuTemplateFiller(BaseWithExceptionHandling):
         row["cook_datetime"] = row["cook_datetime"] - row["time_total"]
         row["prep_datetime"] = row["cook_datetime"]
         return validate_menu_schema(dataframe=row, model=TmpMenuSchema)
-
-    def _process_menu_recipe(
-        self,
-        row: pd.Series,
-        processed_uuid_list: List,
-    ) -> DataFrameBase[TmpMenuSchema]:
-        if row["type"] in ["category", "tag", "filter"]:
-            return self.menu_recipe_processor.select_random_recipe(
-                row=row,
-                entry_type=row["type"],
-                processed_uuid_list=processed_uuid_list,
-            )
-        return self.menu_recipe_processor.retrieve_recipe(
-            row,
-            processed_uuid_list=processed_uuid_list,
-        )

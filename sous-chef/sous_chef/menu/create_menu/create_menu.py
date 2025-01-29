@@ -9,9 +9,7 @@ from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
 from sous_chef.menu.create_menu._export_to_todoist import MenuForTodoist
-from sous_chef.menu.create_menu._from_fixed_template import (
-    MenuFromFixedTemplate,
-)
+from sous_chef.menu.create_menu._fill_menu_template import MenuTemplateFiller
 from sous_chef.menu.create_menu._output_for_grocery_list import (
     MenuForGroceryList,
     MenuIngredient,
@@ -83,7 +81,7 @@ class Menu:
         menu_template_df = menu_templates.load_menu_template()
 
         # set up key service for filling menu template
-        menu_from_fixed_template = MenuFromFixedTemplate(
+        menu_template_filler = MenuTemplateFiller(
             menu_config=self.config.menu.create_menu,
             ingredient_formatter=IngredientFormatter(
                 config=self.config.formatter.format_ingredient,
@@ -100,7 +98,7 @@ class Menu:
         )
 
         # fill menu template & save
-        final_menu_df = menu_from_fixed_template.fill_menu_template(
+        final_menu_df = menu_template_filler.fill_menu_template(
             menu_template_df=menu_template_df
         )
         gsheets_helper.write_worksheet(

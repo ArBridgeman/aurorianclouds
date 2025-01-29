@@ -17,6 +17,9 @@ from sous_chef.menu.create_menu.models import (
     LoadedMenuSchema,
     Season,
     TmpMenuSchema,
+    Type,
+    TypeProcessOrder,
+    YesNo,
     validate_menu_schema,
 )
 from tests.conftest import FROZEN_DATE
@@ -106,12 +109,12 @@ class MenuBuilder:
         prep_day: int = 0,
         season: Season = Season.fall,
         meal_time: str = "dinner",
-        item_type: str = "recipe",
+        item_type: str = TypeProcessOrder.tag.name,
         eat_factor: float = 1.0,
         # gsheets has "", whereas read_csv defaults to np.nans
         eat_unit: Unit = unit_registry.dimensionless,
         freeze_factor: float = 0.0,
-        defrost: str = "N",
+        defrost: str = YesNo.no.value,
         item: str = "dummy",
     ) -> DataFrameBase[AllMenuSchema]:
 
@@ -133,7 +136,7 @@ class MenuBuilder:
                     "eat_unit": eat_unit,
                     "freeze_factor": freeze_factor,
                     "defrost": defrost,
-                    "override_check": "N",
+                    "override_check": YesNo.no.value,
                     "item": item,
                 },
                 index=[0],
@@ -156,7 +159,7 @@ class MenuBuilder:
 
     def create_tmp_menu_row(
         self,
-        item_type: str = "recipe",
+        item_type: str = Type.recipe.value,
         prep_day: int = 0,
         rating: float = 3.0,  # np.nan, if unrated
         time_total_str: str = np.nan,
@@ -168,12 +171,12 @@ class MenuBuilder:
         # template matched with cook_days
         # after recipe/ingredient matched
 
-        if item_type == "recipe":
+        if item_type == Type.recipe.value:
             tmp_menu["rating"] = rating
             tmp_menu["uuid"] = "1666465773100"
             if time_total_str is np.nan:
                 time_total_str = "5 min"
-        elif item_type == "ingredient":
+        elif item_type == Type.ingredient.value:
             tmp_menu["rating"] = np.NaN
             tmp_menu["uuid"] = np.NaN
             if time_total_str is np.nan:
@@ -207,7 +210,7 @@ def default_menu_row_recipe_pair(menu_builder, mock_recipe_book):
     recipe_title = "garlic aioli"
 
     menu_row = menu_builder.create_loaded_menu_row(
-        item=recipe_title, item_type="recipe"
+        item=recipe_title, item_type=Type.recipe.value
     ).squeeze()
 
     recipe = create_recipe(title=recipe_title, time_total_str="5 minutes")

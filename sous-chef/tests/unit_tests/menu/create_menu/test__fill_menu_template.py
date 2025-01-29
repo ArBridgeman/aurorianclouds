@@ -4,6 +4,7 @@ from freezegun import freeze_time
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.formatter.units import unit_registry
 from sous_chef.menu.create_menu._fill_menu_template import MenuTemplateFiller
+from sous_chef.menu.create_menu.models import Type, TypeProcessOrder
 from tests.conftest import FROZEN_DATE
 from tests.unit_tests.util import create_recipe
 
@@ -41,7 +42,7 @@ class TestProcessMenu:
             eat_factor=quantity,
             eat_unit=pint_unit,
             item=item,
-            item_type="ingredient",
+            item_type=TypeProcessOrder.ingredient.name,
         ).squeeze()
 
         mock_ingredient_formatter.format_manual_ingredient.return_value = (
@@ -63,8 +64,8 @@ class TestProcessMenu:
     @pytest.mark.parametrize(
         "item_type,method",
         [
-            ("tag", "get_random_recipe_by_tag"),
-            ("category", "get_random_recipe_by_category"),
+            (TypeProcessOrder.tag.name, "get_random_recipe_by_tag"),
+            (TypeProcessOrder.category.name, "get_random_recipe_by_category"),
         ],
     )
     def test__process_menu_category_or_tag(
@@ -90,7 +91,7 @@ class TestProcessMenu:
             result,
             menu_builder.create_tmp_menu_row(
                 item=recipe.title,
-                item_type="recipe",
+                item_type=Type.recipe.value,
                 time_total_str=recipe.time_total,
                 rating=recipe.rating,
             ),
@@ -123,7 +124,7 @@ class TestCreateMenuProcessMenuRecipe:
             result,
             menu_builder.create_tmp_menu_row(
                 item=recipe.title,
-                item_type="recipe",
+                item_type=Type.recipe.value,
                 time_total_str=pd.to_timedelta(recipe.time_total),
             ),
         )

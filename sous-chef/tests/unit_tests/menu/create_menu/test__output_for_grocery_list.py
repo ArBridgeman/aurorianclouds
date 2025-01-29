@@ -7,6 +7,7 @@ from sous_chef.menu.create_menu._output_for_grocery_list import (
     MenuIngredient,
     MenuRecipe,
 )
+from sous_chef.menu.create_menu.models import Type
 from tests.unit_tests.util import create_recipe
 
 
@@ -74,7 +75,7 @@ class TestForGroceryList:
     ):
         row = menu_builder.create_loaded_menu_row(
             item=recipe_title,
-            item_type="recipe",
+            item_type=Type.recipe.value,
         ).squeeze()
         recipe_with_recipe_title = create_recipe(title=recipe_title)
         mock_recipe_book.get_recipe_by_title.return_value = (

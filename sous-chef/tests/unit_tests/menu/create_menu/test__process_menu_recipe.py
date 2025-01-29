@@ -7,6 +7,7 @@ from sous_chef.menu.create_menu.exceptions import (
     MenuFutureError,
     MenuQualityError,
 )
+from sous_chef.menu.create_menu.models import Type, YesNo
 from tests.unit_tests.util import create_recipe
 
 WEEKDAY = [pytest.param(member, id=member.name) for member in Weekday]
@@ -38,7 +39,7 @@ class TestMenuRecipeProcessor:
     def test__get_cook_prep_datetime_nat(menu_recipe_processor, menu_builder):
         recipe_title = "recipe_without_cook_time"
         row = menu_builder.create_loaded_menu_row(
-            item=recipe_title, item_type="recipe"
+            item=recipe_title, item_type=Type.recipe.value
         ).squeeze()
 
         recipe_without_time_total = create_recipe(
@@ -166,7 +167,7 @@ class TestRetrieveRecipe:
         menu_recipe_processor, default_menu_row_recipe_pair
     ):
         menu_row, recipe = default_menu_row_recipe_pair
-        menu_row.override_check = "Y"
+        menu_row.override_check = YesNo.yes.value
         list_used_uuids = [recipe.uuid]
 
         menu_recipe_processor.menu_history_uuids = tuple(list_used_uuids)

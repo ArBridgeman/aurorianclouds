@@ -30,7 +30,7 @@ class TestProcessMenu:
     @pytest.mark.parametrize(
         "quantity,pint_unit,item", [(1.0, unit_registry.cup, "frozen broccoli")]
     )
-    def test__process_menu_ingredient(
+    def test__works_as_expected_for_ingredient(
         menu_template_filler,
         menu_builder,
         mock_ingredient_formatter,
@@ -64,11 +64,12 @@ class TestProcessMenu:
     @pytest.mark.parametrize(
         "item_type,method",
         [
-            (TypeProcessOrder.tag.name, "get_random_recipe_by_tag"),
             (TypeProcessOrder.category.name, "get_random_recipe_by_category"),
+            (TypeProcessOrder.filter.name, "get_random_recipe_by_filter"),
+            (TypeProcessOrder.tag.name, "get_random_recipe_by_tag"),
         ],
     )
-    def test__process_menu_category_or_tag(
+    def test__works_as_expected_for_random_selection(
         menu_template_filler,
         menu_builder,
         mock_recipe_book,
@@ -107,9 +108,7 @@ class TestProcessMenu:
             },
         ]
 
-
-class TestCreateMenuProcessMenuRecipe:
-    def test_works_for_expected_usecase(
+    def test__works_as_expected_for_recipe(
         self,
         menu_template_filler,
         menu_builder,

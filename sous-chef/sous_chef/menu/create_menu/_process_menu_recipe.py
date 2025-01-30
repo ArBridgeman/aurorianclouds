@@ -5,14 +5,7 @@ from typing import Tuple, Union
 import pandas as pd
 from omegaconf import DictConfig
 from pandera.typing.common import DataFrameBase
-from sous_chef.abstract.handle_exception import BaseWithExceptionHandling
 from sous_chef.date.get_due_date import Weekday
-from sous_chef.formatter.ingredient.format_ingredient import (
-    MapIngredientErrorToException,
-)
-from sous_chef.formatter.ingredient.format_line_abstract import (
-    MapLineErrorToException,
-)
 from sous_chef.menu.create_menu._select_menu_template import MenuTemplates
 from sous_chef.menu.create_menu.exceptions import (
     MenuFutureError,
@@ -24,35 +17,15 @@ from sous_chef.menu.create_menu.models import (
     YesNo,
     validate_menu_schema,
 )
-from sous_chef.menu.record_menu_history import (
-    MapMenuHistoryErrorToException,
-    MenuHistorian,
-    MenuHistoryError,
-)
+from sous_chef.menu.record_menu_history import MenuHistorian, MenuHistoryError
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
-from sous_chef.recipe_book.recipe_util import MapRecipeErrorToException
 from structlog import get_logger
-
-from utilities.extended_enum import ExtendedEnum, extend_enum
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
 FILE_LOGGER = get_logger(__name__)
 
 
-@extend_enum(
-    [
-        MapMenuHistoryErrorToException,
-        MapIngredientErrorToException,
-        MapLineErrorToException,
-        MapRecipeErrorToException,
-    ]
-)
-class MapMenuErrorToException(ExtendedEnum):
-    menu_quality_check = MenuQualityError
-    menu_future_error = MenuFutureError
-
-
-class MenuRecipeProcessor(BaseWithExceptionHandling):
+class MenuRecipeProcessor:
     def __init__(
         self,
         menu_config: DictConfig,
@@ -67,11 +40,6 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
 
         self.number_of_unrated_recipes: int = 0
         self.min_random_recipe_rating: Union[int, None] = None
-
-        self.set_tuple_log_and_skip_exception_from_config(
-            config_errors=self.menu_config.errors,
-            exception_mapper=MapMenuErrorToException,
-        )
 
     def _get_cook_prep_datetime(
         self, row: pd.Series, recipe: pd.Series
@@ -150,27 +118,25 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
             day_type=day_type,
         )
 
-    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
-    def _ensure_rating_exceed_min(
-        self, recipe: pd.Series, recipe_rating_min: float
-    ):
+    @staticmethod
+    def _ensure_rating_exceed_min(recipe: pd.Series, recipe_rating_min: float):
         if not pd.isna(recipe.rating) and (recipe.rating < recipe_rating_min):
             raise MenuQualityError(
                 recipe_title=recipe.title,
                 error_text=f"rating={recipe.rating} < {recipe_rating_min}",
             )
 
-    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
-    def _ensure_not_unrated_recipe(self, recipe: pd.Series, day_type: str):
+    @staticmethod
+    def _ensure_not_unrated_recipe(recipe: pd.Series, day_type: str):
         if pd.isna(recipe.rating):
             raise MenuQualityError(
                 recipe_title=recipe.title,
                 error_text=f"(on {day_type}) unrated recipe",
             )
 
-    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
+    @staticmethod
     def _ensure_does_not_exceed_max_active_cook_time(
-        self, recipe: pd.Series, max_cook_active_minutes: float, day_type: str
+        recipe: pd.Series, max_cook_active_minutes: float, day_type: str
     ):
         time_total = recipe.time_total
         if recipe.time_inactive is not pd.NaT:
@@ -212,7 +178,6 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
                 self.menu_config.quality_check.recipe_rating_min
             )
 
-    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def retrieve_recipe(self, row: pd.Series) -> DataFrameBase[TmpMenuSchema]:
         recipe = self.recipe_book.get_recipe_by_title(row["item"])
         if row.override_check == "N":
@@ -231,7 +196,6 @@ class MenuRecipeProcessor(BaseWithExceptionHandling):
 
         return self._get_entry_with_recipe_columns(row=row, recipe=recipe)
 
-    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def select_random_recipe(
         self,
         row: pd.Series,

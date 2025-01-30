@@ -49,7 +49,8 @@ class TestGroceryList:
                 ),
             }
         )
-        grocery_list.queue_preparation = prep_task_df
 
         with patch("builtins.input", side_effect=[YesNoChoices.yes.value]):
-            grocery_list.send_preparation_to_todoist(todoist_helper)
+            grocery_list.send_preparation_to_todoist(
+                todoist_helper, prep_task_df=prep_task_df
+            )

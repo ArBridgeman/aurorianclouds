@@ -93,21 +93,29 @@ class GroceryListOld:
         self,
         menu_ingredient_list: List[MenuIngredient],
         menu_recipe_list: List[MenuRecipe],
-    ) -> None:
+    ) -> pd.DataFrame:
         self._add_bulk_manual_ingredient_to_grocery_list(menu_ingredient_list)
         self._add_menu_recipe_to_queue(menu_recipe_list)
         self._process_recipe_queue()
 
-    def prepare_grocery_list(self) -> pd.DataFrame:
         if self.has_errors:
             cprint("\n[ERROR] 1 or more recipes had parsing errors", "red")
             raise GroceryListIncompleteError("cannot finalize")
 
+        return self.grocery_list_raw
+
+    def prepare_grocery_list(
+        self, raw_grocery_df: pd.DataFrame
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        self.grocery_list_raw = raw_grocery_df
         self._aggregate_grocery_list()
+        return self.grocery_list, self.queue_preparation
 
-        return self.grocery_list
+    def upload_grocery_list_to_todoist(
+        self, grocery_list_df: pd.DataFrame, todoist_helper: TodoistHelper
+    ):
+        self.grocery_list = grocery_list_df
 
-    def upload_grocery_list_to_todoist(self, todoist_helper: TodoistHelper):
         # TODO what should be in todoist (e.g. dry mode & messages?)
         project_name = self.config.todoist.project_name
         if self.config.todoist.remove_existing_task:
@@ -154,7 +162,11 @@ class GroceryListOld:
                     else 1,
                 )
 
-    def send_preparation_to_todoist(self, todoist_helper: TodoistHelper):
+    def send_preparation_to_todoist(
+        self, todoist_helper: TodoistHelper, prep_task_df: pd.DataFrame
+    ):
+        self.queue_preparation = prep_task_df
+
         # TODO separate service? need freezer check for defrosts
         project_name = self.config.preparation.project_name
         if self.config.todoist.remove_existing_prep_task:

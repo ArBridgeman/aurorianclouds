@@ -127,10 +127,12 @@ def create_menu_recipe(
 
 class TestGroceryList:
     @staticmethod
-    def test_prepare_grocery_list(grocery_list, mock_todoist_helper):
+    def test_extract_ingredients_from_menu(grocery_list, mock_todoist_helper):
         grocery_list.has_errors = ["[Dummy Error] Something happened"]
         with pytest.raises(GroceryListIncompleteError) as error:
-            grocery_list.prepare_grocery_list()
+            grocery_list.extract_ingredients_from_menu(
+                menu_ingredient_list=[], menu_recipe_list=[]
+            )
         assert str(error.value) == "[grocery list had errors] cannot finalize"
 
     @staticmethod

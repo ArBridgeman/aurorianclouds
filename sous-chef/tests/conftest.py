@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 from freezegun import freeze_time
 from hydra import compose, initialize
+from pandera.typing.common import DataFrameBase
 from pytz import UTC
 from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.formatter.format_unit import UnitFormatter
@@ -14,9 +15,10 @@ from sous_chef.formatter.ingredient.get_ingredient_field import IngredientField
 from sous_chef.grocery_list.generate_grocery_list.generate_grocery_list import (
     GroceryList,
 )
+from sous_chef.menu.create_menu.models import BasicMenuSchema
 from sous_chef.nutrition.provide_nutritional_info import Nutritionist
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
-from tests.data.util_data import get_final_menu, get_menu_history
+from tests.data.util_data import get_all_menus, get_final_menu, get_menu_history
 
 from utilities.extended_enum import ExtendedEnum
 
@@ -135,3 +137,8 @@ def fixed_final_menu():
 @pytest.fixture(scope="session")
 def fixed_menu_history():
     return get_menu_history()
+
+
+@pytest.fixture(scope="session")
+def fixed_all_menus() -> DataFrameBase[BasicMenuSchema]:
+    return get_all_menus()

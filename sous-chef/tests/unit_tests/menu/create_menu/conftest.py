@@ -9,15 +9,21 @@ from hydra import compose, initialize
 from pandera.typing.common import DataFrameBase
 from pint import Unit
 from sous_chef.formatter.units import unit_registry
-from sous_chef.menu.create_menu._menu_basic import validate_menu_schema
+from sous_chef.menu.create_menu._process_menu_recipe import MenuRecipeProcessor
+from sous_chef.menu.create_menu._select_menu_template import MenuTemplates
 from sous_chef.menu.create_menu.create_menu import Menu
 from sous_chef.menu.create_menu.models import (
     AllMenuSchema,
     LoadedMenuSchema,
     Season,
     TmpMenuSchema,
+    Type,
+    TypeProcessOrder,
+    YesNo,
+    validate_menu_schema,
 )
 from tests.conftest import FROZEN_DATE
+from tests.unit_tests.util import create_recipe
 
 
 @pytest.fixture
@@ -41,6 +47,32 @@ def config():
 @pytest.fixture
 def menu_config(config):
     return config.menu.create_menu
+
+
+@pytest.fixture
+@freeze_time(FROZEN_DATE)
+def menu_templates(
+    menu_config,
+    mock_gsheets,
+    frozen_due_datetime_formatter,
+    monkeypatch,
+    fixed_all_menus,
+):
+    menu_config.fixed.menu_number = 2
+    menu_config.fixed.selected_season = Season.fall.value
+
+    def mock__get_all_menu_templates(self, **kwargs):
+        return fixed_all_menus
+
+    monkeypatch.setattr(
+        MenuTemplates, "_get_all_menu_templates", mock__get_all_menu_templates
+    )
+
+    return MenuTemplates(
+        config=menu_config.fixed,
+        due_date_formatter=frozen_due_datetime_formatter,
+        gsheets_helper=mock_gsheets,
+    )
 
 
 @pytest.fixture
@@ -77,12 +109,12 @@ class MenuBuilder:
         prep_day: int = 0,
         season: Season = Season.fall,
         meal_time: str = "dinner",
-        item_type: str = "recipe",
+        item_type: str = TypeProcessOrder.tag.name,
         eat_factor: float = 1.0,
         # gsheets has "", whereas read_csv defaults to np.nans
         eat_unit: Unit = unit_registry.dimensionless,
         freeze_factor: float = 0.0,
-        defrost: str = "N",
+        defrost: str = YesNo.no.value,
         item: str = "dummy",
     ) -> DataFrameBase[AllMenuSchema]:
 
@@ -104,7 +136,7 @@ class MenuBuilder:
                     "eat_unit": eat_unit,
                     "freeze_factor": freeze_factor,
                     "defrost": defrost,
-                    "override_check": "N",
+                    "override_check": YesNo.no.value,
                     "item": item,
                 },
                 index=[0],
@@ -127,7 +159,7 @@ class MenuBuilder:
 
     def create_tmp_menu_row(
         self,
-        item_type: str = "recipe",
+        item_type: str = Type.recipe.value,
         prep_day: int = 0,
         rating: float = 3.0,  # np.nan, if unrated
         time_total_str: str = np.nan,
@@ -139,12 +171,12 @@ class MenuBuilder:
         # template matched with cook_days
         # after recipe/ingredient matched
 
-        if item_type == "recipe":
+        if item_type == Type.recipe.value:
             tmp_menu["rating"] = rating
             tmp_menu["uuid"] = "1666465773100"
             if time_total_str is np.nan:
                 time_total_str = "5 min"
-        elif item_type == "ingredient":
+        elif item_type == Type.ingredient.value:
             tmp_menu["rating"] = np.NaN
             tmp_menu["uuid"] = np.NaN
             if time_total_str is np.nan:
@@ -171,3 +203,28 @@ class MenuBuilder:
 @pytest.fixture
 def menu_builder():
     return MenuBuilder()
+
+
+@pytest.fixture
+def default_menu_row_recipe_pair(menu_builder, mock_recipe_book):
+    recipe_title = "garlic aioli"
+
+    menu_row = menu_builder.create_loaded_menu_row(
+        item=recipe_title, item_type=Type.recipe.value
+    ).squeeze()
+
+    recipe = create_recipe(title=recipe_title, time_total_str="5 minutes")
+    mock_recipe_book.get_recipe_by_title.return_value = recipe
+    return menu_row, recipe
+
+
+@pytest.fixture
+@freeze_time(FROZEN_DATE)
+def menu_recipe_processor(
+    menu_config,
+    mock_recipe_book,
+):
+    return MenuRecipeProcessor(
+        menu_config=menu_config,
+        recipe_book=mock_recipe_book,
+    )

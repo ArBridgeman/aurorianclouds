@@ -13,7 +13,7 @@ from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
 from sous_chef.formatter.ingredient.get_ingredient_field import IngredientField
 from sous_chef.grocery_list.generate_grocery_list.generate_grocery_list import (
-    GroceryList,
+    GroceryListOld,
 )
 from sous_chef.menu.create_menu.models import BasicMenuSchema
 from sous_chef.nutrition.provide_nutritional_info import Nutritionist
@@ -84,7 +84,7 @@ def grocery_list(
     mock_ingredient_field,
     frozen_due_datetime_formatter,
 ):
-    grocery_list = GroceryList(
+    grocery_list = GroceryListOld(
         config=config_grocery_list,
         due_date_formatter=frozen_due_datetime_formatter,
         unit_formatter=unit_formatter,

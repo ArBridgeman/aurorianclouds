@@ -6,7 +6,7 @@ from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
 from sous_chef.formatter.ingredient.get_ingredient_field import IngredientField
 from sous_chef.grocery_list.generate_grocery_list.generate_grocery_list import (
-    GroceryList,
+    GroceryListOld,
 )
 from sous_chef.menu.create_menu.create_menu import Menu
 from sous_chef.pantry_list.read_pantry_list import PantryList
@@ -58,23 +58,25 @@ def run_grocery_list(config: DictConfig) -> pd.DataFrame:
         ) = menu.get_menu_for_grocery_list()
 
         # get grocery list
-        grocery_list = GroceryList(
+        grocery_list = GroceryListOld(
             config.grocery_list,
             due_date_formatter=due_date_formatter,
             ingredient_field=ingredient_field,
             unit_formatter=unit_formatter,
         )
-        final_grocery_list = grocery_list.get_grocery_list_from_menu(
+        grocery_list.extract_ingredients_from_menu(
             menu_ingredient_list, menu_recipe_list
         )
+        grocery_list_df = grocery_list.prepare_grocery_list()
 
+        # final_grocery_list =
         # send grocery list to desired output
         # TODO add functionality to choose which helper/function
         if config.grocery_list.run_mode.with_todoist:
             todoist_helper = TodoistHelper(config.api.todoist)
             grocery_list.upload_grocery_list_to_todoist(todoist_helper)
             grocery_list.send_preparation_to_todoist(todoist_helper)
-        return final_grocery_list
+        return grocery_list_df
 
 
 @hydra.main(

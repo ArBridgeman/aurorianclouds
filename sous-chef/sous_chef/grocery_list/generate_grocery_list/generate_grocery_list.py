@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from itertools import chain
 from typing import List, Tuple, Type
+from warnings import warn
 
 import pandas as pd
 from omegaconf import DictConfig
@@ -40,7 +41,7 @@ class GroceryListIncompleteError(Exception):
 
 
 @dataclass
-class GroceryList:
+class GroceryListOld:
     config: DictConfig
     due_date_formatter: DueDatetimeFormatter
     unit_formatter: UnitFormatter
@@ -57,6 +58,13 @@ class GroceryList:
     app_week_label: str = field(init=False)
 
     def __post_init__(self):
+        warn(
+            f"{self.__class__.__name__} is deprecated. "
+            "This should removed & instead use the GroceryList service",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         self.primary_shopping_date = (
             self.due_date_formatter.get_date_relative_to_anchor(
                 self.config.shopping.primary_day
@@ -81,27 +89,25 @@ class GroceryList:
         calendar_week = self.due_date_formatter.get_calendar_week()
         self.app_week_label = f"app-week-{calendar_week}"
 
-    def get_grocery_list_from_menu(
+    def extract_ingredients_from_menu(
         self,
         menu_ingredient_list: List[MenuIngredient],
         menu_recipe_list: List[MenuRecipe],
-    ) -> pd.DataFrame:
+    ) -> None:
         self._add_bulk_manual_ingredient_to_grocery_list(menu_ingredient_list)
         self._add_menu_recipe_to_queue(menu_recipe_list)
         self._process_recipe_queue()
-        self._aggregate_grocery_list()
 
+    def prepare_grocery_list(self) -> pd.DataFrame:
         if self.has_errors:
             cprint("\n[ERROR] 1 or more recipes had parsing errors", "red")
+            raise GroceryListIncompleteError("cannot finalize")
+
+        self._aggregate_grocery_list()
 
         return self.grocery_list
 
     def upload_grocery_list_to_todoist(self, todoist_helper: TodoistHelper):
-        if self.has_errors:
-            raise GroceryListIncompleteError(
-                "will not send to ToDoist until fixed"
-            )
-
         # TODO what should be in todoist (e.g. dry mode & messages?)
         project_name = self.config.todoist.project_name
         if self.config.todoist.remove_existing_task:

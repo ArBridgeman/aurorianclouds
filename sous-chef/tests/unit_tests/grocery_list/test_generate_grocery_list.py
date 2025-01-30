@@ -127,16 +127,11 @@ def create_menu_recipe(
 
 class TestGroceryList:
     @staticmethod
-    def test_upload_grocery_list_to_todoist(grocery_list, mock_todoist_helper):
+    def test_prepare_grocery_list(grocery_list, mock_todoist_helper):
         grocery_list.has_errors = ["[Dummy Error] Something happened"]
         with pytest.raises(GroceryListIncompleteError) as error:
-            grocery_list.upload_grocery_list_to_todoist(
-                todoist_helper=mock_todoist_helper
-            )
-        assert (
-            str(error.value)
-            == "[grocery list had errors] will not send to ToDoist until fixed"
-        )
+            grocery_list.prepare_grocery_list()
+        assert str(error.value) == "[grocery list had errors] cannot finalize"
 
     @staticmethod
     @pytest.mark.parametrize(

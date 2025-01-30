@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from freezegun import freeze_time
 from sous_chef.grocery_list.generate_grocery_list.generate_grocery_list import (
-    GroceryList,
+    GroceryListOld,
 )
 from tests.conftest import FROZEN_DATE
 
@@ -20,7 +20,7 @@ def grocery_list(
     mock_ingredient_field,
     frozen_due_datetime_formatter,
 ):
-    grocery_list = GroceryList(
+    grocery_list = GroceryListOld(
         config=fixed_grocery_config.grocery_list,
         due_date_formatter=frozen_due_datetime_formatter,
         unit_formatter=unit_formatter,

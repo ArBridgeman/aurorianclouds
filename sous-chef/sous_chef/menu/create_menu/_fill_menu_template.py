@@ -5,9 +5,19 @@ import pandas as pd
 from omegaconf import DictConfig
 from pandera.typing.common import DataFrameBase
 from sous_chef.abstract.handle_exception import BaseWithExceptionHandling
-from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
+from sous_chef.formatter.ingredient.format_ingredient import (
+    IngredientFormatter,
+    MapIngredientErrorToException,
+)
+from sous_chef.formatter.ingredient.format_line_abstract import (
+    MapLineErrorToException,
+)
 from sous_chef.menu.create_menu._process_menu_recipe import MenuRecipeProcessor
-from sous_chef.menu.create_menu.exceptions import MenuIncompleteError
+from sous_chef.menu.create_menu.exceptions import (
+    MenuFutureError,
+    MenuIncompleteError,
+    MenuQualityError,
+)
 from sous_chef.menu.create_menu.models import (
     LoadedMenuSchema,
     RandomSelectType,
@@ -15,10 +25,27 @@ from sous_chef.menu.create_menu.models import (
     TypeProcessOrder,
     validate_menu_schema,
 )
+from sous_chef.menu.record_menu_history import MapMenuHistoryErrorToException
+from sous_chef.recipe_book.recipe_util import MapRecipeErrorToException
 from structlog import get_logger
 from termcolor import cprint
 
+from utilities.extended_enum import ExtendedEnum, extend_enum
+
 FILE_LOGGER = get_logger(__name__)
+
+
+@extend_enum(
+    [
+        MapMenuHistoryErrorToException,
+        MapIngredientErrorToException,
+        MapLineErrorToException,
+        MapRecipeErrorToException,
+    ]
+)
+class MapMenuErrorToException(ExtendedEnum):
+    menu_quality_check = MenuQualityError
+    menu_future_error = MenuFutureError
 
 
 class MenuTemplateFiller(BaseWithExceptionHandling):
@@ -31,6 +58,11 @@ class MenuTemplateFiller(BaseWithExceptionHandling):
         self.menu_config = menu_config
         self.ingredient_formatter = ingredient_formatter
         self.menu_recipe_processor = menu_recipe_processor
+
+        self.set_tuple_log_and_skip_exception_from_config(
+            config_errors=self.menu_config.errors,
+            exception_mapper=MapMenuErrorToException,
+        )
 
     def fill_menu_template(
         self, menu_template_df: DataFrameBase[LoadedMenuSchema]
@@ -49,10 +81,10 @@ class MenuTemplateFiller(BaseWithExceptionHandling):
 
             final_menu_df = pd.concat([processed_df, final_menu_df])
 
-        if len(self.record_exception) > 0:
+        if (num_errors := len(self.record_exception)) > 0:
             cprint("\t" + "\n\t".join(self.record_exception), "green")
             raise MenuIncompleteError(
-                custom_message="will not send to finalize until fixed"
+                custom_message=f"{num_errors} menu errors to resolve"
             )
 
         final_menu_df.uuid = final_menu_df.uuid.replace(np.nan, "NaN")
@@ -81,6 +113,7 @@ class MenuTemplateFiller(BaseWithExceptionHandling):
             by=["is_unrated", "process_order"], ascending=[False, True]
         ).drop(columns=["process_order", "is_unrated"])
 
+    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _process_menu(
         self,
         row: pd.Series,
@@ -107,7 +140,6 @@ class MenuTemplateFiller(BaseWithExceptionHandling):
             )
         return self.menu_recipe_processor.retrieve_recipe(tmp_row)
 
-    @BaseWithExceptionHandling.ExceptionHandler.handle_exception
     def _process_ingredient(
         self, row: pd.Series
     ) -> DataFrameBase[TmpMenuSchema]:

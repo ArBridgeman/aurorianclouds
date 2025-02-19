@@ -2,4 +2,4 @@
 rtk:
   delete_older_files: true
   path: ./Dropbox/SharedApps/RecetteTek
-  file_pattern: backup*.rtk
+  file_pattern: myrecipebox_*.rtk

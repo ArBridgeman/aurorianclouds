@@ -5,7 +5,10 @@ import pytest
 from freezegun import freeze_time
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.formatter.units import unit_registry
-from sous_chef.menu.create_menu._from_fixed_template import FixedTemplates
+from sous_chef.menu.create_menu._from_fixed_template import (
+    FixedTemplates,
+    MenuFromFixedTemplate,
+)
 from sous_chef.menu.create_menu._menu_basic import MenuFutureError
 from sous_chef.menu.create_menu.models import Season
 from sous_chef.menu.record_menu_history import MenuHistoryError
@@ -30,6 +33,28 @@ def fixed_templates(
         )
         fixed_templates.all_menus_df = mock_all_menus_df
         return fixed_templates
+
+
+@pytest.fixture
+@freeze_time(FROZEN_DATE)
+def menu_from_fixed_template(
+    config,
+    menu_config,
+    mock_gsheets,
+    mock_ingredient_formatter,
+    mock_menu_history,
+    mock_recipe_book,
+    frozen_due_datetime_formatter,
+):
+    return MenuFromFixedTemplate(
+        config=config,
+        menu_config=menu_config,
+        due_date_formatter=frozen_due_datetime_formatter,
+        gsheets_helper=mock_gsheets,
+        ingredient_formatter=mock_ingredient_formatter,
+        menu_historian=mock_menu_history,
+        recipe_book=mock_recipe_book,
+    )
 
 
 class TestFixedTemplates:
@@ -139,7 +164,12 @@ class TestProcessMenu:
         "quantity,pint_unit,item", [(1.0, unit_registry.cup, "frozen broccoli")]
     )
     def test__process_menu_ingredient(
-        menu, menu_builder, mock_ingredient_formatter, quantity, pint_unit, item
+        menu_from_fixed_template,
+        menu_builder,
+        mock_ingredient_formatter,
+        quantity,
+        pint_unit,
+        item,
     ):
         row = menu_builder.create_loaded_menu_row(
             eat_factor=quantity,
@@ -155,7 +185,9 @@ class TestProcessMenu:
             ingredient
         )
 
-        result = menu._process_menu(row.copy(deep=True), processed_uuid_list=[])
+        result = menu_from_fixed_template._process_menu(
+            row.copy(deep=True), processed_uuid_list=[]
+        )
         assert_equal_series(
             result,
             menu_builder.create_tmp_menu_row(
@@ -175,7 +207,12 @@ class TestProcessMenu:
         ],
     )
     def test__process_menu_category_or_tag(
-        menu, menu_builder, mock_recipe_book, log, item_type, method
+        menu_from_fixed_template,
+        menu_builder,
+        mock_recipe_book,
+        log,
+        item_type,
+        method,
     ):
         row = menu_builder.create_loaded_menu_row(
             item_type=item_type,
@@ -186,7 +223,9 @@ class TestProcessMenu:
         getattr(mock_recipe_book, method).return_value = recipe
         mock_recipe_book.get_recipe_by_title.return_value = recipe
 
-        result = menu._process_menu(row, processed_uuid_list=[])
+        result = menu_from_fixed_template._process_menu(
+            row, processed_uuid_list=[]
+        )
 
         assert_equal_series(
             result,
@@ -226,10 +265,12 @@ class TestCreateMenuProcessMenuRecipe:
         )
         return row, recipe_with_time_total.uuid
 
-    def test__normal(self, menu, menu_builder, mock_recipe_book):
+    def test__normal(
+        self, menu_from_fixed_template, menu_builder, mock_recipe_book
+    ):
         menu_row, _ = self._set_up_recipe(menu_builder, mock_recipe_book)
 
-        result = menu._process_menu(
+        result = menu_from_fixed_template._process_menu(
             menu_row.copy(deep=True), processed_uuid_list=[]
         )
 
@@ -243,7 +284,7 @@ class TestCreateMenuProcessMenuRecipe:
         )
 
     def test__error_when_in_processed_uuid_list(
-        self, menu, menu_builder, mock_recipe_book
+        self, menu_from_fixed_template, menu_builder, mock_recipe_book
     ):
         menu_row, recipe_uuid = self._set_up_recipe(
             menu_builder, mock_recipe_book
@@ -251,36 +292,40 @@ class TestCreateMenuProcessMenuRecipe:
 
         # derived exception MenuQualityError
         with pytest.raises(Exception) as error:
-            menu._process_menu(menu_row, processed_uuid_list=[recipe_uuid])
+            menu_from_fixed_template._process_menu(
+                menu_row, processed_uuid_list=[recipe_uuid]
+            )
         assert (
             str(error.value) == "[menu quality] recipe=garlic aioli "
             "error=recipe already processed in menu"
         )
 
     def test__error_when_in_menu_history_uuid_list(
-        self, menu, menu_builder, mock_recipe_book
+        self, menu_from_fixed_template, menu_builder, mock_recipe_book
     ):
         menu_row, recipe_uuid = self._set_up_recipe(
             menu_builder, mock_recipe_book
         )
 
-        menu.menu_history_uuid_list = [recipe_uuid]
+        menu_from_fixed_template.menu_history_uuid_list = [recipe_uuid]
 
         with pytest.raises(MenuHistoryError) as error:
-            menu._process_menu(menu_row, processed_uuid_list=[])
+            menu_from_fixed_template._process_menu(
+                menu_row, processed_uuid_list=[]
+            )
         assert (
             str(error.value) == "[in recent menu history] recipe=garlic aioli"
         )
 
     def test__error_when_in_future_menu_history_uuid_list(
-        self, menu, menu_builder, mock_recipe_book
+        self, menu_from_fixed_template, menu_builder, mock_recipe_book
     ):
         menu_row, recipe_uuid = self._set_up_recipe(
             menu_builder, mock_recipe_book
         )
 
         with pytest.raises(MenuFutureError) as error:
-            menu._process_menu(
+            menu_from_fixed_template._process_menu(
                 menu_row, processed_uuid_list=[], future_uuid_tuple=recipe_uuid
             )
         assert str(error.value) == (

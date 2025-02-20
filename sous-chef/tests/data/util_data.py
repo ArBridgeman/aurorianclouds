@@ -21,12 +21,6 @@ def _get_menu_df(file_name: str) -> pd.DataFrame:
     return menu
 
 
-def get_tmp_menu() -> DataFrameBase:
-    return validate_menu_schema(
-        dataframe=_get_menu_df("tmp-menu.csv"), model=TmpMenuSchema
-    )
-
-
 def get_final_grocery_list() -> pd.DataFrame:
     final_grocery_list = pd.read_csv(
         abs_path / "final_grocery_list.csv", dtype={"barcode": str}, header=0

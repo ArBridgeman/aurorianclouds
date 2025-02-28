@@ -20,16 +20,16 @@ from utilities.api.todoist_api import TodoistHelper
 def mock_gsheets():
     with initialize(version_base=None, config_path="../../config/api"):
         config = compose(config_name="gsheets_api")
-        with patch.object(GsheetsHelper, "__post_init__"):
-            return Mock(GsheetsHelper(config))
+    with patch.object(GsheetsHelper, "__post_init__"):
+        return Mock(GsheetsHelper(config))
 
 
 @pytest.fixture
 def mock_todoist_helper():
     with initialize(version_base=None, config_path="../../config/api"):
         config = compose(config_name="todoist_api")
-        with patch.object(TodoistHelper, "__post_init__", lambda x: None):
-            return TodoistHelper(config)
+    with patch.object(TodoistHelper, "__post_init__", lambda x: None):
+        return TodoistHelper(config)
 
 
 HISTORY_ENTRY = namedtuple(
@@ -41,7 +41,7 @@ HISTORY_ENTRY = namedtuple(
 def config_menu_history():
     with initialize(version_base=None, config_path="../../config/menu"):
         config = compose(config_name="record_menu_history")
-        return config.record_menu_history
+    return config.record_menu_history
 
 
 @pytest.fixture
@@ -52,19 +52,19 @@ def mock_menu_history(config_menu_history, mock_gsheets):
             gsheets_helper=mock_gsheets,
             current_menu_start_date=FROZEN_DATETIME,
         )
-        menu_historian.dataframe = pd.DataFrame(
-            data=[
-                HISTORY_ENTRY(
-                    FROZEN_DATETIME, 1, "in recent history", str(uuid1())
-                ),
-                HISTORY_ENTRY(
-                    FROZEN_DATETIME - timedelta(days=9),
-                    1,
-                    "before recent history",
-                    str(uuid1()),
-                ),
-            ]
-        )
+    menu_historian.dataframe = pd.DataFrame(
+        data=[
+            HISTORY_ENTRY(
+                FROZEN_DATETIME, 1, "in recent history", str(uuid1())
+            ),
+            HISTORY_ENTRY(
+                FROZEN_DATETIME - timedelta(days=9),
+                1,
+                "before recent history",
+                str(uuid1()),
+            ),
+        ]
+    )
     return menu_historian
 
 

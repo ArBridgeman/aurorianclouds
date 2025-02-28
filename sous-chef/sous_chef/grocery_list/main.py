@@ -51,13 +51,7 @@ def run_grocery_list(config: DictConfig) -> pd.DataFrame:
         due_date_formatter = DueDatetimeFormatter(config=config.date.due_date)
 
         # get menu for grocery list
-        menu = Menu(
-            config=config.menu.create_menu,
-            due_date_formatter=due_date_formatter,
-            gsheets_helper=gsheets_helper,
-            ingredient_formatter=ingredient_formatter,
-            recipe_book=recipe_book,
-        )
+        menu = Menu(config=config)
         (
             menu_ingredient_list,
             menu_recipe_list,

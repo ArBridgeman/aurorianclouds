@@ -16,6 +16,13 @@ from sous_chef.grocery_list.generate_grocery_list.generate_grocery_list import (
 )
 from sous_chef.nutrition.provide_nutritional_info import Nutritionist
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
+from tests.data.util_data import (
+    get_final_grocery_list,
+    get_final_menu,
+    get_menu_history,
+    get_tasks_grocery_list,
+    get_tasks_menu,
+)
 
 from utilities.extended_enum import ExtendedEnum
 
@@ -24,7 +31,7 @@ FROZEN_DATETIME = datetime.strptime(FROZEN_DATE, "%Y-%m-%d").replace(tzinfo=UTC)
 FROZEN_DAY = pd.to_datetime(FROZEN_DATE).day_name()
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def config_recipe_book():
     with initialize(version_base=None, config_path="../config"):
         return compose(config_name="recipe_book").recipe_book
@@ -49,29 +56,18 @@ class Recipe:
     tags: list
 
 
-recipe1 = Recipe(
-    "Bourbon Chicken",
-    10,
-    30,
-    "4 servings",
-    False,
-    0,
-    ["poultry", "American", "BBQ"],
-)
-
-RECIPES = pd.DataFrame([recipe1])
-
-
 @pytest.fixture
 def config_grocery_list():
     with initialize(version_base=None, config_path="../config"):
-        return compose(config_name="grocery_list").grocery_list
+        config = compose(config_name="grocery_list").grocery_list
+    return config
 
 
 @pytest.fixture
 def config_due_date():
     with initialize(version_base=None, config_path="../config"):
-        return compose(config_name="grocery_list").date.due_date
+        config = compose(config_name="grocery_list").date.due_date
+    return config
 
 
 @pytest.fixture
@@ -106,32 +102,57 @@ def grocery_list(
 def mock_ingredient_field():
     with initialize(version_base=None, config_path="../config/formatter"):
         config = compose(config_name="get_ingredient_field")
-        return Mock(IngredientField(config.get_ingredient_field, None, None))
+    return Mock(IngredientField(config.get_ingredient_field, None, None))
 
 
 @pytest.fixture
 def mock_ingredient_formatter():
     with initialize(version_base=None, config_path="../config/formatter"):
         config = compose(config_name="format_ingredient")
-        return Mock(IngredientFormatter(config, None, None))
+    return Mock(IngredientFormatter(config, None, None))
 
 
 @pytest.fixture
 def mock_recipe_book():
     with initialize(version_base=None, config_path="../config"):
         config = compose(config_name="recipe_book")
-        with patch.object(RecipeBook, "__post_init__", lambda x: None):
-            return Mock(RecipeBook(config, None))
+    with patch.object(RecipeBook, "__post_init__", lambda x: None):
+        return Mock(RecipeBook(config, None))
 
 
 @pytest.fixture
 def nutritionist():
     with initialize(version_base=None, config_path="../config/"):
         config = compose(config_name="nutrition").nutrition
-        config.sheet_name = "nutrition-test"
-        return Nutritionist(config=config)
+    config.sheet_name = "nutrition-test"
+    return Nutritionist(config=config)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def unit_formatter():
     return UnitFormatter()
+
+
+@pytest.fixture(scope="session")
+def fixed_final_menu():
+    return get_final_menu()
+
+
+@pytest.fixture(scope="session")
+def fixed_menu_history():
+    return get_menu_history()
+
+
+@pytest.fixture(scope="session")
+def tasks_menu():
+    return get_tasks_menu()
+
+
+@pytest.fixture(scope="session")
+def tasks_grocery_list():
+    return get_tasks_grocery_list()
+
+
+@pytest.fixture(scope="session")
+def final_grocery_list():
+    return get_final_grocery_list()

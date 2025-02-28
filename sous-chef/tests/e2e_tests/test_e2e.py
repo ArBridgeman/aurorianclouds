@@ -5,11 +5,6 @@ import pytest
 from sous_chef.date.get_due_date import DueDatetimeFormatter
 from sous_chef.grocery_list.main import run_grocery_list
 from sous_chef.menu.main import run_menu
-from tests.data.util_data import (
-    get_final_grocery_list,
-    get_tasks_grocery_list,
-    get_tasks_menu,
-)
 from tests.e2e_tests.util import PROJECT, Base
 
 from utilities.testing.pandas_util import assert_equal_dataframe
@@ -72,6 +67,9 @@ class Test(Base):
         todoist_helper,
         fixed_final_menu,
         fixed_menu_history,
+        tasks_menu,
+        final_grocery_list,
+        tasks_grocery_list,
     ):
         with patch.object(
             DueDatetimeFormatter,
@@ -85,10 +83,10 @@ class Test(Base):
         menu_history._load_history()
         assert_equal_dataframe(menu_history.dataframe, fixed_menu_history)
 
-        tasks_menu = self._convert_task_list_to_df(
+        tasks_menu_result = self._convert_task_list_to_df(
             todoist_helper=todoist_helper
         )
-        assert_equal_dataframe(tasks_menu, get_tasks_menu())
+        assert_equal_dataframe(tasks_menu_result, tasks_menu)
 
         with patch.object(
             DueDatetimeFormatter,
@@ -97,13 +95,13 @@ class Test(Base):
             return_value=frozen_due_datetime_formatter.anchor_datetime,
         ):
             with patch("builtins.input", side_effect=[YesNoChoices.yes.value]):
-                final_grocery_list = self._run_grocery_list()
-        final_grocery_list.pint_unit = final_grocery_list.pint_unit.apply(
-            lambda x: str(x)
+                final_grocery_list_result = self._run_grocery_list()
+        final_grocery_list_result.pint_unit = (
+            final_grocery_list_result.pint_unit.apply(lambda x: str(x))
         )
-        assert_equal_dataframe(final_grocery_list, get_final_grocery_list())
+        assert_equal_dataframe(final_grocery_list_result, final_grocery_list)
 
-        tasks_grocery_list = self._convert_task_list_to_df(
+        tasks_grocery_list_result = self._convert_task_list_to_df(
             todoist_helper=todoist_helper
         )
-        assert_equal_dataframe(tasks_grocery_list, get_tasks_grocery_list())
+        assert_equal_dataframe(tasks_grocery_list_result, tasks_grocery_list)

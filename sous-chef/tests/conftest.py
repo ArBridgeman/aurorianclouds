@@ -16,7 +16,13 @@ from sous_chef.grocery_list.generate_grocery_list.generate_grocery_list import (
 )
 from sous_chef.nutrition.provide_nutritional_info import Nutritionist
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
-from tests.data.util_data import get_final_menu, get_menu_history
+from tests.data.util_data import (
+    get_final_grocery_list,
+    get_final_menu,
+    get_menu_history,
+    get_tasks_grocery_list,
+    get_tasks_menu,
+)
 
 from utilities.extended_enum import ExtendedEnum
 
@@ -135,3 +141,18 @@ def fixed_final_menu():
 @pytest.fixture(scope="session")
 def fixed_menu_history():
     return get_menu_history()
+
+
+@pytest.fixture(scope="session")
+def tasks_menu():
+    return get_tasks_menu()
+
+
+@pytest.fixture(scope="session")
+def tasks_grocery_list():
+    return get_tasks_grocery_list()
+
+
+@pytest.fixture(scope="session")
+def final_grocery_list():
+    return get_final_grocery_list()

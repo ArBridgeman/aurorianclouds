@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from hydra import compose, initialize
-from sous_chef.menu.create_menu._menu_basic import MenuIncompleteError
+from sous_chef.menu.create_menu.exceptions import MenuIncompleteError
 from sous_chef.menu.main import main
 
 

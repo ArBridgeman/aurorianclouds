@@ -3,8 +3,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from pandera.typing.common import DataFrameBase
-from sous_chef.menu.create_menu._menu_basic import validate_menu_schema
-from sous_chef.menu.create_menu.models import AllMenuSchema, TmpMenuSchema
+from sous_chef.menu.create_menu.models import (
+    AllMenuSchema,
+    TmpMenuSchema,
+    validate_menu_schema,
+)
 
 abs_path = Path(__file__).parent.absolute()
 
@@ -77,4 +80,5 @@ def get_tasks_grocery_list() -> pd.DataFrame:
 
 def get_all_menus() -> DataFrameBase[AllMenuSchema]:
     all_menus_df = pd.read_csv(abs_path / "all_menus.csv", header=0)
+    all_menus_df.eat_unit.fillna("", inplace=True)
     return validate_menu_schema(dataframe=all_menus_df, model=AllMenuSchema)

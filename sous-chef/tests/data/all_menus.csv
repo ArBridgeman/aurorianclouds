@@ -1,20 +1,21 @@
-menu,season,weekday,prep_day,meal_time,type,selection,eat_factor,eat_unit,freeze_factor,defrost,override_check,item
-0,0_any,Friday,0.0,dinner,ingredient,,1.0,cup,0.0,N,N,rice
-1,0_any,Friday,0.0,dinner,ingredient,,1.0,cup,0.0,N,N,rice
-2,1_winter,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Pad Thai
-2,2_spring,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Pad Thai
-2,3_summer,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Pad Thai
-2,4_fall,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Pad Thai
-3,0_any,Friday,0.0,dinner,filter,either,0.5,,0.0,N,N,t.entree/burger & t.protein/beef
-4,0_any,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Creamy Ramen Noodles
-5,0_any,Friday,0.0,dinner,recipe,,1.0,,0.0,N,Y,Beef Bulgogi & Lotus Bowl
-6,0_any,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Volcano Salmon Bowl
-7,0_any,Friday,0.0,dinner,ingredient,,2.0,,0.0,N,N,steaks
-8,0_any,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Beef pan-fried noodles
-9,0_any,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Barbie Pink Pasta
-10,0_any,Friday,0.0,dinner,filter,rated,1.0,,0.0,N,N,t.side/veggies-european
-11,0_any,Friday,0.0,dinner,recipe,,1.0,,0.0,Y,N,Cali burgers
-11,0_any,Friday,0.0,dinner,ingredient,,450.0,g,0.0,N,N,steak fries
-12,0_any,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Southwest Chile Lime Ranch Salad
-13,0_any,Friday,0.0,dinner,recipe,,1.0,,0.0,Y,N,Gigi Hadid Pasta
-13,0_any,Friday,0.0,dinner,recipe,,1.0,,0.0,N,N,Tex Mex Fries
+weekday,meal_time,type,eat_factor,eat_unit,freeze_factor,defrost,item,selection,prep_day,override_check,menu,season
+Wednesday,dinner,ingredient,1.0,head,0.0,N,frisée,either,0.0,N,0,0_any
+Saturday,dinner,recipe,0.5,,0.5,Y,Italian baked meatballs,either,0.0,Y,1,0_any
+Saturday,dinner,ingredient,1.0,cup,0.0,N,rice,either,0.0,N,1,0_any
+Sunday,dinner,recipe,1.0,,0.0,N,Holiday cheesecake,either,0.0,Y,1,0_any
+Saturday,dinner,recipe,1.0,,0.0,N,Pad Thai,,0.0,N,2,1_winter
+Saturday,dinner,recipe,1.0,,0.0,N,Pad Thai,,0.0,N,2,2_spring
+Saturday,dinner,recipe,1.0,,0.0,N,Pad Thai,,0.0,N,2,3_summer
+Saturday,dinner,recipe,1.0,,0.0,N,Pad Thai,,0.0,N,2,4_fall
+Sunday,dinner,filter,1.0,,0.0,N,t.entree/burger & t.protein/beef,rated,0.0,N,3,0_any
+Monday,dinner,recipe,1.0,,0.0,N,Creamy Ramen Noodles,,0.0,N,4,0_any
+Tuesday,dinner,recipe,1.0,,0.0,N,Barbie Pink Pasta,,0.0,N,5,0_any
+Wednesday,dinner,ingredient,2.0,,0.0,N,steaks,,0.0,N,6,0_any
+Thursday,dinner,recipe,1.0,,0.0,N,Beef Bulgogi & Lotus Bowl,,0.0,N,7,0_any
+Friday,dinner,recipe,1.0,,0.0,N,Volcano Salmon Bowl,,0.0,N,8,0_any
+Saturday,dinner,recipe,1.0,,0.0,N,Cali Burgers,,0.0,N,9,0_any
+Saturday,dinner,ingredient,0.5,pkg,0.0,N,steak fries,,0.0,N,9,0_any
+Sunday,dinner,recipe,1.0,,0.0,N,Beef Pan-Fried Noodles,,0.0,N,10,0_any
+Monday,dinner,recipe,1.0,,0.0,N,Southwest Chile Lime Ranch Salad,,0.0,N,11,0_any
+Tuesday,dinner,recipe,1.0,,0.0,N,Gigi Hadid Pasta,,0.0,N,12,0_any
+Wednesday,dinner,recipe,1.0,,0.0,N,Tex Mex Fries,,0.0,N,13,0_any

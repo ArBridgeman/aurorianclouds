@@ -1,9 +1,11 @@
-from typing import Optional
+from typing import Optional, Union
 
 import pandas as pd
 import pandera as pa
 from pandera.typing import Series
+from pandera.typing.common import DataFrameBase
 from sous_chef.date.get_due_date import MealTime, Weekday
+from sous_chef.menu.create_menu.exceptions import MenuConfigError
 
 from utilities.extended_enum import ExtendedEnum, ExtendedIntEnum
 
@@ -14,6 +16,11 @@ class TypeProcessOrder(ExtendedIntEnum):
     filter = 2
     tag = 3
     category = 4
+
+
+class Type(ExtendedEnum):
+    recipe = "recipe"
+    ingredient = "ingredient"
 
 
 class RandomSelectType(ExtendedEnum):
@@ -30,6 +37,11 @@ class Season(ExtendedEnum):
     fall = "4_fall"
 
 
+class YesNo(ExtendedEnum):
+    yes = "Y"
+    no = "N"
+
+
 class BasicMenuSchema(pa.SchemaModel):
     # TODO replace all panderas with pydantic & create own validator with
     #  dataframe returned, as no default functions & coerce is poorly made
@@ -44,7 +56,10 @@ class BasicMenuSchema(pa.SchemaModel):
         ge=0, default=0, nullable=False, coerce=True
     )
     defrost: Series[str] = pa.Field(
-        isin=["Y", "N"], default="N", nullable=False, coerce=True
+        isin=YesNo.value_list(string_method="upper"),
+        default=YesNo.no.value,
+        nullable=False,
+        coerce=True,
     )
     item: Series[str]
 
@@ -61,7 +76,10 @@ class InProgressSchema(BasicMenuSchema):
         ge=0, lt=7, default=0, nullable=False, coerce=True
     )
     override_check: Series[str] = pa.Field(
-        isin=["Y", "N"], default="N", nullable=False, coerce=True
+        isin=YesNo.value_list(string_method="upper"),
+        default=YesNo.no.value,
+        nullable=False,
+        coerce=True,
     )
 
 
@@ -85,7 +103,7 @@ class LoadedMenuSchema(InProgressSchema, TimeSchema):
 
 class TmpMenuSchema(BasicMenuSchema, TimeSchema):
     # override as should be replaced with one of these
-    type: Series[str] = pa.Field(isin=["ingredient", "recipe"])
+    type: Series[str] = pa.Field(isin=Type.value_list())
     time_total: Series[pd.Timedelta] = pa.Field(nullable=False, coerce=True)
     # manual ingredients lack these
     rating: Series[float] = pa.Field(nullable=True, coerce=True)
@@ -94,3 +112,20 @@ class TmpMenuSchema(BasicMenuSchema, TimeSchema):
     class Config:
         strict = True
         coerce = True
+
+
+def validate_menu_schema(
+    dataframe: Union[DataFrameBase, pd.DataFrame], model
+) -> Union[DataFrameBase]:
+    if isinstance(dataframe, pd.DataFrame):
+        # TODO consider if need sneaky access to hidden method
+        selected_cols = model._collect_fields().keys()
+        return model.validate(dataframe[selected_cols].copy())
+    raise ValueError(f"dataframe is of type {type(dataframe)}")
+
+
+def get_weekday_from_short(short_week_day: str):
+    weekday = Weekday.get_by_abbreviation(short_week_day)
+    if not weekday:
+        raise MenuConfigError(f"{short_week_day} unknown day!")
+    return weekday.name.capitalize()

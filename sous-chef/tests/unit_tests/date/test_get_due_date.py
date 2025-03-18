@@ -121,7 +121,7 @@ class TestDueDatetimeFormatter:
     ):
         assert frozen_due_datetime_formatter.get_due_datetime_with_meal_time(
             Weekday.monday.name, "dinner"
-        ) == create_datetime(day=24, hour=16, minute=30)
+        ) == create_datetime(day=24, hour=17, minute=15)
 
     @staticmethod
     def test_get_due_datetime_with_time(
@@ -130,7 +130,7 @@ class TestDueDatetimeFormatter:
         assert frozen_due_datetime_formatter.get_due_datetime_with_time(
             Weekday.monday.name, time=MealTime.dinner.value
         ) == create_datetime(
-            day=24, hour=16, minute=30, tzinfo=DEFAULT_TIMEZONE
+            day=24, hour=17, minute=15, tzinfo=DEFAULT_TIMEZONE
         )
 
     @staticmethod

@@ -1,12 +1,12 @@
 pint_unit,item,is_optional,quantity,food_group,item_plural,store,barcode,from_recipe,for_day,for_day_str,shopping_date,aisle_group
-cup,basmati rice,False,1.0,Grains,basmati rice,grocery store,4104420218574,[manual],2022-01-22 16:10:00+00:00,[Sat],2022-01-14,Bulk
-gram,chocolate,False,80.0,Baking,chocolate,grocery store,4013320081426,[Holiday cheesecake],2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Sweet carolina
-gram,cream cheese,False,875.0,Dairy products,cream cheese,grocery store,7622300315733,[Holiday cheesecake],2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Dairy force
-dimensionless,egg,False,3.0,Egg,eggs,Lidl,,[Holiday cheesecake],2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Lidl
-head,frisée,False,1.0,Lettuce,frisée,grocery store,,[manual],2022-01-26 16:10:00+00:00,[Wed],2022-01-24,Farmland pride
-teaspoon,ginger powder,False,2.0,Spices and herbs,ginger powder,Asian store,,[Holiday cheesecake],2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Asian store
-teaspoon,nutmeg powder,False,0.25,Spices and herbs,nutmeg powder,grocery store,,[Holiday cheesecake],2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Spices and herbs
-gram,pumpkin puree,False,100.0,Canned,pumpkin puree,grocery store,4260181088037,[Holiday cheesecake],2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Sauces cans and oils
-cup,sour cream,False,0.3,Dairy products,sour cream,grocery store,4046700014301,[Holiday cheesecake],2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Dairy force
-cup,sugar,False,0.5,Baking,sugar,grocery store,4006544205006,[Holiday cheesecake],2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Sweet carolina
-teaspoon,vanilla extract,False,1.0,Baking,vanilla extract,Homemade,,[Holiday cheesecake],2022-01-23 09:45:00+00:00,[Sun],2022-01-14,Homemade
+cup,basmati rice,False,1.0,Grains,basmati rice,grocery store,4104420218574,[manual],2022-01-22 16:55:00+00:00,[Sat],2022-01-14,Bulk
+gram,chocolate,False,80.0,Baking,chocolate,grocery store,4013320081426,[Holiday cheesecake],2022-01-23 10:30:00+00:00,[Sun],2022-01-14,Sweet carolina
+gram,cream cheese,False,875.0,Dairy products,cream cheese,grocery store,7622300315733,[Holiday cheesecake],2022-01-23 10:30:00+00:00,[Sun],2022-01-14,Dairy force
+dimensionless,egg,False,3.0,Egg,eggs,Lidl,,[Holiday cheesecake],2022-01-23 10:30:00+00:00,[Sun],2022-01-14,Lidl
+head,frisée,False,1.0,Lettuce,frisée,grocery store,,[manual],2022-01-26 16:55:00+00:00,[Wed],2022-01-24,Farmland pride
+teaspoon,ginger powder,False,2.0,Spices and herbs,ginger powder,Asian store,,[Holiday cheesecake],2022-01-23 10:30:00+00:00,[Sun],2022-01-14,Asian store
+teaspoon,nutmeg powder,False,0.25,Spices and herbs,nutmeg powder,grocery store,,[Holiday cheesecake],2022-01-23 10:30:00+00:00,[Sun],2022-01-14,Spices and herbs
+gram,pumpkin puree,False,100.0,Canned,pumpkin puree,grocery store,4260181088037,[Holiday cheesecake],2022-01-23 10:30:00+00:00,[Sun],2022-01-14,Sauces cans and oils
+cup,sour cream,False,0.3,Dairy products,sour cream,grocery store,4046700014301,[Holiday cheesecake],2022-01-23 10:30:00+00:00,[Sun],2022-01-14,Dairy force
+cup,sugar,False,0.5,Baking,sugar,grocery store,4006544205006,[Holiday cheesecake],2022-01-23 10:30:00+00:00,[Sun],2022-01-14,Sweet carolina
+teaspoon,vanilla extract,False,1.0,Baking,vanilla extract,Homemade,,[Holiday cheesecake],2022-01-23 10:30:00+00:00,[Sun],2022-01-14,Homemade

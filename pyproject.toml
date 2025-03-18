@@ -1,8 +1,9 @@
 [tool.poetry]
-name = "project"
+name = "aurorianclouds"
 version = "1.0.0"
 description = "Used for pre-commit"
 authors = ["Aurorian Clouds"]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.9"

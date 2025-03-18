@@ -8,6 +8,7 @@
       <module fileurl="file://$PROJECT_DIR$/house-keeper/house-keeper.iml" filepath="$PROJECT_DIR$/house-keeper/house-keeper.iml" />
       <module fileurl="file://$PROJECT_DIR$/jellyfin-helpers/jellyfin-helpers.iml" filepath="$PROJECT_DIR$/jellyfin-helpers/jellyfin-helpers.iml" />
       <module fileurl="file://$PROJECT_DIR$/sous-chef/sous-chef.iml" filepath="$PROJECT_DIR$/sous-chef/sous-chef.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sous-chef-web/sous-chef-web.iml" filepath="$PROJECT_DIR$/sous-chef-web/sous-chef-web.iml" />
       <module fileurl="file://$PROJECT_DIR$/utilities/utilities.iml" filepath="$PROJECT_DIR$/utilities/utilities.iml" />
     </modules>
   </component>

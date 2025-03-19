@@ -44,7 +44,7 @@ class MockMealTime(ExtendedEnum):
     breakfast = {"hour": 8, "minute": 30}
     lunch = {"hour": 12, "minute": 00}
     snack = {"hour": 15, "minute": 00}
-    dinner = {"hour": 16, "minute": 30}
+    dinner = {"hour": 17, "minute": 15}
     dessert = {"hour": 19, "minute": 30}
 
 

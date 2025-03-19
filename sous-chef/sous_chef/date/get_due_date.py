@@ -66,7 +66,7 @@ class MealTime(ExtendedEnum):
     breakfast = datetime.time(hour=8, minute=30, tzinfo=DEFAULT_TIMEZONE)
     lunch = datetime.time(hour=12, minute=0, tzinfo=DEFAULT_TIMEZONE)
     snack = datetime.time(hour=15, minute=0, tzinfo=DEFAULT_TIMEZONE)
-    dinner = datetime.time(hour=16, minute=30, tzinfo=DEFAULT_TIMEZONE)
+    dinner = datetime.time(hour=17, minute=15, tzinfo=DEFAULT_TIMEZONE)
     dessert = datetime.time(hour=19, minute=30, tzinfo=DEFAULT_TIMEZONE)
 
 

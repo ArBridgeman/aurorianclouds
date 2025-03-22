@@ -17,7 +17,7 @@ plan_workouts:
   gsheets:
     workbook: ariel_workout
     worksheet:
-      weekly: weekly-bike
+      weekly: weekly-warm
       sleep: basic-sleep
       sets: basic-set
       plan: plan

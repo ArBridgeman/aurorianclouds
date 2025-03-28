@@ -74,11 +74,11 @@ class MenuForGroceryList(BaseWithExceptionHandling):
         result_dict = defaultdict(list)
         mask_defrost = self.dataframe.defrost != YesNo.yes.value
         for entry, entry_fct in entry_funcs.items():
-            if (mask := self.dataframe["type"] == entry).sum() > 0:
+            if (
+                mask := ((self.dataframe["type"] == entry) & mask_defrost)
+            ).sum() > 0:
                 result_dict[entry] = (
-                    self.dataframe[mask & mask_defrost]
-                    .apply(entry_fct, axis=1)
-                    .tolist()
+                    self.dataframe[mask].apply(entry_fct, axis=1).tolist()
                 )
         if len(self.record_exception) > 0:
             cprint("\t" + "\n\t".join(self.record_exception), "green")

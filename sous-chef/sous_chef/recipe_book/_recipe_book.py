@@ -163,37 +163,57 @@ class RecipeBasic(DataframeSearchable):
         self.dataframe = self.dataframe.drop_duplicates(["title"], keep="first")
 
 
-def create_timedelta(row_entry) -> pd.Timedelta:
-    from fractions import Fraction
-
-    if row_entry == "" or row_entry is None:
-        return pd.NaT
-
+def create_timedelta_clean_row_entry(row_entry: str) -> str:
     row_entry = row_entry.lower().strip()
-    if row_entry.isdecimal():
-        return pd.to_timedelta(int(row_entry), unit="minutes")
-
-    # has units in string or is nan
-    # cleaning, then parsing with pd.to_timedelta
     row_entry = re.sub("time", "", row_entry)
     row_entry = re.sub("prep", "", row_entry)
     row_entry = re.sub("cooking", "", row_entry)
     row_entry = re.sub("minut[eo]s.?", "min", row_entry)
     row_entry = re.sub(r"^[\D]+", "", row_entry)
     row_entry = re.sub(r"mins\.?", "min", row_entry)
+    row_entry = re.sub(r"mines\.?", "min", row_entry)
     row_entry = re.sub(r"hrs\.?", "hour", row_entry)
+    return row_entry
+
+
+# TODO: check and add test cases or remove if no longer relevant
+def create_timedelta_parse_fractions(row_entry: str) -> str:
+    from fractions import Fraction
+
+    groups = re.match(r"^(\d?\s\d+[.,/]?\d*)?\s([\s\-_\w%]+)", row_entry)
+    if groups:
+        float_conv = float(sum(Fraction(s) for s in groups.group(1).split()))
+        return f"{float_conv} {groups.group(2).strip()}"
+    return pd.NaT
+
+
+def create_timedelta(row_entry: str) -> pd.Timedelta:
+    # some kind of null value
+    if pd.isnull(row_entry):
+        return pd.NaT
+
+    # string cleaning
+    row_entry = create_timedelta_clean_row_entry(row_entry)
+
+    # empty string
+    if row_entry == "":
+        return pd.NaT
+
+    # if row_entry is a number, assume minutes
+    if row_entry.isdecimal():
+        return pd.to_timedelta(int(row_entry), unit="minutes")
+
+    # comes in hh:mm format, but without seconds (needed for pandas to convert)
     if re.match(r"^\d{1,2}:\d{1,2}$", row_entry):
-        row_entry = "{}:00".format(row_entry)
+        row_entry = f"{row_entry}:00"
+
+    # comes in hh h mm format, but needs min at the end
+    if re.match(r"^\d{1,3}\s?h(our)?s?\s?\d{1,2}$", row_entry):
+        row_entry = f"{row_entry} min"
 
     # handle fractions properly
-    # TODO outsource to separate clean function
     if "/" in row_entry:
-        groups = re.match(r"^(\d?\s\d+[.,/]?\d*)?\s([\s\-_\w%]+)", row_entry)
-        if groups:
-            float_conv = float(
-                sum(Fraction(s) for s in groups.group(1).split())
-            )
-            row_entry = f"{float_conv} {groups.group(2).strip()}"
+        row_entry = create_timedelta_parse_fractions(row_entry)
 
     # errors = "ignore", if confident we want to ignore further issues
     time_converted = pd.to_timedelta(row_entry, unit=None, errors="coerce")

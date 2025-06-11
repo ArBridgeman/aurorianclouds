@@ -734,7 +734,9 @@ class TestRecipeBook:
 @pytest.mark.parametrize(
     "input_time_string,expected_timedelta",
     [
+        ("25", pd.to_timedelta("00:25:00")),
         ("hurr 30 min", pd.to_timedelta("00:30:00")),
+        ("hurr 30 ", pd.to_timedelta("00:30:00")),
         ("20 min 10 s", pd.to_timedelta("00:20:10")),
         ("0:10", pd.to_timedelta("00:10:00")),
         ("0:10:0", pd.to_timedelta("00:10:00")),
@@ -745,6 +747,13 @@ class TestRecipeBook:
         ("15 minutes", pd.to_timedelta("00:15:00")),
         ("5 hours 10 mins", pd.to_timedelta("05:10:00")),
         ("prep time 6 min", pd.to_timedelta("00:06:00")),
+        ("10h 05", pd.to_timedelta("10:05:00")),
+        ("10 h 05", pd.to_timedelta("10:05:00")),
+        ("10 hour 05", pd.to_timedelta("10:05:00")),
+        ("10 hours 05", pd.to_timedelta("10:05:00")),
+        ("10 hour 05 min", pd.to_timedelta("10:05:00")),
+        ("10 hours 5 min", pd.to_timedelta("10:05:00")),
+        ("10 hour 5 min 9 s", pd.to_timedelta("10:05:09")),
     ],
 )
 def test_create_timedelta(input_time_string, expected_timedelta):

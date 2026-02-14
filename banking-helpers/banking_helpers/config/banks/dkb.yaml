@@ -1,0 +1,32 @@
+bank_name: "DKB"
+date_format: "DD.MM.YY"
+skip_rows: 4
+delimiter: ";"
+
+column_mappings:
+  Date:
+    source_columns: ["Buchungsdatum"]
+    parser: "date"
+  Category:
+    parser: "literal"
+    value: ""
+  Payment:
+    parser: "literal"
+    value: "joint"
+  Payer:
+    parser: "literal"
+    value: "joint"
+  Benefiter:
+    parser: "literal"
+    value: "household"
+  Amount:
+    source_columns: ["Betrag (€)"]
+    parser: "amount"
+    positive_is: "credit"
+    decimal_separator: ","
+  "To-update":
+    parser: "literal"
+    value: ""
+  Description:
+    source_columns: ["Verwendungszweck"]
+    parser: "string"

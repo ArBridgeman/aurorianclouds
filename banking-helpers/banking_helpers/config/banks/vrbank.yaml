@@ -1,0 +1,32 @@
+bank_name: "VR Bank"
+date_format: "DD.MM.YYYY"
+skip_rows: 0
+delimiter: ";"
+
+column_mappings:
+  Date:
+    source_columns: ["Buchungstag"]
+    parser: "date"
+  Category:
+    parser: "literal"
+    value: ""
+  Payment:
+    parser: "literal"
+    value: "alex personal"
+  Payer:
+    parser: "literal"
+    value: "alex"
+  Benefiter:
+    parser: "literal"
+    value: "household"
+  Amount:
+    source_columns: ["Betrag"]
+    parser: "amount"
+    positive_is: "credit"
+    decimal_separator: ","
+  "To-update":
+    parser: "literal"
+    value: ""
+  Description:
+    source_columns: ["Verwendungszweck"]
+    parser: "string"

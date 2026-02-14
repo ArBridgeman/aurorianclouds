@@ -1,0 +1,17 @@
+columns:
+  - name: Date
+    required: true
+  - name: Category
+    required: false
+  - name: Payment
+    required: true
+  - name: Payer
+    required: true
+  - name: Benefiter
+    required: false
+  - name: Amount
+    required: true
+  - name: To-update
+    required: false
+  - name: Description
+    required: true

@@ -1,0 +1,32 @@
+bank_name: "Sparkasse"
+date_format: "DD.MM.YY"
+skip_rows: 0
+delimiter: ";"
+
+column_mappings:
+  Date:
+    source_columns: ["Buchungstag"]
+    parser: "date"
+  Category:
+    parser: "literal"
+    value: ""
+  Payment:
+    parser: "literal"
+    value: "ariel personal"
+  Payer:
+    parser: "literal"
+    value: "ariel"
+  Benefiter:
+    parser: "literal"
+    value: "household"
+  Amount:
+    source_columns: ["Betrag"]
+    parser: "amount"
+    positive_is: "credit"
+    decimal_separator: ","
+  "To-update":
+    parser: "literal"
+    value: ""
+  Description:
+    source_columns: ["Verwendungszweck"]
+    parser: "string"

@@ -1,0 +1,40 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist
+build
+
+# Virtual environments
+.venv
+venv
+env
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Documentation
+README.md
+*.md
+
+# Example files
+example_transactions.csv
+
+# Poetry (keep lock file for reproducible builds)
+# poetry.lock
+
+# OS
+.DS_Store
+Thumbs.db

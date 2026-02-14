@@ -16,7 +16,7 @@ dependencies = [
     "pygsheets==2.0.5",
     "structlog>=23.1.0,<24",
     "tenacity>=8.1.0,<9",
-    "todoist-api-python>=2.0.0,<3",
+    "todoist-api-python>=3.2.1,<4",
 ]
 
 [dependency-groups]

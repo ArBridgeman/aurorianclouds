@@ -26,11 +26,11 @@ class TodoistHelper(AbstractTodoistHelper):
             for project in self.connection.get_projects()
         }
 
-    @tenacity.retry(
-        stop=tenacity.stop_after_attempt(5),
-        wait=tenacity.wait_exponential(multiplier=1, min=1, max=20),
-        after=tenacity.after_log(FILE_LOGGER, logging.DEBUG),
-    )
+    # @tenacity.retry(
+    #     stop=tenacity.stop_after_attempt(5),
+    #     wait=tenacity.wait_exponential(multiplier=1, min=1, max=20),
+    #     after=tenacity.after_log(FILE_LOGGER, logging.DEBUG),
+    # )
     def _add_task(self, **kwargs):
         return self.connection.add_task(**kwargs)
 

@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import List, Optional
 from uuid import uuid4
 
-from todoist_api_python.models import Project, Section, Task
+from todoist_api_python.models import Due, Project, Section, Task
 
 from utilities.api.todoist_api import TodoistHelper
 
@@ -69,20 +69,19 @@ class LocalTodoistConnection:
         self.sections.append(section)
 
     @staticmethod
-    def get_due(due_string: str) -> Dict:
+    def get_due(due_string: str) -> Due:
         is_recurring = False
         date = due_string
         if "every" in due_string:
             is_recurring = True
             date = str(datetime.today())
 
-        return {
-            "date": date,
-            "is_recurring": is_recurring,
-            "string": due_string,
-            "datetime": date,
-            "timezone": "UTC",
-        }
+        return Due(
+            date=date,
+            string=due_string,
+            is_recurring=is_recurring,
+            timezone="UTC",
+        )
 
     def add_task(
         self, project_id: str, section_id: Optional[str] = None, **kwargs
@@ -119,6 +118,7 @@ class LocalTodoistConnection:
             due_string = task_values.pop("due_string")
             task_values["due"] = self.get_due(due_string)
 
+        print(task_values.keys())
         task = Task(**task_values)
         self.tasks.append(task)
         return task

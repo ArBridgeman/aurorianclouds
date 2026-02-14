@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional
 from uuid import uuid4
 
@@ -35,29 +35,36 @@ class LocalTodoistConnection:
     def add_project(
         self, project_name: str, project_id: Optional[str] = None
     ) -> str:
+        now_iso = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         if project_id is None:
             project_id = str(uuid4())
         project = Project(
-            name=project_name,
-            color="teal",
-            comment_count=0,
             id=project_id,
-            is_favorite=False,
-            is_inbox_project=False,
-            is_shared=True,
-            is_team_inbox=False,
+            name=project_name,
+            description="local_project",
             order=1,
+            color="teal",
+            is_collapsed=False,
+            is_shared=True,
+            is_favorite=False,
+            is_archived=False,
+            is_inbox_project=False,
             parent_id=None,
-            url="https://not-real",
             view_style="list",
             can_assign_tasks=False,
+            created_at=now_iso,
+            updated_at=now_iso,
         )
         self.projects.append(project)
         return project.id
 
     def add_section(self, project_id: str, section_name: str):
         section = Section(
-            name=section_name, id=str(uuid4()), order=1, project_id=project_id
+            id=str(uuid4()),
+            name=section_name,
+            project_id=project_id,
+            is_collapsed=False,
+            order=1,
         )
         self.sections.append(section)
 
@@ -80,19 +87,27 @@ class LocalTodoistConnection:
     def add_task(
         self, project_id: str, section_id: Optional[str] = None, **kwargs
     ):
+        time_now = datetime.now().strftime("%Y-%m-%d %H:%M:%s")
         default_task_kwargs = dict(
-            content="",
-            added_at=datetime.now().strftime("%Y-%m-%d %H:%M:%s"),
-            added_by_uid=str(uuid4()),
-            description=None,
             id=str(uuid4()),
-            labels=[],
-            child_order=0,
-            priority=1,
+            content="",
+            description=None,
             project_id=project_id,
-            parent_id=0,
             section_id=section_id,
-            sync_id=str(uuid4()),
+            parent_id=0,
+            labels=[],
+            priority=1,
+            due=None,
+            deadline=None,
+            duration=None,
+            is_collapsed=False,
+            child_order=0,
+            assignee_id=None,
+            assigner_id=None,
+            completed_at=None,
+            created_at=time_now,
+            updated_at=time_now,
+            added_by_uid=str(uuid4()),
         )
         task_values = default_task_kwargs | {**kwargs}
         task_values["content"] = task_values["content"].strip()
@@ -104,7 +119,7 @@ class LocalTodoistConnection:
             due_string = task_values["due_string"]
             task_values["due"] = self.get_due(due_string)
 
-        task = Task.from_quick_add_response(task_values)
+        task = Task(**task_values)
         self.tasks.append(task)
         return task
 

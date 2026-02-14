@@ -101,13 +101,13 @@ class LocalTodoistConnection:
             deadline=None,
             duration=None,
             is_collapsed=False,
-            child_order=0,
+            order=0,
             assignee_id=None,
             assigner_id=None,
             completed_at=None,
             created_at=time_now,
             updated_at=time_now,
-            added_by_uid=str(uuid4()),
+            creator_id=str(uuid4()),
         )
         task_values = default_task_kwargs | {**kwargs}
         task_values["content"] = task_values["content"].strip()
@@ -116,7 +116,7 @@ class LocalTodoistConnection:
         task_values["labels"] = sorted(task_values["labels"])
 
         if task_values.get("due_string") is not None:
-            due_string = task_values["due_string"]
+            due_string = task_values.pop("due_string")
             task_values["due"] = self.get_due(due_string)
 
         task = Task(**task_values)

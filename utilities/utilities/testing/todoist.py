@@ -19,17 +19,21 @@ class LocalTodoistConnection:
             if task.id == task_id:
                 return task
 
-    def get_tasks(self, project_id: str) -> List[Task]:
-        return [task for task in self.tasks if task.project_id == project_id]
+    def get_tasks(self, project_id: str, limit: int = None) -> List[List[Task]]:
+        return [[task for task in self.tasks if task.project_id == project_id]]
 
-    def get_projects(self) -> List[Project]:
-        return self.projects
+    def get_projects(self, limit: int = None) -> List[List[Project]]:
+        return [self.projects]
 
-    def get_sections(self, project_id: str) -> List[Section]:
+    def get_sections(
+        self, project_id: str, limit: int = None
+    ) -> List[List[Section]]:
         return [
-            section
-            for section in self.sections
-            if section.project_id == project_id
+            [
+                section
+                for section in self.sections
+                if section.project_id == project_id
+            ]
         ]
 
     def add_project(
@@ -114,11 +118,12 @@ class LocalTodoistConnection:
             task_values["description"] = ""
         task_values["labels"] = sorted(task_values["labels"])
 
-        if task_values.get("due_string") is not None:
-            due_string = task_values.pop("due_string")
+        if (due_string := task_values.get("due_string")) is not None:
             task_values["due"] = self.get_due(due_string)
 
-        print(task_values.keys())
+        if "due_string" in task_values:
+            task_values.pop("due_string")
+
         task = Task(**task_values)
         self.tasks.append(task)
         return task

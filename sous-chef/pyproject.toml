@@ -28,7 +28,8 @@ dependencies = [
     # numpy not compatible with other versions
     "numpy>=1.26.0,<2",
     "uvicorn[standard]>=0.23,<0.24",
-    "utilities @ ../utilities"
+    "utilities @ ../utilities",
+    "setuptools==81.0.0"
 ]
 
 [dependency-groups]

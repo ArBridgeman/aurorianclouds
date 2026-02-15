@@ -130,6 +130,9 @@ dmypy.json
 
 # IntelliJ
 outputs
+.idea/copilot*
+.idea/aws*
+.idea/inspectionProfiles
 
 # Google API
 tokens/

@@ -28,11 +28,13 @@ class Test:
     @staticmethod
     def _convert_task_list_to_df(todoist_helper):
         project_id = todoist_helper.get_project_id(PROJECT)
-        task_list = todoist_helper.connection.get_tasks(project_id=project_id)
+        task_list = todoist_helper._get_tasks(project_id=project_id)
         task_df = pd.DataFrame.from_records(
             [task.__dict__ for task in task_list]
         )
-        task_df.due = task_df.due.astype(str)
+        task_df.due = task_df.due.astype(str).str.replace(
+            r"\s+", "", regex=True
+        )
         return (
             task_df[["content", "due", "labels", "priority"]]
             .sort_values("content")
@@ -86,8 +88,8 @@ class Test:
         ):
             with patch("builtins.input", side_effect=[YesNoChoices.yes.value]):
                 final_grocery_list_result = run_grocery_list(grocery_config)
-        final_grocery_list_result.pint_unit = final_grocery_list_result.pint_unit.apply(
-            lambda x: str(x)
+        final_grocery_list_result.pint_unit = (
+            final_grocery_list_result.pint_unit.apply(lambda x: str(x))
         )
         assert_equal_dataframe(final_grocery_list_result, final_grocery_list)
 

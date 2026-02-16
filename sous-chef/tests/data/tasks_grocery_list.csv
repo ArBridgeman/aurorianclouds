@@ -1,12 +1,12 @@
 content,due,labels,priority
-"basmati rice, 1 cup","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Sat, app, app-week-3, manual]",1
-"chocolate, 80 g","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
-"cream cheese, 880 g","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
-"eggs, 3","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
-"frisée, 1 head","Due(date='2022-01-24', is_recurring=False, string='on 2022-01-24', datetime=None, timezone=None)","[Wed, app, app-week-3, manual]",2
-"ginger powder, 2 tsp","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
-"nutmeg powder, 0.25 tsp","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
-"pumpkin puree, 100 g","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
-"sour cream, 0.3 cup","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
-"sugar, 0.5 cup","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
-"vanilla extract, 1 tsp","Due(date='2022-01-14', is_recurring=False, string='on 2022-01-14', datetime=None, timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
+"basmati rice, 1 cup","Due(date=datetime.date(2022,1,14),string='on2022-01-14',lang='en',is_recurring=False,timezone=None)","[Sat, app, app-week-3, manual]",1
+"chocolate, 80 g","Due(date=datetime.date(2022,1,14),string='on2022-01-14',lang='en',is_recurring=False,timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
+"cream cheese, 880 g","Due(date=datetime.date(2022,1,14),string='on2022-01-14',lang='en',is_recurring=False,timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
+"eggs, 3","Due(date=datetime.date(2022,1,14),string='on2022-01-14',lang='en',is_recurring=False,timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
+"frisée, 1 head","Due(date=datetime.date(2022,1,24),string='on2022-01-24',lang='en',is_recurring=False,timezone=None)","[Wed, app, app-week-3, manual]",2
+"ginger powder, 2 tsp","Due(date=datetime.date(2022,1,14),string='on2022-01-14',lang='en',is_recurring=False,timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
+"nutmeg powder, 0.25 tsp","Due(date=datetime.date(2022,1,14),string='on2022-01-14',lang='en',is_recurring=False,timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
+"pumpkin puree, 100 g","Due(date=datetime.date(2022,1,14),string='on2022-01-14',lang='en',is_recurring=False,timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
+"sour cream, 0.3 cup","Due(date=datetime.date(2022,1,14),string='on2022-01-14',lang='en',is_recurring=False,timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
+"sugar, 0.5 cup","Due(date=datetime.date(2022,1,14),string='on2022-01-14',lang='en',is_recurring=False,timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1
+"vanilla extract, 1 tsp","Due(date=datetime.date(2022,1,14),string='on2022-01-14',lang='en',is_recurring=False,timezone=None)","[Holiday_cheesecake, Sun, app, app-week-3]",1

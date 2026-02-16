@@ -22,7 +22,7 @@ class TodoistHelper(AbstractTodoistHelper):
 
     def _get_projects(self) -> Dict[str, Project]:
         result: Dict[str, Project] = {}
-        all_projects = list(self.connection.get_projects(limit=None))
+        all_projects = self.connection.get_projects(limit=None)
         for project_list in all_projects:
             for project in project_list:
                 result[project.name.casefold()] = project
@@ -46,9 +46,7 @@ class TodoistHelper(AbstractTodoistHelper):
 
     def _get_tasks(self, project_id: str) -> List[Task]:
         result: List[Task] = []
-        all_tasks = list(
-            self.connection.get_tasks(project_id=project_id, limit=None)
-        )
+        all_tasks = self.connection.get_tasks(project_id=project_id, limit=None)
         for task_list in all_tasks:
             for task in task_list:
                 result.append(task)
@@ -64,8 +62,8 @@ class TodoistHelper(AbstractTodoistHelper):
 
     def _get_sections(self, project_id: str) -> Dict[str, Section]:
         result: Dict[str, Section] = {}
-        all_sections = list(
-            self.connection.get_sections(project_id=project_id, limit=None)
+        all_sections = self.connection.get_sections(
+            project_id=project_id, limit=None
         )
         for section_list in all_sections:
             for section in section_list:

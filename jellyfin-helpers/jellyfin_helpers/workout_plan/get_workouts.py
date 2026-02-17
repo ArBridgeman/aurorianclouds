@@ -106,12 +106,12 @@ def _parse_workout_videos(
             raw_data["RunTimeTicks"] / 10**7 / 60, unit="m"
         )
         raw_data["genre"] = genre["Name"]
-        raw_data[
-            ["difficulty", "difficulty_num", "rating", "tool"]
-        ] = raw_data.apply(
-            lambda x: TagExtractor.extract_tags(x["Tags"]),
-            axis=1,
-            result_type="expand",
+        raw_data[["difficulty", "difficulty_num", "rating", "tool"]] = (
+            raw_data.apply(
+                lambda x: TagExtractor.extract_tags(x["Tags"]),
+                axis=1,
+                result_type="expand",
+            )
         )
 
         raw_data.columns = raw_data.columns.str.lower()

@@ -1,4 +1,5 @@
 """Simple jellyfin helpers."""
+
 import argparse
 import os
 import pathlib

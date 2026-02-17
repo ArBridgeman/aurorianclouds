@@ -19,7 +19,7 @@ package-mode = false
 [dependency-groups]
 dev = [
     "autoflake>=2.0,<3",
-    "black>=22.1,<23",
+    "black>=26.1,<27",
     "coverage>=7.0,<8",
     "flake8>=6.0.0,<7",
     "isort>=5.8.0,<6",

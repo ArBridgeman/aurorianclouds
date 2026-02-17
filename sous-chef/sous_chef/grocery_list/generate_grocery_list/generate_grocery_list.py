@@ -143,9 +143,11 @@ class GroceryList:
                     project_id=project_id,
                     section=section_name,
                     section_id=section_id,
-                    priority=2
-                    if entry["shopping_date"] != self.primary_shopping_date
-                    else 1,
+                    priority=(
+                        2
+                        if entry["shopping_date"] != self.primary_shopping_date
+                        else 1
+                    ),
                 )
 
     def send_preparation_to_todoist(self, todoist_helper: TodoistHelper):
@@ -401,10 +403,10 @@ class GroceryList:
             self.grocery_list = pd.DataFrame()
 
         # TODO add for_day option
-        self.grocery_list_raw[
-            "dimension"
-        ] = self.grocery_list_raw.pint_unit.apply(
-            lambda x: str(x.dimensionality)
+        self.grocery_list_raw["dimension"] = (
+            self.grocery_list_raw.pint_unit.apply(
+                lambda x: str(x.dimensionality)
+            )
         )
 
         # TODO fix pantry list to not do lidl for meats (real group instead)

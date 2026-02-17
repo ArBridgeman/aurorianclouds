@@ -3,6 +3,7 @@ Run in terminal with poetry run python convert_image_to_text.py
 Needs tesseract application installed.
 Custom languages might need to be downloaded.
 """
+
 from pathlib import Path
 
 import pytesseract

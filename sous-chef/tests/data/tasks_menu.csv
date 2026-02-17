@@ -1,10 +1,10 @@
 content,due,labels,priority
 Holiday cheesecake (4.0),None,"[app, app-week-3]",3
-Holiday cheesecake (x eat: 1.0) [405 min],"Due(date='2022-01-23', is_recurring=False, string='on 2022-01-23 at 15:30', datetime='2022-01-23T15:30:00', timezone=None)","[app, app-week-3]",3
-Italian baked meatballs,"Due(date='2022-01-22', is_recurring=False, string='on 2022-01-22 at 17:15', datetime='2022-01-22T17:15:00', timezone=None)","[app, app-week-3]",3
+Holiday cheesecake (x eat: 1.0) [405 min],"Due(date=datetime.datetime(2022,1,23,15,30),string='on2022-01-23at15:30',lang='en',is_recurring=False,timezone=None)","[app, app-week-3]",3
+Italian baked meatballs,"Due(date=datetime.datetime(2022,1,22,17,15),string='on2022-01-22at17:15',lang='en',is_recurring=False,timezone=None)","[app, app-week-3]",3
 Italian baked meatballs (4.5),None,"[app, app-week-3]",3
-[DEFROST] Italian baked meatballs,"Due(date='2022-01-21', is_recurring=False, string='on 2022-01-21 at 17:15', datetime='2022-01-21T17:15:00', timezone=None)","[app, app-week-3]",3
-[PREP] Holiday cheesecake (x eat: 1.0) [405 min],"Due(date='2022-01-23', is_recurring=False, string='on 2022-01-23 at 10:30', datetime='2022-01-23T10:30:00', timezone=None)","[app, app-week-3]",3
-edit recipes from week #3,"Due(date='2022-01-27', is_recurring=False, string='on 2022-01-27', datetime=None, timezone=None)","[app, app-week-3]",3
-frisée (x eat: 1.0) [20 min],"Due(date='2022-01-26', is_recurring=False, string='on 2022-01-26 at 16:55', datetime='2022-01-26T16:55:00', timezone=None)","[app, app-week-3]",3
-rice (x eat: 1.0) [20 min],"Due(date='2022-01-22', is_recurring=False, string='on 2022-01-22 at 16:55', datetime='2022-01-22T16:55:00', timezone=None)","[app, app-week-3]",3
+[DEFROST] Italian baked meatballs,"Due(date=datetime.datetime(2022,1,21,17,15),string='on2022-01-21at17:15',lang='en',is_recurring=False,timezone=None)","[app, app-week-3]",3
+[PREP] Holiday cheesecake (x eat: 1.0) [405 min],"Due(date=datetime.datetime(2022,1,23,10,30),string='on2022-01-23at10:30',lang='en',is_recurring=False,timezone=None)","[app, app-week-3]",3
+edit recipes from week #3,"Due(date=datetime.date(2022,1,27),string='on2022-01-27',lang='en',is_recurring=False,timezone=None)","[app, app-week-3]",3
+frisée (x eat: 1.0) [20 min],"Due(date=datetime.datetime(2022,1,26,16,55),string='on2022-01-26at16:55',lang='en',is_recurring=False,timezone=None)","[app, app-week-3]",3
+rice (x eat: 1.0) [20 min],"Due(date=datetime.datetime(2022,1,22,16,55),string='on2022-01-22at16:55',lang='en',is_recurring=False,timezone=None)","[app, app-week-3]",3

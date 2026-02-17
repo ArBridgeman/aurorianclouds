@@ -21,10 +21,12 @@ class TodoistHelper(AbstractTodoistHelper):
         self.projects = self._get_projects()
 
     def _get_projects(self) -> Dict[str, Project]:
-        return {
-            project.name.casefold(): project
-            for project in self.connection.get_projects()
-        }
+        result: Dict[str, Project] = {}
+        all_projects = self.connection.get_projects(limit=None)
+        for project_list in all_projects:
+            for project in project_list:
+                result[project.name.casefold()] = project
+        return result
 
     @tenacity.retry(
         stop=tenacity.stop_after_attempt(5),
@@ -43,7 +45,12 @@ class TodoistHelper(AbstractTodoistHelper):
         return self.connection.get_task(task_id=task_id)
 
     def _get_tasks(self, project_id: str) -> List[Task]:
-        return self.connection.get_tasks(project_id=project_id)
+        result: List[Task] = []
+        all_tasks = self.connection.get_tasks(project_id=project_id, limit=None)
+        for task_list in all_tasks:
+            for task in task_list:
+                result.append(task)
+        return result
 
     @tenacity.retry(
         stop=tenacity.stop_after_attempt(5),
@@ -54,7 +61,11 @@ class TodoistHelper(AbstractTodoistHelper):
         self.connection.delete_task(task_id=task_id)
 
     def _get_sections(self, project_id: str) -> Dict[str, Section]:
-        return {
-            section.name.casefold(): section
-            for section in self.connection.get_sections(project_id=project_id)
-        }
+        result: Dict[str, Section] = {}
+        all_sections = self.connection.get_sections(
+            project_id=project_id, limit=None
+        )
+        for section_list in all_sections:
+            for section in section_list:
+                result[section.name.casefold()] = section
+        return result

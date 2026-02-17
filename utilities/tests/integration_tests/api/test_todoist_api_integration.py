@@ -33,7 +33,7 @@ class TestTodoistHelper:
 
     @staticmethod
     def _get_task_count(todoist_helper, project_id):
-        return len(todoist_helper.connection.get_tasks(project_id=project_id))
+        return len(todoist_helper._get_tasks(project_id=project_id))
 
     @staticmethod
     def _log_add_task(
@@ -296,8 +296,9 @@ class TestTodoistHelper:
 
     @staticmethod
     def test_get_section_id_if_not_exists(implementation):
+        project_id = implementation.get_project_id(DEFAULT_PROJECT)
         with pytest.raises(TodoistKeyError) as error:
-            implementation.get_section_id("2228326717", "not-a-section-name")
+            implementation.get_section_id(project_id, "not-a-section-name")
         assert str(error.value) == (
             "[todoist key error]: tag=section_id for "
             "value=not-a-section-name"

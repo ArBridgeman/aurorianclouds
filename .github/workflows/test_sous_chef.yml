@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out our repo branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
       - name: Setup Python environment
         uses: ./.github/actions/poetry-setup-with-tokens
         with:
@@ -40,7 +40,7 @@ jobs:
         run: poetry run pytest --cov=sous_chef --cov-report=xml:sous_chef_integration_tests.xml -k "not dropbox and not openfoodfacts" ./tests/integration_tests
       - name: Upload coverage to Codecov
         if: github.ref != 'refs/heads/main'
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./sous-chef/sous_chef_unit_tests.xml,./sous-chef/sous_chef_integration_tests.xml
@@ -48,7 +48,7 @@ jobs:
           verbose: false
       - name: Archive code coverage results
         if: github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: cov_sous_chef
           path: ./sous-chef/*.xml

@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out our repo branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
       - name: Setup Python environment
         uses: ./.github/actions/poetry-setup-with-tokens
         with:
@@ -36,7 +36,7 @@ jobs:
         run: poetry run pytest --cov=utilities --cov-report=xml:utilities_tests.xml ./tests/
       - name: Upload coverage to Codecov
         if: github.ref != 'refs/heads/main'
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./utilities/utilities_tests.xml
@@ -44,7 +44,7 @@ jobs:
           verbose: false
       - name: Archive code coverage results
         if: github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: cov_utilities
           path: ./utilities/*.xml

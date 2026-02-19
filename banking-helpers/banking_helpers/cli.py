@@ -65,6 +65,7 @@ def run(
     )
 
     csv_bytes: bytes = csv_path.read_bytes()
+
     df = processor.process(csv_bytes)
 
     if print_preview:

@@ -22,7 +22,7 @@ column_mappings:
   Amount:
     source_columns: ["Betrag (€)"]
     parser: "amount"
-    positive_is: "credit"
+    positive_is: "debit"
     decimal_separator: ","
   "To-update":
     parser: "literal"

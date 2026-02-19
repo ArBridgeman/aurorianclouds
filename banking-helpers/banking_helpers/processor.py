@@ -57,6 +57,7 @@ class CSVProcessor:
             delimiter=delimiter,
             encoding="utf-8",
             on_bad_lines="skip",
+            encoding_errors="replace",
         )
 
         # Build output DataFrame
@@ -64,6 +65,7 @@ class CSVProcessor:
 
         # Process each required output column
         for col_config in self.output_config.columns:
+
             col_name: str = col_config.name
             required: bool = col_config.get("required", True)
 
@@ -128,7 +130,8 @@ class CSVProcessor:
                 ]
             elif parser_type == "string":
                 output_data[col_name] = [
-                    str(val) if pd.notna(val) else "" for val in df[source_col]
+                    str(val).strip() if pd.notna(val) else ""
+                    for val in df[source_col]
                 ]
             else:
                 raise ValueError(f"Unknown parser type: {parser_type}")

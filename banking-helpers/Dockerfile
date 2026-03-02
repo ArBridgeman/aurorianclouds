@@ -1,8 +1,8 @@
 FROM docker.io/library/python:3.11-slim
 
-SHELL ["/bin/bash", "-c"]
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
 
 # Install Poetry
 RUN pip install --upgrade pip && \
@@ -15,7 +15,7 @@ COPY poetry.lock poetry.toml pyproject.toml ./
 
 # Configure Poetry and install dependencies
 RUN poetry config virtualenvs.create false && \
-    poetry install --only main
+    poetry install --no-root
 
 # Copy application code
 COPY banking_helpers/ ./banking_helpers/

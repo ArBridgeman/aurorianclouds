@@ -1,6 +1,7 @@
 bank_name: "Example Bank"
 date_format: "MM/DD/YYYY"
 skip_rows: 0
+delimiter: ","
 
 column_mappings:
   Date:

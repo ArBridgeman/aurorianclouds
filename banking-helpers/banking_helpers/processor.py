@@ -5,8 +5,11 @@ from typing import Optional
 
 import pandas as pd
 from banking_helpers.utils import (
+    find_all_columns,
     find_column,
     format_date,
+    match_category_pattern,
+    normalize_combined_text,
     parse_amount,
     parse_date,
 )
@@ -60,6 +63,12 @@ class CSVProcessor:
             encoding_errors="replace",
         )
 
+        # Validate CSV data
+        if df.empty:
+            raise ValueError("CSV file is empty or contains no valid data rows")
+        if len(df.columns) == 0:
+            raise ValueError("CSV file contains no columns")
+
         # Build output DataFrame
         output_data: dict[str, list] = {}
 
@@ -70,9 +79,9 @@ class CSVProcessor:
             required: bool = col_config.get("required", True)
 
             # Get mapping configuration
-            mapping: Optional[
-                DictConfig
-            ] = self.bank_config.column_mappings.get(col_name)
+            mapping: Optional[DictConfig] = (
+                self.bank_config.column_mappings.get(col_name)
+            )
 
             if not mapping:
                 if required:
@@ -111,29 +120,102 @@ class CSVProcessor:
                     "date_format"
                 )
                 output_data[col_name] = [
-                    format_date(
-                        parse_date(str(val), input_date_format),
-                        self.date_format,
+                    (
+                        format_date(
+                            parse_date(str(val), input_date_format),
+                            self.date_format,
+                        )
+                        if pd.notna(val)
+                        else ""
                     )
-                    if pd.notna(val)
-                    else ""
                     for val in df[source_col]
                 ]
             elif parser_type == "amount":
                 positive_is: str = mapping.get("positive_is", "debit")
                 decimal_separator: str = mapping.get("decimal_separator", ".")
                 output_data[col_name] = [
-                    parse_amount(str(val), positive_is, decimal_separator)
-                    if pd.notna(val)
-                    else 0.0
+                    (
+                        parse_amount(str(val), positive_is, decimal_separator)
+                        if pd.notna(val)
+                        else 0.0
+                    )
                     for val in df[source_col]
                 ]
             elif parser_type == "string":
-                output_data[col_name] = [
-                    str(val).strip() if pd.notna(val) else ""
-                    for val in df[source_col]
-                ]
+                source_columns: list[str] = mapping.get("source_columns", [])
+
+                # Find ALL matching source columns (not just first)
+                all_source_cols: list[str] = (
+                    find_all_columns(df.columns.tolist(), source_columns)
+                    if source_columns
+                    else []
+                )
+
+                try:
+                    if not all_source_cols:
+                        # No source columns found, use empty string
+                        output_data[col_name] = [""] * len(df)
+                    else:
+                        # Combine all source columns and normalize
+                        output_data[col_name] = [
+                            normalize_combined_text(
+                                " ".join(
+                                    (
+                                        str(df[col].iloc[idx])
+                                        if pd.notna(df[col].iloc[idx])
+                                        else ""
+                                    )
+                                    for col in all_source_cols
+                                )
+                            )
+                            for idx in range(len(df))
+                        ]
+                except Exception as e:
+                    raise ValueError(
+                        f"Error in string parsing for column "
+                        f"'{col_name}': {str(e)}"
+                    ) from e
+            elif parser_type == "pattern_category":
+                patterns: dict[str, str] = mapping.get("patterns", {})
+                default_category: str = mapping.get("default", "")
+                source_columns: list[str] = mapping.get("source_columns", [])
+
+                # Find ALL matching source columns (not just first)
+                all_source_cols: list[str] = (
+                    find_all_columns(df.columns.tolist(), source_columns)
+                    if source_columns
+                    else []
+                )
+
+                try:
+                    if not all_source_cols:
+                        # No source columns found, use default
+                        output_data[col_name] = [default_category] * len(df)
+                    else:
+                        # Combine all source columns and match patterns
+                        output_data[col_name] = [
+                            match_category_pattern(
+                                normalize_combined_text(
+                                    " ".join(
+                                        (
+                                            str(df[col].iloc[idx])
+                                            if pd.notna(df[col].iloc[idx])
+                                            else ""
+                                        )
+                                        for col in all_source_cols
+                                    )
+                                ),
+                                patterns,
+                            )
+                            or default_category
+                            for idx in range(len(df))
+                        ]
+                except Exception as e:
+                    raise ValueError(
+                        f"Error in pattern_category parsing for column "
+                        f"'{col_name}': {str(e)}"
+                    ) from e
             else:
                 raise ValueError(f"Unknown parser type: {parser_type}")
 
-        return pd.DataFrame(output_data)
+        return pd.DataFrame(output_data).sort_values("Date", ascending=True)

@@ -1,9 +1,63 @@
 """Utility functions for CSV processing."""
 
+import re
 from datetime import datetime
 from typing import Optional
 
 from dateutil import parser as date_parser
+
+
+def match_category_pattern(text: str, patterns: dict[str, str]) -> str:
+    """
+    Match text against a dictionary of regex patterns and return the category.
+
+    Patterns are matched in order (Python 3.7+) against the input text in a
+    case-insensitive manner. The first matching pattern's category is returned.
+
+    Args:
+        text: Text to match against patterns (typically a Description field)
+        patterns: Dictionary mapping regex patterns to category names.
+                 Example: {"rewe|edeka": "groceries", "amazon|ebay": "shopping"}
+                 Patterns support full regex syntax (|, ., *, etc.).
+                 Dictionary order is preserved in Python 3.7+.
+
+    Returns:
+        Matched category name as string, or empty string if no pattern matches.
+
+    Raises:
+        re.error: If a pattern contains invalid regex syntax.
+
+    Example:
+        >>> patterns = {
+        ...     "rewe|edeka|aldi": "groceries",
+        ...     "amazon|ebay": "shopping",
+        ...     "spotify|netflix": "entertainment"
+        ... }
+        >>> match_category_pattern("REWE MARKT GMBH", patterns)
+        'groceries'
+    """
+    if not patterns:
+        return ""
+
+    text_lower = text.lower()
+
+    for pattern, category in patterns.items():
+        try:
+            # Case-insensitive pattern matching
+            if re.search(pattern, text_lower, re.IGNORECASE):
+                return str(category)
+        except re.error as e:
+            # Log invalid regex and continue to next pattern
+            import warnings
+
+            warnings.warn(
+                f"Invalid regex pattern '{pattern}' in category matching: {e}",
+                SyntaxWarning,
+                stacklevel=2,
+            )
+            continue
+
+    return ""
 
 
 def parse_date(date_str: str, input_format: Optional[str] = None) -> datetime:
@@ -124,3 +178,53 @@ def find_column(
                 return col
 
     return None
+
+
+def find_all_columns(
+    df_columns: list[str], possible_names: list[str]
+) -> list[str]:
+    """
+    Find all matching column names from a list of possibilities.
+
+    Args:
+        df_columns: List of actual column names in DataFrame
+        possible_names: List of possible column names to search for
+
+    Returns:
+        List of matching column names in order, or empty list if none found
+    """
+    matching_cols: list[str] = []
+    for name in possible_names:
+        name_lower: str = name.lower().strip()
+        for col in df_columns:
+            if col.lower().strip() == name_lower:
+                matching_cols.append(col)
+                break  # Found this name, move to next possible name
+    return matching_cols
+
+
+def normalize_combined_text(text: str) -> str:
+    """
+    Normalize combined text by removing extra whitespace and newlines.
+
+    Converts to lowercase, removes line breaks, collapses multiple spaces
+    into single spaces, and strips leading/trailing whitespace.
+
+    Args:
+        text: Text to normalize
+
+    Returns:
+        Normalized text (lowercase, cleaned whitespace)
+
+    Example:
+        >>> text = "REWE MARKT\\n  1234\\n  Berlin"
+        >>> normalize_combined_text(text)
+        'rewe markt 1234 berlin'
+    """
+    # Convert to lowercase
+    text_lower = text.lower()
+    # Replace newlines and tabs with spaces
+    text_cleaned = text_lower.replace("\n", " ").replace("\t", " ")
+    # Collapse multiple spaces into single space
+    text_normalized = " ".join(text_cleaned.split())
+    return text_normalized

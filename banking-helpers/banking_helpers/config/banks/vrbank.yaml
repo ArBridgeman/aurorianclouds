@@ -8,8 +8,22 @@ column_mappings:
     source_columns: ["Buchungstag"]
     parser: "date"
   Category:
-    parser: "literal"
-    value: ""
+    source_columns: ["Verwendungszweck", "Name Zahlungsbeteiligter"]
+    parser: "pattern_category"
+    patterns:
+      rewe|edeka|alnatura|aldi|penny|lidl|kaufland|netto|isabella|orient master: groceries
+      "dm|rossmann|müller": "household"
+      "cafe|restaurant|imbiss|bäckerei|takeaway": "takeout"
+      "apotheke": "medical"
+      "strom|gas|wasser|elektrizität|yello": "utilities"
+      "miete|nebenkosten|rent": "rent"
+      "spotify|netflix|disney|amazon prime video": "fun"
+      "etsy": "household"
+      "db vertrieb": "transit"
+      "agila": "insurance"
+      "vet concept": "pet groceries"
+      "mae.studio": "sports"
+    default: "household"
   Payment:
     parser: "literal"
     value: "alex personal"
@@ -18,7 +32,7 @@ column_mappings:
     value: "alex"
   Benefiter:
     parser: "literal"
-    value: "household"
+    value: "house-ours"
   Amount:
     source_columns: ["Betrag"]
     parser: "amount"
@@ -28,5 +42,5 @@ column_mappings:
     parser: "literal"
     value: ""
   Description:
-    source_columns: ["Verwendungszweck"]
+    source_columns: ["Verwendungszweck", "Name Zahlungsbeteiligter"]
     parser: "string"

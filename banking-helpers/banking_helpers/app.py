@@ -65,7 +65,12 @@ def main() -> None:
         return
 
     # File upload
-    uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
+    uploaded_file = st.file_uploader(
+        "Upload CSV file",
+        type=["csv"],
+        max_bytes=50_000_000,  # 50MB limit
+        help="Maximum file size: 50 MB. For larger files, use the CLI instead.",
+    )
 
     # Bank selection
     bank_names: list[str] = list(banks.keys())
@@ -103,63 +108,10 @@ def main() -> None:
                 # Prepare CSV output
                 csv_output: str = cleaned_df.to_csv(index=False)
 
-                # Copy to clipboard section
-                st.markdown("### Copy to Clipboard")
+                # Download/Copy Options Section
+                st.markdown("### Download & Copy Options")
 
-                # Store CSV in session state for copy button
-                st.session_state["csv_output"] = csv_output
-
-                # Text area for manual copy
-                st.text_area(
-                    "CSV Content (select all and copy)",
-                    value=csv_output,
-                    height=200,
-                    key="csv_output_area",
-                    help=(
-                        "Select all (Ctrl+A / Cmd+A), "
-                        "then copy (Ctrl+C / Cmd+C)."
-                    ),
-                )
-
-                # Copy button with JavaScript (JSON encoding for safe handling)
-                csv_json = json.dumps(csv_output)
-                copy_button_html = f"""
-                <div id="copy-container">
-                    <button id="copy-btn" onclick="copyToClipboard()" style="
-                        background-color: #4CAF50;
-                        color: white;
-                        padding: 10px 20px;
-                        border: none;
-                        border-radius: 4px;
-                        cursor: pointer;
-                        font-size: 16px;
-                        width: 100%;
-                        font-weight: bold;
-                    ">📋 Copy to Clipboard</button>
-                </div>
-                <script>
-                const csvData = {csv_json};
-                function copyToClipboard() {{
-                    navigator.clipboard.writeText(csvData).then(function() {{
-                        const btn = document.getElementById('copy-btn');
-                        const originalText = btn.innerHTML;
-                        btn.innerHTML = '✅ Copied!';
-                        btn.style.backgroundColor = '#45a049';
-                        setTimeout(function() {{
-                            btn.innerHTML = originalText;
-                            btn.style.backgroundColor = '#4CAF50';
-                        }}, 2000);
-                    }}, function(err) {{
-                        alert(
-                            '❌ Failed to copy. '
-                            'Use the text area above and copy manually.'
-                        );
-                    }});
-                }}
-                </script>
-                """
-
-                # Action buttons: CSV, Excel (with dropdowns), Copy
+                # Get validation config for Excel export
                 validation_path: Path = config_dir / "validation.yaml"
                 validation_config: dict[str, list[Any]] = {}
                 if validation_path.exists():
@@ -176,6 +128,7 @@ def main() -> None:
                 )
                 excel_bytes: bytes = excel_buffer.getvalue()
 
+                # Download buttons (3 columns)
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     st.download_button(
@@ -187,7 +140,7 @@ def main() -> None:
                     )
                 with col2:
                     st.download_button(
-                        label="📊 Download Excel (with dropdowns)",
+                        label="📊 Download Excel",
                         data=excel_bytes,
                         file_name=(
                             f"cleaned_{Path(uploaded_file.name).stem}.xlsx"
@@ -199,7 +152,95 @@ def main() -> None:
                         use_container_width=True,
                     )
                 with col3:
+                    # Copy to clipboard button using HTML/JavaScript
+                    csv_json = json.dumps(csv_output)
+                    copy_button_html = f"""
+                    <div style="display: flex; gap: 10px;">
+                        <button id="copy-btn" onclick="copyToClipboard()"
+                            style="
+                            background-color: #FF6B6B;
+                            color: white;
+                            padding: 10px 20px;
+                            border: none;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-size: 14px;
+                            width: 100%;
+                            font-weight: bold;
+                            transition: all 0.3s;
+                        "
+                            onmouseover="this.style.backgroundColor='#FF5252'"
+                            onmouseout="this.style.backgroundColor='#FF6B6B'">
+                        📋 Copy to Clipboard
+                        </button>
+                    </div>
+                    <script>
+                    const csvData = {csv_json};
+                    function copyToClipboard() {{
+                        try {{
+                            // Try modern clipboard API first
+                            navigator.clipboard.writeText(csvData).then(
+                                function() {{
+                                    const btn = document.getElementById(
+                                        'copy-btn');
+                                    const originalText = btn.innerHTML;
+                                    btn.innerHTML = '✅ Copied!';
+                                    btn.style.backgroundColor = '#51CF66';
+                                    setTimeout(function() {{
+                                        btn.innerHTML = originalText;
+                                        btn.style.backgroundColor =
+                                            '#FF6B6B';
+                                    }}, 2000);
+                            }}).catch(function(err) {{
+                                // Fallback: create temporary textarea
+                                fallbackCopy(csvData);
+                            }});
+                        }} catch(err) {{
+                            fallbackCopy(csvData);
+                        }}
+                    }}
+
+                    function fallbackCopy(text) {{
+                        const textarea = (
+                            document.createElement('textarea'));
+                        textarea.value = text;
+                        textarea.style.position = 'fixed';
+                        textarea.style.opacity = '0';
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        try {{
+                            document.execCommand('copy');
+                            const btn = document.getElementById('copy-btn');
+                            const originalText = btn.innerHTML;
+                            btn.innerHTML = '✅ Copied!';
+                            btn.style.backgroundColor = '#51CF66';
+                            setTimeout(function() {{
+                                btn.innerHTML = originalText;
+                                btn.style.backgroundColor = '#FF6B6B';
+                            }}, 2000);
+                        }} catch(err) {{
+                            alert('Failed to copy. ' +
+                                'Please use Download CSV instead.');
+                        }}
+                        document.body.removeChild(textarea);
+                    }}
+                    </script>
+                    """
                     components.html(copy_button_html, height=50)
+
+                # CSV text area for manual copy/view
+                st.markdown("### Or View/Copy from Text Area")
+                st.text_area(
+                    "CSV Content (select all and copy with Ctrl+A / Cmd+A, then Ctrl+C / Cmd+C)",
+                    value=csv_output,
+                    height=250,
+                    disabled=True,
+                    key="csv_output_area",
+                    help=(
+                        "This is a read-only view of your cleaned CSV. "
+                        "Recommended: Use the Copy to Clipboard or Download buttons instead."
+                    ),
+                )
 
             except Exception as e:
                 st.error(f"❌ Error processing CSV: {str(e)}")

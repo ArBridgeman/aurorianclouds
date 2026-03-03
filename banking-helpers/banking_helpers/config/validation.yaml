@@ -9,7 +9,28 @@ Payment:
   - joint
   - alex personal
   - ariel personal
-Category: []
+Category:
+  - clothing
+  - clothing - special
+  - donation
+  - fun
+  - groceries
+  - household
+  - household - special
+  - insurance
+  - medical
+  - pet groceries
+  - pet medical
+  - presents
+  - rent
+  - sports
+  - takeout
+  - taxes
+  - transit
+  - utilities
+  - vacation
+  - work
+  - xfer
 Benefiter:
   - household
 "To-update": []

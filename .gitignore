@@ -134,6 +134,9 @@ outputs
 .idea/aws*
 .idea/inspectionProfiles
 
+# vscode/cursor
+.vscode
+
 # Google API
 tokens/
 token.pickle

@@ -65,12 +65,7 @@ def main() -> None:
         return
 
     # File upload
-    uploaded_file = st.file_uploader(
-        "Upload CSV file",
-        type=["csv"],
-        max_bytes=50_000_000,  # 50MB limit
-        help="Maximum file size: 50 MB. For larger files, use the CLI instead.",
-    )
+    uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
 
     # Bank selection
     bank_names: list[str] = list(banks.keys())

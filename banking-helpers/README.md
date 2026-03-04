@@ -1,4 +1,4 @@
-# Banking CSV Cleaner
+# Banking CSV Preparer
 
 A simple Streamlit application for cleaning and standardizing banking CSV files.
 

@@ -153,3 +153,6 @@ menu-tmp.csv
 
 # Analysis
 *.html
+
+# configs
+banking-helpers/banking_helpers/config/*

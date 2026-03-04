@@ -6,7 +6,7 @@ ENV PYTHONPATH=/app
 
 # Install Poetry
 RUN pip install --upgrade pip && \
-    pip install 'poetry==1.8.3'
+    pip install 'poetry==2.3.2'
 
 WORKDIR /app
 

@@ -38,10 +38,10 @@ def get_bank_configs(config_dir: Path) -> dict[str, str]:
 def main() -> None:
     """Main Streamlit application."""
     st.set_page_config(
-        page_title="Banking CSV Cleaner", page_icon="💰", layout="wide"
+        page_title="Banking CSV Preparer", page_icon="💰", layout="wide"
     )
 
-    st.title("💰 Banking CSV Cleaner")
+    st.title("💰 Banking CSV Preparer")
     st.markdown(
         "Upload your banking CSV and get a cleaned version "
         "ready for your spreadsheet."

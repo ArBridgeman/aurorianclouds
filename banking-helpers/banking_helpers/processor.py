@@ -218,4 +218,9 @@ class CSVProcessor:
             else:
                 raise ValueError(f"Unknown parser type: {parser_type}")
 
-        return pd.DataFrame(output_data).sort_values("Date", ascending=True)
+        output_df = pd.DataFrame(output_data)
+
+        if "Date" in output_df.columns:
+            output_df = output_df.sort_values("Date", ascending=True)
+
+        return output_df

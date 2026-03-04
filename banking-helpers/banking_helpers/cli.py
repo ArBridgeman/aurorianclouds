@@ -16,7 +16,7 @@ def get_config_dir() -> Path:
 
 
 def list_banks(config_dir: Path) -> dict[str, str]:
-    """Return mapping of bank display names to config keys (e.g. DKB -> dkb)."""
+    """Return mapping of bank display names to config keys (e.g. BANK1 -> bank1)."""
     banks_dir: Path = config_dir / "banks"
     banks: dict[str, str] = {}
     if banks_dir.exists():
@@ -39,7 +39,7 @@ def run(
 
     Args:
         csv_path: Path to the input CSV file.
-        bank_key: Bank config key (e.g. dkb, sparkasse, vrbank, bank1).
+        bank_key: Bank config key (e.g. bank1).
         output_path: If set, write output here; for Excel format required.
         output_format: "csv" or "excel".
         print_preview: If True, print a short preview of the result to stderr.
@@ -116,10 +116,7 @@ def main() -> None:
         type=str,
         nargs="?",
         default=None,
-        help=(
-            "Bank config key (e.g. dkb, sparkasse, vrbank, bank1). "
-            "Use --list-banks to see all."
-        ),
+        help=("Bank config key (e.g. bank1). " "Use --list-banks to see all."),
     )
     parser.add_argument(
         "-o",

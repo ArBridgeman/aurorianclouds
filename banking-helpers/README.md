@@ -32,20 +32,20 @@ Process a CSV without the Streamlit interface:
 poetry run python -m banking_helpers.cli --list-banks
 
 # Process a file (prints cleaned CSV to stdout)
-poetry run python -m banking_helpers.cli data/dkb.csv dkb
+poetry run python -m banking_helpers.cli data/bank1.csv bank1
 
 # Write output to a file
-poetry run python -m banking_helpers.cli data/dkb.csv dkb -o cleaned.csv
+poetry run python -m banking_helpers.cli data/bank1.csv bank1 -o cleaned.csv
 
 # Suppress preview (only CSV on stdout)
-poetry run python -m banking_helpers.cli data/dkb.csv dkb --no-preview
+poetry run python -m banking_helpers.cli data/bank1.csv bank1 --no-preview
 
 # Export to Excel with dropdowns (Payer, Payment, Benefiter, etc.)
-poetry run python -m banking_helpers.cli data/dkb.csv dkb -f excel \
+poetry run python -m banking_helpers.cli data/bank1.csv bank1 -f excel \
   -o cleaned.xlsx
 ```
 
-Use the bank config key (e.g. `dkb`, `sparkasse`, `vrbank`, `bank1`) as the
+Use the bank config key (e.g. `bank1`) as the
 second argument.
 
 ### Docker Deployment

@@ -39,7 +39,7 @@ default: "household"
 
 ## Expanding Patterns
 
-To add more auto-assigned categories, edit any bank config (e.g., `config/banks/dkb.yaml`):
+To add more auto-assigned categories, edit any bank config (e.g., `config/banks/bank1.yaml`):
 
 ```yaml
 patterns:
@@ -76,10 +76,10 @@ default: "household"
 
 ```bash
 # Process CSV and see categories
-poetry run python -m banking_helpers.cli data/dkb.csv dkb
+poetry run python -m banking_helpers.cli data/bank1.csv bank1
 
 # Export to Excel with dropdowns
-poetry run python -m banking_helpers.cli data/dkb.csv dkb -o output.xlsx -f excel
+poetry run python -m banking_helpers.cli data/bank1.csv bank1 -o output.xlsx -f excel
 
 # List available banks
 poetry run python -m banking_helpers.cli --list-banks
@@ -87,17 +87,12 @@ poetry run python -m banking_helpers.cli --list-banks
 
 ## Excel Workflow
 
-1. Process CSV: `poetry run python -m banking_helpers.cli data.csv dkb -o clean.xlsx -f excel`
+1. Process CSV: `poetry run python -m banking_helpers.cli data.csv bank1 -o clean.xlsx -f excel`
 2. Open Excel file
 3. For cells marked "household" (auto-assigned or default), use dropdown to manually select correct category
 4. Save and re-import for further processing
 
 ## Bank Configs
-
-All 3 German banks use identical patterns:
-- `config/banks/dkb.yaml` - DKB
-- `config/banks/sparkasse.yaml` - Sparkasse
-- `config/banks/vrbank.yaml` - VR Bank
 
 Default (example bank, uses comma delimiter):
 - `config/banks/bank1.yaml` - Example Bank

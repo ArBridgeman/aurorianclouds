@@ -47,3 +47,5 @@ Thumbs.db
 .AppleDouble
 .LSOverride
 
+# configs
+banking_helpers/config/banks

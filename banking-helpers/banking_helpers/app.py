@@ -43,7 +43,7 @@ def main() -> None:
 
     st.title("💰 Banking CSV Preparer")
     st.markdown(
-        "Upload your banking CSV and get a cleaned version "
+        "Upload your banking CSV and get a processed version "
         "ready for your spreadsheet."
     )
 
@@ -92,16 +92,16 @@ def main() -> None:
                     date_format=main_config.date_format,
                 )
 
-                cleaned_df: pd.DataFrame = processor.process(csv_content)
+                prepared_df: pd.DataFrame = processor.process(csv_content)
 
                 # Display preview
                 st.success(
-                    f"✅ Processed {len(cleaned_df)} transactions successfully!"
+                    f"✅ Processed {len(prepared_df)} transactions successfully!"
                 )
-                st.dataframe(cleaned_df.head(20), use_container_width=True)
+                st.dataframe(prepared_df.head(20), use_container_width=True)
 
                 # Prepare CSV output
-                csv_output: str = cleaned_df.to_csv(index=False)
+                csv_output: str = prepared_df.to_csv(index=False)
 
                 # Download/Copy Options Section
                 st.markdown("### Download & Copy Options")
@@ -119,7 +119,7 @@ def main() -> None:
 
                 excel_buffer = io.BytesIO()
                 write_excel_with_validation(
-                    cleaned_df, excel_buffer, validation_config
+                    prepared_df, excel_buffer, validation_config
                 )
                 excel_bytes: bytes = excel_buffer.getvalue()
 
@@ -129,7 +129,7 @@ def main() -> None:
                     st.download_button(
                         label="📥 Download CSV",
                         data=csv_output,
-                        file_name=f"cleaned_{uploaded_file.name}",
+                        file_name=f"prepared_{uploaded_file.name}",
                         mime="text/csv",
                         use_container_width=True,
                     )
@@ -138,7 +138,7 @@ def main() -> None:
                         label="📊 Download Excel",
                         data=excel_bytes,
                         file_name=(
-                            f"cleaned_{Path(uploaded_file.name).stem}.xlsx"
+                            f"prepared_{Path(uploaded_file.name).stem}.xlsx"
                         ),
                         mime=(
                             "application/vnd.openxmlformats-"
@@ -232,7 +232,7 @@ def main() -> None:
                     disabled=True,
                     key="csv_output_area",
                     help=(
-                        "This is a read-only view of your cleaned CSV. "
+                        "This is a read-only view of your prepared CSV. "
                         "Recommended: Use the Copy to Clipboard or Download buttons instead."
                     ),
                 )

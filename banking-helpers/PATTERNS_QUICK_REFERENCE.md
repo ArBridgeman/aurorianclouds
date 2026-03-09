@@ -3,11 +3,11 @@
 ## Your 21 Categories
 
 **Auto-assigned via patterns (5):**
-- ✅ groceries - supermarket stores
-- ✅ utilities - electricity, gas, water
-- ✅ rent - housing payments
-- ✅ fun - entertainment/streaming
-- ✅ household - default fallback
+- groceries - supermarket stores
+- utilities - electricity, gas, water
+- rent - housing payments
+- fun - entertainment/streaming
+- household - default fallback
 
 **Manual categories in Excel dropdowns (16):**
 - clothing

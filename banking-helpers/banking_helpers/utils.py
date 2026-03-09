@@ -131,18 +131,18 @@ def parse_amount(
         ValueError: If amount cannot be parsed
     """
     # Remove currency symbols and whitespace
-    cleaned: str = amount_str.strip().replace("$", "").replace("€", "").strip()
+    parsed: str = amount_str.strip().replace("$", "").replace("€", "").strip()
 
     # Handle German number format (comma as decimal, dot as thousands separator)
     if decimal_separator == ",":
         # Replace dot (thousands) with nothing, comma (decimal) with dot
-        cleaned = cleaned.replace(".", "").replace(",", ".")
+        parsed = parsed.replace(".", "").replace(",", ".")
     else:
         # US format: remove thousands separator (comma)
-        cleaned = cleaned.replace(",", "")
+        parsed = parsed.replace(",", "")
 
     try:
-        amount: float = float(cleaned)
+        amount: float = float(parsed)
     except ValueError as e:
         raise ValueError(f"Could not parse amount: {amount_str}") from e
 

@@ -39,13 +39,13 @@ class CSVProcessor:
 
     def process(self, csv_content: bytes) -> pd.DataFrame:
         """
-        Process CSV content and return cleaned DataFrame.
+        Process CSV content and return prepared DataFrame.
 
         Args:
             csv_content: Raw CSV file content as bytes
 
         Returns:
-            Cleaned DataFrame with standardized columns
+            Prepared DataFrame with standardized columns
 
         Raises:
             ValueError: If required columns are missing or data invalid

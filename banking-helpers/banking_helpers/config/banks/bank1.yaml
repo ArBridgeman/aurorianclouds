@@ -23,7 +23,7 @@ column_mappings:
     source_columns: ["Amount", "Transaction Amount"]
     parser: "amount"
     positive_is: "credit"
-  "To-update":
+  To-update:
     parser: "literal"
     value: ""
   Description:

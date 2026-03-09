@@ -75,7 +75,7 @@ def run(
 
     if output_format == "excel":
         if output_path is None:
-            output_path = Path("cleaned.xlsx")
+            output_path = Path("prepared.xlsx")
         validation_path: Path = config_dir / "validation.yaml"
         validation_config: dict[str, list[Any]] = {}
         if validation_path.exists():
@@ -162,7 +162,7 @@ def main() -> None:
         sys.exit(1)
 
     if args.format == "excel" and args.output is None:
-        args.output = Path("cleaned.xlsx")
+        args.output = Path("prepared.xlsx")
 
     try:
         run(

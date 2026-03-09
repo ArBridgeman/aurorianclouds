@@ -1,12 +1,12 @@
 # Banking CSV Preparer
 
-A simple Streamlit application for cleaning and standardizing banking CSV files.
+A simple Streamlit application for preparing and standardizing banking CSV files.
 
 ## Features
 
 - **Multiple Bank Support**: Configure different bank CSV formats via YAML files
 - **Flexible Configuration**: All input/output formats configurable via Hydra
-- **Simple UI**: Upload CSV, select bank format, download cleaned version
+- **Simple UI**: Upload CSV, select bank format, download prepared version
 - **Handles Messy CSVs**: Skip header rows, flexible column mapping
 
 ## Setup
@@ -31,18 +31,18 @@ Process a CSV without the Streamlit interface:
 # List available bank configs
 poetry run python -m banking_helpers.cli --list-banks
 
-# Process a file (prints cleaned CSV to stdout)
+# Process a file (prints prepared CSV to stdout)
 poetry run python -m banking_helpers.cli data/bank1.csv bank1
 
 # Write output to a file
-poetry run python -m banking_helpers.cli data/bank1.csv bank1 -o cleaned.csv
+poetry run python -m banking_helpers.cli data/bank1.csv bank1 -o prepared.csv
 
 # Suppress preview (only CSV on stdout)
 poetry run python -m banking_helpers.cli data/bank1.csv bank1 --no-preview
 
 # Export to Excel with dropdowns (Payer, Payment, Benefiter, etc.)
 poetry run python -m banking_helpers.cli data/bank1.csv bank1 -f excel \
-  -o cleaned.xlsx
+  -o prepared.xlsx
 ```
 
 Use the bank config key (e.g. `bank1`) as the
@@ -135,4 +135,4 @@ See `example_transactions.csv` for a sample input matching the default
 2. Upload your banking CSV file
 3. Select the appropriate bank format from the dropdown
 4. Click "Process CSV"
-5. Review the preview and download the cleaned CSV
+5. Review the preview and download the prepared CSV

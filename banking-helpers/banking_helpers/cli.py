@@ -92,7 +92,7 @@ def run(
         )
         return
 
-    csv_out: str = df.to_csv(index=False)
+    csv_out: str = df.to_csv(index=False, float_format="%.2f")
     if output_path is not None:
         output_path.write_text(csv_out, encoding="utf-8")
         print(f"Wrote {len(df)} rows to {output_path}", file=sys.stderr)

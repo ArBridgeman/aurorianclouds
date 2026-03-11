@@ -8,6 +8,7 @@ from banking_helpers.utils import (
     find_all_columns,
     format_date,
     match_category_pattern,
+    match_first_pattern_text,
     normalize_combined_text,
     parse_amount,
     parse_date,
@@ -145,16 +146,27 @@ class CSVProcessor:
         """Read CSV content into DataFrame with configured settings."""
         skip_rows = self.bank_config.get("skip_rows", 0)
         delimiter = self.bank_config.get("delimiter", ",")
+        encodings_to_try = ["utf-8-sig", "utf-8", "cp1252", "latin-1"]
 
         try:
-            return pd.read_csv(
-                io.BytesIO(csv_content),
-                skiprows=skip_rows,
-                delimiter=delimiter,
-                encoding="utf-8",
-                on_bad_lines="skip",
-                encoding_errors="replace",
-            )
+            last_decode_error: UnicodeDecodeError | None = None
+            for encoding in encodings_to_try:
+                try:
+                    return pd.read_csv(
+                        io.BytesIO(csv_content),
+                        skiprows=skip_rows,
+                        delimiter=delimiter,
+                        encoding=encoding,
+                        on_bad_lines="skip",
+                    )
+                except UnicodeDecodeError as e:
+                    last_decode_error = e
+                    continue
+
+            tried = ", ".join(encodings_to_try)
+            raise ValueError(
+                f"Could not decode CSV content with encodings: {tried}"
+            ) from last_decode_error
         except pd.errors.EmptyDataError:
             raise ValueError("CSV file is empty or contains no valid data rows")
 
@@ -205,9 +217,9 @@ class CSVProcessor:
             if parser_type == "date":
                 return self._parse_date_column(df, mapping, source_columns)
             elif parser_type == "amount":
-                return self._parse_amount_column(mapping, source_columns, df)
+                return self._parse_amount_column(df, mapping, source_columns)
             elif parser_type == "string":
-                return self._parse_string_column(df, source_columns)
+                return self._parse_string_column(df, mapping, source_columns)
             elif parser_type == "pattern_category":
                 return self._parse_pattern_category_column(
                     df, mapping, source_columns
@@ -239,7 +251,7 @@ class CSVProcessor:
 
     @staticmethod
     def _parse_amount_column(
-        mapping: DictConfig, source_columns: list[str], df: pd.DataFrame
+        df: pd.DataFrame, mapping: DictConfig, source_columns: list[str]
     ) -> list[float]:
         """Parse amount column using first source column."""
         source_col = source_columns[0]  # Use first matching column
@@ -256,10 +268,10 @@ class CSVProcessor:
         ]
 
     @staticmethod
-    def _parse_string_column(
+    def _build_normalized_row_texts(
         df: pd.DataFrame, source_columns: list[str]
     ) -> list[str]:
-        """Parse string column combining all source columns."""
+        """Combine and normalize all source text columns row-wise."""
         return [
             normalize_combined_text(
                 " ".join(
@@ -274,33 +286,49 @@ class CSVProcessor:
             for idx in range(len(df))
         ]
 
+    def _parse_string_column(
+        self, df: pd.DataFrame, mapping: DictConfig, source_columns: list[str]
+    ) -> list[str]:
+        """Parse string column, optionally shortening to matched pattern text."""
+        combined_texts = self._build_normalized_row_texts(df, source_columns)
+
+        shorten_enabled = bool(
+            mapping.get("use_category_pattern_match_for_output", False)
+        )
+        if not shorten_enabled:
+            return combined_texts
+
+        pattern_source_column = mapping.get("pattern_source_column", "Category")
+        category_mapping = self.bank_config.column_mappings.get(
+            pattern_source_column
+        )
+        patterns = (
+            category_mapping.get("patterns", {}) if category_mapping else {}
+        )
+
+        return [
+            match_first_pattern_text(text, patterns) or text
+            for text in combined_texts
+        ]
+
     def _parse_pattern_category_column(
         self, df: pd.DataFrame, mapping: DictConfig, source_columns: list[str]
     ) -> list[str]:
         """Parse pattern category column combining all source columns."""
         patterns = mapping.get("patterns", {})
         default_category = mapping.get("default", "")
+        combined_texts = self._build_normalized_row_texts(df, source_columns)
 
         return [
             match_category_pattern(
-                normalize_combined_text(
-                    " ".join(
-                        (
-                            str(df[col].iloc[idx])
-                            if pd.notna(df[col].iloc[idx])
-                            else ""
-                        )
-                        for col in source_columns
-                    )
-                ),
+                combined_text,
                 patterns,
             )
             or default_category
-            for idx in range(len(df))
+            for combined_text in combined_texts
         ]
 
     @staticmethod
     def _sort_by_date(df: pd.DataFrame, col: str = "Date") -> pd.DataFrame:
-        """Sort DataFrame by Date column if it exists."""
-        df = df.sort_values(col, ascending=True)
-        return df
+        """Sort DataFrame by Date column, using a stable sort to preserve input order for equal dates."""
+        return df.sort_values(col, ascending=True, kind="stable")

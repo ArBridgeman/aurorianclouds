@@ -76,7 +76,7 @@ def write_excel_with_validation(
                 type="list",
                 formula1=formula,
                 allow_blank=True,
-                showDropDown=True,
+                showDropDown=False,
             )
             ws.add_data_validation(dv)
             col_letter = ws.cell(

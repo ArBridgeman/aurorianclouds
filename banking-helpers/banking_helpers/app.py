@@ -101,7 +101,9 @@ def main() -> None:
                 st.dataframe(prepared_df.head(20), use_container_width=True)
 
                 # Prepare CSV output
-                csv_output: str = prepared_df.to_csv(index=False)
+                csv_output: str = prepared_df.to_csv(
+                    index=False, float_format="%.2f"
+                )
 
                 # Download/Copy Options Section
                 st.markdown("### Download & Copy Options")

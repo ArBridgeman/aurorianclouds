@@ -150,7 +150,7 @@ class TestExcelValidation:
     def test_validation_on_multiple_columns(
         self, sample_dataframe, sample_validation_config, tmp_path
     ):
-        """Test validation on multiple columns."""
+        """Test that validation is applied to every configured column."""
         output_path = tmp_path / "test.xlsx"
         write_excel_with_validation(
             sample_dataframe, output_path, sample_validation_config
@@ -159,12 +159,17 @@ class TestExcelValidation:
         wb = load_workbook(output_path)
         ws = wb.active
 
-        validations = ws.data_validations.dataValidation
-        # Should have at least one validation (for Category and/or Payment)
-        assert len(validations) > 0
+        # Collect all cell ranges that have validation
+        validated_ranges = " ".join(
+            str(dv.sqref) for dv in ws.data_validations.dataValidation
+        )
+
+        # Both Category (col B) and Payment (col C) should have dropdowns
+        assert "B" in validated_ranges, "Category column missing validation"
+        assert "C" in validated_ranges, "Payment column missing validation"
 
     def test_no_validation_for_empty_list(self, sample_dataframe, tmp_path):
-        """Test that no validation is applied for empty list."""
+        """Test that no validation is applied when the allowed list is empty."""
         validation_config = {"Category": []}
         output_path = tmp_path / "test.xlsx"
         write_excel_with_validation(
@@ -174,8 +179,7 @@ class TestExcelValidation:
         wb = load_workbook(output_path)
         ws = wb.active
 
-        # Should not crash and file should be valid
-        assert ws.max_row > 0
+        assert len(ws.data_validations.dataValidation) == 0
 
     def test_validation_ignores_missing_columns(
         self, sample_dataframe, tmp_path
@@ -199,7 +203,7 @@ class TestExcelValidation:
     def test_validation_with_special_characters(
         self, sample_dataframe, tmp_path
     ):
-        """Test validation with special characters in values."""
+        """Test that validation values with special characters are correctly encoded in the formula."""
         validation_config = {
             "Category": [
                 "clothing - special",
@@ -215,8 +219,13 @@ class TestExcelValidation:
         wb = load_workbook(output_path)
         ws = wb.active
 
-        # Should not crash and file should be valid
-        assert ws.max_row > 0
+        validations = ws.data_validations.dataValidation
+        assert len(validations) == 1
+        formula = validations[0].formula1
+        assert "clothing - special" in formula
+        assert "household - special" in formula
+        # Quotes in values are escaped as ""
+        assert 'value""with""quotes' in formula
 
 
 class TestExcelValidationNone:

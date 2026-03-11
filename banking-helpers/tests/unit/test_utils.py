@@ -6,9 +6,9 @@ from datetime import datetime
 import pytest
 from banking_helpers.utils import (
     find_all_columns,
-    find_column,
     format_date,
     match_category_pattern,
+    match_first_pattern_text,
     normalize_combined_text,
     parse_amount,
     parse_date,
@@ -137,27 +137,50 @@ class TestParseAmount:
             parse_amount("not-a-number", "debit")
 
 
-class TestFindColumn:
-    """Tests for find_column function."""
+class TestMatchFirstPatternText:
+    """Tests for match_first_pattern_text function."""
 
     @pytest.mark.parametrize(
-        "columns,possibilities,expected",
+        "text,patterns,expected",
         [
-            (["Date", "Amount", "Description"], ["Amount"], "Amount"),
-            (["Date", "Amount", "Description"], ["Amount", "Value"], "Amount"),
-            (["Date", "Amount", "Description"], ["amount"], "Amount"),
+            # Returns the matched fragment, lowercased
+            ("REWE MARKT GMBH 12345", {"rewe|edeka": "groceries"}, "rewe"),
+            ("EDEKA CENTER BERLIN", {"rewe|edeka": "groceries"}, "edeka"),
+            # Multi-word pattern returns full match
             (
-                ["Date", "Amount", " Description "],
-                ["description"],
-                " Description ",
+                "AMAZON PRIME VIDEO SUBSCRIPTION",
+                {
+                    "amazon prime video": "fun",
+                    "amazon": "household",
+                },
+                "amazon prime video",
             ),
-            (["Date", "Amount", "Description"], ["NonExistent"], None),
-            (["Date", "Amount"], [], None),
+            # Alternation: first matching branch returned
+            (
+                "SPOTIFY SUBSCRIPTION",
+                {"spotify|netflix": "fun"},
+                "spotify",
+            ),
+            # No match returns empty string
+            ("UNKNOWN STORE", {"rewe|edeka": "groceries"}, ""),
+            # Empty patterns returns empty string
+            ("ANY TEXT", {}, ""),
         ],
     )
-    def test_find_column_results(self, columns, possibilities, expected):
-        """Test finding columns with various inputs."""
-        assert find_column(columns, possibilities) == expected
+    def test_match_first_pattern_text(self, text, patterns, expected):
+        """Test first matched pattern text extraction with various inputs."""
+        assert match_first_pattern_text(text, patterns) == expected
+
+    def test_invalid_regex_triggers_warning_and_continues(self):
+        """Test that invalid regex patterns warn and skip to the next pattern."""
+        patterns = {"[unclosed": "skip", "rewe": "groceries"}
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            result = match_first_pattern_text("REWE MARKT", patterns)
+        assert result == "rewe"
+        assert len(w) == 1
+        assert issubclass(w[0].category, SyntaxWarning)
+        assert "Invalid regex pattern" in str(w[0].message)
 
 
 class TestFindAllColumns:

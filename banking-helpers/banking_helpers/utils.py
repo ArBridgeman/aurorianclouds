@@ -1,10 +1,21 @@
 """Utility functions for CSV processing."""
 
 import re
+import warnings
 from datetime import datetime
 from typing import Optional
 
 from dateutil import parser as date_parser
+
+# Shared mapping from custom format strings to Python strftime format.
+# Used by both parse_date and format_date.
+_DATE_FORMAT_MAP: dict[str, str] = {
+    "YYYY-MM-DD": "%Y-%m-%d",
+    "MM/DD/YYYY": "%m/%d/%Y",
+    "DD/MM/YYYY": "%d/%m/%Y",
+    "DD.MM.YYYY": "%d.%m.%Y",
+    "DD.MM.YY": "%d.%m.%y",
+}
 
 
 def match_category_pattern(text: str, patterns: dict[str, str]) -> str:
@@ -43,15 +54,42 @@ def match_category_pattern(text: str, patterns: dict[str, str]) -> str:
 
     for pattern, category in patterns.items():
         try:
-            # Case-insensitive pattern matching
-            if re.search(pattern, text_lower, re.IGNORECASE):
+            if re.search(pattern, text_lower):
                 return str(category)
         except re.error as e:
-            # Log invalid regex and continue to next pattern
-            import warnings
 
             warnings.warn(
                 f"Invalid regex pattern '{pattern}' in category matching: {e}",
+                SyntaxWarning,
+                stacklevel=2,
+            )
+            continue
+
+    return ""
+
+
+def match_first_pattern_text(text: str, patterns: dict[str, str]) -> str:
+    """
+    Return the first matched text fragment for configured regex patterns.
+
+    This is useful when a long description should be shortened to the
+    detected keyword (for example "amazon") while still reusing the same
+    pattern list as category matching.
+    """
+    if not patterns:
+        return ""
+
+    text_lower = text.lower()
+
+    for pattern in patterns:
+        try:
+            match = re.search(pattern, text_lower)
+            if match:
+                return normalize_combined_text(match.group(0))
+        except re.error as e:
+
+            warnings.warn(
+                f"Invalid regex pattern '{pattern}' in text shortening: {e}",
                 SyntaxWarning,
                 stacklevel=2,
             )
@@ -76,15 +114,7 @@ def parse_date(date_str: str, input_format: Optional[str] = None) -> datetime:
         ValueError: If date cannot be parsed
     """
     if input_format:
-        # Convert custom format strings to Python strftime format
-        format_map: dict[str, str] = {
-            "YYYY-MM-DD": "%Y-%m-%d",
-            "MM/DD/YYYY": "%m/%d/%Y",
-            "DD/MM/YYYY": "%d/%m/%Y",
-            "DD.MM.YYYY": "%d.%m.%Y",
-            "DD.MM.YY": "%d.%m.%y",
-        }
-        python_format: str = format_map.get(input_format, input_format)
+        python_format: str = _DATE_FORMAT_MAP.get(input_format, input_format)
         return datetime.strptime(date_str.strip(), python_format)
     return date_parser.parse(date_str.strip())
 
@@ -100,16 +130,7 @@ def format_date(dt: datetime, output_format: str) -> str:
     Returns:
         Formatted date string
     """
-    # Convert format strings to Python strftime format
-    format_map: dict[str, str] = {
-        "YYYY-MM-DD": "%Y-%m-%d",
-        "MM/DD/YYYY": "%m/%d/%Y",
-        "DD/MM/YYYY": "%d/%m/%Y",
-        "DD.MM.YYYY": "%d.%m.%Y",
-        "DD.MM.YY": "%d.%m.%y",
-    }
-
-    python_format: str = format_map.get(output_format, output_format)
+    python_format: str = _DATE_FORMAT_MAP.get(output_format, output_format)
     return dt.strftime(python_format)
 
 
@@ -156,28 +177,6 @@ def parse_amount(
 
     # positive_is="credit": standard format, no conversion needed
     return amount
-
-
-def find_column(
-    df_columns: list[str], possible_names: list[str]
-) -> Optional[str]:
-    """
-    Find the first matching column name from a list of possibilities.
-
-    Args:
-        df_columns: List of actual column names in DataFrame
-        possible_names: List of possible column names to search for
-
-    Returns:
-        First matching column name, or None if not found
-    """
-    for name in possible_names:
-        name_lower: str = name.lower().strip()
-        for col in df_columns:
-            if col.lower().strip() == name_lower:
-                return col
-
-    return None
 
 
 def find_all_columns(

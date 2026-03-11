@@ -48,6 +48,29 @@ class TestCSVProcessorValidation:
         with pytest.raises(ValueError, match="Required column"):
             processor.process(csv_content)
 
+    @pytest.mark.parametrize(
+        "csv_text,encoding,expected_description",
+        [
+            (
+                "Date;Description;Amount\n01.01.26;Müller Markt;10.00",
+                "cp1252",
+                "müller markt",
+            ),
+            (
+                "Date;Description;Amount\n01.01.26;Bäckerei Test;10.00",
+                "utf-8-sig",
+                "bäckerei test",
+            ),
+        ],
+    )
+    def test_read_csv_decodes_german_characters_with_fallback(
+        self, processor, csv_text, encoding, expected_description
+    ):
+        """Test encoding fallback preserves German characters in descriptions."""
+        csv_content = csv_text.encode(encoding)
+        result = processor.process(csv_content)
+        assert result["Description"].iloc[0] == expected_description
+
 
 class TestCSVProcessorLiteralParser:
     """Tests for literal parser."""
@@ -130,6 +153,34 @@ class TestCSVProcessorStringParser:
         csv_content = b"Date;Description\n01.01.26;REWE  MARKT  1234"
         result = processor.process(csv_content)
         assert result["Description"].iloc[0] == "rewe markt 1234"
+
+    @pytest.mark.parametrize(
+        "csv_content,expected_description",
+        [
+            (
+                b"Date;Description\n01.01.26;REWE MARKT ORDER 123",
+                "rewe",
+            ),
+            (
+                b"Date;Description\n01.01.26;UNKNOWN SHOP 123",
+                "unknown shop 123",
+            ),
+        ],
+    )
+    def test_string_parser_can_shorten_to_matched_pattern_text(
+        self,
+        bank_config,
+        output_config,
+        csv_content,
+        expected_description,
+    ):
+        """Test optional description shortening using category pattern config."""
+        bank_config.column_mappings.Description.use_category_pattern_match_for_output = (
+            True
+        )
+        processor = CSVProcessor(bank_config, output_config, "YYYY-MM-DD")
+        result = processor.process(csv_content)
+        assert result["Description"].iloc[0] == expected_description
 
 
 class TestCSVProcessorPatternCategoryParser:

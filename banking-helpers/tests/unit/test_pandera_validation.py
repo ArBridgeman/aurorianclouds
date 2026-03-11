@@ -1,5 +1,6 @@
 """Unit tests for Pandera schema validation integration."""
 
+import pandera.engines.numpy_engine
 import pandera.pandas as pa
 from banking_helpers.processor import CSVProcessor
 
@@ -60,16 +61,20 @@ class TestPanderaValidation:
     def test_schema_infers_type_from_amount_parser(
         self, bank_config, output_config
     ):
-        """Test that amount parser results in float type."""
-        processor = CSVProcessor(bank_config, output_config, "YYYY-MM-DD")
-        processor._build_schema()
+        """Test that amount parser results in float64 type in the schema."""
+        # Make Amount required so it is included in schema validation
+        for col in output_config.columns:
+            if col.name == "Amount":
+                col.required = True
 
-        # Amount column exists and should have float type when included
-        # (Amount is optional in our test config, so it won't be in schema)
-        # Let's verify that if we had a required Amount, it would be float
-        amount_mapping = bank_config.column_mappings.get("Amount")
-        assert amount_mapping is not None
-        assert amount_mapping.parser == "amount"
+        processor = CSVProcessor(bank_config, output_config, "YYYY-MM-DD")
+        schema = processor._build_schema()
+
+        amount_col = schema.columns.get("Amount")
+        assert amount_col is not None
+        assert (
+            amount_col.dtype == pandera.engines.numpy_engine.Float64()
+        ), f"Expected float64, got {amount_col.dtype}"
 
     def test_schema_allows_extra_columns(self, bank_config, output_config):
         """Test that schema allows extra columns not in output_config."""

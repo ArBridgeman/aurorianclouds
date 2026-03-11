@@ -116,6 +116,24 @@ Edit `banking_helpers/config/output_format.yaml` to change output columns.
 Edit `banking_helpers/config/config.yaml` to change the default output date
 format.
 
+### Optional: shorten `Description` to matched category keyword
+
+If you want `Description` to keep only the first matched keyword from your
+`Category.patterns` (for example long Amazon text -> `amazon`), enable this
+on the `Description` mapping:
+
+```yaml
+Description:
+  source_columns: ["Verwendungszweck", "Beguenstigter/Zahlungspflichtiger"]
+  parser: "string"
+  use_category_pattern_match_for_output: true
+  pattern_source_column: "Category"
+```
+
+Notes:
+- Reuses the pattern list from `pattern_source_column` (no pattern duplication)
+- If no pattern matches, the full normalized description is kept
+
 ### Excel dropdowns (validation)
 
 When you download **Excel** (button "Download Excel (with dropdowns)" or CLI

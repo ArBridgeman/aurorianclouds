@@ -1,0 +1,31 @@
+bank_name: "Example Bank"
+date_format: "MM/DD/YYYY"
+skip_rows: 0
+delimiter: ","
+
+column_mappings:
+  Date:
+    source_columns: ["Transaction Date", "Date"]
+    parser: "date"
+  Category:
+    parser: "literal"
+    value: ""
+  Payment:
+    parser: "literal"
+    value: "joint"
+  Payer:
+    parser: "literal"
+    value: "joint"
+  Benefiter:
+    parser: "literal"
+    value: "household"
+  Amount:
+    source_columns: ["Amount", "Transaction Amount"]
+    parser: "amount"
+    positive_is: "credit"
+  To-update:
+    parser: "literal"
+    value: ""
+  Description:
+    source_columns: ["Description", "Memo", "Payee"]
+    parser: "string"

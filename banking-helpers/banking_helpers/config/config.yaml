@@ -1,0 +1,5 @@
+defaults:
+  - output_format
+  - banks: bank1
+
+date_format: "YYYY-MM-DD"

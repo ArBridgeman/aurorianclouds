@@ -58,10 +58,15 @@ def run(
         sys.exit(1)
 
     bank_cfg: DictConfig = OmegaConf.load(bank_cfg_path)
+    rules_cfg_path: Path = config_dir / "rules.yaml"
+    rules_cfg: DictConfig | None = (
+        OmegaConf.load(rules_cfg_path) if rules_cfg_path.exists() else None
+    )
     processor: CSVProcessor = CSVProcessor(
         bank_config=bank_cfg,
         output_config=output_cfg,
         date_format=main_cfg.date_format,
+        rules_config=rules_cfg,
     )
 
     csv_bytes: bytes = csv_path.read_bytes()

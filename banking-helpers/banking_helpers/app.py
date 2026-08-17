@@ -53,6 +53,12 @@ def main() -> None:
     output_config: DictConfig = OmegaConf.load(
         config_dir / "output_format.yaml"
     )
+    rules_config_path: Path = config_dir / "rules.yaml"
+    rules_config: DictConfig | None = (
+        OmegaConf.load(rules_config_path)
+        if rules_config_path.exists()
+        else None
+    )
 
     # Get available banks
     banks: dict[str, str] = get_bank_configs(config_dir)
@@ -90,6 +96,7 @@ def main() -> None:
                     bank_config=bank_config,
                     output_config=output_config,
                     date_format=main_config.date_format,
+                    rules_config=rules_config,
                 )
 
                 prepared_df: pd.DataFrame = processor.process(csv_content)

@@ -1,6 +1,9 @@
 """CSV processor for banking transactions."""
 
 import io
+import re
+import warnings
+from typing import Optional
 
 import pandas as pd
 import pandera.pandas as pa
@@ -13,7 +16,7 @@ from banking_helpers.utils import (
     parse_amount,
     parse_date,
 )
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 
 class CSVProcessor:
@@ -24,6 +27,7 @@ class CSVProcessor:
         bank_config: DictConfig,
         output_config: DictConfig,
         date_format: str,
+        rules_config: Optional[DictConfig] = None,
     ) -> None:
         """
         Initialize processor with configurations.
@@ -32,11 +36,19 @@ class CSVProcessor:
             bank_config: Bank-specific config (column mappings, formats, etc.)
             output_config: Output format configuration (column definitions)
             date_format: Output date format string
+            rules_config: Optional shared rules config (rules.yaml). When provided,
+                rules are applied as a post-processing step after all columns are
+                parsed. Bank-level ``extra_rules`` (if any) take priority.
         """
         self.bank_config: DictConfig = bank_config
         self.output_config: DictConfig = output_config
-        self.schema = self._build_schema()
+        self.rules_config: Optional[DictConfig] = rules_config
         self.date_format: str = date_format
+        self.schema = self._build_schema()
+        # Pre-compile rules once; invalid regexes are warned and skipped here.
+        self._compiled_rules: list[tuple[re.Pattern, dict]] = (
+            self._build_compiled_rules()
+        )
 
     def process(self, csv_content: bytes) -> pd.DataFrame:
         """
@@ -81,6 +93,15 @@ class CSVProcessor:
         output_df = pd.DataFrame(output_data)
         if "Date" in output_df.columns:
             output_df = self._sort_by_date(output_df, col="Date")
+
+        # Reset index so label == positional index (required for _apply_rules)
+        output_df = output_df.reset_index(drop=True)
+
+        # Apply shared + bank-level pattern rules as a post-processing step
+        output_df = self._apply_rules(output_df)
+
+        # Apply bank-level value remappings (e.g. joint → to be split)
+        output_df = self._apply_remap_values(output_df)
 
         # Validate output DataFrame against schema
         self._validate_output(output_df)
@@ -271,20 +292,17 @@ class CSVProcessor:
     def _build_normalized_row_texts(
         df: pd.DataFrame, source_columns: list[str]
     ) -> list[str]:
-        """Combine and normalize all source text columns row-wise."""
-        return [
-            normalize_combined_text(
-                " ".join(
-                    (
-                        str(df[col].iloc[idx])
-                        if pd.notna(df[col].iloc[idx])
-                        else ""
-                    )
-                    for col in source_columns
-                )
-            )
-            for idx in range(len(df))
-        ]
+        """Combine and normalize all source text columns row-wise (vectorized)."""
+        combined: pd.Series = (
+            df[source_columns].fillna("").astype(str).agg(" ".join, axis=1)
+        )
+        return (
+            combined.str.lower()
+            .str.replace(r"[\n\t]", " ", regex=True)
+            .str.split()
+            .str.join(" ")
+            .tolist()
+        )
 
     def _parse_string_column(
         self, df: pd.DataFrame, mapping: DictConfig, source_columns: list[str]
@@ -327,6 +345,139 @@ class CSVProcessor:
             or default_category
             for combined_text in combined_texts
         ]
+
+    def _build_compiled_rules(self) -> list[tuple[re.Pattern, dict]]:
+        """
+        Pre-compile regex patterns from bank extra_rules + global rules.
+
+        Extra rules (bank config) are prepended and evaluated first (higher
+        priority). Invalid regex patterns emit a SyntaxWarning and are skipped.
+        Called once at construction time so errors surface early.
+
+        Returns:
+            List of (compiled_pattern, rule_dict) in evaluation order.
+        """
+        raw_extra = self.bank_config.get("extra_rules")
+        extra_rules: list = (
+            list(OmegaConf.to_container(raw_extra, resolve=True))
+            if OmegaConf.is_config(raw_extra)
+            else list(raw_extra) if raw_extra else []
+        )
+        raw_global = (
+            self.rules_config.get("rules") if self.rules_config else None
+        )
+        global_rules: list = (
+            list(OmegaConf.to_container(raw_global, resolve=True))
+            if OmegaConf.is_config(raw_global)
+            else list(raw_global) if raw_global else []
+        )
+
+        compiled: list[tuple[re.Pattern, dict]] = []
+        for rule in extra_rules + global_rules:
+            regex_str: str = rule.get("regex", "")
+            if not regex_str:
+                continue
+            try:
+                # Cell text is already lowercased before matching
+                compiled.append((re.compile(regex_str), rule))
+            except re.error as exc:
+                warnings.warn(
+                    f"Invalid regex in rule '{rule.get('name', '')}': {exc}",
+                    SyntaxWarning,
+                    stacklevel=2,
+                )
+        return compiled
+
+    def _apply_rules(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Apply pre-compiled pattern rules as a post-processing step.
+
+        Bank-level extra_rules (higher priority) are prepended to global rules.
+        First matching rule per row wins; remaining rules for that row are skipped.
+
+        When ``shorten_description_on_rule_match: true`` is set in the bank
+        config, Description is also replaced with the matched text fragment.
+
+        Args:
+            df: Output DataFrame (already sorted, index reset).
+
+        Returns:
+            DataFrame with rule-derived column values applied in-place.
+        """
+        if not self._compiled_rules:
+            return df
+
+        shorten_description: bool = bool(
+            self.bank_config.get("shorten_description_on_rule_match", False)
+        )
+
+        for idx in range(len(df)):
+            for pattern, rule in self._compiled_rules:
+                match_col: str = rule.get("match_on", "Description")
+                if match_col not in df.columns:
+                    continue
+
+                cell_value = df.at[idx, match_col]
+                if not isinstance(cell_value, str):
+                    continue
+
+                match = pattern.search(cell_value.lower())
+                if match:
+                    for col, value in (rules := rule.get("set") or {}).items():
+                        if col in df.columns:
+                            df.at[idx, col] = value
+                    # rules take precedence over generic shortening
+                    if (
+                        shorten_description
+                        and ("Description" in df.columns)
+                        and ("Description" not in rules.keys())
+                    ):
+                        df.at[idx, "Description"] = normalize_combined_text(
+                            match.group(0)
+                        )
+                    break  # First match wins; skip remaining rules for this row
+
+        return df
+
+    def _apply_remap_values(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Apply bank-level value remappings as a final post-processing step.
+
+        Reads ``remap_values`` from the bank config — a mapping of
+        ``{column: {old_value: new_value}}``.  Every cell in *column* whose
+        value equals *old_value* (exact, case-sensitive) is replaced with
+        *new_value*.  The remapping is applied after all rules, so it catches
+        values set both by literals and by rule ``set`` directives.
+
+        Example bank config entry::
+
+            remap_values:
+              Payment:
+                joint: "to be split"
+
+        Args:
+            df: Output DataFrame after rules have been applied.
+
+        Returns:
+            DataFrame with remapped values applied in-place.
+        """
+        raw = self.bank_config.get("remap_values")
+        if not raw:
+            return df
+
+        remap: dict = (
+            OmegaConf.to_container(raw, resolve=True)
+            if OmegaConf.is_config(raw)
+            else dict(raw)
+        )
+
+        for col, value_map in remap.items():
+            if col not in df.columns:
+                continue
+            for old_value, new_value in value_map.items():
+                df[col] = df[col].replace(old_value, new_value)
+
+        return df
 
     @staticmethod
     def _sort_by_date(df: pd.DataFrame, col: str = "Date") -> pd.DataFrame:

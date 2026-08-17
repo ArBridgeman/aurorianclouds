@@ -21,7 +21,7 @@ project:
 - **Established:** Actively developed, tested, and sufficiently stable for its
   intended use, although it may continue to evolve.
 - **Experimental:** Early-stage software whose interfaces and implementation
-  may change substantially as it is developed and evaluated.
+  may change substantially as it is being developed and evaluated.
 
 ## Projects
 
@@ -30,7 +30,7 @@ project:
 **Maturity: Established**
 
 `sous-chef` is a meal-planning and recipe-management application. It parses prepared
-recipes, creates menus, schedules menu items, and prepares a aisle-based grocery list.
+recipes, creates menus, schedules menu items, and prepares an aisle-based grocery list.
 Results are exported to services such as Todoist and Google Sheets. It is
 the most established application in this repository and includes extensive
 unit, integration, and end-to-end test coverage.

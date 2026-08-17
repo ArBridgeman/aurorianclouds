@@ -1,21 +1,76 @@
 [![codecov](https://codecov.io/gh/ArBridgeman/aurorianclouds/branch/main/graph/badge.svg?token=86JV74K4VY)](https://codecov.io/gh/ArBridgeman/aurorianclouds)
 [![license](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
-sous_chef is a Python application used to parse recipes to create grocery lists
-& menus, which are exported to third-party APIs (i.e. Todoist).
+## Requirements
 
-Until recently, this has been solely a private project, and it is currently
-under construction to make contributions more easily possible. We are working
-on adding new features, while harmonizing the code base, adding much-needed 
-tests, and creating some documentation.
+- **Poetry:** >= 2.3.2
+- **Python:**
+  - `sous-chef`, `utilities`, and `jellyfin-helpers` require Python >= 3.10.
+  - `banking-helpers` requires Python >= 3.11 
+
+Because the projects target different Python versions, use separate virtual
+environments when working with `banking-helpers` alongside the other projects.
+
+These projects are currently developed and used directly from source. We do
+not currently publish versioned releases or distribution packages; version
+numbers in individual project metadata indicate development state only.
+
+Project maturity labels describe the current level of confidence in each
+project:
+
+- **Established:** Actively developed, tested, and sufficiently stable for its
+  intended use, although it may continue to evolve.
+- **Experimental:** Early-stage software whose interfaces and implementation
+  may change substantially as it is being developed and evaluated.
+
+## Projects
+
+### sous-chef
+
+**Maturity: Established**
+
+`sous-chef` is a meal-planning and recipe-management application. It parses prepared
+recipes, creates menus, schedules menu items, and prepares an aisle-based grocery list.
+Results are exported to services such as Todoist and Google Sheets. It is
+the most established application in this repository and includes extensive
+unit, integration, and end-to-end test coverage.
 
 - **Documentation (private):** https://endymion.atlassian.net/wiki/spaces/SC/overview?homepageId=98430
-- **Source code:** https://github.com/ArBridgeman/aurorianclouds
 
-Testing:
+See the [sous-chef source code](./sous-chef/).
 
-sous_chef requires `poetry` and several packages defined in the `poetry.toml`
-Tests can then be run after installation with:
-```
-poetry run pytest sous_chef/unit_tests
-```
+### utilities
+
+**Maturity: Established**
+
+`utilities` is a shared Python library containing common functionality used by
+the other projects. It provides reusable helpers for tasks such as enum
+handling, input validation, Todoist integration, and Google Sheets access.
+Both [sous-chef](./sous-chef/) and
+[jellyfin-helpers](./jellyfin-helpers/) use it as an underlying dependency.
+
+See the [utilities source code](./utilities/).
+
+### jellyfin-helpers
+
+**Maturity: Established**
+
+`jellyfin-helpers` provides scripts and API helpers for working with media
+libraries managed by Jellyfin. It can inspect library contents, interact with
+Jellyfin playlists and metadata, and build workout plans from tagged workout
+videos. It uses `utilities` for shared integrations and supporting helpers.
+
+See the [jellyfin-helpers source code](./jellyfin-helpers/).
+
+### banking-helpers
+
+**Maturity: Experimental**
+
+`banking-helpers` is a Streamlit application and command-line tool for
+standardizing banking CSV exports. Bank-specific YAML configurations describe
+input formats, after which transactions can be validated, normalized, and
+exported as CSV or Excel files with useful dropdown validation. This project
+is experimental and was initially produced with AI-generated code, so its
+interfaces and implementation will change as it matures.
+
+See the [banking-helpers README](./banking-helpers/README.md).

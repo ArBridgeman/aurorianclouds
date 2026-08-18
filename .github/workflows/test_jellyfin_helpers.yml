@@ -1,12 +1,10 @@
 name: jellyfin-helper tests
 on:
-  push:
+  pull_request:
     paths:
       - jellyfin-helpers/**
       - .github/workflows/test_jellyfin_helpers.yml
       - utilities/utilities/** # since dependent on without version atm
-    branches-ignore:
-      - main
   workflow_call:
     secrets:
       GSHEETS_SERVICE_TOKEN:

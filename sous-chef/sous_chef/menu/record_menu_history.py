@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import List
 
@@ -52,7 +52,9 @@ class MenuHistorian:
     gsheets_helper: GsheetsHelper
     current_menu_start_date: datetime
     dataframe: DataFrame[MenuHistory] = None
-    columns: List[str] = MenuHistory.__annotations__.keys()
+    columns: List[str] = field(
+        default_factory=lambda: list(MenuHistory.__annotations__)
+    )
 
     def __post_init__(self):
         self._load_history()

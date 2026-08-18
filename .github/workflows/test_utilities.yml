@@ -1,11 +1,9 @@
 name: utilities tests
 on:
-  push:
+  pull_request:
     paths:
       - utilities/**
       - .github/workflows/test_utilities.yml
-    branches-ignore:
-      - main
   workflow_call:
     secrets:
       GSHEETS_SERVICE_TOKEN:
@@ -49,4 +47,3 @@ jobs:
           name: cov_utilities
           path: ./utilities/*.xml
           retention-days: 5
-

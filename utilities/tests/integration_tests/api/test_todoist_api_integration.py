@@ -111,9 +111,16 @@ class TestTodoistHelper:
             task_kwarg["due_string"] = get_due_datetime_str(
                 task_kwarg["due_date"]
             )
-            # The SDK returns `due.date` as a datetime. Compare the calendar
-            # date rather than relying on Todoist's human-readable formatting.
-            assert task.due.date.date() == task_kwarg["due_date"].date()
+            # The local test double returns a string while the API SDK returns
+            # a datetime. Compare the calendar date in either representation.
+            returned_due_date = task.due.date
+            if isinstance(returned_due_date, datetime):
+                returned_due_date = returned_due_date.date()
+            else:
+                returned_due_date = date.fromisoformat(
+                    returned_due_date.removeprefix("on ").split()[0]
+                )
+            assert returned_due_date == task_kwarg["due_date"].date()
         else:
             assert task.due is None
 

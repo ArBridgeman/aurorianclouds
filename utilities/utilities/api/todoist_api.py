@@ -31,7 +31,7 @@ class TodoistHelper(AbstractTodoistHelper):
     @tenacity.retry(
         stop=tenacity.stop_after_attempt(5),
         wait=tenacity.wait_exponential(multiplier=1, min=1, max=20),
-        after=tenacity.after_log(FILE_LOGGER, logging.DEBUG),
+        before_sleep=tenacity.before_sleep_log(FILE_LOGGER, logging.DEBUG),
     )
     def _add_task(self, **kwargs):
         return self.connection.add_task(**kwargs)
@@ -39,7 +39,7 @@ class TodoistHelper(AbstractTodoistHelper):
     @tenacity.retry(
         stop=tenacity.stop_after_attempt(5),
         wait=tenacity.wait_exponential(multiplier=1, min=1, max=20),
-        after=tenacity.after_log(FILE_LOGGER, logging.DEBUG),
+        before_sleep=tenacity.before_sleep_log(FILE_LOGGER, logging.DEBUG),
     )
     def _get_task(self, task_id: str) -> Task:
         return self.connection.get_task(task_id=task_id)
@@ -55,7 +55,7 @@ class TodoistHelper(AbstractTodoistHelper):
     @tenacity.retry(
         stop=tenacity.stop_after_attempt(5),
         wait=tenacity.wait_exponential(multiplier=1, min=1, max=20),
-        after=tenacity.after_log(FILE_LOGGER, logging.DEBUG),
+        before_sleep=tenacity.before_sleep_log(FILE_LOGGER, logging.DEBUG),
     )
     def _delete_task(self, task_id: str):
         self.connection.delete_task(task_id=task_id)

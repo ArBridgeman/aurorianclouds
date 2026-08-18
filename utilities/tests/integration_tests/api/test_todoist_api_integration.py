@@ -111,10 +111,9 @@ class TestTodoistHelper:
             task_kwarg["due_string"] = get_due_datetime_str(
                 task_kwarg["due_date"]
             )
-            # Todoist normalizes the human-readable `due.string` in its
-            # response (for example, to "Jan 1 2050 00:00"). Verify the
-            # date sent to the API rather than relying on that presentation.
-            assert task_kwarg["due_date"].date().isoformat() in task.due.date
+            # The SDK returns `due.date` as a datetime. Compare the calendar
+            # date rather than relying on Todoist's human-readable formatting.
+            assert task.due.date.date() == task_kwarg["due_date"].date()
         else:
             assert task.due is None
 

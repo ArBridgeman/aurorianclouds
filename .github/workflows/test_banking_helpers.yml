@@ -1,11 +1,9 @@
 name: banking-helpers tests
 on:
-  push:
+  pull_request:
     paths:
       - banking-helpers/**
       - .github/workflows/test_banking_helpers.yml
-    branches-ignore:
-      - main
   workflow_call:
     secrets:
       CODECOV_TOKEN:

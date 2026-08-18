@@ -5,11 +5,9 @@
 
 - **Poetry:** >= 2.3.2
 - **Python:**
-  - `sous-chef`, `utilities`, and `jellyfin-helpers` require Python >= 3.10.
-  - `banking-helpers` requires Python >= 3.11 
+  - All projects require Python >= 3.11.
 
-Because the projects target different Python versions, use separate virtual
-environments when working with `banking-helpers` alongside the other projects.
+Use separate virtual environments for each project when working from source.
 
 These projects are currently developed and used directly from source. We do
 not currently publish versioned releases or distribution packages; version

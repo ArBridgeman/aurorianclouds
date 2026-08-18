@@ -3,10 +3,10 @@ name = "sous_chef"
 version = "1.2.3"
 description = "Plans your meals and grocery list"
 authors = [{ name = "Aurorian Clouds" }]
-requires-python = ">=3.10,<3.11"
+requires-python = ">=3.11,<4"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 
 [tool.poetry.dependencies]

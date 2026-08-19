@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Check out our repo branch
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - name: Setup Python environment
         uses: ./.github/actions/poetry-setup-with-tokens
         with:

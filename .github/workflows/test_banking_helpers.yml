@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Check out our repo branch
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - name: Setup Python environment
         uses: actions/setup-python@v6
         with:

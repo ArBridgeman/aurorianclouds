@@ -21,11 +21,11 @@ runs:
       shell: bash
       run: |
         TOKEN_DIR=./tokens
-        mkdir $TOKEN_DIR
+        mkdir -p "$TOKEN_DIR"
         GSHEETS_TOKEN="${TOKEN_DIR}/google_client_key.json"
         TODOIST_TOKEN="${TOKEN_DIR}/todoist_token.txt"
-        echo ${INPUTS_GSHEETS_SERVICE_TOKEN} > $GSHEETS_TOKEN
-        echo ${INPUTS_TODOIST_TOKEN} > $TODOIST_TOKEN
+        printf '%s' "${INPUTS_GSHEETS_SERVICE_TOKEN:1:${#INPUTS_GSHEETS_SERVICE_TOKEN}-2}" > "$GSHEETS_TOKEN"
+        printf '%s' "$INPUTS_TODOIST_TOKEN" > "$TODOIST_TOKEN"
       env:
         INPUTS_GSHEETS_SERVICE_TOKEN: ${{ inputs.gsheets-service-token }}
         INPUTS_TODOIST_TOKEN: ${{ inputs.todoist-token }}

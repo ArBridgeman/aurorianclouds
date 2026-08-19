@@ -19,7 +19,9 @@ runs:
         cache-dependency-path: ./${{ inputs.poetry-dir }}/poetry.lock
     - name: Set up Poetry environment
       shell: bash
-      run: poetry env use "${{ steps.setup-python.outputs.python-path }}"
+      run: poetry env use "${STEPS_SETUP_PYTHON_OUTPUTS_PYTHON_PATH}"
+      env:
+        STEPS_SETUP_PYTHON_OUTPUTS_PYTHON_PATH: ${{ steps.setup-python.outputs.python-path }}
     - name: Install dependencies
       shell: bash
       working-directory: ./${{ inputs.poetry-dir }}

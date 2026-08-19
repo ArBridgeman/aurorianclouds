@@ -14,19 +14,22 @@ on:
       CODECOV_TOKEN:
         required: true
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.ref }}-jellyfin
   cancel-in-progress: true
 
 jobs:
   pytest:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out our repo branch
         uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - name: Setup Python environment
+      - name: Set up Python environment
         uses: ./.github/actions/poetry-setup-with-tokens
         with:
           poetry-dir: jellyfin-helpers
@@ -40,7 +43,7 @@ jobs:
         run: poetry run pytest --cov=jellyfin_helpers --cov-report=xml:jellyfin_helpers_integration_tests.xml -k "not jellyfin" ./tests/integration_tests
       - name: Upload coverage to Codecov
         if: github.ref != 'refs/heads/main'
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./jellyfin-helpers/jellyfin_helpers_unit_tests.xml,./jellyfin-helpers/jellyfin_helpers_integration_tests.xml

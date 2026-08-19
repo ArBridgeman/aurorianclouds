@@ -9,29 +9,25 @@ on:
       CODECOV_TOKEN:
         required: true
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.ref }}-banking-helpers
   cancel-in-progress: true
 
 jobs:
   pytest:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out our repo branch
         uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - name: Setup Python environment
-        uses: actions/setup-python@v6
+      - name: Set up Python environment
+        uses: ./.github/actions/poetry-setup
         with:
-          python-version: "3.11"
-      - name: Install Poetry
-        uses: abatilo/actions-poetry@v3
-        with:
-          poetry-version: "2.3.2"
-      - name: Install dependencies
-        working-directory: ./banking-helpers
-        run: poetry install
+          poetry-dir: banking-helpers
       - name: Run unit tests
         working-directory: ./banking-helpers
         run: poetry run pytest --cov=banking_helpers --cov-report=xml:banking_helpers_unit_tests.xml ./tests/unit
@@ -40,7 +36,7 @@ jobs:
         run: poetry run pytest --cov=banking_helpers --cov-report=xml:banking_helpers_integration_tests.xml ./tests/integration
       - name: Upload coverage to Codecov
         if: github.ref != 'refs/heads/main'
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./banking-helpers/banking_helpers_unit_tests.xml,./banking-helpers/banking_helpers_integration_tests.xml

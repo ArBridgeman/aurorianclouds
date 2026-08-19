@@ -25,3 +25,23 @@ updates:
         applies-to: version-updates
         patterns:
           - "*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+      timezone: "Europe/Berlin"
+
+    cooldown:
+      default-days: 7
+
+    open-pull-requests-limit: 1
+
+    groups:
+      all-github-actions:
+        applies-to: version-updates
+        patterns:
+          - "*"

@@ -3,9 +3,8 @@
 
 ## Requirements
 
-- **Poetry:** >= 2.3.2
-- **Python:**
-  - All projects require Python >= 3.11.
+- **Poetry:** >= 2.3.2, <3
+- **Python:** >= 3.11, <4
 
 Use separate virtual environments for each project when working from source.
 

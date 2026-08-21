@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Check out our repo branch
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Set up Python environment
@@ -36,7 +36,7 @@ jobs:
         run: poetry run pytest --cov=banking_helpers --cov-report=xml:banking_helpers_integration_tests.xml ./tests/integration
       - name: Upload coverage to Codecov
         if: github.ref != 'refs/heads/main'
-        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./banking-helpers/banking_helpers_unit_tests.xml,./banking-helpers/banking_helpers_integration_tests.xml
@@ -44,7 +44,7 @@ jobs:
           verbose: false
       - name: Archive code coverage results
         if: github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: cov_banking_helpers
           path: ./banking-helpers/*.xml

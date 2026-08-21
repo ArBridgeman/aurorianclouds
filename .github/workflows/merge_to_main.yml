@@ -18,7 +18,7 @@ jobs:
       contents: read
     steps:
       - name: Check out our repo branch
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Set up Python environment
@@ -65,11 +65,11 @@ jobs:
       contents: read
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
       - name: Display structure of downloaded files
         run: ls -R
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./cov_sous_chef/sous_chef_unit_tests.xml,./cov_sous_chef/sous_chef_integration_tests.xml,./cov_jellyfin_helpers/jellyfin_helpers_unit_tests.xml,./cov_jellyfin_helpers/jellyfin_helpers_integration_tests.xml,./cov_utilities/utilities_tests.xml,./cov_banking_helpers/banking_helpers_unit_tests.xml,./cov_banking_helpers/banking_helpers_integration_tests.xml

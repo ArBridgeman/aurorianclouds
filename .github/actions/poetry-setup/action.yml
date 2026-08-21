@@ -1,0 +1,28 @@
+name: Set up Python environment
+description: Set up Python, Poetry, and project dependencies
+inputs:
+  poetry-dir:
+    required: true
+    description: Directory containing the Poetry project
+runs:
+  using: composite
+  steps:
+    - name: Install Poetry
+      shell: bash
+      run: pipx install poetry==2.4.1
+    - name: Set up Python 3.11
+      id: setup-python
+      uses: actions/setup-python@v6
+      with:
+        python-version: "3.11"
+        cache: poetry
+        cache-dependency-path: ./${{ inputs.poetry-dir }}/poetry.lock
+    - name: Set up Poetry environment
+      shell: bash
+      run: poetry env use "${STEPS_SETUP_PYTHON_OUTPUTS_PYTHON_PATH}"
+      env:
+        STEPS_SETUP_PYTHON_OUTPUTS_PYTHON_PATH: ${{ steps.setup-python.outputs.python-path }}
+    - name: Install dependencies
+      shell: bash
+      working-directory: ./${{ inputs.poetry-dir }}
+      run: poetry install

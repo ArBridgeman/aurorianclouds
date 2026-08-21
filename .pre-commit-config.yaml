@@ -39,4 +39,5 @@ repos:
         description: 'Enforces style consistency for YAML files'
         entry: poetry run yamllint
         language: system
+        exclude: ^\.github/
         types_or: [yaml]

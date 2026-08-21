@@ -14,17 +14,22 @@ on:
       CODECOV_TOKEN:
         required: true
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.ref }}-sous-chef
   cancel-in-progress: true
 
 jobs:
   pytest:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out our repo branch
         uses: actions/checkout@v6
-      - name: Setup Python environment
+        with:
+          persist-credentials: false
+      - name: Set up Python environment
         uses: ./.github/actions/poetry-setup-with-tokens
         with:
           poetry-dir: sous-chef
@@ -38,7 +43,7 @@ jobs:
         run: poetry run pytest --cov=sous_chef --cov-report=xml:sous_chef_integration_tests.xml -k "not dropbox and not openfoodfacts" ./tests/integration_tests
       - name: Upload coverage to Codecov
         if: github.ref != 'refs/heads/main'
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./sous-chef/sous_chef_unit_tests.xml,./sous-chef/sous_chef_integration_tests.xml

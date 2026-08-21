@@ -1,11 +1,22 @@
 [![codecov](https://codecov.io/gh/ArBridgeman/aurorianclouds/branch/main/graph/badge.svg?token=86JV74K4VY)](https://codecov.io/gh/ArBridgeman/aurorianclouds)
 [![license](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
+## Table of contents
+
+- [Requirements](#requirements)
+- [Projects](#projects)
+  - [sous-chef](#sous-chef)
+  - [utilities](#utilities)
+  - [jellyfin-helpers](#jellyfin-helpers)
+  - [banking-helpers](#banking-helpers)
+- [Development tools](#development-tools)
+  - [pre-commit](#pre-commit)
+  - [just](#just)
+
 ## Requirements
 
-- **Poetry:** >= 2.3.2
-- **Python:**
-  - All projects require Python >= 3.11.
+- **Poetry:** >= 2.3.2, <3
+- **Python:** >= 3.11, <4
 
 Use separate virtual environments for each project when working from source.
 
@@ -72,3 +83,37 @@ is experimental and was initially produced with AI-generated code, so its
 interfaces and implementation will change as it matures.
 
 See the [banking-helpers README](./banking-helpers/README.md).
+
+## Development tools
+
+The repository provides a few tools to make common development tasks consistent
+across projects.
+
+### pre-commit
+
+[`pre-commit`](https://pre-commit.com/) runs the configured formatting and
+linting hooks before commits. The repository configuration is in
+[`.pre-commit-config.yaml`](./.pre-commit-config.yaml).
+
+Install the project dependencies, install the Git hook, and run the hooks once
+against the entire repository:
+
+```bash
+poetry install
+poetry run pre-commit install
+```
+
+After installation, the hooks run automatically when committing.
+
+
+### just
+
+[`just`](https://just.systems/man/en/) is the repository's command runner. Its
+recipes are defined in [`justfile`](./justfile).
+
+List the available recipes and run common checks with:
+
+```bash
+just --list
+just <command>
+```

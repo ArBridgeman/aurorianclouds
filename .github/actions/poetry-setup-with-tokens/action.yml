@@ -1,5 +1,5 @@
-name: Setup Python environment
-description: "Setup Python Environment"
+name: Set up Python environment
+description: Set up Python, Poetry, project dependencies, and service tokens
 inputs:
   poetry-dir:
     required: true
@@ -13,24 +13,19 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v6
+    - name: Set up Python environment
+      uses: ./.github/actions/poetry-setup
       with:
-        python-version: "3.11"
-    - name: Run image
-      uses: abatilo/actions-poetry@v3
-      with:
-        poetry-version: "2.3.2"
-    - name: Install dependencies
-      shell: bash
-      working-directory: ./${{ inputs.poetry-dir }}
-      run: poetry install
-    - name: Setup token directory
+        poetry-dir: ${{ inputs.poetry-dir }}
+    - name: Set up token directory
       shell: bash
       run: |
         TOKEN_DIR=./tokens
-        mkdir $TOKEN_DIR
+        mkdir -p "$TOKEN_DIR"
         GSHEETS_TOKEN="${TOKEN_DIR}/google_client_key.json"
         TODOIST_TOKEN="${TOKEN_DIR}/todoist_token.txt"
-        echo ${{ inputs.gsheets-service-token }} > $GSHEETS_TOKEN
-        echo ${{ inputs.todoist-token }} > $TODOIST_TOKEN
+        printf '%s' "${INPUTS_GSHEETS_SERVICE_TOKEN:1:${#INPUTS_GSHEETS_SERVICE_TOKEN}-2}" > "$GSHEETS_TOKEN"
+        printf '%s' "$INPUTS_TODOIST_TOKEN" > "$TODOIST_TOKEN"
+      env:
+        INPUTS_GSHEETS_SERVICE_TOKEN: ${{ inputs.gsheets-service-token }}
+        INPUTS_TODOIST_TOKEN: ${{ inputs.todoist-token }}

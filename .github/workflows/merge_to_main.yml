@@ -8,29 +8,68 @@ concurrency:
   group: ${{ github.ref }}-main
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
+  zizmor:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Check out our repo branch
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Set up Python environment
+        uses: ./.github/actions/poetry-setup
+        with:
+          poetry-dir: .
+      - name: Run Zizmor
+        run: poetry run zizmor .github/workflows
+
   call-utilities:
     uses: ./.github/workflows/test_utilities.yml
-    secrets: inherit
+    permissions:
+      contents: read
+    secrets:
+      GSHEETS_SERVICE_TOKEN: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
+      TODOIST_TOKEN: ${{ secrets.TODOIST_TOKEN }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   call-jellyfin-helpers:
     uses: ./.github/workflows/test_jellyfin_helpers.yml
-    secrets: inherit
+    permissions:
+      contents: read
+    secrets:
+      GSHEETS_SERVICE_TOKEN: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
+      TODOIST_TOKEN: ${{ secrets.TODOIST_TOKEN }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   call-sous-chef-tests:
     uses: ./.github/workflows/test_sous_chef.yml
-    secrets: inherit
+    permissions:
+      contents: read
+    secrets:
+      GSHEETS_SERVICE_TOKEN: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
+      TODOIST_TOKEN: ${{ secrets.TODOIST_TOKEN }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   call-banking-helpers-tests:
     uses: ./.github/workflows/test_banking_helpers.yml
-    secrets: inherit
+    permissions:
+      contents: read
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   send_code_coverage:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [call-utilities, call-jellyfin-helpers, call-sous-chef-tests, call-banking-helpers-tests]
+    permissions:
+      contents: read
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v7
       - name: Display structure of downloaded files
         run: ls -R
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./cov_sous_chef/sous_chef_unit_tests.xml,./cov_sous_chef/sous_chef_integration_tests.xml,./cov_jellyfin_helpers/jellyfin_helpers_unit_tests.xml,./cov_jellyfin_helpers/jellyfin_helpers_integration_tests.xml,./cov_utilities/utilities_tests.xml,./cov_banking_helpers/banking_helpers_unit_tests.xml,./cov_banking_helpers/banking_helpers_integration_tests.xml

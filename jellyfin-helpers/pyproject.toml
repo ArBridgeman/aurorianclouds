@@ -1,6 +1,6 @@
 [project]
 name = "jellyfin-helpers"
-version = "0.0.1"
+version = "1.0.0"
 description = "Helper scrips to deal with media libraries for e.g. Jellyfin media server."
 authors = [{ name = "Aurorian Clouds" }]
 requires-python = ">=3.11,<4"

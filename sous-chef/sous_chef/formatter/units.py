@@ -1,7 +1,7 @@
 from pint import UnitRegistry
 
 unit_registry = UnitRegistry()
-unit_registry.default_format = ".2f"
+unit_registry.formatter.default_format = ".2f"
 
 # custom units
 unit_registry.define("bag = 1")

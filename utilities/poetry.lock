@@ -1226,19 +1226,19 @@ windows-terminal = ["colorama (>=0.4.6)"]
 
 [[package]]
 name = "pygsheets"
-version = "2.0.6"
+version = "2.0.5"
 description = "Google Spreadsheets Python API v4"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 groups = ["main"]
 files = [
-    {file = "pygsheets-2.0.6-py3-none-any.whl", hash = "sha256:3338c2eb8990fdee9f463b42a370ec0870c118d607d775471a6dfb8b08f6cd87"},
-    {file = "pygsheets-2.0.6.tar.gz", hash = "sha256:bff46c812e99f9b8b81a09b456581365281c797620ec08530b0d0e48fa9299e2"},
+    {file = "pygsheets-2.0.5-py2.py3-none-any.whl", hash = "sha256:85a4c871ac1d53013e042c13552b07f908b991c3d8c8770b3a68eb3452c8c218"},
+    {file = "pygsheets-2.0.5.tar.gz", hash = "sha256:ea6ce75dabd1359e49fd36920ff0d25ff9428ccc3d5d2474bdba80fb8653ad80"},
 ]
 
 [package.dependencies]
-google-api-python-client = ">=2.50.0"
-google-auth-oauthlib = ">=0.7.1"
+google-api-python-client = ">=1.5.5"
+google-auth-oauthlib = "*"
 
 [package.extras]
 pandas = ["pandas (>=0.14.0)"]
@@ -1571,4 +1571,4 @@ zstd = ["backports-zstd (>=1.0.0) ; python_version < \"3.14\""]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<4"
-content-hash = "5643527f66a2660821be31da90dcb7208356cb481f72f3089daa8d97dc728714"
+content-hash = "88595414453eeadb02e714bac1b3465952a30b6683c3c4227fb8e48f40e1b45c"

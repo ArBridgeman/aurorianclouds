@@ -6,12 +6,12 @@ from jellyfin_helpers.jellyfin_api import (
     _compare_strings,
     _convert_parameter_value_to_string,
 )
-from pydantic import HttpUrl, parse_obj_as
+from pydantic import HttpUrl, TypeAdapter
 
 
 @pytest.fixture(scope="module")
 def server_url():
-    return parse_obj_as(HttpUrl, "https://google.com")
+    return TypeAdapter(HttpUrl).validate_python("https://google.com")
 
 
 class TestBuildUrl:

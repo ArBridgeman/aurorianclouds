@@ -16,8 +16,8 @@ def _get_menu_df(file_name: str) -> pd.DataFrame:
     menu = TmpMenuSchema.validate(
         pd.read_csv(abs_path / file_name, dtype={"uuid": str}, header=0)
     )
-    menu.eat_unit.fillna("", inplace=True)
-    menu.uuid.fillna("NaN", inplace=True)
+    menu["eat_unit"] = menu["eat_unit"].fillna("")
+    menu["uuid"] = menu["uuid"].fillna("NaN")
     menu.cook_datetime = pd.to_datetime(menu.cook_datetime)
     menu.prep_datetime = pd.to_datetime(menu.prep_datetime)
     menu.time_total = pd.to_timedelta(menu.time_total)
@@ -28,7 +28,7 @@ def get_final_grocery_list() -> pd.DataFrame:
     final_grocery_list = pd.read_csv(
         abs_path / "final_grocery_list.csv", dtype={"barcode": str}, header=0
     )
-    final_grocery_list.barcode.fillna("", inplace=True)
+    final_grocery_list["barcode"] = final_grocery_list["barcode"].fillna("")
     final_grocery_list.from_recipe = final_grocery_list.from_recipe.apply(
         lambda cell: cell[1:-1].split(", ")
     )
@@ -57,7 +57,7 @@ def get_menu_history():
         abs_path / "menu_history.csv", dtype={"uuid": str}, header=0
     )
     menu_history.cook_datetime = pd.to_datetime(menu_history.cook_datetime)
-    menu_history.uuid.fillna("NaN", inplace=True)
+    menu_history["uuid"] = menu_history["uuid"].fillna("NaN")
     return menu_history
 
 
@@ -80,5 +80,6 @@ def get_tasks_grocery_list() -> pd.DataFrame:
 
 def get_all_menus() -> DataFrameBase[AllMenuSchema]:
     all_menus_df = pd.read_csv(abs_path / "all_menus.csv", header=0)
-    all_menus_df.eat_unit.fillna("", inplace=True)
+    all_menus_df.columns = pd.Index(all_menus_df.columns, dtype=object)
+    all_menus_df["eat_unit"] = all_menus_df["eat_unit"].fillna("")
     return validate_menu_schema(dataframe=all_menus_df, model=AllMenuSchema)

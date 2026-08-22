@@ -16,7 +16,6 @@ from sous_chef.grocery_list.generate_grocery_list.generate_grocery_list import (
     GroceryList,
 )
 from sous_chef.menu.create_menu.models import BasicMenuSchema
-from sous_chef.nutrition.provide_nutritional_info import Nutritionist
 from sous_chef.recipe_book.read_recipe_book import RecipeBook
 from tests.data.util_data import (
     get_all_menus,
@@ -121,14 +120,6 @@ def mock_recipe_book():
         config = compose(config_name="recipe_book")
     with patch.object(RecipeBook, "__post_init__", lambda x: None):
         return Mock(RecipeBook(config, None))
-
-
-@pytest.fixture
-def nutritionist():
-    with initialize(version_base=None, config_path="../config/"):
-        config = compose(config_name="nutrition").nutrition
-    config.sheet_name = "nutrition-test"
-    return Nutritionist(config=config)
 
 
 @pytest.fixture(scope="session")

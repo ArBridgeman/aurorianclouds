@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import List
 
 import pandas as pd
-import pandera as pa
+import pandera.pandas as pa
 from omegaconf import DictConfig
 from pandera.typing import DataFrame, Series
 from pandera.typing.common import DataFrameBase
@@ -34,7 +34,7 @@ class MapMenuHistoryErrorToException(ExtendedEnum):
     recipe_in_recent_menu_history = MenuHistoryError
 
 
-class MenuHistory(pa.SchemaModel):
+class MenuHistory(pa.DataFrameModel):
     cook_datetime: Series[pd.DatetimeTZDtype] = pa.Field(
         dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
     )

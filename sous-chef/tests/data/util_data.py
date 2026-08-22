@@ -80,8 +80,6 @@ def get_tasks_grocery_list() -> pd.DataFrame:
 
 def get_all_menus() -> DataFrameBase[AllMenuSchema]:
     all_menus_df = pd.read_csv(abs_path / "all_menus.csv", header=0)
-    # Keep fixture columns compatible with dataframes returned by GSheets.
-    # pandas 3 gives read_csv columns a StringDtype index by default.
     all_menus_df.columns = pd.Index(all_menus_df.columns, dtype=object)
     all_menus_df["eat_unit"] = all_menus_df["eat_unit"].fillna("")
     return validate_menu_schema(dataframe=all_menus_df, model=AllMenuSchema)

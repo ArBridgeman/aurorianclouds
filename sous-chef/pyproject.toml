@@ -1,6 +1,6 @@
 [project]
 name = "sous_chef"
-version = "1.2.3"
+version = "2.0.0"
 description = "Plans your meals and grocery list"
 authors = [{ name = "Aurorian Clouds" }]
 requires-python = ">=3.11,<4"

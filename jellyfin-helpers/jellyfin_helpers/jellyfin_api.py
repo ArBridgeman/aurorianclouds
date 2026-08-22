@@ -6,8 +6,7 @@ from typing import Dict, List, Optional, Union
 import requests
 from numpy import ndarray
 from omegaconf import DictConfig
-from pydantic import HttpUrl
-from pydantic.tools import parse_obj_as
+from pydantic import HttpUrl, TypeAdapter
 from structlog import get_logger
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
@@ -49,8 +48,8 @@ class Jellyfin:
 
         self.token: str = credentials["token"]
         self.user_id: str = credentials["user_id"]
-        self.server_url: HttpUrl = parse_obj_as(
-            HttpUrl, credentials["server_url"]
+        self.server_url: HttpUrl = TypeAdapter(HttpUrl).validate_python(
+            credentials["server_url"]
         )
 
     def _prepare_request_url(

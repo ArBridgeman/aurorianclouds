@@ -12,14 +12,14 @@ classifiers = [
 [tool.poetry.dependencies]
 fuzzywuzzy = ">=0.18,<0.19"
 hydra-core = ">=1.2,<2"
-pandas = ">=2.0,<3"
+pandas = ">=3.0.5,<4"
 pandera = ">=0.32.1,<0.33"
 pint = ">=0.25.3,<0.26"
 pytesseract = ">=0.3.9,<0.4"
+pytz = ">=2020.1"
 python-Levenshtein = ">=0.27.4,<0.28"
 regex = ">=2026.7.19,<2027"
-structlog = ">=23.1.0,<24"
-openfoodfacts = "==5.3.0" # 0.1.5 has issues with products
+structlog = ">=26.1.0,<27"
 pydantic = ">=2.13.4,<3"
 termcolor = ">=3.3.0,<4"
 fastapi = ">=0.141.1,<1.0"
@@ -45,6 +45,5 @@ build-backend = "poetry.core.masonry.api"
 markers = [
     "dropbox: marks tests using dropbox",
     "gsheets: marks tests using gsheets",
-    "openfoodfacts: marks tests using OpenFoodFacts API",
     "todoist: marks tests using todoist, which requires periodically updating API key"
 ]

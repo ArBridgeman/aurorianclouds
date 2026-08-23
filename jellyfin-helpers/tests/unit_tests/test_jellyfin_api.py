@@ -31,7 +31,7 @@ class TestBuildUrl:
         ],
     )
     def test_works_as_expected(server_url, kwargs, expected_query):
-        expected_url = f"{server_url}/items" + expected_query
+        expected_url = f"{str(server_url).rstrip('/')}/items" + expected_query
         assert (
             _build_url(server_url=server_url, path="items", kwargs=kwargs)
             == expected_url

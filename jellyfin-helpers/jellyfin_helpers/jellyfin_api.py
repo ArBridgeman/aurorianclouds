@@ -15,7 +15,9 @@ LOGGER = get_logger(__name__)
 
 
 def _build_url(server_url: HttpUrl, path: str, kwargs: OrderedDict) -> str:
-    base_url = f"{server_url}/{path}"
+    # HttpUrl normalizes host-only URLs with a trailing slash. Normalize both
+    # sides here so requests never receive a double slash in the path.
+    base_url = f"{str(server_url).rstrip('/')}/{path.lstrip('/')}"
     separator = "?"
     for key, value in kwargs.items():
         value_str = _convert_parameter_value_to_string(value)

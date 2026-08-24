@@ -32,8 +32,10 @@ class Test:
         task_df = pd.DataFrame.from_records(
             [task.__dict__ for task in task_list]
         )
-        task_df.due = task_df.due.astype(str).str.replace(
-            r"\s+", "", regex=True
+        task_df["due"] = (
+            task_df.due.fillna("None")
+            .astype(str)
+            .str.replace(r"\s+", "", regex=True)
         )
         return (
             task_df[["content", "due", "labels", "priority"]]

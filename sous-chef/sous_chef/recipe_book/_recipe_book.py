@@ -285,10 +285,13 @@ def read_recipe_book(
 
 
 def extract_pint_quantity(
-    quantity_patterns: list, recipe_output: str
+    quantity_patterns: list, recipe_output: str | float
 ) -> Optional[Quantity]:
     if recipe_output is pd.NA or not recipe_output:
         return None
+
+    if isinstance(recipe_output, float):
+        return recipe_output * unit_registry.dimensionless
 
     if recipe_output.isdecimal():
         return float(recipe_output) * unit_registry.dimensionless

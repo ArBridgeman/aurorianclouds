@@ -6,12 +6,12 @@ from jellyfin_helpers.jellyfin_api import (
     _compare_strings,
     _convert_parameter_value_to_string,
 )
-from pydantic import HttpUrl, parse_obj_as
+from pydantic import HttpUrl, TypeAdapter
 
 
 @pytest.fixture(scope="module")
 def server_url():
-    return parse_obj_as(HttpUrl, "https://google.com")
+    return TypeAdapter(HttpUrl).validate_python("https://google.com")
 
 
 class TestBuildUrl:
@@ -31,7 +31,7 @@ class TestBuildUrl:
         ],
     )
     def test_works_as_expected(server_url, kwargs, expected_query):
-        expected_url = f"{server_url}/items" + expected_query
+        expected_url = f"{str(server_url).rstrip('/')}/items" + expected_query
         assert (
             _build_url(server_url=server_url, path="items", kwargs=kwargs)
             == expected_url

@@ -66,11 +66,13 @@ class MenuTemplates:
         all_menus["weekday"] = (
             all_menus.day.str.split("_").str[1].apply(get_weekday_from_short)
         )
-        return (
+        result = (
             validate_menu_schema(dataframe=all_menus, model=AllMenuSchema)
             .sort_values(by=["menu", "season", "weekday", "meal_time"])
             .reset_index(drop=True)
         )
+        result.columns = pd.Index(result.columns, dtype=object)
+        return result
 
     def _get_all_menu_templates(
         self, gsheets_helper: GsheetsHelper

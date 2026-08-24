@@ -2,7 +2,7 @@ from datetime import timedelta
 from enum import Enum, IntEnum, auto
 from typing import List, Optional
 
-import pandera as pa
+import pandera.pandas as pa
 from pandera.typing import Series
 
 
@@ -59,7 +59,7 @@ class Difficulty(IntEnum):
         return list(map(lambda c: c.value, cls))
 
 
-class WorkoutVideoSchema(pa.SchemaModel):
+class WorkoutVideoSchema(pa.DataFrameModel):
     name: Series[str]
     id: Series[str]
     duration: Series[timedelta] = pa.Field(
@@ -86,7 +86,7 @@ time_of_day_field = pa.Field(
 )
 
 
-class TimePlanSchema(pa.SchemaModel):
+class TimePlanSchema(pa.DataFrameModel):
     week: Series[int] = week_field
     day: Series[str]
     total_in_min: Series[int] = pa.Field(
@@ -104,7 +104,7 @@ class TimePlanSchema(pa.SchemaModel):
     time_of_day: Series[str] = time_of_day_field
 
 
-class SetSchema(pa.SchemaModel):
+class SetSchema(pa.DataFrameModel):
     key: Series[str]
     search_type: Series[str] = pa.Field(isin=SearchType.name_list("lower"))
     values: Series[str]
@@ -114,7 +114,7 @@ class SetSchema(pa.SchemaModel):
     )
 
 
-class WorkoutPlan(pa.SchemaModel):
+class WorkoutPlan(pa.DataFrameModel):
     week: Series[int] = week_field
     day: Series[int] = pa.Field(ge=0, le=35, nullable=False, coerce=True)
     source_type: Series[str] = pa.Field(

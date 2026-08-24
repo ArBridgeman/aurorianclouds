@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 
 import pandas as pd
-import pandera as pa
+import pandera.pandas as pa
 from pandera.typing import Series
 from sous_chef.abstract.search_dataframe import DirectSearchError
 
 from utilities.extended_enum import ExtendedEnum
 
 
-class RecipeSchema(pa.SchemaModel):
+class RecipeSchema(pa.DataFrameModel):
     title: Series[str] = pa.Field(nullable=False)
     # TODO set to only timedelta (NaT)
     # but needs to propagate & work with pandera

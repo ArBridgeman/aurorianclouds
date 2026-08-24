@@ -6,8 +6,7 @@ from typing import Dict, List, Optional, Union
 import requests
 from numpy import ndarray
 from omegaconf import DictConfig
-from pydantic import HttpUrl
-from pydantic.tools import parse_obj_as
+from pydantic import HttpUrl, TypeAdapter
 from structlog import get_logger
 
 ABS_FILE_PATH = Path(__file__).absolute().parent
@@ -16,7 +15,9 @@ LOGGER = get_logger(__name__)
 
 
 def _build_url(server_url: HttpUrl, path: str, kwargs: OrderedDict) -> str:
-    base_url = f"{server_url}/{path}"
+    # HttpUrl normalizes host-only URLs with a trailing slash. Normalize both
+    # sides here so requests never receive a double slash in the path.
+    base_url = f"{str(server_url).rstrip('/')}/{path.lstrip('/')}"
     separator = "?"
     for key, value in kwargs.items():
         value_str = _convert_parameter_value_to_string(value)
@@ -49,8 +50,8 @@ class Jellyfin:
 
         self.token: str = credentials["token"]
         self.user_id: str = credentials["user_id"]
-        self.server_url: HttpUrl = parse_obj_as(
-            HttpUrl, credentials["server_url"]
+        self.server_url: HttpUrl = TypeAdapter(HttpUrl).validate_python(
+            credentials["server_url"]
         )
 
     def _prepare_request_url(

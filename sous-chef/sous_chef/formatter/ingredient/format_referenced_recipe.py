@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from pint import Unit
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sous_chef.formatter.ingredient.format_line_abstract import LineFormatter
 from structlog import get_logger
 
@@ -9,13 +9,12 @@ FILE_LOGGER = get_logger(__name__)
 
 
 class ReferencedRecipe(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     quantity: float
     pint_unit: Unit
     title: str
     amount: str
-
-    class Config:
-        arbitrary_types_allowed: bool = True
 
 
 @dataclass

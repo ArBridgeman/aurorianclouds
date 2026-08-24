@@ -1,7 +1,7 @@
 from typing import Optional, Union
 
 import pandas as pd
-import pandera as pa
+import pandera.pandas as pa
 from pandera.typing import Series
 from pandera.typing.common import DataFrameBase
 from sous_chef.date.get_due_date import MealTime, Weekday
@@ -42,7 +42,7 @@ class YesNo(ExtendedEnum):
     no = "N"
 
 
-class BasicMenuSchema(pa.SchemaModel):
+class BasicMenuSchema(pa.DataFrameModel):
     # TODO replace all panderas with pydantic & create own validator with
     #  dataframe returned, as no default functions & coerce is poorly made
     weekday: Series[str] = pa.Field(isin=Weekday.name_list("capitalize"))
@@ -88,7 +88,7 @@ class AllMenuSchema(InProgressSchema):
     season: Series[str] = pa.Field(isin=Season.value_list(), nullable=False)
 
 
-class TimeSchema(pa.SchemaModel):
+class TimeSchema(pa.DataFrameModel):
     cook_datetime: Optional[Series[pd.DatetimeTZDtype]] = pa.Field(
         dtype_kwargs={"unit": "ns", "tz": "UTC"}, coerce=True
     )

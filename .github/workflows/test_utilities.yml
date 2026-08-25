@@ -34,7 +34,6 @@ jobs:
           paths: |
             utilities/
             .github/workflows/test_utilities.yml
-
   pytest:
     needs: changes
     if: needs.changes.outputs.relevant == 'true'

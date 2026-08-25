@@ -30,7 +30,6 @@ jobs:
           paths: |
             banking-helpers/
             .github/workflows/test_banking_helpers.yml
-
   pytest:
     needs: changes
     if: needs.changes.outputs.relevant == 'true'

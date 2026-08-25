@@ -35,7 +35,6 @@ jobs:
             jellyfin-helpers/
             utilities/utilities/
             .github/workflows/test_jellyfin_helpers.yml
-
   pytest:
     needs: changes
     if: needs.changes.outputs.relevant == 'true'

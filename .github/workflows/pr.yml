@@ -24,6 +24,7 @@ jobs:
         uses: ./.github/actions/poetry-setup
         with:
           poetry-dir: .
+          poetry-lock-path: poetry.lock
       - name: Run Zizmor
         run: poetry run zizmor .github/workflows
   call-utilities:

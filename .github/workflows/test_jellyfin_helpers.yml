@@ -49,6 +49,7 @@ jobs:
         uses: ./.github/actions/poetry-setup-with-tokens
         with:
           poetry-dir: jellyfin-helpers
+          poetry-lock-path: jellyfin-helpers/poetry.lock
           gsheets-service-token: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
           todoist-token: ${{ secrets.TODOIST_TOKEN }}
       - name: Run unit tests

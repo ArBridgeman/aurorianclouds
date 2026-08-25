@@ -48,6 +48,7 @@ jobs:
         uses: ./.github/actions/poetry-setup-with-tokens
         with:
           poetry-dir: utilities
+          poetry-lock-path: utilities/poetry.lock
           gsheets-service-token: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
           todoist-token: ${{ secrets.TODOIST_TOKEN }}
       - name: Run tests

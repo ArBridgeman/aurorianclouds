@@ -44,6 +44,7 @@ jobs:
         uses: ./.github/actions/poetry-setup
         with:
           poetry-dir: banking-helpers
+          poetry-lock-path: banking-helpers/poetry.lock
       - name: Run unit tests
         working-directory: ./banking-helpers
         run: poetry run pytest --cov=banking_helpers --cov-report=xml:banking_helpers_unit_tests.xml ./tests/unit

@@ -1,17 +1,31 @@
-name: merge to main
+name: pull request
 on:
-  push:
-    branches:
-      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 concurrency:
-  group: ${{ github.ref }}-main
+  group: ${{ github.ref }}-pr
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
+  run-zizmor:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Check out our repo branch
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Set up Python environment
+        uses: ./.github/actions/poetry-setup
+        with:
+          poetry-dir: .
+      - name: Run Zizmor
+        run: poetry run zizmor .github/workflows
   call-utilities:
     uses: ./.github/workflows/test_utilities.yml
     permissions:
@@ -42,20 +56,26 @@ jobs:
       contents: read
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-  send_code_coverage:
+
+  allow-merge:
+    name: Allow Merge
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
-    needs: [call-utilities, call-jellyfin-helpers, call-sous-chef-tests, call-banking-helpers-tests]
     permissions:
       contents: read
+    needs:
+      - run-zizmor
+      - call-utilities
+      - call-jellyfin-helpers
+      - call-sous-chef-tests
+      - call-banking-helpers-tests
     steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v8
-      - name: Display structure of downloaded files
-        run: ls -R
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./cov_sous_chef/sous_chef_unit_tests.xml,./cov_sous_chef/sous_chef_integration_tests.xml,./cov_jellyfin_helpers/jellyfin_helpers_unit_tests.xml,./cov_jellyfin_helpers/jellyfin_helpers_integration_tests.xml,./cov_utilities/utilities_tests.xml,./cov_banking_helpers/banking_helpers_unit_tests.xml,./cov_banking_helpers/banking_helpers_integration_tests.xml
-          fail_ci_if_error: true
-          verbose: false
+      - name: Branch Protection - failure if any test workflow failed or was cancelled
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: |
+          echo "$NEEDS_JSON"
+          exit 1
+      - name: Branch protection
+        run: echo "All required test workflows passed or were skipped. Merge allowed."

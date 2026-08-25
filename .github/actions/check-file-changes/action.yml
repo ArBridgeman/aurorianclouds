@@ -1,4 +1,4 @@
-name: Check workflow changes
+name: Check files changes
 description: Check whether a workflow should run for the calling event and changed paths
 
 inputs:

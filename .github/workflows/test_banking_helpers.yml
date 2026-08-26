@@ -1,9 +1,5 @@
 name: banking-helpers tests
 on:
-  pull_request:
-    paths:
-      - banking-helpers/**
-      - .github/workflows/test_banking_helpers.yml
   workflow_call:
     secrets:
       CODECOV_TOKEN:
@@ -17,7 +13,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    outputs:
+      relevant: ${{ steps.filter.outputs.relevant }}
+    steps:
+      - name: Check out our repo branch
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Check if relevant files were changed
+        id: filter
+        uses: ./.github/actions/check-file-changes
+        with:
+          paths: |
+            banking-helpers/
+            .github/workflows/test_banking_helpers.yml
   pytest:
+    needs: changes
+    if: needs.changes.outputs.relevant == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Check out our repo branch
@@ -28,6 +43,7 @@ jobs:
         uses: ./.github/actions/poetry-setup
         with:
           poetry-dir: banking-helpers
+          poetry-lock-path: banking-helpers/poetry.lock
       - name: Run unit tests
         working-directory: ./banking-helpers
         run: poetry run pytest --cov=banking_helpers --cov-report=xml:banking_helpers_unit_tests.xml ./tests/unit

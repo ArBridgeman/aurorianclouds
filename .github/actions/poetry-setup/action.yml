@@ -4,6 +4,9 @@ inputs:
   poetry-dir:
     required: true
     description: Directory containing the Poetry project
+  poetry-lock-path:
+    required: true
+    description: Path to the Poetry lockfile from the repository root
 runs:
   using: composite
   steps:
@@ -16,7 +19,7 @@ runs:
       with:
         python-version: "3.11"
         cache: poetry
-        cache-dependency-path: ./${{ inputs.poetry-dir }}/poetry.lock
+        cache-dependency-path: ${{ inputs.poetry-lock-path }}
     - name: Set up Poetry environment
       shell: bash
       run: poetry env use "${STEPS_SETUP_PYTHON_OUTPUTS_PYTHON_PATH}"

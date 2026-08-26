@@ -1,0 +1,44 @@
+name: Check files changes
+description: Check whether a workflow should run for the calling event and changed paths
+
+inputs:
+  paths:
+    description: Newline-separated directories or files relevant to this workflow
+    required: true
+
+outputs:
+  relevant:
+    description: Whether the workflow should run
+    value: ${{ steps.publish.outputs.relevant }}
+runs:
+  using: composite
+  steps:
+    - name: Mark non-PR workflow relevant
+      if: github.event_name != 'pull_request'
+      shell: bash
+      run: echo 'RELEVANT=true' >> "$GITHUB_ENV"
+
+    - name: Check relevant PR paths
+      if: github.event_name == 'pull_request'
+      shell: bash
+      env:
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        PATHS: ${{ inputs.paths }}
+      run: |
+        echo 'RELEVANT=false' >> "$GITHUB_ENV"
+        changed_files="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
+        while IFS= read -r path; do
+          [ -z "$path" ] && continue
+          while IFS= read -r changed_file; do
+            if [[ "$changed_file" == "$path"* ]]; then
+              echo 'RELEVANT=true' >> "$GITHUB_ENV"
+              break 2
+            fi
+          done <<< "$changed_files"
+        done <<< "$PATHS"
+
+    - name: Publish workflow status
+      id: publish
+      shell: bash
+      run: echo "relevant=$RELEVANT" >> "$GITHUB_OUTPUT"

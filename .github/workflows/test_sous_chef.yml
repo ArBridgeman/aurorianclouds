@@ -1,10 +1,5 @@
 name: sous-chef tests
 on:
-  pull_request:
-    paths:
-      - sous-chef/**
-      - .github/workflows/test_sous_chef.yml
-      - utilities/utilities/** # since dependent on without version atm
   workflow_call:
     secrets:
       GSHEETS_SERVICE_TOKEN:
@@ -22,7 +17,27 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    outputs:
+      relevant: ${{ steps.filter.outputs.relevant }}
+    steps:
+      - name: Check out our repo branch
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Check if relevant files were changed
+        id: filter
+        uses: ./.github/actions/check-file-changes
+        with:
+          paths: |
+            sous-chef/
+            utilities/utilities/
+            .github/workflows/test_sous_chef.yml
   pytest:
+    needs: changes
+    if: needs.changes.outputs.relevant == 'true'
     runs-on: ubuntu-24.04
     steps:
       - name: Check out our repo branch
@@ -33,6 +48,7 @@ jobs:
         uses: ./.github/actions/poetry-setup-with-tokens
         with:
           poetry-dir: sous-chef
+          poetry-lock-path: sous-chef/poetry.lock
           gsheets-service-token: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
           todoist-token: ${{ secrets.TODOIST_TOKEN }}
       - name: Run unit tests

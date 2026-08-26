@@ -4,6 +4,9 @@ inputs:
   poetry-dir:
     required: true
     description: "Poetry directory"
+  poetry-lock-path:
+    required: true
+    description: "Path to the Poetry lockfile from the repository root"
   gsheets-service-token:
     required: true
     description: "Token for Gsheets service"
@@ -17,6 +20,7 @@ runs:
       uses: ./.github/actions/poetry-setup
       with:
         poetry-dir: ${{ inputs.poetry-dir }}
+        poetry-lock-path: ${{ inputs.poetry-lock-path }}
     - name: Set up token directory
       shell: bash
       run: |

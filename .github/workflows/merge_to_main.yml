@@ -41,7 +41,7 @@ jobs:
     permissions:
       contents: read
     secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      SONAR_TOKEN_BANKING_HELPERS: ${{ secrets.SONAR_TOKEN_BANKING_HELPERS }}
   send_code_coverage:
     runs-on: ubuntu-24.04
     needs: [call-utilities, call-jellyfin-helpers, call-sous-chef-tests, call-banking-helpers-tests]

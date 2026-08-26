@@ -56,7 +56,7 @@ jobs:
     permissions:
       contents: read
     secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      SONAR_TOKEN_BANKING_HELPERS: ${{ secrets.SONAR_TOKEN_BANKING_HELPERS }}
   allow-merge:
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04

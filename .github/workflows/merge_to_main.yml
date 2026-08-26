@@ -19,7 +19,7 @@ jobs:
     secrets:
       GSHEETS_SERVICE_TOKEN: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
       TODOIST_TOKEN: ${{ secrets.TODOIST_TOKEN }}
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      SONAR_TOKEN_UTILITIES: ${{ secrets.SONAR_TOKEN_UTILITIES }}
   call-jellyfin-helpers:
     uses: ./.github/workflows/test_jellyfin_helpers.yml
     permissions:

@@ -6,7 +6,7 @@ on:
         required: true
       TODOIST_TOKEN:
         required: true
-      CODECOV_TOKEN:
+      SONAR_TOKEN_JELLYFIN_HELPERS:
         required: true
 
 permissions:
@@ -57,14 +57,20 @@ jobs:
       - name: Run integration tests
         working-directory: ./jellyfin-helpers
         run: poetry run pytest --cov=jellyfin_helpers --cov-report=xml:jellyfin_helpers_integration_tests.xml -k "not jellyfin" ./tests/integration_tests
-      - name: Upload coverage to Codecov
-        if: github.ref != 'refs/heads/main'
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./jellyfin-helpers/jellyfin_helpers_unit_tests.xml,./jellyfin-helpers/jellyfin_helpers_integration_tests.xml
-          fail_ci_if_error: true
-          verbose: false
+          projectBaseDir: ./jellyfin-helpers
+          args: >-
+            -Dsonar.projectKey=aurorianclouds.jellyfin-helpers
+            -Dsonar.organization=aurorianclouds
+            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.sources=jellyfin_helpers
+            -Dsonar.tests=tests
+            -Dsonar.python.version=3.11,3.12,3.13,3.14
+            -Dsonar.python.coverage.reportPaths=jellyfin_helpers_unit_tests.xml,jellyfin_helpers_integration_tests.xml
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_JELLYFIN_HELPERS }}
       - name: Archive code coverage results
         if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v7

@@ -42,7 +42,7 @@ jobs:
     secrets:
       GSHEETS_SERVICE_TOKEN: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
       TODOIST_TOKEN: ${{ secrets.TODOIST_TOKEN }}
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      SONAR_TOKEN_JELLYFIN_HELPERS: ${{ secrets.SONAR_TOKEN_JELLYFIN_HELPERS }}
   call-sous-chef-tests:
     uses: ./.github/workflows/test_sous_chef.yml
     permissions:

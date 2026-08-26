@@ -35,7 +35,7 @@ jobs:
     secrets:
       GSHEETS_SERVICE_TOKEN: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
       TODOIST_TOKEN: ${{ secrets.TODOIST_TOKEN }}
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      SONAR_TOKEN_SOUS_CHEF: ${{ secrets.SONAR_TOKEN_SOUS_CHEF }}
   call-banking-helpers-tests:
     uses: ./.github/workflows/test_banking_helpers.yml
     permissions:

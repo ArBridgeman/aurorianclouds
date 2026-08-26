@@ -47,3 +47,11 @@ markers = [
     "gsheets: marks tests using gsheets",
     "todoist: marks tests using todoist, which requires periodically updating API key"
 ]
+
+[tool.sonar]
+projectKey = "aurorianclouds.sous-chef"
+host.url = "https://sonarcloud.io"
+organization = "aurorianclouds"
+python.version = "3.11, 3.12, 3.13, 3.14"
+sources = "sous_chef"
+tests = "tests"

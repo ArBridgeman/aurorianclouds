@@ -34,7 +34,7 @@ jobs:
     secrets:
       GSHEETS_SERVICE_TOKEN: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
       TODOIST_TOKEN: ${{ secrets.TODOIST_TOKEN }}
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      SONAR_TOKEN_UTILITIES: ${{ secrets.SONAR_TOKEN_UTILITIES }}
   call-jellyfin-helpers:
     uses: ./.github/workflows/test_jellyfin_helpers.yml
     permissions:
@@ -42,7 +42,7 @@ jobs:
     secrets:
       GSHEETS_SERVICE_TOKEN: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
       TODOIST_TOKEN: ${{ secrets.TODOIST_TOKEN }}
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      SONAR_TOKEN_JELLYFIN_HELPERS: ${{ secrets.SONAR_TOKEN_JELLYFIN_HELPERS }}
   call-sous-chef-tests:
     uses: ./.github/workflows/test_sous_chef.yml
     permissions:
@@ -50,13 +50,13 @@ jobs:
     secrets:
       GSHEETS_SERVICE_TOKEN: ${{ secrets.GSHEETS_SERVICE_TOKEN }}
       TODOIST_TOKEN: ${{ secrets.TODOIST_TOKEN }}
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      SONAR_TOKEN_SOUS_CHEF: ${{ secrets.SONAR_TOKEN_SOUS_CHEF }}
   call-banking-helpers-tests:
     uses: ./.github/workflows/test_banking_helpers.yml
     permissions:
       contents: read
     secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      SONAR_TOKEN_BANKING_HELPERS: ${{ secrets.SONAR_TOKEN_BANKING_HELPERS }}
   allow-merge:
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04

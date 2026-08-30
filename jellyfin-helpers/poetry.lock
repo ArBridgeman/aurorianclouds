@@ -1860,4 +1860,4 @@ url = "../utilities"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<4"
-content-hash = "0bd081904a77ba8c445614dfafc5b1e206f5ebf33df781f4ec22e0ad7c7d106f"
+content-hash = "a70f0a05849f001b1840d05ef79563ff48668c9c8780fedf34e3dd2e11eac00d"

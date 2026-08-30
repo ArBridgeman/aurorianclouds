@@ -99,7 +99,8 @@ class TestTodoistHelper:
         )
 
         # checks
-        assert task.id == task.id
+        assert isinstance(task.id, str)
+        assert len(task.id) > 0
         assert task.is_completed is False
         assert task.content == task_kwarg["task"].strip()
         assert task.description == task_kwarg.get("description", "")

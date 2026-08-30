@@ -1,5 +1,4 @@
 import datetime
-from zoneinfo import ZoneInfo
 
 import pytest
 from freezegun import freeze_time
@@ -29,7 +28,7 @@ def create_datetime(
     hour: int = 0,
     minute: int = 0,
     second: int = 0,
-    tzinfo=ZoneInfo("UTC"),
+    tzinfo=DEFAULT_TIMEZONE,
 ):
     return datetime.datetime(
         year=year,

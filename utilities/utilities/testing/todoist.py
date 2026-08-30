@@ -135,7 +135,8 @@ class LocalTodoistConnection:
 class DebugTodoistHelper(TodoistHelper):
     connection: LocalTodoistConnection
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
+        # The debug helper receives its local connection through set_connection.
         pass
 
     def set_connection(self, connection: LocalTodoistConnection):

@@ -7,8 +7,7 @@ import pytest
 from freezegun import freeze_time
 from hydra import compose, initialize
 from pandera.typing.common import DataFrameBase
-from pytz import UTC
-from sous_chef.date.get_due_date import DueDatetimeFormatter
+from sous_chef.date.get_due_date import DEFAULT_TIMEZONE, DueDatetimeFormatter
 from sous_chef.formatter.format_unit import UnitFormatter
 from sous_chef.formatter.ingredient.format_ingredient import IngredientFormatter
 from sous_chef.formatter.ingredient.get_ingredient_field import IngredientField
@@ -29,7 +28,9 @@ from tests.data.util_data import (
 from utilities.extended_enum import ExtendedEnum
 
 FROZEN_DATE = "2022-01-14"
-FROZEN_DATETIME = datetime.strptime(FROZEN_DATE, "%Y-%m-%d").replace(tzinfo=UTC)
+FROZEN_DATETIME = datetime.strptime(FROZEN_DATE, "%Y-%m-%d").replace(
+    tzinfo=DEFAULT_TIMEZONE
+)
 FROZEN_DAY = pd.to_datetime(FROZEN_DATE).day_name()
 
 

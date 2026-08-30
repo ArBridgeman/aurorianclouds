@@ -10,19 +10,19 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-pandas = ">=3.0.5,<4"
-pydantic = "^2.13.4"
 hydra-core = "^1.3.2"
-pandera = "^0.32.1"
-utilities = {path = "../utilities/", develop = true}
 joblib = "^1.3.2"
 numpy = "^2.4.6"
+pandas = ">=3.0.5,<4"
+pandera = "^0.32.1"
+pydantic = "^2.13.4"
+utilities = {path = "../utilities/", develop = true}
 
 [dependency-groups]
 dev = [
+    "freezegun>=1.1,<2",
     "pytest>=9.0.0,<10",
     "pytest-cov>=4.1.0,<5",
-    "freezegun>=1.1,<2",
 ]
 
 [build-system]

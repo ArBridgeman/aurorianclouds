@@ -154,25 +154,13 @@ class AbstractTodoistHelper(ABC):
     ) -> int:
         # TODO look into using the API query to reduce subsequent loops
         # manually filtering tasks to decide what gets deleted or not
-        tasks_to_be_deleted = []
         project_id = self.get_project_id(project)
-        for task in self._get_tasks(project_id):
-            if task.is_completed:
-                continue
-            if only_delete_after_date and task.due is None:
-                continue
-            if task.due is not None:
-                if skip_recurring and task.due.is_recurring and task.due.date:
-                    continue
-                if only_delete_after_date and task.due.date:
-                    if (
-                        pd.to_datetime(task.due.date).date()
-                        <= only_delete_after_date
-                    ):
-                        continue
-            if only_with_label and only_with_label not in task.labels:
-                continue
-            tasks_to_be_deleted.append(task)
+        tasks_to_be_deleted = self._get_tasks_to_be_deleted(
+            project_id=project_id,
+            skip_recurring=skip_recurring,
+            only_delete_after_date=only_delete_after_date,
+            only_with_label=only_with_label,
+        )
 
         # checking if deletion desired & performing it
         number_tasks_to_be_deleted = len(tasks_to_be_deleted)
@@ -196,6 +184,72 @@ class AbstractTodoistHelper(ABC):
             FILE_LOGGER.info("[todoist delete]", action="Deleted tasks!")
 
         return number_tasks_to_be_deleted
+
+    def _get_tasks_to_be_deleted(
+        self,
+        project_id: str,
+        skip_recurring: bool,
+        only_delete_after_date: date,
+        only_with_label: str,
+    ) -> List[Task]:
+        return [
+            task
+            for task in self._get_tasks(project_id)
+            if self._is_task_eligible_for_deletion(
+                task=task,
+                skip_recurring=skip_recurring,
+                only_delete_after_date=only_delete_after_date,
+                only_with_label=only_with_label,
+            )
+        ]
+
+    def _is_task_eligible_for_deletion(
+        self,
+        task: Task,
+        skip_recurring: bool,
+        only_delete_after_date: date,
+        only_with_label: str,
+    ) -> bool:
+        return all(
+            (
+                self._is_incomplete_task(task),
+                self._has_required_due_date(task, only_delete_after_date),
+                self._is_not_skipped_recurring_task(task, skip_recurring),
+                self._is_after_date(task, only_delete_after_date),
+                self._has_required_label(task, only_with_label),
+            )
+        )
+
+    @staticmethod
+    def _is_incomplete_task(task: Task) -> bool:
+        return not task.is_completed
+
+    @staticmethod
+    def _has_required_due_date(
+        task: Task, only_delete_after_date: date
+    ) -> bool:
+        return not only_delete_after_date or task.due is not None
+
+    @staticmethod
+    def _is_not_skipped_recurring_task(
+        task: Task, skip_recurring: bool
+    ) -> bool:
+        return not (
+            skip_recurring
+            and task.due is not None
+            and task.due.is_recurring
+            and task.due.date
+        )
+
+    @staticmethod
+    def _is_after_date(task: Task, only_delete_after_date: date) -> bool:
+        if not only_delete_after_date or task.due is None or not task.due.date:
+            return True
+        return pd.to_datetime(task.due.date).date() > only_delete_after_date
+
+    @staticmethod
+    def _has_required_label(task: Task, only_with_label: str) -> bool:
+        return not only_with_label or only_with_label in task.labels
 
     def get_project_id(self, project_name: str) -> str:
         project_name = project_name.casefold()

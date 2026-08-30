@@ -57,7 +57,7 @@ jobs:
         run: poetry run pytest --cov=sous_chef --cov-report=xml:sous_chef_unit_tests.xml ./tests/unit_tests
       - name: Run integration tests
         working-directory: ./sous-chef
-        run: poetry run pytest --cov=sous_chef --cov-report=xml:sous_chef_integration_tests.xml -k "not dropbox and not openfoodfacts" ./tests/integration_tests
+        run: poetry run pytest --cov=sous_chef --cov-report=xml:sous_chef_integration_tests.xml -k "not dropbox" ./tests/integration_tests
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@7006c4492b2e0ee0f816d36501671557c97f5995 # v8.1.0
         with:
@@ -80,6 +80,5 @@ jobs:
           path: ./sous-chef/*.xml
           retention-days: 5
       - name: Run e2e tests
-        if: github.ref == 'refs/heads/main'
         working-directory: ./sous-chef
-        run: poetry run pytest -k "not dropbox and not openfoodfacts" ./tests/e2e_tests
+        run: poetry run pytest -k "not dropbox" ./tests/e2e_tests

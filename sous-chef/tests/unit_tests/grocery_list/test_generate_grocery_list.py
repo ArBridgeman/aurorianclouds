@@ -3,12 +3,12 @@ import datetime
 from typing import Optional
 from unittest import mock
 from unittest.mock import patch
+from zoneinfo import ZoneInfo
 
 import numpy as np
 import pandas as pd
 import pytest
 from pint import Unit
-from pytz import timezone
 from sous_chef.formatter.format_unit import unit_registry
 from sous_chef.formatter.ingredient.format_ingredient import Ingredient
 from sous_chef.grocery_list.generate_grocery_list.generate_grocery_list import (
@@ -35,7 +35,7 @@ def create_grocery_list_row(
     plural_ending: str = "s",
     from_recipe: str = "dummy recipe",
     for_day: datetime = datetime.datetime(
-        year=2022, month=1, day=20, tzinfo=timezone("UTC")
+        year=2022, month=1, day=20, tzinfo=ZoneInfo("UTC")
     ),
     aisle_group: str = None,
 ):
@@ -68,7 +68,7 @@ def create_ingredient_and_grocery_entry_raw(
     recipe_factor: float = 1.0,
     from_recipe: str = "dummy recipe",
     for_day: datetime.datetime = datetime.datetime(
-        year=2022, month=1, day=27, tzinfo=timezone("UTC")
+        year=2022, month=1, day=27, tzinfo=ZoneInfo("UTC")
     ),
     for_day_str: str = "Thu",
     # frozen anchor date is Friday & second group includes vegetables
@@ -111,7 +111,7 @@ def create_menu_recipe(
     eat_factor: float = 1.0,
     freeze_factor: float = 0.0,
     for_day=datetime.datetime(
-        year=2022, month=1, day=27, tzinfo=timezone("UTC")
+        year=2022, month=1, day=27, tzinfo=ZoneInfo("UTC")
     ),
 ):
     if recipe is None:
@@ -281,28 +281,28 @@ class TestGroceryList:
         [
             (  # Monday
                 datetime.datetime(
-                    year=2022, month=1, day=24, tzinfo=timezone("UTC")
+                    year=2022, month=1, day=24, tzinfo=ZoneInfo("UTC")
                 ),
                 "vegetables",
                 datetime.date(year=2022, month=1, day=20),
             ),
             (
                 datetime.datetime(
-                    year=2022, month=1, day=21, tzinfo=timezone("UTC")
+                    year=2022, month=1, day=21, tzinfo=ZoneInfo("UTC")
                 ),
                 "vegetables",
                 datetime.date(year=2022, month=1, day=20),
             ),  # Friday
             (
                 datetime.datetime(
-                    year=2022, month=1, day=27, tzinfo=timezone("UTC")
+                    year=2022, month=1, day=27, tzinfo=ZoneInfo("UTC")
                 ),
                 "Vegetables",
                 datetime.date(year=2022, month=1, day=27),
             ),  # Thursday
             (
                 datetime.datetime(
-                    year=2022, month=1, day=27, tzinfo=timezone("UTC")
+                    year=2022, month=1, day=27, tzinfo=ZoneInfo("UTC")
                 ),
                 "Fruits",
                 datetime.date(year=2022, month=1, day=20),
@@ -553,13 +553,13 @@ class TestAddReferencedRecipeToQueue:
                     day=26,
                     hour=23,
                     minute=40,
-                    tzinfo=timezone("UTC"),
+                    tzinfo=ZoneInfo("UTC"),
                 ),
             ),
             (
                 YesNoChoices.yes.value,
                 datetime.datetime(
-                    year=2022, month=1, day=25, hour=12, tzinfo=timezone("UTC")
+                    year=2022, month=1, day=25, hour=12, tzinfo=ZoneInfo("UTC")
                 ),
             ),
         ],
@@ -617,7 +617,7 @@ class TestAddReferencedRecipeToQueue:
             self._get_preparation_queue(
                 task_str=f"[PREP] {self.menu_recipe_ref.amount}",
                 due_date=datetime.datetime(
-                    year=2022, month=1, day=25, hour=12, tzinfo=timezone("UTC")
+                    year=2022, month=1, day=25, hour=12, tzinfo=ZoneInfo("UTC")
                 ),
             ),
         )
@@ -637,7 +637,7 @@ class TestAddReferencedRecipeToQueue:
             self._get_preparation_queue(
                 task_str=f"[DEFROST] {self.menu_recipe_ref.amount}",
                 due_date=datetime.datetime(
-                    year=2022, month=1, day=26, tzinfo=timezone("UTC")
+                    year=2022, month=1, day=26, tzinfo=ZoneInfo("UTC")
                 ),
             ),
         )

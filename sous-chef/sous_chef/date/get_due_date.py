@@ -1,13 +1,13 @@
 import datetime
 from dataclasses import dataclass, field
 from typing import NamedTuple, Tuple, Union
+from zoneinfo import ZoneInfo
 
 from omegaconf import DictConfig
-from pytz import timezone
 
 from utilities.extended_enum import ExtendedEnum
 
-DEFAULT_TIMEZONE = timezone("UTC")
+DEFAULT_TIMEZONE = ZoneInfo("UTC")
 
 
 class Day(NamedTuple):

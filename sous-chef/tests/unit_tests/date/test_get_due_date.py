@@ -1,9 +1,9 @@
 import datetime
+from zoneinfo import ZoneInfo
 
 import pytest
 from freezegun import freeze_time
 from hydra import compose, initialize
-from pytz import timezone
 from sous_chef.date.get_due_date import (
     DEFAULT_TIMEZONE,
     DueDatetimeFormatter,
@@ -29,7 +29,7 @@ def create_datetime(
     hour: int = 0,
     minute: int = 0,
     second: int = 0,
-    tzinfo=timezone("UTC"),
+    tzinfo=ZoneInfo("UTC"),
 ):
     return datetime.datetime(
         year=year,

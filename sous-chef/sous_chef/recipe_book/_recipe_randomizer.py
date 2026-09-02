@@ -107,7 +107,7 @@ class RecipeRandomizer(RecipeBasic):
                 row["ingredients"], str
             ):
                 # add leading space
-                search_term = " " + re.sub("#", " ", entity.lower())
+                search_term = " " + entity.lower().replace("#", " ")
                 ingredients = re.sub(
                     r"\n|\r|'", " ", row["ingredients"].lower()
                 )

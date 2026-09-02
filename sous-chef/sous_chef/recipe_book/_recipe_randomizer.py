@@ -1,3 +1,5 @@
+import ast
+import operator
 import re
 from dataclasses import dataclass
 from datetime import timedelta
@@ -12,6 +14,12 @@ from sous_chef.recipe_book.recipe_util import (
 from structlog import get_logger
 
 FILE_LOGGER = get_logger(__name__)
+MAX_FILTER_LENGTH = 150
+FILTER_PATTERN = re.compile(
+    # Possessive quantifiers prevent the validator from retrying different
+    # whitespace/token splits on malformed input.
+    r"(?:\s*+(?:[ct]\.[\w\-/]++|i\.[\w\-/#]++|time\.[\w]++|[&|~()])\s*+)++"
+)
 
 
 @dataclass
@@ -87,6 +95,11 @@ class RecipeRandomizer(RecipeBasic):
         )
 
     def _construct_filter(self, row: pd.Series, filter_str: str):
+        if len(filter_str) > MAX_FILTER_LENGTH or not FILTER_PATTERN.fullmatch(
+            filter_str
+        ):
+            raise ValueError("Invalid recipe filter")
+
         def _replace_entity(entity_name: str, match_obj: re.Match) -> str:
             row_name_map = {"tag": "tags", "category": "categories"}
             if (entity := match_obj.group(1)) is not None:
@@ -146,11 +159,37 @@ class RecipeRandomizer(RecipeBasic):
             r"time\.([\w]+)", lambda x: _replace_time(x), filter_str
         )
 
-        # try:
-        return eval(filter_str)
-        # except Exception as error:
-        #     FILE_LOGGER.info(row["title"])
-        #     FILE_LOGGER.exception(error)
+        def _evaluate_filter(node: ast.AST):
+            if isinstance(node, ast.Constant):
+                return node.value
+            if isinstance(node, (ast.List, ast.Tuple)):
+                values = [_evaluate_filter(element) for element in node.elts]
+                return tuple(values) if isinstance(node, ast.Tuple) else values
+            if isinstance(node, ast.Compare):
+                if len(node.ops) != 1 or len(node.comparators) != 1:
+                    raise ValueError("Unsupported filter comparison")
+                left = _evaluate_filter(node.left)
+                right = _evaluate_filter(node.comparators[0])
+                if isinstance(node.ops[0], ast.In):
+                    return operator.contains(right, left)
+                if isinstance(node.ops[0], ast.Eq):
+                    return operator.eq(left, right)
+                raise ValueError("Unsupported filter comparison operator")
+            if isinstance(node, ast.BinOp):
+                left = _evaluate_filter(node.left)
+                right = _evaluate_filter(node.right)
+                if isinstance(node.op, ast.BitAnd):
+                    return operator.and_(left, right)
+                if isinstance(node.op, ast.BitOr):
+                    return operator.or_(left, right)
+                raise ValueError("Unsupported filter binary operator")
+            if isinstance(node, ast.UnaryOp) and isinstance(
+                node.op, ast.Invert
+            ):
+                return operator.invert(_evaluate_filter(node.operand))
+            raise ValueError("Unsupported filter expression")
+
+        return _evaluate_filter(ast.parse(filter_str, mode="eval").body)
 
     def _construct_mask(
         self,

@@ -218,6 +218,24 @@ class TestRecipeBook:
         )
 
     @staticmethod
+    @pytest.mark.parametrize(
+        "filter_str",
+        ["t.valid; __import__('os')", "t.valid.__class__"],
+    )
+    def test__construct_filter_rejects_filters_outside_allowed_pattern(
+        recipe_book, filter_str
+    ):
+        with pytest.raises(ValueError, match="Invalid recipe filter"):
+            recipe_book._construct_filter(pd.Series(), filter_str)
+
+    @staticmethod
+    def test__construct_filter_rejects_overlong_filter(recipe_book):
+        filter_str = "t.valid " * 30
+
+        with pytest.raises(ValueError, match="Invalid recipe filter"):
+            recipe_book._construct_filter(pd.Series(), filter_str)
+
+    @staticmethod
     def test__construct_filter_handles_and(recipe_book, recipe_book_builder):
         tag = "cuisine/italian"
         and_tag = "entree/pasta"

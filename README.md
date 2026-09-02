@@ -1,4 +1,3 @@
-[![codecov](https://codecov.io/gh/ArBridgeman/aurorianclouds/branch/main/graph/badge.svg?token=86JV74K4VY)](https://codecov.io/gh/ArBridgeman/aurorianclouds)
 [![license](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 ## Table of contents
@@ -15,8 +14,8 @@
 
 ## Requirements
 
-- **Poetry:** >= 2.3.2, <3
-- **Python:** >= 3.11, <4
+- Poetry >= 2.3.2, <3
+- Python >= 3.11, <4
 
 Use separate virtual environments for each project when working from source.
 
@@ -51,6 +50,11 @@ See the [sous-chef source code](./sous-chef/).
 ### utilities
 
 **Maturity: Established**
+
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=aurorianclouds.utilities&metric=coverage)](https://sonarcloud.io/summary/new_code?id=aurorianclouds.utilities)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=aurorianclouds.utilities&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=aurorianclouds.utilities)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=aurorianclouds.utilities&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=aurorianclouds.utilities)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=aurorianclouds.utilities&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=aurorianclouds.utilities)
 
 `utilities` is a shared Python library containing common functionality used by
 the other projects. It provides reusable helpers for tasks such as enum

@@ -37,6 +37,11 @@ project:
 
 **Maturity: Established**
 
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=aurorianclouds.sous-chef&metric=coverage)](https://sonarcloud.io/summary/new_code?id=aurorianclouds.sous-chef)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=aurorianclouds.sous-chef&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=aurorianclouds.sous-chef)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=aurorianclouds.sous-chef&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=aurorianclouds.sous-chef)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=aurorianclouds.sous-chef&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=aurorianclouds.sous-chef)
+
 `sous-chef` is a meal-planning and recipe-management application. It parses prepared
 recipes, creates menus, schedules menu items, and prepares an aisle-based grocery list.
 Results are exported to services such as Todoist and Google Sheets. It is

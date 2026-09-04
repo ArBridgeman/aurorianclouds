@@ -58,6 +58,12 @@ jobs:
       - name: Run integration tests
         working-directory: ./jellyfin-helpers
         run: poetry run pytest --cov=jellyfin_helpers --cov-report=xml:jellyfin_helpers_integration_tests.xml -k "not jellyfin" ./tests/integration_tests
+      - name: Run Bandit
+        uses: ./.github/actions/run-bandit
+        with:
+          poetry-dir: jellyfin-helpers
+          source: jellyfin_helpers
+          report: bandit-report.json
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
         with:
@@ -70,6 +76,7 @@ jobs:
             -Dsonar.tests=tests
             -Dsonar.python.version=3.11,3.12,3.13,3.14
             -Dsonar.python.coverage.reportPaths=jellyfin_helpers_unit_tests.xml,jellyfin_helpers_integration_tests.xml
+            -Dsonar.python.bandit.reportPaths=bandit-report.json
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_JELLYFIN_HELPERS }}
       - name: Archive code coverage results

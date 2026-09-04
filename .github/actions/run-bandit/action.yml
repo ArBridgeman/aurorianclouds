@@ -1,0 +1,21 @@
+name: Run Bandit
+description: Run Bandit and write a JSON report for SonarCloud
+inputs:
+  poetry-dir:
+    required: true
+    description: Directory containing the Poetry project
+  source:
+    required: true
+    description: Source directory to scan, relative to the Poetry project
+  report:
+    required: true
+    description: JSON report path, relative to the Poetry project
+runs:
+  using: composite
+  steps:
+    - name: Run Bandit
+      working-directory: ./${{ inputs.poetry-dir }}
+      shell: bash
+      run: >-
+        poetry run bandit --recursive ${{ inputs.source }}
+        --format json --output ${{ inputs.report }} --exit-zero

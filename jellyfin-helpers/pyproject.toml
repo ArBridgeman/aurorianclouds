@@ -20,6 +20,7 @@ utilities = {path = "../utilities/", develop = true}
 
 [dependency-groups]
 dev = [
+    "bandit>=1.8,<2",
     "freezegun>=1.1,<2",
     "pytest>=9.0.0,<10",
     "pytest-cov>=4.1.0,<5",

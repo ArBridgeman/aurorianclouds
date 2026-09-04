@@ -29,6 +29,7 @@ uvicorn = {extras = ["standard"], version = ">=0.52.3,<0.53"}
 
 [dependency-groups]
 dev = [
+    "bandit>=1.8,<2",
     "freezegun>=1.1,<2",
     "pytest>=9.0.0,<10.0.0",
     "pytest-cov>=4.1,<5",

@@ -165,9 +165,9 @@ class RecipeBasic(DataframeSearchable):
 
 def create_timedelta_clean_row_entry(row_entry: str) -> str:
     row_entry = row_entry.lower().strip()
-    row_entry = re.sub("time", "", row_entry)
-    row_entry = re.sub("prep", "", row_entry)
-    row_entry = re.sub("cooking", "", row_entry)
+    row_entry = row_entry.replace("time", "")
+    row_entry = row_entry.replace("prep", "")
+    row_entry = row_entry.replace("cooking", "")
     row_entry = re.sub("minut[eo]s.?", "min", row_entry)
     row_entry = re.sub(r"^[\D]+", "", row_entry)
     row_entry = re.sub(r"mins\.?", "min", row_entry)

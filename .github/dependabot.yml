@@ -18,6 +18,9 @@ updates:
     cooldown:
       default-days: 7
 
+    ignore:
+      - dependency-name: "pygsheets"
+
     open-pull-requests-limit: 1
 
     groups:

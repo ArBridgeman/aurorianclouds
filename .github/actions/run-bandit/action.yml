@@ -16,6 +16,9 @@ runs:
     - name: Run Bandit
       working-directory: ./${{ inputs.poetry-dir }}
       shell: bash
+      env:
+        BANDIT_SOURCE: ${{ inputs.source }}
+        BANDIT_REPORT: ${{ inputs.report }}
       run: >-
-        poetry run bandit --recursive ${{ inputs.source }}
-        --format json --output ${{ inputs.report }} --exit-zero
+        poetry run bandit --recursive "$BANDIT_SOURCE"
+        --format json --output "$BANDIT_REPORT" --exit-zero

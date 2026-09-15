@@ -17,7 +17,7 @@ runs:
   using: "composite"
   steps:
     - name: Set up Python environment
-      uses: ./.github/actions/poetry-setup
+      uses: $/.github/actions/poetry-setup
       with:
         poetry-dir: ${{ inputs.poetry-dir }}
         poetry-lock-path: ${{ inputs.poetry-lock-path }}

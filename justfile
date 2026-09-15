@@ -9,8 +9,8 @@ precommit:
     poetry run pre-commit run --all-files
 
 # Audit GitHub Actions, Dependabot, and pre-commit configuration.
-zizmor:
-    poetry run zizmor .github .pre-commit-config.yaml
+zizmor *args:
+    poetry run zizmor .github .pre-commit-config.yaml {{args}}
 
 # Print the site-packages directory for a project's Poetry environment.
 project-site-packages project:

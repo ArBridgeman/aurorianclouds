@@ -25,7 +25,7 @@ jobs:
           fetch-depth: 0
       - name: Check if relevant files were changed
         id: filter
-        uses: ./.github/actions/check-file-changes
+        uses: $/.github/actions/check-file-changes
         with:
           paths: |
             banking-helpers/
@@ -41,7 +41,7 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
       - name: Set up Python environment
-        uses: ./.github/actions/poetry-setup
+        uses: $/.github/actions/poetry-setup
         with:
           poetry-dir: banking-helpers
           poetry-lock-path: banking-helpers/poetry.lock
@@ -52,7 +52,7 @@ jobs:
         working-directory: ./banking-helpers
         run: poetry run pytest --cov=banking_helpers --cov-report=xml:banking_helpers_integration_tests.xml ./tests/integration
       - name: Run Bandit
-        uses: ./.github/actions/run-bandit
+        uses: $/.github/actions/run-bandit
         with:
           poetry-dir: banking-helpers
           source: banking_helpers

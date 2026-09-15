@@ -29,7 +29,7 @@ jobs:
           fetch-depth: 0
       - name: Check if relevant files were changed
         id: filter
-        uses: ./.github/actions/check-file-changes
+        uses: $/.github/actions/check-file-changes
         with:
           paths: |
             sous-chef/
@@ -46,7 +46,7 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
       - name: Set up Python environment
-        uses: ./.github/actions/poetry-setup-with-tokens
+        uses: $/.github/actions/poetry-setup-with-tokens
         with:
           poetry-dir: sous-chef
           poetry-lock-path: sous-chef/poetry.lock
@@ -59,7 +59,7 @@ jobs:
         working-directory: ./sous-chef
         run: poetry run pytest --cov=sous_chef --cov-report=xml:sous_chef_integration_tests.xml -k "not dropbox" ./tests/integration_tests
       - name: Run Bandit
-        uses: ./.github/actions/run-bandit
+        uses: $/.github/actions/run-bandit
         with:
           poetry-dir: sous-chef
           source: sous_chef

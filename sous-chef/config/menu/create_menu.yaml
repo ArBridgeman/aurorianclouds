@@ -34,7 +34,7 @@ create_menu:
     basic_number: 0
     menu_number:
     basic_season: 0_any
-    selected_season: 3_summer
+    selected_season: 4_fall
     sheet_to_mealtime:
       breakfast: breakfast
       snack: snack

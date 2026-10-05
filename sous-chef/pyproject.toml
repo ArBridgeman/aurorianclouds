@@ -20,12 +20,12 @@ pandera = ">=0.33.1,<0.34"
 pint = ">=0.25.3,<0.26"
 pydantic = ">=2.13.4,<3"
 python-Levenshtein = ">=0.27.5,<0.28"
-pytz = ">=2020.1"
+pytz = ">=2026.4"
 regex = ">=2026.9.10,<2027"
 structlog = ">=26.1.0,<27"
 termcolor = ">=3.3.0,<4"
 utilities = {path = "../utilities", develop = true}
-uvicorn = {extras = ["standard"], version = ">=0.53.0,<0.54"}
+uvicorn = {extras = ["standard"], version = ">=0.54.0,<0.55"}
 
 [dependency-groups]
 dev = [

@@ -14,8 +14,8 @@ hydra-core = "^1.3.7"
 joblib = "^1.6.0"
 numpy = "^2.4.6"
 pandas = ">=3.0.6,<4"
-pandera = "^0.33.1"
-pydantic = "^2.13.4"
+pandera = "^0.34.1"
+pydantic = "^2.14.1"
 utilities = {path = "../utilities/", develop = true}
 
 [dependency-groups]

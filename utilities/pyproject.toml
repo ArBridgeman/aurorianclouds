@@ -15,7 +15,7 @@ dependencies = [
     "pandas>=3.0.6,<4",
     "pygsheets==2.0.5",
     "structlog>=26.1.0,<27",
-    "tenacity>=9.1.4,<10",
+    "tenacity>=9.2.1,<10",
     "todoist-api-python>=4.0.0,<5",
 ]
 

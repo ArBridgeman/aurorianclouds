@@ -177,8 +177,8 @@ class MenuBuilder:
             if time_total_str is np.nan:
                 time_total_str = "5 min"
         elif item_type == Type.ingredient.value:
-            tmp_menu["rating"] = np.NaN
-            tmp_menu["uuid"] = np.NaN
+            tmp_menu["rating"] = np.nan
+            tmp_menu["uuid"] = np.nan
             if time_total_str is np.nan:
                 time_total_str = "20 min"
 

@@ -159,8 +159,8 @@ class MenuTemplateFiller(BaseWithExceptionHandling):
                             self.menu_config.ingredient.default_cook_minutes
                         )
                     ),
-                    "rating": np.NaN,
-                    "uuid": np.NaN,
+                    "rating": np.nan,
+                    "uuid": np.nan,
                 }
             ]
         )

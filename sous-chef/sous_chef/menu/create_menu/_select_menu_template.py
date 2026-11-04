@@ -60,7 +60,7 @@ class MenuTemplates:
             "defrost",
             "override_check",
         ]
-        all_menus[nan_columns] = all_menus[nan_columns].replace("", np.NaN)
+        all_menus[nan_columns] = all_menus[nan_columns].replace("", np.nan)
 
         # unravel short form for weekday values
         all_menus["weekday"] = (

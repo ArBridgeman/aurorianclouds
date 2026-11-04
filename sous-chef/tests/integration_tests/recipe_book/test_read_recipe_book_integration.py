@@ -90,8 +90,8 @@ class TestCurrentRecipeBook:
     @staticmethod
     def _has_no_unused_label(label_col: pd.Series, label_tuple: Tuple):
         used_labels = collections.Counter(label_col.explode().values)
-        if np.NaN in used_labels.keys():
-            used_labels.pop(np.NaN)
+        if np.nan in used_labels.keys():
+            used_labels.pop(np.nan)
         unused_labels = set(label_tuple) - set(used_labels.keys())
         if has_unused_labels := (len(unused_labels) > 0):
             print("# unused labels")

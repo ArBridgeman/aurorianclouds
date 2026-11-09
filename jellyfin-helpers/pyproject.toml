@@ -15,14 +15,14 @@ joblib = "^1.6.0"
 numpy = "^2.4.6"
 pandas = ">=3.1.0,<4"
 pandera = "^0.35.0"
-pydantic = "^2.14.1"
+pydantic = "^2.14.2"
 utilities = {path = "../utilities/", develop = true}
 
 [dependency-groups]
 dev = [
     "bandit>=1.8,<2",
     "freezegun>=1.1,<2",
-    "pytest>=9.0.0,<10",
+    "pytest>=9.2.0,<10",
     "pytest-cov>=4.1.0,<5",
 ]
 

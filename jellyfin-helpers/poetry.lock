@@ -1176,14 +1176,14 @@ xml = ["lxml (>=6.0.0)"]
 
 [[package]]
 name = "pandera"
-version = "0.35.0"
+version = "0.36.0"
 description = "A light-weight and flexible data validation and testing tool for statistical data objects."
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "pandera-0.35.0-py3-none-any.whl", hash = "sha256:ce5cab5e882480d07575361899a4140585b80c489410cf97b7ef6e8aa90de3b6"},
-    {file = "pandera-0.35.0.tar.gz", hash = "sha256:d2d11bbf9b4dd19c227caf31ac57ac28a679bbe18577f9496dcf809143232389"},
+    {file = "pandera-0.36.0-py3-none-any.whl", hash = "sha256:f9ed1191fde25467813cde0ab3f279707c6e05fbb6c61649cfc5b646d1b2a783"},
+    {file = "pandera-0.36.0.tar.gz", hash = "sha256:70194c6c9c8e3e950d62d9018d1fa6ba2b4371d1abc62c124574173f71432d80"},
 ]
 
 [package.dependencies]
@@ -1198,6 +1198,7 @@ all = ["black", "dask[dataframe]", "distributed", "fastapi", "frictionless (<=4.
 cli = ["pyyaml (>=5.1)", "rich", "typer (>=0.12.3)"]
 dask = ["dask[dataframe]", "distributed"]
 datafusion = ["narwhals-datafusion (>=0.1.5)"]
+decisions = ["typesafe-sdk"]
 fastapi = ["fastapi"]
 frictionless = ["frictionless (<=4.40.8)"]
 geopandas = ["geopandas", "shapely"]
@@ -1915,4 +1916,4 @@ url = "../utilities"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<4"
-content-hash = "08051fec790746f3634eb81487db7f54cf5d2501b1d39cc88b67c94c65564c84"
+content-hash = "b5bdb1be18168d9872670903e002eca3d101468a8baa67f0a1660b819eb429f7"
